@@ -3,7 +3,9 @@
 **Status:** Draft · **Phase:** 3 · **ADRs:** 0005, 0006, 0007
 
 ## 1. Principles
-Versioned (`/api/v1`), JSON, OpenAPI 3.1 generated from code, problem+json errors (RFC 9457), idempotency keys on uploads, cursor pagination. Money as strings with 2 decimals in DTOs (`"1234.56"`), dates ISO-8601.
+Versioned (`/api/v1`), JSON, OpenAPI 3.1 generated from code, problem+json errors (RFC 9457). Money as strings with 2 decimals in DTOs (`"1234.56"`), dates ISO-8601.
+
+> **v1.0 trim (2026-09-18).** Idempotency keys and cursor pagination wait for a second user and a large collection. One user with four filings a year has neither problem. The versioned path, OpenAPI generation and problem+json stay, because they cost nothing now and are expensive to retrofit.
 
 ## 2. Resources
 

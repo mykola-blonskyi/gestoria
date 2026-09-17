@@ -168,15 +168,24 @@ Exit criteria
 
 ## 6. Milestone table
 
-| # | Milestone | Target | Proof |
+Re-estimated 2026-09-18, replacing the week-numbered table written before any of the ADR-0010 to ADR-0015 cuts. Dates are anchored to filing deadlines, not to elapsed weeks, because Hacienda sets three of them.
+
+Roughly 30 weeks from 2026-09-18 to 20 April 2027, against an estimated 16 to 22 weeks of build at 15 to 20 hours a week. The binding constraint is the calendar in exactly one place: `2027.json` cannot be finalised until BOE publishes, around December 2026.
+
+| # | Milestone | By | Proof |
 |---|---|---|---|
-| M0 | Skeleton + CI green | Week 2 | CI badge |
-| M1 | Engine passes 10 golden cases | Week 8 | `dotnet test` output |
-| M2 | Credits engine + explanations | Week 12 | JSON-only rule added in test |
-| M3 | API end-to-end golden #1 | Week 16 | Integration test |
-| M4 | OCR + classifier benchmark met | Week 23 | `bench` report |
-| M5 | SPA usable end-to-end | Week 28 | User test notes |
-| M6 | v1.0.0 | Week 31 | Tag |
+| M0 | CI green, `Engine` and `Application` projects in place, `2026.json` started | mid Oct 2026 | `dotnet test` and `pytest` green in CI |
+| M1 | Set-aside estimator; `seguridadSocial.tramos` in config; master key escrowed and a MinIO restore rehearsed | mid Dec 2026 | You can answer "how much do I hold back" before registering, and you can restore a document with only the escrowed key |
+| M2 | Modelo 130, 303 and 349 engine | end Jan 2027 | G3, G5 and G9 pass against published examples (SPEC-011 §1) |
+| M3 | Persistence and the entry path | mid Mar 2027 | Real Q1 2027 data loads end to end |
+| M4 | **Q1 2027 filings produced and reconciled against a gestor** | 15 Apr 2027 | Engine output diffed line by line against the gestor's 130, 303 and 349. Q1 is filed from the gestor's numbers |
+| M4b | First self-filed quarter | 20 Jul 2027 | Q2 2027 filed from engine output, with the M4 diff closed |
+| M5 | Renta 2026 employee path and the credits engine | 15 Jun 2027 | Casilla sheet plus credit outcomes, two weeks before 30 June |
+| M6 | Autónomo annual path | H2 2027 | For Renta 2027, filed April 2028 |
+
+M1 is the one to watch. It has no software deadline, only a money one, so it is the milestone most likely to lose to engine work that feels more like progress.
+
+M3 is where the interface question gets decided. Loading a real quarter means a few hundred bank lines to classify and a few dozen invoices to enter, and that is the first moment there is evidence about whether typing is the bottleneck.
 
 ## 7. Risks and mitigations
 

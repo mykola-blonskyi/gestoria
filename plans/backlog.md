@@ -18,7 +18,7 @@ Cut from v1.0 by ADR-0013:
 - [ ] Fine-tuned invoice extraction model on accumulated, consented data
 - [ ] Modelo 720/721 threshold reminders (no filing)
 - [ ] Foreign-tax credit (deducción por doble imposición internacional)
-- [ ] Modelo 349 and 390 forms (currently only aggregates)
+- [ ] Modelo 390 (currently aggregates only; verify whether this profile is still required to file it)
 - [ ] Criterio de caja fully supported (today: flag + warning, calculation by devengo)
 - [ ] Depreciation table per asset class completed; multi-year asset tracking
 

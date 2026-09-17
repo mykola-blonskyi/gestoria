@@ -19,6 +19,8 @@ Order: set-aside estimator, then 130 and 303, then the employee annual path, the
 
 **Two configs are release blockers and neither exists**: `2026.json` for Renta 2026 and `2027.json` for the Q1 2027 forms. BOE publishes 2027 values around December 2026.
 
+**Documents live in MinIO on the author's VPS, encrypted client-side before upload (ADR-0015).** MinIO never holds plaintext or the master key. Escrowing that master key outside the laptop and the VPS is a release blocker, and the restore drill happens before the first real upload. The engine never reads documents, so MinIO being down cannot block a calculation.
+
 Start here, in this order:
 
 1. `plans/DEVELOPMENT_PLAN.md` — phases, exit criteria, current phase (Phase 0 as of 2026-09-17)
@@ -42,7 +44,7 @@ Tax theory (the *why* behind the rules) lives **outside** the repo in the Obsidi
 - No real personal data in fixtures, logs or the repo (SPEC-013).
 - v1.0 region: Valencia (`VC`) only (ADR-0013). Forms: 100, 130, 303.
 - `seguridadSocial.tramos` is January work, not a deferred `_todo`. An autónomo picks a contribution base at registration and tarifa plana is an 80 €/month decision taken then.
-- `retencionNuevo` must be right from invoice number one: 7 % for the first three years if Profesional, 15 % otherwise.
+- The author registers as **Profesional with EU and US clients** (2026-09-18). Consequences in SPEC-003 §0: Modelo 130 is required, retención on foreign invoices is **0** (`retencionNuevo` does not apply to them), Modelo 303 usually nets to a refund, Modelo 349 becomes a real quarterly filing, and ROI/VIES registration must be on the Modelo 036.
 - All ten goldens gate v1.0, plus G8b. G8 hits the 6,500 € other-income cap through autónomo income; G8b hits the same cap through savings income, which is how an employee reaches it (SPEC-002 step 1).
 - Goldens have three oracle tiers (SPEC-011 §1): `aeat-simulator`, then `published-example`, then `theory`. Modelo 130 and 303 have no simulator, so G5 and G9 need published worked examples.
 
