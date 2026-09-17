@@ -2,12 +2,10 @@
 
 ## High Priority (v1.x, right after v1.0)
 
-Cut from v1.0 by ADR-0012, in the order they would come back:
+Cut from v1.0 by ADR-0013:
 
-- [ ] Autónomo scope: activity income, issued and received invoices, difícil justificación, SS tramos (SPEC-001, SPEC-002 step 2)
-- [ ] Modelo 130 and Modelo 303 (SPEC-003), with the `_todo` config blocks they need
-- [ ] OCR service and document ingestion (SPEC-005), and the classifier's expense side (SPEC-004)
-- [ ] Madrid and the remaining common-regime regions
+- [ ] OCR service and document ingestion (SPEC-005)
+- [ ] Madrid and the remaining common-regime regions (scales and credits as JSON only)
 
 - [ ] Hosted deployment: VPS, Caddy TLS, OIDC, upload rate limiting, encrypted backups with a rehearsed restore, GDPR export and delete (deferred by ADR-0010; needs a real second user first)
 - [ ] `config/tax-years/2027.json` when BOE publishes the changes; rehearse the new-year runbook

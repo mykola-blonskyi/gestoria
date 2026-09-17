@@ -1,8 +1,8 @@
 # SPEC-005 — Document Ingestion and OCR Service (`gestoria-ocr`)
 
-> Deferred on 2026-09-18. v1.0 enters figures by hand; about a dozen documents a year does not pay for a second runtime. The spec keeps its number and its content; `docs/CONVENTIONS.md` forbids renumbering.
+> Deferred on 2026-09-18 and still deferred under ADR-0013. v1.0 enters figures by hand; about a dozen documents a year does not pay for the longest phase in the plan. The spec keeps its number and its content; `docs/CONVENTIONS.md` forbids renumbering.
 
-**Status:** Deferred to v1.x (ADR-0012) · **Phase:** 4 · **Theory refs:** §5.1, §7.5, §15.1 · **ADRs:** 0002, 0005
+**Status:** Deferred to v1.x (ADR-0013) · **Phase:** 4 · **Theory refs:** §5.1, §7.5, §15.1 · **ADRs:** 0002, 0005
 
 ## 1. Purpose
 Turn PDFs and images into structured, confidence-scored fields; keep humans in the loop for anything uncertain.

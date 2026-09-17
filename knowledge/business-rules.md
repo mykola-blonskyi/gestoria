@@ -2,8 +2,6 @@
 
 Invariants the code must enforce. Each points to its spec and to the theory section that justifies it (vault). Not a tax tutorial.
 
-Rules 1, 3, 4, 7 and 14 govern activity income and the quarterly forms. ADR-0012 puts those outside v1.0, so they are correct and dormant. They return with the autónomo scope; do not delete them.
-
 ---
 
 ## Rule 1 — No expense without a supporting document

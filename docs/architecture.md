@@ -2,7 +2,7 @@
 
 ## Overview
 
-**v1.0 scope (ADR-0012): Modelo 100 for one employee in Valencia, figures typed in by hand.** The OCR service, the quarterly forms and the classifier below are the v1.x target architecture, kept here because the engine boundary is designed for them.
+**v1.0 scope (ADR-0013): Modelo 100, 130 and 303 for employees and autónomos, Valencia only, figures typed in by hand.** The OCR service below is deferred to v1.x; everything else is v1.0.
 
 GestorIA turns raw personal financial documents (bank statements, nóminas, invoices, AEAT datos fiscales) into Spanish tax filings — Modelo 130/303 per quarter and Modelo 100 per year — with a step-by-step explanation of every figure and a list of tax credits the user may have missed. It is a two-service system plus a SPA. The **engine is pure**: given a profile, a ledger of confirmed documents and a year configuration, it deterministically produces a result and a trace. Everything else (parsing, OCR, storage, UI) exists to feed the engine correct inputs and show its outputs.
 

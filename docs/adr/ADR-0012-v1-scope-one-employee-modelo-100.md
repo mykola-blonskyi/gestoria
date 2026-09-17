@@ -1,6 +1,9 @@
 # ADR-0012: v1.0 computes Modelo 100 for one employee in Valencia
 
-**Status:** Accepted · **Date:** 2026-09-18 · **Builds on:** ADR-0010, ADR-0011
+**Status:** Superseded by [ADR-0013](ADR-0013-v1-scope-employee-and-autonomo.md) · **Date:** 2026-09-18
+
+> Superseded the same day. The decision rested on an inference the author never made: that because he is not an autónomo today, the autónomo domain has no user. Autónomo scope is restored in ADR-0013.
+> The record is kept because the OCR and Madrid cuts below survived, and because the failure mode is worth remembering.
 
 ## Context
 The project was specced for "Spanish residents (employees and *autónomos* under *estimación directa simplificada*)". That produced thirteen specs, six phases and a 31-week plan.

@@ -31,7 +31,8 @@
 
 - Specs: `SPEC-NNN-kebab-title.md`, numbered once, never renumbered.
 - ADRs: `ADR-NNNN-kebab-title.md`; status `Proposed → Accepted → Superseded by ADR-x`. Accepted ADRs are not edited.
-- An ADR is `Accepted` only once the decision has been felt: code written against it, a service called, a benchmark run. Reasoning that has not met the work yet is `Proposed`. Writing nine Accepted ADRs in one day, before any of them has been exercised, records guesses as decisions and then forbids editing them.
+- An ADR is `Accepted` only once the evidence it rests on is in hand. For a technology choice that means the technology has been exercised: code written against it, a service called, a benchmark run. For a scope or direction choice it means the facts about the user, the deadline and the domain have been stated by the person who owns them. Reasoning that has met neither is `Proposed`. Writing nine Accepted ADRs in one day, before any of them has been exercised, records guesses as decisions and then forbids editing them.
+- Separate what was **stated** from what was **concluded**. ADR-0012 was superseded within the hour because "the author is not an autónomo" (stated) became "the autónomo domain has no user" (concluded) with nothing marking the join. A fact about the present is not a scope boundary. The ADR template has a `Premises` section for this; fill it.
 - .NET projects: `GestorIA.<Layer>` (`Domain`, `Engine`, `Application`, `Infrastructure`, `Api`); tests `GestorIA.<Layer>.Tests` under `tests/`.
 - Python service: package `gestoria_ocr`.
 - Domain vocabulary keeps the **Spanish tax terms** as identifiers (`CuotaIntegra`, `BaseLiquidableGeneral`, `RendimientoNeto`, `Retencion`) — they map 1:1 to AEAT forms and the theory doc. Comments/docs are English.

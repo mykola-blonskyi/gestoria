@@ -1,8 +1,7 @@
 # SPEC-003 — Quarterly Forms: Modelo 130 (IRPF advance) and Modelo 303 (IVA)
 
-> Deferred on 2026-09-18. Modelo 130 and Modelo 303 arise from economic activity. v1.0's user is an employee, so neither is filed. The spec keeps its number and its content; `docs/CONVENTIONS.md` forbids renumbering.
 
-**Status:** Deferred to v1.x (ADR-0012) · **Phase:** 1 · **Theory refs:** §7.3, §7.4, §8.1–8.4, §12, §15.4
+**Status:** Draft · **Phase:** 1 · **Theory refs:** §7.3, §7.4, §8.1–8.4, §12, §15.4
 
 ## 1. Modelo 130
 

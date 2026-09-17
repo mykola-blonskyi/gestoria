@@ -17,16 +17,20 @@ An ADR is **Accepted** only when the decision has been felt: code written, a ser
 | [ADR-0009](adr/ADR-0009-ocr-job-queue-inprocess-channel.md) | In-process `Channel<T>` job queue for OCR extraction in v1 | Proposed | 2026-09-17 |
 | [ADR-0010](adr/ADR-0010-deployment-local-only-v1.md) | Local-only deployment for v1.0; hosted VPS deferred | Accepted | 2026-09-18 |
 | [ADR-0011](adr/ADR-0011-aeat-simulator-as-correctness-oracle.md) | The AEAT simulator decides golden values | Accepted | 2026-09-18 |
-| [ADR-0012](adr/ADR-0012-v1-scope-one-employee-modelo-100.md) | v1.0 computes Modelo 100 for one employee in Valencia | Accepted | 2026-09-18 |
+| [ADR-0012](adr/ADR-0012-v1-scope-one-employee-modelo-100.md) | v1.0 computes Modelo 100 for one employee in Valencia | Superseded by ADR-0013 | 2026-09-18 |
+| [ADR-0013](adr/ADR-0013-v1-scope-employee-and-autonomo.md) | v1.0 covers employee and autónomo scope; OCR and Madrid stay out | Accepted | 2026-09-18 |
 
 ## Small decisions (no ADR)
 
-- **Regions in v1.0: Valencia (`VC`) only** — 2026-09-18, superseding the 2026-09-17 note that added Madrid. A fake region in a test fixture proves the model is data-driven (ADR-0012).
+- **Regions in v1.0: Valencia (`VC`) only** — 2026-09-18, superseding the 2026-09-17 note that added Madrid. A fake region in a test fixture proves the model is data-driven (ADR-0013).
+- **Build order follows deadlines, not scope** — 2026-09-18. The employee Modelo 100 path is built first because Renta 2026 is the only date Hacienda has set for this project. The autónomo path follows and gets a deadline when the author registers.
 - **Credits are the destination, not a mid-plan phase** — 2026-09-18. Renta WEB already produces a borrador with most figures in it. What it does not do is tell you which regional credit you missed. SPEC-006 and SPEC-010 are what v1.0 is for; SPEC-002 exists to make them evaluable.
 - **The first filing is Renta 2026, due April to June 2027** — 2026-09-18. The first production config is therefore `2026.json`, not `2025.json`.
 - **The prototype is deleted, not kept green** — 2026-09-18. `IrpfTaxCalculator`, `IrpfCalculationResult` and their tests are gone. SPEC-001 §7 and SPEC-011 §4 previously said to keep them compiling until the goldens passed; they had already stopped compiling. `IStatementParser`, `BbvaCsvStatementParser`, `Transaction` and `BbvaParserTests` survive, because SPEC-004 §5 carries them forward.
 
 ## Decisions still open
+
+- Whether the author intends to register as an autónomo and when. That is what would give the autónomo path a deadline, and it is also what decides whether ADR-0010's single-user premise still holds.
 
 - Whether the SPA (SPEC-012) earns its place against a CLI, now that ADR-0012 has removed the review queue it was largely built around.
 - Whether PostgreSQL and EF Core (ADR-0006) and an ASP.NET API (SPEC-009) are still justified for one user typing one profile a year, or whether v1.0 is an engine library plus a config plus a thin front end.

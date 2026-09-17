@@ -1,8 +1,7 @@
 # SPEC-004 — Bank Transaction Classifier and Invoice Matcher
 
-> Deferred on 2026-09-18. The expense side of the classifier exists to serve activity deductions, which v1.0 does not compute. The spec keeps its number and its content; `docs/CONVENTIONS.md` forbids renumbering.
 
-**Status:** Deferred to v1.x (ADR-0012) · **Phase:** 4 · **Theory refs:** §7.4, §9, §15.1, §15.2
+**Status:** Draft · **Phase:** 4 · **Theory refs:** §7.4, §9, §15.1, §15.2
 
 ## 1. Purpose
 First automatic pass over bank statement lines: assign a class, link supporting documents, never guess when unsure. Replaces the prototype's `IsDeductible` flag and sign-derived `TransactionType`.
