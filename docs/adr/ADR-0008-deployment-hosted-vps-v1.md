@@ -1,6 +1,10 @@
 # ADR-0008: Hosted single-VPS deployment for v1; local-only mode deferred
 
-**Status:** Accepted · **Date:** 2026-09-17
+**Status:** Superseded by [ADR-0010](ADR-0010-deployment-local-only-v1.md) · **Date:** 2026-09-17
+
+> Superseded on 2026-09-18. This decision was made before the audience for v1.0 was settled.
+> With one user the hosted topology buys nothing and costs four release blockers.
+> The record is kept because the alternatives table below is still the right analysis.
 
 ## Context
 Two deployment topologies were on the table for v1.0: (A) hosted — API, PostgreSQL and the OCR service run on a VPS operated by the project owner, users access a website; (B) local-only — the same containers run on the user's own machine via Docker Compose, data never leaves it. Both are technically possible with the current architecture; the question is which one the v1.0 release must ship and support.

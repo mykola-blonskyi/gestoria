@@ -17,12 +17,14 @@ Phase 0 — Foundation. Turn the scaffold + prototype into a config-driven, test
 - [ ] `Directory.Build.props`: nullable, warnings-as-errors, banned `double`/`float` for money (ADR-0004)
 - [ ] `services/ocr` skeleton: FastAPI `/health`, `pyproject.toml`, `uv.lock`, `ruff`, `pytest`
 - [ ] CI: GitHub Actions running `dotnet test` + `pytest`
-- [ ] Fill `.claude/CLAUDE.local.md`, `knowledge/*` (done in this commit — review)
+- [x] Fill `.claude/CLAUDE.local.md`, `knowledge/*`
+- [x] Repo under git; prototype deleted; `dotnet build` and `dotnet test` green (2026-09-18)
 
 ---
 
 ## Phase 1 — Core engine (starts after Phase 0 exit criteria)
 
+- [ ] **First:** enter G1, G2, G3, G6, G7 into the AEAT simulator; record inputs, outputs and run date as fixtures (ADR-0011)
 - [ ] `Money`, `Rate`, `TaxYear`, `Region`, `Nif` value objects (SPEC-001)
 - [ ] `ScaleCalculator` + property tests
 - [ ] `EmploymentIncomeCalculator` → golden #1, #2, #8
@@ -32,8 +34,7 @@ Phase 0 — Foundation. Turn the scaffold + prototype into a config-driven, test
 - [ ] `IrpfAnnualCalculator` + `CalculationTrace`
 - [ ] `Modelo130Calculator` → golden #3, #5; `Modelo303Calculator`
 - [ ] `Modelo100Mapper` (SPEC-008); `FilingObligationChecker` → golden #10
-- [ ] Reconciliation of 3 profiles vs AEAT simulator → `reports/investigations/`
-- [ ] Remove prototype `IrpfTaxCalculator` and its tests once goldens pass
+- [ ] Reconciliation log vs AEAT simulator → `reports/investigations/2025-renta-reconciliation.md`
 
 ---
 
@@ -41,4 +42,5 @@ Phase 0 — Foundation. Turn the scaffold + prototype into a config-driven, test
 
 - Estimates assume ~15–20 h/week while learning C#; re-plan after Phase 1 exit.
 - `2025.json` values must be re-verified against the AEAT Manual before goldens are trusted.
-- The existing `Transaction` model (signed amount ⇒ income/expense) conflicts with SPEC-001 ledger design; migrate rather than extend.
+- The existing `Transaction` model (signed amount ⇒ income/expense) conflicts with SPEC-001 ledger design; migrate rather than extend. It survives only as the parser's output type.
+- `2025.example.json` has four `_todo` holes (Madrid scale, SS tramos, 130 and 303 line numbers, minoración bands). Filling them is research against BOE, not coding, and Phase 0 currently gates on it.

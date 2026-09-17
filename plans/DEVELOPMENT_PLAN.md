@@ -22,7 +22,7 @@ Out of scope for v1: *estimación objetiva* (módulos), corporate tax (IS), non-
 | Yearly legal changes | Nothing 📅 is hard-coded — `config/tax-years/YYYY.json` (ADR-0003) |
 | Solo dev, two new languages | Thin vertical slices; each phase ends with something runnable; Python surface kept small |
 | Zero-cost infrastructure for now | Self-hostable stack, free-tier cloud LLM as optional fallback only |
-| Personal financial data | Privacy-by-design from Phase 1 (SPEC-013); hosted on a single VPS in v1 (ADR-0008), so encryption at rest, encrypted backups and GDPR export/delete are release blockers |
+| Personal financial data | Privacy-by-design from Phase 1 (SPEC-013). v1.0 runs on the author's own machine for one user (ADR-0010), so blob encryption at rest and PII-free logs stay; the rest of the control set is scoped when hosting is on the table |
 | Regions | v1 = Valencia (`VC`) + Madrid (`MD`); Madrid proves the region model is data-driven |
 | Background work | In-process `Channel<T>` queue with Postgres as job-state source of truth (ADR-0009); no broker in v1 |
 
@@ -36,7 +36,9 @@ See `docs/architecture.md`. Two deployable services plus a SPA:
 
 ## 4. Current state (2026-09-17)
 
-The repo contains an early prototype: `src/GestorIA.Domain/Services/IrpfTaxCalculator.cs` (hard-coded combined scale 19–47 %, no regional split, no mínimo, per-bracket rounding), `Transaction` model, a BBVA CSV parser and two test classes. Phase 0/1 below replaces this prototype with the config-driven engine described in SPEC-002; keep it until the golden tests pass on the new engine, then delete.
+The repo carried an early prototype: `IrpfTaxCalculator` (hard-coded combined 19–47 % scale, no regional split, no mínimo, per-bracket rounding), `IrpfCalculationResult`, a `Transaction` model, a BBVA CSV parser and two test classes.
+
+As of 2026-09-18 the calculator, its result type and its tests are deleted, and the repo is under git with a green `dotnet build` and `dotnet test`. `Transaction`, `IStatementParser`, `BbvaCsvStatementParser` and `BbvaParserTests` survive, because SPEC-004 §5 carries them into Phase 4. The plan below builds the config-driven engine of SPEC-002 on that base.
 
 ## 5. Phases
 
@@ -75,11 +77,12 @@ Deliverables
   - `Modelo100Mapper` (aggregate → casilla numbers, SPEC-008).
   - Filing-obligation checker (golden case #10).
 - `tests/GestorIA.Engine.Tests`: the 10 golden cases + property-based tests for `ScaleCalculator` + rounding tests.
-- Delete the prototype `IrpfTaxCalculator` once goldens pass.
+
+Entry criteria
+- Every golden the simulator can express is entered into AEAT *Renta WEB Open Simulador* and its output recorded as the expected value, before the matching calculator is written (ADR-0011). Run log in `reports/investigations/2025-renta-reconciliation.md`.
 
 Exit criteria
 - All 10 golden cases pass **to the cent**.
-- Three additional profiles reconciled manually against AEAT *Renta WEB Open Simulador*; deviations documented in `reports/investigations/2025-renta-reconciliation.md`.
 - Mutation testing (Stryker.NET) score ≥ 80 % on `GestorIA.Engine`.
 - `CalculationTrace` can be pretty-printed into the step-by-step form used in Theory §5.3 / §7.2.
 
@@ -138,7 +141,7 @@ Exit criteria
 Deliverables
 - Security review checklist (SPEC-013), dependency scanning, backups, data export/delete (GDPR).
 - `config/tax-years/2026.json` to prove the year-switch path.
-- Deployment guide: single VPS with Docker Compose (`api`, `postgres`, `ocr`, `caddy`), encrypted backups, restore drill (ADR-0008).
+- Deployment guide: local Docker Compose (`api`, `postgres`, `ocr`), encrypted backups, restore drill (ADR-0010).
 - Observability: OpenTelemetry metrics, error tracking.
 
 Exit criteria
@@ -163,11 +166,11 @@ Exit criteria
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Wrong tax figures | Users under/overpay | Golden tests, AEAT simulator reconciliation, explicit "not advice" UI, trace visible |
+| Wrong tax figures | Users under/overpay | Goldens derived from the AEAT simulator before the calculator is written (ADR-0011), explicit "not advice" UI, trace visible |
 | Casilla numbers shift yearly | Wrong sheet | Mapping lives in `YYYY.json` (SPEC-008); yearly runbook |
 | OCR quality on photos | Bad inputs → bad outputs | Confidence thresholds + mandatory human confirmation; no expense without an invoice |
 | Learning two languages slows delivery | Schedule | Vertical slices, engine first (pure C#), Python surface minimal and isolated |
-| PII leakage | Legal/trust | SPEC-013; hosted data is the owner's liability — encryption at rest, encrypted backups, no PII in logs, LLM fallback off by default |
+| PII leakage | Legal/trust | Largely removed for v1.0: one user, own machine, no server (ADR-0010). Encryption at rest, no PII in logs and LLM fallback off by default still apply |
 | Scope creep | Never ships | v1 = Valencia + Madrid, forms 100/130/303 only |
 
 ## 8. Learning track (parallel to phases)

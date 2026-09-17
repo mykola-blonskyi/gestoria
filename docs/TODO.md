@@ -4,7 +4,6 @@ Detailed checklists live in `plans/current.md`; this file tracks cross-cutting i
 
 ## Backlog
 
-- [ ] Move theory copies out of `Claude outputs/` (vault is the source; see `docs/CONVENTIONS.md`)
 - [ ] `docs/onboarding.md`: fill once Phase 0 tooling exists (dotnet, uv, docker)
 - [ ] `graph/architecture.md`, `graph/dependencies.md`: generate after Phase 0 project layout lands
 
@@ -18,7 +17,7 @@ Detailed checklists live in `plans/current.md`; this file tracks cross-cutting i
 
 ## In Progress
 
-- [ ] Review generated ADRs/specs (2026-09-17) and mark Accepted / amend
+- [ ] Review the remaining specs (SPEC-003…013) the way ADR-0008 and SPEC-011 were reviewed
 
 ---
 
@@ -32,3 +31,5 @@ Detailed checklists live in `plans/current.md`; this file tracks cross-cutting i
 
 - [x] Roadmap, ADR-0001…0007, SPEC-001…013, `config/tax-years/2025.example.json` (2026-09-17)
 - [x] Decided: Madrid in v1; hosted VPS for v1.0 (ADR-0008); in-process `Channel<T>` queue (ADR-0009) (2026-09-17)
+- [x] Repo under git; prototype calculator deleted, build green (2026-09-18)
+- [x] Reversed: v1.0 is local-only (ADR-0010). Goldens come from the AEAT simulator (ADR-0011). ADR-0002/0005/0009 back to Proposed (2026-09-18)

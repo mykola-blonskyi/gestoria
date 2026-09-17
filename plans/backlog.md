@@ -2,7 +2,7 @@
 
 ## High Priority (v1.x, right after v1.0)
 
-- [ ] Local-only deployment mode: end-user `docker-compose.yml`, install guide, smoke tests on macOS/Windows/Linux with Docker Desktop (deferred by ADR-0008)
+- [ ] Hosted deployment: VPS, Caddy TLS, OIDC, upload rate limiting, encrypted backups with a rehearsed restore, GDPR export and delete (deferred by ADR-0010; needs a real second user first)
 - [ ] Remaining 13 common-regime regions (scales + credits as JSON only)
 - [ ] `config/tax-years/2027.json` when BOE publishes the changes; rehearse the new-year runbook
 - [ ] gRPC contract between API and OCR if throughput demands it (revisit ADR-0005)

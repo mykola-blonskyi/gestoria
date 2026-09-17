@@ -1,6 +1,10 @@
 # ADR-0005: REST + JSON Schema between API and OCR service; gRPC deferred
 
-**Status:** Accepted · **Date:** 2026-09-17
+**Status:** Proposed · **Date:** 2026-09-17
+
+> Demoted from Accepted on 2026-09-18. No payload has crossed this boundary yet,
+> so the claim that JSON is fast enough is untested. Accept once the OCR client
+> runs against the real service.
 
 ## Context
 The C# API must call the Python OCR service and receive structured extraction results. Options: REST/JSON, gRPC/protobuf, message queue.

@@ -1,6 +1,10 @@
 # ADR-0009: In-process `Channel<T>` job queue for OCR extraction in v1
 
-**Status:** Accepted · **Date:** 2026-09-17
+**Status:** Proposed · **Date:** 2026-09-17
+
+> Demoted from Accepted on 2026-09-18. No job has run. The single-user premise
+> this rests on is now settled by [ADR-0010](ADR-0010-deployment-local-only-v1.md),
+> so the reasoning is sounder than it was; the mechanism is still unexercised.
 
 ## Context
 Document extraction takes seconds (up to ~8–10 s for a phone photo on CPU), so uploads must be accepted immediately and processed in the background. The queue can live in the API process (.NET `System.Threading.Channels`) or in an external broker (RabbitMQ, Azure Service Bus, Kafka).

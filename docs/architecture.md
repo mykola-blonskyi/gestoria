@@ -113,8 +113,8 @@ Quarterly flow is identical up to step 4, then `Modelo130Calculator` / `Modelo30
 
 | Mode | Where | Status |
 |---|---|---|
-| Single VPS | one host, Docker Compose, Caddy TLS | **v1.0** (ADR-0008) |
-| Local-only | user's machine, Docker Compose | v1.x — kept possible by `IFileStorage` + single-user auth |
+| Local-only | the author's machine, Docker Compose, no public port | **v1.0** (ADR-0010) |
+| Single VPS | one host, Docker Compose, Caddy TLS | backlog — needs a second user first (ADR-0010 supersedes ADR-0008) |
 | Split | API on VPS, OCR on a GPU box | later — requires the RabbitMQ `IExtractJobQueue` (ADR-0009) |
 
 Containers: `api`, `ocr`, `postgres`, `caddy`. OCR has no public port. Background extraction runs inside `api` (in-process `Channel<T>`, job state in Postgres).
@@ -123,7 +123,7 @@ Containers: `api`, `ocr`, `postgres`, `caddy`. OCR has no public port. Backgroun
 
 ## Security
 
-Authentication: v1 local mode — single user, hashed API key; hosted mode — OIDC (Authorization Code + PKCE) behind a feature flag.
+Authentication: v1.0 is single user with a hashed API key. OIDC (Authorization Code + PKCE) waits for the hosted milestone.
 
 Authorization: every query scoped by user id; no cross-user access paths.
 

@@ -4,7 +4,7 @@
 
 ```
 tests/
-├── GestorIA.Domain.Tests/               # prototype tests (retire IrpfCalculatorTests after goldens pass — SPEC-011 §4)
+├── GestorIA.Domain.Tests/               # BbvaParserTests; port to BankTransaction in Phase 4 (SPEC-004 §5)
 ├── GestorIA.Engine.Tests/               # Phase 1: golden + property tests (SPEC-011)
 │   └── Golden/G01_*.cs … G10_*.cs
 ├── GestorIA.Api.Tests/                  # Phase 3: integration tests (Testcontainers Postgres)

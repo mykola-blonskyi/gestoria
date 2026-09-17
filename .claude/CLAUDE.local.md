@@ -34,7 +34,8 @@ Tax theory (the *why* behind the rules) lives **outside** the repo in the Obsidi
 - Stack: C# / .NET 10 (`Domain → Engine → Application → Infrastructure → Api`), PostgreSQL 16 + EF Core, Python 3.12 / FastAPI + PaddleOCR in `services/ocr`, React 19 + TypeScript SPA in `web/` (Phase 5).
 - API ↔ OCR: REST with a shared JSON Schema (`services/ocr/schema/extraction-result.schema.json`); DTOs on both sides are generated from it (ADR-0005).
 - Test projects live in `tests/` (as in `GestorIA.slnx`), not in `src/`.
-- The existing `IrpfTaxCalculator` / `Transaction` in `src/GestorIA.Domain` are a prototype. Keep them compiling until the new engine passes the goldens, then delete (SPEC-011 §4, SPEC-001 §7).
+- The prototype `IrpfTaxCalculator` and `IrpfCalculationResult` are deleted (2026-09-18). `Transaction` stays only as `BbvaCsvStatementParser`'s output type until `BankTransaction` lands in Phase 4 (SPEC-001 §7, SPEC-004 §5).
+- Goldens come from the AEAT simulator, entered before the calculator is written, not from the theory document (ADR-0011).
 - Spanish tax terms stay as identifiers (`CuotaIntegra`, `RendimientoNeto`, `Retencion`); comments and docs in English.
 
 ---
@@ -51,8 +52,10 @@ Tax theory (the *why* behind the rules) lives **outside** the repo in the Obsidi
 
 ## Deployment Notes
 
-- v1.0 is **hosted**: single VPS, Docker Compose (`api`, `postgres`, `ocr`, `caddy`), Caddy for TLS, OCR has no public port (ADR-0008). Encrypted blobs and encrypted backups are release blockers.
-- Dev: the same `docker compose up` locally; OCR runs on CPU. A supported end-user local-only mode is v1.x (backlog), so keep `IFileStorage` and single-user auth mode intact.
+- v1.0 is **local-only**: the author's own machine, Docker Compose (`api`, `postgres`, `ocr`), no public port, no TLS terminator, single-user API key auth (ADR-0010). One user, the author.
+- Hosting is backlog, behind a real request from a second person. Keep `IFileStorage` and the single-user auth mode intact so it stays cheap.
+- Blob encryption at rest and PII-free logs stay in v1.0. The rest of SPEC-013's control set is an open decision.
+- OCR runs on CPU.
 - Background extraction jobs: in-process `Channel<T>` + `BackgroundService` behind `IExtractJobQueue`; job state in Postgres, re-enqueue `Pending` on startup (ADR-0009). No broker in v1.
 - LLM structuring in OCR is a feature flag (`LLM_STRUCTURING=off|ollama|cloud`), off by default; when on, only masked raw text of one document is sent, never images.
 - Secrets via env only; `.env.example` documents them.

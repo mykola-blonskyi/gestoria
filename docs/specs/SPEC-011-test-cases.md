@@ -2,12 +2,16 @@
 
 **Status:** Draft · **Phase:** 1+ · **Theory refs:** §15.6 (all ten cases), §4.4, §5.3–5.4, §7.2–7.4
 
-## 1. Golden cases (must pass to the cent; figures from Theory §15.6, cross-checked there by a separate script)
+## 1. Golden cases (must pass to the cent)
+
+Expected values come from the AEAT Renta WEB Open Simulador, entered by hand before the calculator is written (ADR-0011). Where the simulator cannot express a case, the theory document is the source and the fixture says so.
+
+The table below is an index. It is not the input. Each fixture states its inputs in full, because a golden whose inputs live in the vault is not a regression test: G1's expected 4,851.00 depends on an employee SS contribution of 1,950.00 that this table never mentions.
 
 | # | Scenario | Expected |
 |---|---|---|
-| G1 | Employee, 30,000 € gross, VC, no children | cuota íntegra **4,851.00** |
-| G2 | Employee, 18,000 € gross | full reducción 7,302 applied; cuota íntegra **365.93** |
+| G1 | Employee, 30,000 € gross, SS 1,950.00, VC, no children | cuota íntegra **4,851.00** |
+| G2 | Employee, 18,000 € gross, SS 1,170.00, VC | full reducción 7,302 applied; cuota íntegra **365.93** |
 | G3 | Autónomo, income 50,000, expenses 4,000, SS 3,600, VC | cuota íntegra **9,548.00**; Σ 130 = **8,480.00**; result **1,068.00 a ingresar** |
 | G4 | Difícil justificación | previo 42,400 → **2,000**; 10,000 → **500**; −500 → **0** |
 | G5 | 130 with loss-making Q3 | Q3 payable **0**, carry-over applied in Q4 |
@@ -18,6 +22,16 @@
 | G10 | Obligation | 21,000 single payer → not required; 16,000 + 2,000 → required |
 
 Each golden lives in `tests/GestorIA.Engine.Tests/Golden/G0N_*.cs` with the input built by a fluent test builder and the expected trace stored as a JSON snapshot in `tests/golden/2025/G0N.json` (asserted with a semantic diff, not string equality).
+
+Every fixture carries its provenance:
+
+```json
+{ "oracle": "aeat-simulator", "oracleRunDate": "2026-09-25",
+  "inputs": { "grossSalary": "30000.00", "ssTrabajador": "1950.00", "region": "VC", ... },
+  "expected": { "cuotaIntegra": "4851.00", ... } }
+```
+
+`oracle` is `aeat-simulator` or `theory`. A `theory` golden is the weaker gate and is marked as such. G4, G5, G9 and G10 are expected to stay `theory`, because the simulator cannot express them on their own.
 
 ## 2. Additional test layers
 - **Property-based** (FsCheck): scale monotonicity/continuity; `Money` arithmetic; classifier never assigns `DEDUCTIBLE_EXPENSE` without invoice link.
@@ -30,8 +44,8 @@ Each golden lives in `tests/GestorIA.Engine.Tests/Golden/G0N_*.cs` with the inpu
 ## 3. Fixtures policy
 All sample documents anonymised (fake NIFs with valid checksums, fake names, real layouts). No real personal data in the repo, ever. Generator script `tests/fixtures/generate.py` produces synthetic nóminas/invoices as PDFs for the OCR benchmark.
 
-## 4. Existing prototype tests
-`tests/GestorIA.Domain.Tests/IrpfCalculatorTests.cs` and `BbvaParserTests.cs` test the prototype; keep them green until the goldens pass on the new engine, then retire `IrpfCalculatorTests` and port `BbvaParserTests` to the new `BankTransaction` model.
+## 4. Prototype tests
+`IrpfCalculatorTests.cs` was deleted on 2026-09-18 together with the calculator it tested. `BbvaParserTests.cs` survives and stays green; port it to the new `BankTransaction` model in Phase 4 (SPEC-004 §5).
 
 ## 5. Year change
 When `config/tax-years/2026.json` lands, goldens are re-derived under `tests/golden/2026/`; 2025 goldens remain and keep passing with the 2025 config.

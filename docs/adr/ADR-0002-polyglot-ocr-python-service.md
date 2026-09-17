@@ -1,6 +1,10 @@
 # ADR-0002: Separate Python service for OCR and ML
 
-**Status:** Accepted · **Date:** 2026-09-17
+**Status:** Proposed · **Date:** 2026-09-17
+
+> Demoted from Accepted on 2026-09-18. Nothing has been extracted yet.
+> Accept once the Phase 4 benchmark shows PaddleOCR meeting the field-accuracy
+> targets in `plans/DEVELOPMENT_PLAN.md`, or reopen if it does not.
 
 ## Context
 Nóminas and supplier invoices arrive as PDFs and phone photos. Extraction quality directly determines calculation quality ("no expense without an invoice", Theory §15.2). Options: Tesseract in-process via C# wrapper; cloud document AI (Azure/Google/AWS, free tiers); Python service with PaddleOCR/docTR; LLM-vision only.

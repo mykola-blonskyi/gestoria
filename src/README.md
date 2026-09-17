@@ -5,7 +5,7 @@ Solution file: `../GestorIA.slnx` (projects under `src/`, test projects under `.
 ## Current (prototype)
 
 ```
-src/GestorIA.Domain/          Transaction, IrpfCalculationResult, IrpfTaxCalculator (hard-coded scale), IStatementParser, Result<T>
+src/GestorIA.Domain/          Transaction, IStatementParser, Result<T>
 src/GestorIA.Infrastructure/  BbvaCsvStatementParser
 src/GestorIA.Api/             empty
 ```

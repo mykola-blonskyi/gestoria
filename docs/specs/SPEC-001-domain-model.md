@@ -85,6 +85,8 @@ Invariants
 - Savings: payment date per broker/bank report.
 
 ## 7. Migration from the prototype
+`IrpfTaxCalculator` and `IrpfCalculationResult` were deleted on 2026-09-18. `Transaction` survives only because `BbvaCsvStatementParser` still produces it; it is replaced by `BankTransaction` in Phase 4.
+
 - `Transaction.Type` derived from the sign of `Amount` → replaced by explicit `Classification` (SPEC-004).
 - `Transaction.IsDeductible` → replaced by a link to a confirmed `FacturaRecibida` with `DeductibleShare`.
 - `VatRate` enum with integer values → `Rate` value object from config (`iva.rates`).

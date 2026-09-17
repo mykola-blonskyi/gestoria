@@ -4,11 +4,12 @@
 
 | Content | Location | Notes |
 |---|---|---|
-| Source code, technical docs, ADRs, specs, plans | `~/workspace/gestoria` (this repo) | Never store tax theory, study notes or worked examples here |
+| Source code, technical docs, ADRs, specs, plans | `~/workspace/gestoria` (this repo) | Never store tax theory or study notes here |
+| Golden test inputs and expected values | `tests/golden/YYYY/G0N.json` | Fixture data, not theory. Belongs in the repo, in full |
 | Tax theory, examples, notes (RU/EN) | `~/Documents/obsidian-notes/gestor` | Single source of truth for domain knowledge; cite as *Theory §x.y* |
 | Yearly tax parameters (scales, minimums, thresholds) | `config/tax-years/YYYY.json` | Data, not knowledge — belongs in the repo; every 📅-marked value from the theory doc goes here |
 
-> `Claude outputs/` currently holds copies of the theory documents. Per the rule above they belong in the vault; keep the folder out of git (`.gitignore`) or delete the copies.
+> The "no theory in the repo" rule covers prose, not numbers. A golden test whose inputs live outside version control is not a regression test, so every golden fixture states its own inputs in full. A `// Theory §5.3` pointer carries the derivation.
 
 ## Folder map
 
@@ -30,6 +31,7 @@
 
 - Specs: `SPEC-NNN-kebab-title.md`, numbered once, never renumbered.
 - ADRs: `ADR-NNNN-kebab-title.md`; status `Proposed → Accepted → Superseded by ADR-x`. Accepted ADRs are not edited.
+- An ADR is `Accepted` only once the decision has been felt: code written against it, a service called, a benchmark run. Reasoning that has not met the work yet is `Proposed`. Writing nine Accepted ADRs in one day, before any of them has been exercised, records guesses as decisions and then forbids editing them.
 - .NET projects: `GestorIA.<Layer>` (`Domain`, `Engine`, `Application`, `Infrastructure`, `Api`); tests `GestorIA.<Layer>.Tests` under `tests/`.
 - Python service: package `gestoria_ocr`.
 - Domain vocabulary keeps the **Spanish tax terms** as identifiers (`CuotaIntegra`, `BaseLiquidableGeneral`, `RendimientoNeto`, `Retencion`) — they map 1:1 to AEAT forms and the theory doc. Comments/docs are English.
@@ -50,7 +52,7 @@
 ## Definition of done (any feature)
 
 1. Spec section referenced in the PR.
-2. Unit tests; for engine changes the 10 golden cases (SPEC-011) still pass.
+2. Unit tests; for engine changes the 10 golden cases (SPEC-011) still pass. A new or changed golden records its oracle, its inputs and its run date (ADR-0011).
 3. Explanation output (SPEC-010) updated if a number the user sees changed.
 4. No tax theory copied into code comments beyond a `// Theory §7.3` pointer.
 5. `plans/current.md` checkbox ticked.
