@@ -29,6 +29,9 @@ An ADR is **Accepted** only when the decision has been felt: code written, a ser
 - **PostgreSQL, EF Core and ASP.NET stay in v1.0** — 2026-09-18, closing a challenge raised and withdrawn the same day. ADR-0006 stands unchanged. The deciding argument is not volume, it is `decimal`. SQLite has no decimal type, EF Core maps `decimal` to TEXT there, and ordering and comparison on money break. ADR-0004 makes `double`/`float` for money a build error, so a store that cannot hold an exact decimal is disqualified before convenience is discussed. PostgreSQL `numeric` holds it exactly. The ledger is also genuinely relational (transaction → linked document → invoice) with immutable versioned rows per SPEC-001 §5, and the Phase 3 learning track lists EF Core and ASP.NET as goals.
 - **Retención is a property of the payer, not the issuer** — 2026-09-18. See business rule 3b. This was latent in SPEC-001, where `AutonomoRegistration.RetencionRate` looks like it belongs on the invoice.
 - **v1.0 produces the Modelo 349 itself** — 2026-09-18, not just per-client totals. The data is a by-product of the 303 calculation, and a quarter with no intra-EU operations producing no filing is part of the output.
+- **A gestor prepares Q1 2027 in parallel** — 2026-09-18. The 130, 303 and 349 have no borrador and no simulator, and the author's first quarter combines tarifa plana, EU reverse charge, US export and zero retención, which no worked example covers. Q1 is filed from the gestor's numbers; the diff against the engine becomes `gestor-prepared` goldens; Q2 2027 is the first self-filed quarter.
+- **Commits are authored solely by the repository owner** — 2026-09-18. Enforced by `.githooks/commit-msg`, not only documented. See `docs/CONVENTIONS.md`.
+- **VIES verification is recorded by hand in v1.0** — 2026-09-18. `Client.Vies { Number, VerifiedOn }` plus a warning at invoice time when it is missing or stale. The VIES consultation reference is the evidence worth storing, and an automated call that returns a boolean discards it.
 - **Golden oracles are ranked** — 2026-09-18. `aeat-simulator`, then `published-example` with a citable reference, then `theory`. Tax-advisor articles find rules; they do not fix numbers (SPEC-011 §1).
 - **Credits are the destination, not a mid-plan phase** — 2026-09-18. Renta WEB already produces a borrador with most figures in it. What it does not do is tell you which regional credit you missed. SPEC-006 and SPEC-010 are what v1.0 is for; SPEC-002 exists to make them evaluable.
 - **The first filing is Renta 2026, due April to June 2027** — 2026-09-18. The first production config is therefore `2026.json`, not `2025.json`.
@@ -37,7 +40,5 @@ An ADR is **Accepted** only when the decision has been felt: code written, a ser
 ## Decisions still open
 
 
-- Whether the SPA (SPEC-012) earns its place against a CLI, now that data entry rather than data storage is the real question.
-- Whether v1.0 calls the VIES service to verify a client's VAT number, or records a manual check with a date. Reverse charge on an unverified number is an IVA error (SPEC-003 §2.1).
-- Whether the milestone table in `plans/DEVELOPMENT_PLAN.md` §6 is replaced with the April 2027 re-estimate.
+- Whether the interface is a CLI or a SPA. Deferred by decision to M3, mid-March 2027, when loading a real quarter gives evidence instead of opinion.
 - Whether the 31-week plan survives its own cuts, and what the revised milestone dates are against April 2027.

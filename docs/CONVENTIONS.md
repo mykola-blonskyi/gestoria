@@ -48,6 +48,8 @@
 - `main` is always green (`dotnet test` + `pytest` pass).
 - Branch per spec: `feat/SPEC-004-transaction-classifier`.
 - Commit messages: `feat(engine): ...`, `fix(ocr): ...`, `docs(adr): ...`.
+- **Every commit, branch, tag and release is authored solely by the repository owner.** No `Co-authored-by` trailers, no AI or tool attribution, no `--author` or `GIT_AUTHOR_*` overrides, no second identity. This is enforced, not just written down: `.githooks/commit-msg` rejects attribution trailers and any author that is not the configured `user.email`.
+- Enable the hooks once per clone: `git config core.hooksPath .githooks`. Hook path is local config, so a fresh clone starts unenforced until you run it.
 - A change to any `config/tax-years/*.json` must come with a golden-test update or an explicit "no golden impact" note in the PR.
 
 ## Definition of done (any feature)

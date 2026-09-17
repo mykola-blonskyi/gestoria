@@ -1,0 +1,22 @@
+#!/bin/sh
+# Commits in this repo are authored solely by the repository owner.
+# See docs/CONVENTIONS.md, "Git".
+msg="$1"
+
+if grep -qiE '^[[:space:]]*co-authored-by:' "$msg"; then
+    echo "commit-msg: rejected. Co-authored-by trailers are not used in this repo." >&2
+    exit 1
+fi
+
+if grep -qE '🤖|noreply@anthropic\.com|[Gg]enerated with \[|[Aa]ssistant-authored' "$msg"; then
+    echo "commit-msg: rejected. AI or tool attribution is not used in this repo." >&2
+    exit 1
+fi
+
+expected=$(git config user.email)
+actual=$(git var GIT_AUTHOR_IDENT | sed -n 's/.*<\(.*\)>.*/\1/p')
+if [ -n "$expected" ] && [ "$expected" != "$actual" ]; then
+    echo "commit-msg: rejected. Author <$actual> is not the configured <$expected>." >&2
+    echo "  --author and GIT_AUTHOR_* overrides are not used in this repo." >&2
+    exit 1
+fi

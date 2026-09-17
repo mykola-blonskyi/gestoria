@@ -178,7 +178,8 @@ Roughly 30 weeks from 2026-09-18 to 20 April 2027, against an estimated 16 to 22
 | M1 | Set-aside estimator; `seguridadSocial.tramos` in config; master key escrowed and a MinIO restore rehearsed | mid Dec 2026 | You can answer "how much do I hold back" before registering, and you can restore a document with only the escrowed key |
 | M2 | Modelo 130, 303 and 349 engine | end Jan 2027 | G3, G5 and G9 pass against published examples (SPEC-011 §1) |
 | M3 | Persistence and the entry path | mid Mar 2027 | Real Q1 2027 data loads end to end |
-| M4 | **Q1 2027 filings produced** | 15 Apr 2027 | 130, 303 and 349 output, five days before the deadline |
+| M4 | **Q1 2027 filings produced and reconciled against a gestor** | 15 Apr 2027 | Engine output diffed line by line against the gestor's 130, 303 and 349. Q1 is filed from the gestor's numbers |
+| M4b | First self-filed quarter | 20 Jul 2027 | Q2 2027 filed from engine output, with the M4 diff closed |
 | M5 | Renta 2026 employee path and the credits engine | 15 Jun 2027 | Casilla sheet plus credit outcomes, two weeks before 30 June |
 | M6 | Autónomo annual path | H2 2027 | For Renta 2027, filed April 2028 |
 

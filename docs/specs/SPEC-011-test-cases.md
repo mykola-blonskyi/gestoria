@@ -8,8 +8,9 @@ Expected values come from the AEAT Renta WEB Open Simulador, entered by hand bef
 
 | Tier | `oracle` | Use when |
 |---|---|---|
+| 1 | `gestor-prepared` | A professional prepared the same period from the same facts. Strongest available for 130, 303 and 349, because it covers this taxpayer's own combination rather than a textbook's |
 | 1 | `aeat-simulator` | The simulator can express the case. Modelo 100 scenarios |
-| 2 | `published-example` | A worked example from AEAT, a gestoría or a published manual. Cite it. Modelo 130 and 303 have no simulator |
+| 2 | `published-example` | A worked example from AEAT or a published manual. Cite it |
 | 3 | `theory` | Nothing better exists. The weakest gate, and marked as such |
 
 The table below is an index. It is not the input. Each fixture states its inputs in full, because a golden whose inputs live in the vault is not a regression test: G1's expected 4,851.00 depends on an employee SS contribution of 1,950.00 that this table never mentions.
@@ -45,6 +46,7 @@ Every fixture carries its provenance:
 ## 2. Additional test layers
 - **Property-based** (FsCheck): scale monotonicity/continuity; `Money` arithmetic; classifier never assigns `DEDUCTIBLE_EXPENSE` without invoice link.
 - **Reconciliation**: `reports/investigations/2025-renta-reconciliation.md` — ≥ 3 profiles entered into AEAT Renta WEB Open Simulador; document inputs, official output, engine output, delta, cause.
+- **Q1 2027 gestor reconciliation**: a gestor prepares Modelo 130, 303 and 349 for Q1 2027 from the same facts. The engine runs the same period in parallel and every line is diffed. Q1 is **filed from the gestor's numbers**; the engine's first self-filed quarter is Q2 2027, due 20 July. The diff becomes `gestor-prepared` goldens and the report goes to `reports/investigations/2027-q1-gestor-reconciliation.md`.
 - **Contract**: OCR schema fixtures (`tests/ocr-contract/`) deserialize in C#; Pydantic models validate the same fixtures.
 - **Integration**: API end-to-end (Testcontainers Postgres, stubbed OCR).
 - **OCR benchmark**: field accuracy per document type (SPEC-005 §5).
