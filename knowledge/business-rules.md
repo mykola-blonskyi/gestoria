@@ -2,6 +2,8 @@
 
 Invariants the code must enforce. Each points to its spec and to the theory section that justifies it (vault). Not a tax tutorial.
 
+Rules 1, 3, 4, 7 and 14 govern activity income and the quarterly forms. ADR-0012 puts those outside v1.0, so they are correct and dormant. They return with the autónomo scope; do not delete them.
+
 ---
 
 ## Rule 1 — No expense without a supporting document
@@ -26,7 +28,7 @@ If `CertificadoRetenciones` disagrees with Σ nóminas, use the certificate and 
 
 ## Rule 6 — Employment relief is lost entirely when other income > 6,500 €
 
-`ReduccionTrabajo` is zero if non-employment income exceeds the cap, however small the salary. — SPEC-002 step 1, golden #8, Theory §5.2.
+`ReduccionTrabajo` is zero if non-employment income exceeds the cap, however small the salary. For an employee the cap is reached through savings gross, rental net or imputed income, not only through activity income. — SPEC-002 step 1, golden #8, Theory §5.2.
 
 ## Rule 7 — Difícil justificación is 5 % capped at 2,000 € and never negative
 

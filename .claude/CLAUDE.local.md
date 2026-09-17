@@ -2,7 +2,11 @@
 
 ## Project Context
 
-GestorIA — a tax engine for Spanish residents (employees and autónomos under *estimación directa simplificada*). From bank statements, nóminas and invoices it calculates Modelo 130/303 per quarter and Modelo 100 per year, explains every figure step by step, and flags tax credits the user may have missed.
+GestorIA — a tax engine for Spanish residents.
+
+**v1.0 scope (ADR-0012): Modelo 100 for one employee resident in Valencia.** Employment income, savings income, the personal and family minimum, the casilla sheet, the trace, the explanations and the credits engine. Data entry is manual. First filing: Renta 2026, due April to June 2027.
+
+Deferred to v1.x: Modelo 130, Modelo 303, all autónomo concepts, the OCR service, Madrid, the classifier's expense side. The long-term target is still the full engine for employees and autónomos; v1.0 is the half this user actually files.
 
 Start here, in this order:
 
@@ -25,7 +29,8 @@ Tax theory (the *why* behind the rules) lives **outside** the repo in the Obsidi
 - No deductible expense without a linked, confirmed invoice; nothing unconfirmed enters a calculation (business rules 1–2).
 - The 10 golden cases (SPEC-011) must pass to the cent before any engine change is merged.
 - No real personal data in fixtures, logs or the repo (SPEC-013).
-- Region set for v1: Valencia (`VC`) + Madrid (`MD`). Forms: 100, 130, 303 only.
+- v1.0 region: Valencia (`VC`) only. Form: Modelo 100 only (ADR-0012).
+- Six goldens gate v1.0: G1, G2, G6, G7, G8, G10. G8 needs restating, because it reaches the 6,500 € other-income cap through autónomo income and an employee reaches it through savings or rental income instead.
 
 ---
 

@@ -7,7 +7,7 @@
 {
   "taxYear": 2025,
   "schemaVersion": 1,
-  "sources": [ { "ref": "AEAT Manual práctico Renta 2025", "url": "..." } ],
+  "sources": [ { "ref": "AEAT Manual práctico Renta 2025", "url": "..." } ],   // file-level fallback only
   "irpf": {
     "escalaEstatal":   [ { "upTo": 12450, "rate": 0.095 }, ... , { "upTo": null, "rate": 0.245 } ],
     "escalaAhorro":    { "combined": [ {"upTo": 6000, "rate": 0.19}, ... ], "estatalShare": 0.5 },
@@ -43,6 +43,16 @@
 }
 ```
 Scales use `upTo` (upper bound of tranche, `null` = open) so a tranche's width is derived, avoiding off-by-one edits.
+
+## 1.1 Provenance per value
+Every 📅 value carries the source it was verified against, so that next January it can be re-checked without re-deriving it:
+
+```json
+"escalaEstatal": { "value": [ { "upTo": 12450, "rate": 0.095 }, ... ],
+                   "source": "Ley 35/2006 art. 63.1, redacción Ley 31/2022", "verified": "2026-09-25" }
+```
+
+A value verified only against the theory document in the vault is marked `"source": "theory"`, which flags it for checking. The theory document is a study aid written for this project, not a legal source (ADR-0011 makes the same distinction for golden values).
 
 ## 2. Validation
 JSON Schema at `config/tax-years/schema.json`; validated in CI and at startup. Rules: tranches strictly increasing; rates in [0,1]; regions ⊇ {`VC`,`MD`} for v1; every `deducciones[].casilla` exists in `casillas`; `sources` non-empty.

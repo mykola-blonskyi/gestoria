@@ -2,6 +2,8 @@
 
 **Version:** 1.0 · **Date:** 2026-09-17 · **Owner:** solo developer (learning C# and Python; primary language TypeScript)
 
+> **Re-scoped 2026-09-18 (ADR-0012).** v1.0 computes Modelo 100 for one employee in Valencia, figures typed in by hand, against Renta 2026 due April to June 2027. Modelo 130, Modelo 303, all autónomo concepts, the OCR service and Madrid move to v1.x. Sections 1 and 5 below still describe the full target; read the phase cuts in section 5.1 first. The milestone table in section 6 predates the cut and has not been re-estimated.
+
 ## 1. Goal and scope
 
 Build a full tax engine for Spanish residents (employees and *autónomos* under *estimación directa simplificada*) that:
@@ -23,7 +25,7 @@ Out of scope for v1: *estimación objetiva* (módulos), corporate tax (IS), non-
 | Solo dev, two new languages | Thin vertical slices; each phase ends with something runnable; Python surface kept small |
 | Zero-cost infrastructure for now | Self-hostable stack, free-tier cloud LLM as optional fallback only |
 | Personal financial data | Privacy-by-design from Phase 1 (SPEC-013). v1.0 runs on the author's own machine for one user (ADR-0010), so blob encryption at rest and PII-free logs stay; the rest of the control set is scoped when hosting is on the table |
-| Regions | v1 = Valencia (`VC`) + Madrid (`MD`); Madrid proves the region model is data-driven |
+| Regions | v1.0 = Valencia (`VC`) only. A fake region in a test fixture proves the region model is data-driven (ADR-0012) |
 | Background work | In-process `Channel<T>` queue with Postgres as job-state source of truth (ADR-0009); no broker in v1 |
 
 ## 3. Architecture summary
@@ -57,6 +59,18 @@ Exit criteria
 - `dotnet test` and `pytest` run green in CI.
 - `2025.json` validates against the SPEC-007 JSON Schema.
 - Learning checkpoint (C#): records, `decimal`, LINQ, DI, xUnit — enough to read SPEC-002 fluently.
+
+### 5.1 What v1.0 actually builds (ADR-0012)
+
+| Phase | v1.0 status |
+|---|---|
+| 0 Foundation | In, and smaller. All four `_todo` blocks in the config are gone with the scope that needed them |
+| 1 Core engine | In, minus `ActivityIncomeCalculator`, `Modelo130Calculator`, `Modelo303Calculator`. Gate on G1, G2, G6, G7, G8, G10 |
+| 2 Credits and explanations | In, and it is the point (SPEC-006, SPEC-010) |
+| 3 Application, persistence, API | Open. See `docs/decisions.md` |
+| 4 OCR and ingestion | Out. v1.x |
+| 5 Web application | Open. See `docs/decisions.md` |
+| 6 Hardening and release | In, and smaller, because ADR-0010 removed the server |
 
 ### Phase 1 — Core tax engine (≈ 4–6 weeks) · SPEC-001, SPEC-002, SPEC-007, SPEC-011
 

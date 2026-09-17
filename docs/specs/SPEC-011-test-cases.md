@@ -8,18 +8,20 @@ Expected values come from the AEAT Renta WEB Open Simulador, entered by hand bef
 
 The table below is an index. It is not the input. Each fixture states its inputs in full, because a golden whose inputs live in the vault is not a regression test: G1's expected 4,851.00 depends on an employee SS contribution of 1,950.00 that this table never mentions.
 
-| # | Scenario | Expected |
-|---|---|---|
-| G1 | Employee, 30,000 € gross, SS 1,950.00, VC, no children | cuota íntegra **4,851.00** |
-| G2 | Employee, 18,000 € gross, SS 1,170.00, VC | full reducción 7,302 applied; cuota íntegra **365.93** |
-| G3 | Autónomo, income 50,000, expenses 4,000, SS 3,600, VC | cuota íntegra **9,548.00**; Σ 130 = **8,480.00**; result **1,068.00 a ingresar** |
-| G4 | Difícil justificación | previo 42,400 → **2,000**; 10,000 → **500**; −500 → **0** |
-| G5 | 130 with loss-making Q3 | Q3 payable **0**, carry-over applied in Q4 |
-| G6 | Ahorro 4,500 → **855**; 7,000 → **1,350** | tranche boundary at 6,000 |
-| G7 | Minimum, two children (5, 2) | both parents individual → **9,500** each; single filer → **13,450** |
-| G8 | Salary 20,000 + autónomo 8,000 | reducción por trabajo = **0** (other income > 6,500) |
-| G9 | Bank credit 1,060 from one invoice | base **1,000**, IVA **210**, retención **150** |
-| G10 | Obligation | 21,000 single payer → not required; 16,000 + 2,000 → required |
+`Gate` marks the six cases that gate v1.0 (ADR-0012). The rest stay as the v1.x corpus and are not merge gates while their scope is deferred.
+
+| # | Gate | Scenario | Expected |
+|---|---|---|---|
+| G1 | ✅ | Employee, 30,000 € gross, SS 1,950.00, VC, no children | cuota íntegra **4,851.00** |
+| G2 | ✅ | Employee, 18,000 € gross, SS 1,170.00, VC | full reducción 7,302 applied; cuota íntegra **365.93** |
+| G3 | — | Autónomo, income 50,000, expenses 4,000, SS 3,600, VC | cuota íntegra **9,548.00**; Σ 130 = **8,480.00**; result **1,068.00 a ingresar** |
+| G4 | — | Difícil justificación | previo 42,400 → **2,000**; 10,000 → **500**; −500 → **0** |
+| G5 | — | 130 with loss-making Q3 | Q3 payable **0**, carry-over applied in Q4 |
+| G6 | ✅ | Ahorro 4,500 → **855**; 7,000 → **1,350** | tranche boundary at 6,000 |
+| G7 | ✅ | Minimum, two children (5, 2) | both parents individual → **9,500** each; single filer → **13,450** |
+| G8 | ✅ | Salary 20,000 + **savings income 8,000** (restated; was autónomo income) | reducción por trabajo = **0** (other income > 6,500) |
+| G9 | — | Bank credit 1,060 from one invoice | base **1,000**, IVA **210**, retención **150** |
+| G10 | ✅ | Obligation | 21,000 single payer → not required; 16,000 + 2,000 → required |
 
 Each golden lives in `tests/GestorIA.Engine.Tests/Golden/G0N_*.cs` with the input built by a fluent test builder and the expected trace stored as a JSON snapshot in `tests/golden/2025/G0N.json` (asserted with a semantic diff, not string equality).
 
