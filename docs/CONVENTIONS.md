@@ -17,6 +17,7 @@
 |---|---|
 | `plans/` | `DEVELOPMENT_PLAN.md` (roadmap), `current.md` (active phase checklist), `backlog.md` |
 | `docs/` | `architecture.md`, `decisions.md` (ADR index), `CONVENTIONS.md`, `TODO.md`, `onboarding.md`, `adr/`, `specs/` |
+| `docs/agents/` | Configuration the engineering skills read: `issue-tracker.md`, `triage-labels.md`, `domain.md` |
 | `knowledge/` | Repo-level domain summary: `domain-model.md`, `business-rules.md`, `glossary.md` — pointers and invariants only, no theory text |
 | `src/` | .NET projects; `GestorIA.slnx` sits in the repo root |
 | `tests/` | .NET test projects (`GestorIA.*.Tests`) **and** cross-cutting fixtures: `golden/`, `fixtures/`, `ocr-contract/` |
