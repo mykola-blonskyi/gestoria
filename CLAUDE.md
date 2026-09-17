@@ -66,3 +66,17 @@ Reuse existing templates whenever possible.
 Additional project-specific instructions may exist in:
 
 - .claude/CLAUDE.local.md
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on `mykola-blonskyi/gestoria`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical roles, each label string equal to its name. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context. The glossary is `knowledge/glossary.md`, not `CONTEXT.md`. See `docs/agents/domain.md`.
