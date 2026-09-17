@@ -1,6 +1,8 @@
 # ADR-0013: v1.0 covers employee and autónomo scope; OCR and Madrid stay out
 
-**Status:** Accepted · **Date:** 2026-09-18 · **Supersedes:** ADR-0012
+**Status:** Accepted · **Date:** 2026-09-18 · **Supersedes:** ADR-0012 · **Sequencing amended by:** [ADR-0014](ADR-0014-build-order-april-2027-cluster.md)
+
+> The scope decision below stands. The sequencing clause does not: the author registers as an autónomo in January 2027, so three filings now fall due in April 2027 and the quarterly path is built first. See ADR-0014.
 
 ## Context
 ADR-0012 cut the autónomo domain from v1.0. It rested on one stated fact and one unstated inference.
@@ -18,7 +20,7 @@ This is worth recording as a failure mode rather than a typo. A fact about the p
 | The author will source test data for the autónomo cases | Stated | Author, 2026-09-18 |
 | The OCR service and Madrid stay out | Stated | Author, 2026-09-18 (Q9) |
 | Renta 2026 is the only filing with a date the author must meet | Concluded, from the two facts above | This ADR |
-| Whether the author will register as an autónomo | Neither. Open question | — |
+| Whether the author will register as an autónomo | Resolved 2026-09-18: yes, January 2027. See ADR-0014 | Author |
 
 ## Decision
 v1.0 covers the full employee and autónomo scope: **Modelo 100, Modelo 130 and Modelo 303**, Valencia only, data entered by hand.
@@ -44,4 +46,4 @@ Two cuts from ADR-0012 survive, because they were decided separately and have no
 - The plan returns to roughly its original size minus Phase 4. Re-estimation is still open.
 
 ## Open
-Whether the author intends to register as an autónomo, and when. That answer is what would give the autónomo path a deadline of its own, and it is also what decides whether ADR-0010's single-user premise still holds.
+Resolved. The author registers in January 2027, which gives the autónomo path the earlier deadline and reorders the build (ADR-0014). ADR-0010's single-user premise holds, because he is registering himself.

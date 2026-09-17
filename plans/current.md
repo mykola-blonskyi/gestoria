@@ -4,7 +4,9 @@
 
 Phase 0 — Foundation. Turn the scaffold into a config-driven, testable base for the tax engine.
 
-**v1.0 is Modelo 100, 130 and 303 for employees and autónomos, Valencia only** (ADR-0013). Build order follows deadlines: the employee Modelo 100 path first, for Renta 2026 between April and June 2027, then the autónomo path. Full roadmap: `plans/DEVELOPMENT_PLAN.md` §5.1.
+**v1.0 is Modelo 100, 130 and 303 for employees and autónomos, Valencia only** (ADR-0013).
+
+Build order follows deadlines (ADR-0014). The author registers as an autónomo in January 2027, so Modelo 130 and 303 for Q1 2027 fall due 20 April 2027, alongside Renta 2026. Quarterly path first, employee annual second, autónomo annual last because it waits for April 2028. Full roadmap: `plans/DEVELOPMENT_PLAN.md` §5.1.
 
 ---
 
@@ -16,7 +18,9 @@ Phase 0 — Foundation. Turn the scaffold into a config-driven, testable base fo
 - [ ] Verify the values the first goldens touch against the AEAT Manual, not the vault: `escalaEstatal`, `regions.VC.escalaAutonomica`, `minimos.contribuyente`, `minimos.descendientes`, `minimos.menor3`, `trabajo.otrosGastos`, and the seven values in `trabajo.reduccion`
 - [ ] Move `sources` from file level down to per value, so each scale cites the BOE article it came from
 - [ ] Drop the Madrid `_todo` block (ADR-0013) and rename `2025.example.json` to `2025.json`
-- [ ] Fill the remaining `_todo` blocks when the autónomo path starts, not before: `modelo130.lines` and `minoracion`, `modelo303.lines`, `seguridadSocial.tramos`
+- [ ] Fill `seguridadSocial.tramos` before January: the registration decision on contribution base and tarifa plana depends on it (ADR-0014)
+- [ ] Fill `modelo130.lines`, `modelo130.minoracion` and `modelo303.lines` before the Q1 2027 forms
+- [ ] Start `config/tax-years/2026.json` and `2027.json`. Both are release blockers; BOE publishes 2027 around December 2026
 - [ ] Write `config/tax-years/schema.json` (SPEC-007) and a startup validator
 - [ ] Add projects: `src/GestorIA.Engine`, `src/GestorIA.Application`, `tests/GestorIA.Engine.Tests`; register in `GestorIA.slnx`
 - [ ] `Directory.Build.props`: nullable, warnings-as-errors, banned `double`/`float` for money (ADR-0004)
@@ -51,4 +55,5 @@ Phase 0 — Foundation. Turn the scaffold into a config-driven, testable base fo
 - `2025.json` values must be re-verified against the AEAT Manual before goldens are trusted.
 - The existing `Transaction` model (signed amount ⇒ income/expense) conflicts with SPEC-001 ledger design; migrate rather than extend. It survives only as the parser's output type.
 - The first production config is `2026.json`, which does not exist yet and cannot until BOE publishes the 2026 values. `2025.json` is the test corpus.
-- 28 weeks to the Renta 2026 window against a 31-week plan that only Phase 4 has been cut from. Re-estimate before trusting any milestone date.
+- ~28 weeks to 20 April 2027, when Modelo 130, Modelo 303 and Renta 2026 all come due, against a 31-week plan that only Phase 4 has been cut from. Re-estimate before trusting any milestone date.
+- Whether Modelo 130 is required at all is unknown until the client mix is settled (SPEC-003 §1). If ≥ 70 % of activity income carries retención, it is not required, and one of the three April filings disappears.

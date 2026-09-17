@@ -4,7 +4,7 @@
 
 > **Re-scoped 2026-09-18 (ADR-0013, superseding ADR-0012).** v1.0 keeps the full employee and autónomo scope: Modelo 100, 130 and 303, Valencia only, figures typed in by hand. Only the OCR service (Phase 4) and Madrid move to v1.x.
 >
-> Build order follows deadlines. The author is an employee and his first filing is Renta 2026, due April to June 2027, so the employee Modelo 100 path comes first and the autónomo path follows it. The milestone table in section 6 predates all of this and has not been re-estimated.
+> Build order follows deadlines (ADR-0014). The author registers as an autónomo in January 2027, so Modelo 130 and 303 for Q1 2027 fall due 20 April 2027 alongside Renta 2026. Order: set-aside estimator, then the quarterly forms, then the employee annual path, then the autónomo annual path, which waits for April 2028. The milestone table in section 6 predates all of this and has not been re-estimated.
 
 ## 1. Goal and scope
 
@@ -156,7 +156,7 @@ Exit criteria
 
 Deliverables
 - Security review checklist (SPEC-013), dependency scanning, backups, data export/delete (GDPR).
-- `config/tax-years/2026.json` to prove the year-switch path.
+- `config/tax-years/2026.json` and `2027.json`. These are not proofs of the year-switch path; they are the production configs (ADR-0014).
 - Deployment guide: local Docker Compose (`api`, `postgres`, `ocr`), encrypted backups, restore drill (ADR-0010).
 - Observability: OpenTelemetry metrics, error tracking.
 

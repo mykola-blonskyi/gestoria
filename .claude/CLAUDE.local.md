@@ -8,7 +8,16 @@ GestorIA — a tax engine for Spanish residents.
 
 Deferred to v1.x: the OCR service (SPEC-005) and Madrid.
 
-**Build order follows deadlines, not scope.** The author is an employee, and his own first filing is Renta 2026, due April to June 2027. That is the only date Hacienda has set for this project, so the employee Modelo 100 path is built first. The autónomo path follows and has no deadline yet.
+**Build order follows deadlines (ADR-0014).** The author registers as an autónomo in **January 2027**, so three filings cluster in April 2027:
+
+| Filing | Due | Pre-filled by AEAT? |
+|---|---|---|
+| Modelo 130 + 303, Q1 2027 | 1–20 April 2027 | No |
+| Renta 2026, employee | 2 April – 30 June 2027 | Yes |
+
+Order: set-aside estimator, then 130 and 303, then the employee annual path, then the autónomo annual path (not needed until April 2028).
+
+**Two configs are release blockers and neither exists**: `2026.json` for Renta 2026 and `2027.json` for the Q1 2027 forms. BOE publishes 2027 values around December 2026.
 
 Start here, in this order:
 
@@ -32,6 +41,8 @@ Tax theory (the *why* behind the rules) lives **outside** the repo in the Obsidi
 - The 10 golden cases (SPEC-011) must pass to the cent before any engine change is merged.
 - No real personal data in fixtures, logs or the repo (SPEC-013).
 - v1.0 region: Valencia (`VC`) only (ADR-0013). Forms: 100, 130, 303.
+- `seguridadSocial.tramos` is January work, not a deferred `_todo`. An autónomo picks a contribution base at registration and tarifa plana is an 80 €/month decision taken then.
+- `retencionNuevo` must be right from invoice number one: 7 % for the first three years if Profesional, 15 % otherwise.
 - All ten goldens gate v1.0, plus G8b. G8 hits the 6,500 € other-income cap through autónomo income; G8b hits the same cap through savings income, which is how an employee reaches it (SPEC-002 step 1).
 - Goldens have three oracle tiers (SPEC-011 §1): `aeat-simulator`, then `published-example`, then `theory`. Modelo 130 and 303 have no simulator, so G5 and G9 need published worked examples.
 
