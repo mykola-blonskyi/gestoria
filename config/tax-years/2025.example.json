@@ -1,0 +1,89 @@
+{
+  "taxYear": 2025,
+  "schemaVersion": 1,
+  "sources": [
+    { "ref": "AEAT Manual práctico Renta 2025", "url": "https://sede.agenciatributaria.gob.es" },
+    { "ref": "Theory doc (vault) §4, §5.2, §7, §8.2, §15.3 — edition 2, Sept 2026" }
+  ],
+  "irpf": {
+    "escalaEstatal": [
+      { "upTo": 12450, "rate": 0.095 },
+      { "upTo": 20200, "rate": 0.12 },
+      { "upTo": 35200, "rate": 0.15 },
+      { "upTo": 60000, "rate": 0.185 },
+      { "upTo": 300000, "rate": 0.225 },
+      { "upTo": null, "rate": 0.245 }
+    ],
+    "escalaAhorro": {
+      "combined": [
+        { "upTo": 6000, "rate": 0.19 },
+        { "upTo": 50000, "rate": 0.21 },
+        { "upTo": 200000, "rate": 0.23 },
+        { "upTo": 300000, "rate": 0.27 },
+        { "upTo": null, "rate": 0.30 }
+      ],
+      "estatalShare": 0.5
+    },
+    "minimos": {
+      "contribuyente": 5550, "mayor65": 1150, "mayor75": 1400,
+      "descendientes": [2400, 2700, 4000, 4500], "menor3": 2800,
+      "ascendiente": 1150, "ascendiente75": 1400,
+      "discapacidad33": 3000, "discapacidad65": 9000, "asistencia": 3000,
+      "descendienteIncomeCap": 8000, "descendienteAgeCap": 25
+    },
+    "trabajo": {
+      "otrosGastos": 2000, "movilidadExtra": 2000, "discapacidadExtra": 3500, "discapacidadExtra65": 7750,
+      "unionFeeCap": 500,
+      "reduccion": { "fixed": 7302, "t1": 14852, "t2": 17673.52, "t3": 19747.50, "k1": 1.75, "k2": 1.14, "otherIncomeCap": 6500 }
+    },
+    "actividad": {
+      "dificilJustificacion": { "pct": 0.05, "max": 2000 },
+      "homeUtilitiesFactor": 0.30,
+      "retencionProfesional": 0.15, "retencionNuevo": 0.07, "retencionNuevoYears": 3,
+      "depreciation": { "equipos": 4, "software": 3, "mobiliario": 10 }
+    },
+    "ahorro": { "lossOffsetPct": 0.25, "carryForwardYears": 4 },
+    "inmuebles": { "imputacionPct": 0.011, "imputacionPctRevisado": 0.02, "rentalReductionPct": 0.50, "depreciationPct": 0.03 },
+    "reducciones": { "planPensionesCap": 1500, "conjuntaBiparental": 3400, "conjuntaMonoparental": 2150 },
+    "obligacion": { "unPagador": 22000, "variosPagadores": 15876, "segundoPagadorMin": 1500, "ahorroCap": 1600, "imputadasCap": 1000 }
+  },
+  "regions": {
+    "VC": {
+      "name": "Comunitat Valenciana",
+      "escalaAutonomica": [
+        { "upTo": 12000, "rate": 0.09 },
+        { "upTo": 22000, "rate": 0.12 },
+        { "upTo": 32000, "rate": 0.15 },
+        { "upTo": 42000, "rate": 0.175 },
+        { "upTo": 52000, "rate": 0.199 },
+        { "upTo": 62000, "rate": 0.224 },
+        { "upTo": 72000, "rate": 0.249 },
+        { "upTo": 100000, "rate": 0.266 },
+        { "upTo": 150000, "rate": 0.279 },
+        { "upTo": 200000, "rate": 0.289 },
+        { "upTo": null, "rate": 0.295 }
+      ],
+      "minimosOverride": null
+    },
+    "MD": { "name": "Comunidad de Madrid", "escalaAutonomica": [], "minimosOverride": null, "_todo": "fill in Phase 2" }
+  },
+  "modelo130": { "rate": 0.20, "retencionExemptionShare": 0.70, "mortgageCap": 660.14, "applyDj": false, "minoracion": [], "lines": {}, "_todo": "minoracion bands and line numbers" },
+  "modelo303": { "lines": {}, "_todo": "line numbers" },
+  "iva": { "rates": { "general": 0.21, "reducido": 0.10, "superreducido": 0.04 } },
+  "seguridadSocial": { "tramos": [], "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12 }, "_todo": "copy tramos table (Theory §6.2) for the contribution year" },
+  "calendar": {
+    "modelo130": [["04-01", "04-20"], ["07-01", "07-20"], ["10-01", "10-20"], ["+1-01-01", "+1-01-30"]],
+    "renta": ["+1-04-02", "+1-06-30"],
+    "holidays": ["01-01", "01-06", "05-01", "08-15", "10-12", "11-01", "12-06", "12-08", "12-25"]
+  },
+  "casillas": {
+    "0003": "trabajo.ingresos", "0013": "trabajo.ss", "0019": "trabajo.otrosGastos", "0023": "trabajo.reduccion",
+    "0027": "ahorro.intereses", "0029": "ahorro.dividendos", "0090": "inmuebles.imputacion",
+    "0171": "actividad.ingresos", "0186": "actividad.ss", "0223": "actividad.dj", "0224": "actividad.rn",
+    "0435": "bases.big", "0460": "bases.bia", "0500": "bases.blg", "0510": "bases.bla", "0511": "minimo.total",
+    "0545": "cuota.cie", "0546": "cuota.cia",
+    "0596": "pagosACuenta.retTrabajo", "0599": "pagosACuenta.retActividad", "0604": "pagosACuenta.pagos130",
+    "0670": "resultado"
+  },
+  "deducciones": []
+}
