@@ -21,6 +21,7 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - [ ] Fill `seguridadSocial.tramos` before January: the registration decision on contribution base and tarifa plana depends on it (ADR-0014)
 - [ ] Fill `modelo130.lines`, `modelo130.minoracion`, `modelo303.lines` and `modelo349` before the Q1 2027 forms
 - [ ] Confirm ROI/VIES is on the Modelo 036 filed in January; without it, EU invoices carry Spanish IVA they should not
+- [ ] Master key escrow and a rehearsed MinIO restore, before the first real document is uploaded (ADR-0015)
 - [ ] Start `config/tax-years/2026.json` and `2027.json`. Both are release blockers; BOE publishes 2027 around December 2026
 - [ ] Write `config/tax-years/schema.json` (SPEC-007) and a startup validator
 - [ ] Add projects: `src/GestorIA.Engine`, `src/GestorIA.Application`, `tests/GestorIA.Engine.Tests`; register in `GestorIA.slnx`
@@ -42,7 +43,7 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - [ ] `EmploymentIncomeCalculator` → golden #1, #2, #8
 - [ ] `MinimoCalculator` → golden #7
 - [ ] `ActivityIncomeCalculator` → golden #3, #4
-- [ ] `Modelo130Calculator` → golden #3, #5; `Modelo303Calculator`
+- [ ] `Modelo130Calculator` → golden #3, #5; `Modelo303Calculator`; `Modelo349Calculator`
 - [ ] `SavingsIncomeCalculator` → golden #6
 - [ ] `IrpfAnnualCalculator` + `CalculationTrace`
 - [ ] `Modelo100Mapper` (SPEC-008); `FilingObligationChecker` → golden #10

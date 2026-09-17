@@ -115,7 +115,7 @@ Quarterly flow is identical up to step 4, then `Modelo130Calculator` / `Modelo30
 
 | Mode | Where | Status |
 |---|---|---|
-| Local-only | the author's machine, Docker Compose, no public port | **v1.0** (ADR-0010) |
+| Local-only | the author's machine, Docker Compose, no public port. Documents in MinIO on his VPS, encrypted client-side (ADR-0015) | **v1.0** (ADR-0010) |
 | Single VPS | one host, Docker Compose, Caddy TLS | backlog — needs a second user first (ADR-0010 supersedes ADR-0008) |
 | Split | API on VPS, OCR on a GPU box | later — requires the RabbitMQ `IExtractJobQueue` (ADR-0009) |
 

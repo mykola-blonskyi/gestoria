@@ -57,7 +57,9 @@ Content: per EU client, the VIES VAT number and the total base for the period. U
 
 Filing period is quarterly by default and monthly above a volume threshold. Verify the current threshold against AEAT before Q1 2027, and put it in `config.modelo349`.
 
-Decide before Q1 2027 whether v1.0 produces the 349 itself or only the per-client totals the author transcribes. The data is a by-product of the 303 calculation either way.
+v1.0 produces the form, not just the totals (2026-09-18). Output mirrors 130 and 303: `Modelo349Result { Quarter, Lines, Trace, DueWindow }`, line numbers from `config.modelo349.lines`. A quarter with no intra-EU operations produces no filing, and saying so is part of the output.
+
+**Reverse charge depends on the client's VAT number being valid in VIES**, not on the author believing it is. If it is not valid at the time of invoicing, Spanish IVA is chargeable and both the 303 and the 349 are wrong. So `Client.InVies` cannot be a user-entered boolean; it is a verified fact with a date. Whether v1.0 calls the VIES service or records a manual check is open.
 
 ## 3. Invoice amount reconstruction (used by SPEC-004 matcher)
 Given a bank credit `X` from a client and a candidate invoice: `Total = Base × (1 + IvaRate) − Base × RetencionRate`. Match if `|X − Total| ≤ 0.01`. Golden #9: 1,060 → 1,000 / 210 / 150.

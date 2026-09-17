@@ -20,6 +20,7 @@ An ADR is **Accepted** only when the decision has been felt: code written, a ser
 | [ADR-0012](adr/ADR-0012-v1-scope-one-employee-modelo-100.md) | v1.0 computes Modelo 100 for one employee in Valencia | Superseded by ADR-0013 | 2026-09-18 |
 | [ADR-0013](adr/ADR-0013-v1-scope-employee-and-autonomo.md) | v1.0 covers employee and autónomo scope; OCR and Madrid stay out | Accepted (sequencing amended by ADR-0014) | 2026-09-18 |
 | [ADR-0014](adr/ADR-0014-build-order-april-2027-cluster.md) | Build order follows the April 2027 deadline cluster | Accepted | 2026-09-18 |
+| [ADR-0015](adr/ADR-0015-documents-in-minio-encrypted-client-side.md) | Documents live in MinIO on the author's VPS, encrypted client-side | Accepted | 2026-09-18 |
 
 ## Small decisions (no ADR)
 
@@ -27,6 +28,7 @@ An ADR is **Accepted** only when the decision has been felt: code written, a ser
 - **Build order follows deadlines, not scope** — 2026-09-18. Quarterly forms first, because the author registers as an autónomo in January 2027 and Modelo 130 and 303 for Q1 2027 fall due 20 April 2027, alongside Renta 2026 (ADR-0014). The autónomo annual path is not needed until April 2028.
 - **PostgreSQL, EF Core and ASP.NET stay in v1.0** — 2026-09-18, closing a challenge raised and withdrawn the same day. ADR-0006 stands unchanged. The deciding argument is not volume, it is `decimal`. SQLite has no decimal type, EF Core maps `decimal` to TEXT there, and ordering and comparison on money break. ADR-0004 makes `double`/`float` for money a build error, so a store that cannot hold an exact decimal is disqualified before convenience is discussed. PostgreSQL `numeric` holds it exactly. The ledger is also genuinely relational (transaction → linked document → invoice) with immutable versioned rows per SPEC-001 §5, and the Phase 3 learning track lists EF Core and ASP.NET as goals.
 - **Retención is a property of the payer, not the issuer** — 2026-09-18. See business rule 3b. This was latent in SPEC-001, where `AutonomoRegistration.RetencionRate` looks like it belongs on the invoice.
+- **v1.0 produces the Modelo 349 itself** — 2026-09-18, not just per-client totals. The data is a by-product of the 303 calculation, and a quarter with no intra-EU operations producing no filing is part of the output.
 - **Golden oracles are ranked** — 2026-09-18. `aeat-simulator`, then `published-example` with a citable reference, then `theory`. Tax-advisor articles find rules; they do not fix numbers (SPEC-011 §1).
 - **Credits are the destination, not a mid-plan phase** — 2026-09-18. Renta WEB already produces a borrador with most figures in it. What it does not do is tell you which regional credit you missed. SPEC-006 and SPEC-010 are what v1.0 is for; SPEC-002 exists to make them evaluable.
 - **The first filing is Renta 2026, due April to June 2027** — 2026-09-18. The first production config is therefore `2026.json`, not `2025.json`.
@@ -36,6 +38,6 @@ An ADR is **Accepted** only when the decision has been felt: code written, a ser
 
 
 - Whether the SPA (SPEC-012) earns its place against a CLI, now that data entry rather than data storage is the real question.
-- Where documents are stored, and therefore which SPEC-013 controls v1.0 ships. Backup and multi-device access are different requirements with different cheapest answers; see round 6.
-- Whether v1.0 produces Modelo 349 itself or only the per-client totals (SPEC-003 §2.1).
+- Whether v1.0 calls the VIES service to verify a client's VAT number, or records a manual check with a date. Reverse charge on an unverified number is an IVA error (SPEC-003 §2.1).
+- Whether the milestone table in `plans/DEVELOPMENT_PLAN.md` §6 is replaced with the April 2027 re-estimate.
 - Whether the 31-week plan survives its own cuts, and what the revised milestone dates are against April 2027.

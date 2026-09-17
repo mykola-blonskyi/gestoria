@@ -19,6 +19,8 @@ Order: set-aside estimator, then 130 and 303, then the employee annual path, the
 
 **Two configs are release blockers and neither exists**: `2026.json` for Renta 2026 and `2027.json` for the Q1 2027 forms. BOE publishes 2027 values around December 2026.
 
+**Documents live in MinIO on the author's VPS, encrypted client-side before upload (ADR-0015).** MinIO never holds plaintext or the master key. Escrowing that master key outside the laptop and the VPS is a release blocker, and the restore drill happens before the first real upload. The engine never reads documents, so MinIO being down cannot block a calculation.
+
 Start here, in this order:
 
 1. `plans/DEVELOPMENT_PLAN.md` — phases, exit criteria, current phase (Phase 0 as of 2026-09-17)

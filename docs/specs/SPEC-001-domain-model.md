@@ -52,7 +52,7 @@ AutonomoRegistration (Modelo 036/037)
 Nomina            Period(Month), EmployerCif, TotalDevengado, Exentas, EnEspecie, SsTrabajador,
                   IrpfRetenido, IrpfRate, Liquido, Atrasos?, IsExtraPay
 CertificadoRetenciones  Year, EmployerCif, totals — takes priority over Σ nóminas (Theory §15.1)
-FacturaEmitida    Number, Series, IssueDate, AccrualDate, Client{Nif,Name,Country,InVies},
+FacturaEmitida    Number, Series, IssueDate, AccrualDate, Client{Nif,Name,Country,Vies:{Number,VerifiedOn}?},
                   Base, IvaRate, IvaAmount, RetencionRate, RetencionAmount, Total,
                   IvaRegime: Standard | ReverseChargeEU | ExportNonEU | Exempt(article)
 FacturaRecibida   Number, IssueDate, Supplier{Nif,Name,Country}, Base, IvaRate, IvaAmount, Total,
@@ -78,6 +78,8 @@ Invariants
 - A `FacturaRecibida` can only be `Confirmed` if `Kind == Completa` **or** the user explicitly accepts the audit risk of a simplificada (flag stored, warning in explanations).
 - A `BankTransaction` classified `DEDUCTIBLE_EXPENSE` must have `LinkedDocumentId` before it counts (Theory §15.2 main rule).
 - Ledger rows are immutable after confirmation; corrections create a new version and keep history.
+- `FacturaEmitida.RetencionRate` is 0 unless the payer is a Spanish business or professional. It is **not** defaulted from `Activity.RetencionRate`, which describes what Spanish payers withhold from this taxpayer (business rule 3b, SPEC-003 §0).
+- `Client.Vies` records a verification and its date, not a claim. Reverse charge on an unverified number is an IVA error (SPEC-003 §2.1).
 
 ## 6. Year attribution
 - Employment: nómina `Period` month.
