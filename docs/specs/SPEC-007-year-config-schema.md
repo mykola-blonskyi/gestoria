@@ -33,6 +33,7 @@
   },
   "modelo130": { "rate": 0.20, "retencionExemptionShare": 0.70, "mortgageCap": 660.14, "applyDj": false, "minoracion": [ ... ], "lines": { ... } },
   "modelo303": { "lines": { ... } },
+  "modelo349": { "periodThreshold": ..., "lines": { ... } },
   "iva": { "rates": { "general": 0.21, "reducido": 0.10, "superreducido": 0.04 } },
   "seguridadSocial": { "tramos": [ { "name": "Reducida 1", "netUpTo": 670, "baseMin": 653.59, "baseMax": 718.94, "cuotaMin": 205 }, ... ],
                        "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12 } },

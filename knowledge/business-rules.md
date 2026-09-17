@@ -16,6 +16,10 @@ Extracted fields below the confidence threshold, and any `UNCLEAR` transaction, 
 
 Activity income and expenses belong to the year/quarter of the invoice date, not the payment date. *Criterio de caja* is a profile flag (warning-only in v1). — SPEC-001 §6, Theory §7.1.
 
+## Rule 3b — Retención depends on the payer, not on the issuer
+
+`FacturaEmitida.RetencionRate` is 0 unless the payer is a Spanish business or professional obliged to withhold. An autónomo's own 7 % or 15 % rate describes what Spanish clients withhold from him, not a property of his invoices. For EU and US clients it is 0, and that is why Modelo 130 is required for this profile. — SPEC-003 §0, SPEC-001 §3.
+
 ## Rule 4 — Reconstruct client payments from the invoice, never guess from the amount
 
 A bank credit of 1,060 € is income 1,000 / IVA 210 / retención 150 only because the matching invoice says so. — SPEC-003 §3, SPEC-004 §3.1, Theory §7.4.

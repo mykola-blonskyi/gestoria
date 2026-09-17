@@ -42,7 +42,7 @@ Tax theory (the *why* behind the rules) lives **outside** the repo in the Obsidi
 - No real personal data in fixtures, logs or the repo (SPEC-013).
 - v1.0 region: Valencia (`VC`) only (ADR-0013). Forms: 100, 130, 303.
 - `seguridadSocial.tramos` is January work, not a deferred `_todo`. An autónomo picks a contribution base at registration and tarifa plana is an 80 €/month decision taken then.
-- `retencionNuevo` must be right from invoice number one: 7 % for the first three years if Profesional, 15 % otherwise.
+- The author registers as **Profesional with EU and US clients** (2026-09-18). Consequences in SPEC-003 §0: Modelo 130 is required, retención on foreign invoices is **0** (`retencionNuevo` does not apply to them), Modelo 303 usually nets to a refund, Modelo 349 becomes a real quarterly filing, and ROI/VIES registration must be on the Modelo 036.
 - All ten goldens gate v1.0, plus G8b. G8 hits the 6,500 € other-income cap through autónomo income; G8b hits the same cap through savings income, which is how an employee reaches it (SPEC-002 step 1).
 - Goldens have three oracle tiers (SPEC-011 §1): `aeat-simulator`, then `published-example`, then `theory`. Modelo 130 and 303 have no simulator, so G5 and G9 need published worked examples.
 
