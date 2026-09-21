@@ -28,10 +28,12 @@ pago         = config.modelo130.rate (0.20) × base
              − Σ retenciones YTD
              − Σ pagos130 already paid this year
              − minoración (config: net income last year < 12,000 → banded reduction)
-             − mortgage deduction min(2 % × ingresosYTD, config.modelo130.mortgageCap per quarter)
+             − mortgage deduction min(config.modelo130.mortgageRate × ingresosYTD, config.modelo130.mortgageCap)
 result       = max(0, pago); carryNegative = min(0, pago)   // carried to next quarter of same year
 ```
 Golden #3 (Σ = 8,480), #5 (loss-making quarter → 0 and carry-over).
+
+The mortgage rate is `config.modelo130.mortgageRate` (0.02 for 2025, Theory §7.3), not a literal. It was written as `2 %` here until 2026-09-21, which put a tax number in a spec formula and from there into code, against ADR-0003. `mortgageCap` is per quarter.
 
 Output: `Modelo130Result { Quarter, Lines: { "01": ingresosYTD, "02": gastosYTD, "03": net, … "19": resultado }, Trace, DueWindow }`. Line numbers come from `config.modelo130.lines`.
 
