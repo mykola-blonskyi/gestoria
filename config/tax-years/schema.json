@@ -43,19 +43,19 @@
       "$ref": "#/$defs/regions"
     },
     "modelo130": {
-      "type": "object"
+      "$ref": "#/$defs/modelo130"
     },
     "modelo303": {
-      "type": "object"
+      "$ref": "#/$defs/modelo303"
     },
     "modelo349": {
       "type": "object"
     },
     "iva": {
-      "type": "object"
+      "$ref": "#/$defs/iva"
     },
     "seguridadSocial": {
-      "type": "object"
+      "$ref": "#/$defs/seguridadSocial"
     },
     "calendar": {
       "$ref": "#/$defs/calendar"
@@ -489,6 +489,20 @@
           "_todo": {
             "$ref": "#/$defs/todoNote"
           }
+        },
+        "if": {
+          "not": {
+            "required": [
+              "_todo"
+            ]
+          }
+        },
+        "then": {
+          "properties": {
+            "escalaAutonomica": {
+              "minItems": 1
+            }
+          }
         }
       }
     },
@@ -529,6 +543,160 @@
       "additionalProperties": {
         "type": "string",
         "minLength": 1
+      }
+    },
+    "seguridadSocial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tramos",
+        "tarifaPlana"
+      ],
+      "properties": {
+        "tramos": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "tarifaPlana": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "amount",
+            "months",
+            "extensionMonths"
+          ],
+          "properties": {
+            "amount": {
+              "$ref": "#/$defs/money"
+            },
+            "months": {
+              "$ref": "#/$defs/years"
+            },
+            "extensionMonths": {
+              "$ref": "#/$defs/years"
+            }
+          }
+        },
+        "_todo": {
+          "$ref": "#/$defs/todoNote"
+        }
+      },
+      "if": {
+        "not": {
+          "required": [
+            "_todo"
+          ]
+        }
+      },
+      "then": {
+        "properties": {
+          "tramos": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "modelo303": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lines"
+      ],
+      "properties": {
+        "lines": {
+          "type": "object"
+        },
+        "_todo": {
+          "$ref": "#/$defs/todoNote"
+        }
+      },
+      "if": {
+        "not": {
+          "required": [
+            "_todo"
+          ]
+        }
+      },
+      "then": {
+        "properties": {
+          "lines": {
+            "minProperties": 1
+          }
+        }
+      }
+    },
+    "modelo130": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rate",
+        "retencionExemptionShare",
+        "mortgageCap",
+        "applyDj",
+        "minoracion",
+        "lines"
+      ],
+      "properties": {
+        "rate": {
+          "$ref": "#/$defs/rate"
+        },
+        "retencionExemptionShare": {
+          "$ref": "#/$defs/rate"
+        },
+        "mortgageCap": {
+          "$ref": "#/$defs/money"
+        },
+        "applyDj": {
+          "type": "boolean"
+        },
+        "minoracion": {
+          "type": "array"
+        },
+        "lines": {
+          "type": "object"
+        },
+        "_todo": {
+          "$ref": "#/$defs/todoNote"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "not": {
+              "required": [
+                "_todo"
+              ]
+            }
+          },
+          "then": {
+            "properties": {
+              "minoracion": {
+                "minItems": 1
+              },
+              "lines": {
+                "minProperties": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "iva": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rates"
+      ],
+      "properties": {
+        "rates": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/rate"
+          }
+        }
       }
     }
   }
