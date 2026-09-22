@@ -1,6 +1,7 @@
 # Domain Model
 
 Authoritative definition: `docs/specs/SPEC-001-domain-model.md`. Tax theory behind it: Obsidian vault (`Theory §…`), never copied here.
+Entity-relationship diagram: `graph/architecture.md` → Components.
 
 ## Entities
 

@@ -172,6 +172,27 @@ Re-estimated 2026-09-18, replacing the week-numbered table written before any of
 
 Roughly 30 weeks from 2026-09-18 to 20 April 2027, against an estimated 16 to 22 weeks of build at 15 to 20 hours a week. The binding constraint is the calendar in exactly one place: `2027.json` cannot be finalised until BOE publishes, around December 2026.
 
+```mermaid
+gantt
+  title Anchored to filing deadlines, not to elapsed weeks
+  dateFormat YYYY-MM-DD
+  axisFormat %b %Y
+
+  section Foundation
+  M0 CI green, Engine and Application projects, 2026.json started :m0, 2026-09-18, 2026-10-20
+  section Money before code
+  M1 Set-aside estimator, SS tramos, key escrow and MinIO restore drill :m1, 2026-10-20, 2026-12-15
+  Autonomo registration - Modelo 036, ROI and VIES :milestone, 2027-01-15, 0d
+  section Quarterly
+  M2 Modelo 130, 303 and 349 engine :m2, 2026-12-15, 2027-01-31
+  M3 Persistence and the entry path - CLI vs SPA decided here :m3, 2027-01-31, 2027-03-15
+  M4 Q1 2027 produced and diffed against the gestor :milestone, 2027-04-15, 0d
+  section Annual
+  M5 Renta 2026 employee path and the credits engine :m5, 2027-03-15, 2027-06-15
+  M4b First self-filed quarter - Q2 2027 :milestone, 2027-07-20, 0d
+  M6 Autonomo annual path :m6, 2027-09-01, 2027-12-31
+```
+
 | # | Milestone | By | Proof |
 |---|---|---|---|
 | M0 | CI green, `Engine` and `Application` projects in place, `2026.json` started | mid Oct 2026 | `dotnet test` and `pytest` green in CI |
