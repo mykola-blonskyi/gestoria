@@ -70,7 +70,7 @@
   "modelo130": { "rate": 0.20, "retencionExemptionShare": 0.70, "mortgageRate": 0.02, "mortgageCap": 660.14, "applyDj": false, "minoracion": [], "lines": {}, "_todo": "minoracion bands and line numbers" },
   "modelo303": { "lines": {}, "_todo": "line numbers" },
   "iva": { "rates": { "general": 0.21, "reducido": 0.10, "superreducido": 0.04 } },
-  "seguridadSocial": { "tramos": [], "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12 }, "_todo": "copy tramos table (Theory §6.2) for the contribution year" },
+  "seguridadSocial": { "tramos": [], "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12, "extensionNetIncomeCap": null }, "_todo": "copy tramos table (Theory §6.2) for the contribution year" },
   "calendar": {
     "modelo130": [["04-01", "04-20"], ["07-01", "07-20"], ["10-01", "10-20"], ["+1-01-01", "+1-01-30"]],
     "renta": ["+1-04-02", "+1-06-30"],

@@ -6,52 +6,88 @@ namespace GestorIA.Engine.Tests;
 
 public class TaxYearValidationRejectsBadFiles
 {
-    private static readonly Dictionary<string, Action<JsonNode>> Mutations = new()
+    // JSON Schema ignores unknown keywords rather than rejecting them, so a rule can
+    // be written, read like it works, and validate nothing. Every rule therefore has a
+    // mutation that must fail, and must fail at a named pointer.
+    private static readonly Dictionary<string, (Action<JsonNode> Apply, string Pointer)> Mutations = new()
     {
         ["rate above 1"] =
-            r => r["irpf"]!["escalaEstatal"]![1]!["rate"] = 1.5m,
+            (r => r["irpf"]!["escalaEstatal"]![1]!["rate"] = 1.5m, "/irpf/escalaEstatal/1/rate"),
 
         ["misspelled block key"] =
-            r => Rename(r["irpf"]!.AsObject(), "escalaEstatal", "escalaEstattal"),
+            (r => Rename(r["irpf"]!.AsObject(), "escalaEstatal", "escalaEstattal"), "/irpf"),
 
         ["empty sources"] =
-            r => r["sources"] = new JsonArray(),
+            (r => r["sources"] = new JsonArray(), "/sources"),
+
+        ["source entry without a ref"] =
+            (r => Rename(r["sources"]![0]!.AsObject(), "ref", "reff"), "/sources/0"),
 
         ["region VC missing"] =
-            r => Rename(r["regions"]!.AsObject(), "VC", "XX"),
+            (r => Rename(r["regions"]!.AsObject(), "VC", "XX"), "/regions"),
+
+        ["casilla key that is not four digits"] =
+            (r => Rename(r["casillas"]!.AsObject(), "0003", "003"), "/casillas/003"),
 
         ["_todo removed while block still empty"] =
-            r => r["seguridadSocial"]!.AsObject().Remove("_todo"),
+            (r => r["seguridadSocial"]!.AsObject().Remove("_todo"), "/seguridadSocial/tramos"),
+
+        ["_todo misspelled, which re-arms the gate"] =
+            (r => Rename(r["modelo303"]!.AsObject(), "_todo", "_tood"), "/modelo303"),
 
         ["tranches out of order"] =
-            r => Swap(r["irpf"]!["escalaEstatal"]!.AsArray(), 1, 2),
+            (r => Swap(r["irpf"]!["escalaEstatal"]!.AsArray(), 1, 2), "/irpf/escalaEstatal/2/upTo"),
 
         ["two open-ended tranches"] =
-            r => r["irpf"]!["escalaEstatal"]![0]!["upTo"] = null,
+            (r => r["irpf"]!["escalaEstatal"]![0]!["upTo"] = null, "/irpf/escalaEstatal"),
 
         ["open-ended tranche not last"] =
-            r => Swap(r["irpf"]!["escalaEstatal"]!.AsArray(), 0, 5),
+            (r => Swap(r["irpf"]!["escalaEstatal"]!.AsArray(), 0, 5), "/irpf/escalaEstatal/0"),
 
         ["rate descends inside a scale"] =
-            r => r["irpf"]!["escalaEstatal"]![4]!["rate"] = 0.01m,
+            (r => r["irpf"]!["escalaEstatal"]![4]!["rate"] = 0.01m, "/irpf/escalaEstatal/4/rate"),
+
+        ["calendar window that ends before it starts"] =
+            (r => Swap(r["calendar"]!["modelo130"]![0]!.AsArray(), 0, 1), "/calendar/modelo130/0"),
 
         ["taxYear disagrees with the file name"] =
-            r => r["taxYear"] = 2024,
+            (r => r["taxYear"] = 2024, "/taxYear"),
 
         ["provenance entry verified against a source but carrying no date"] =
-            r => r["provenance"]!["/irpf/escalaEstatal"]!["kind"] = "boe",
+            (r => r["provenance"]!["/irpf/escalaEstatal"]!["kind"] = "boe", "~1irpf~1escalaEstatal"),
 
         ["provenance kind outside the enum"] =
-            r => r["provenance"]!["/irpf/escalaEstatal"]!["kind"] = "BOE",
+            (r => r["provenance"]!["/irpf/escalaEstatal"]!["kind"] = "BOE", "~1irpf~1escalaEstatal/kind"),
 
         ["provenance key that is not a JSON Pointer"] =
-            r => Rename(r["provenance"]!.AsObject(), "/irpf/escalaEstatal", "irpf/escalaEstatal"),
+            (r => Rename(r["provenance"]!.AsObject(), "/irpf/escalaEstatal", "irpf/escalaEstatal"),
+             "/provenance/irpf~1escalaEstatal"),
 
         ["provenance pointer at a node that does not exist"] =
-            r => Rename(r["provenance"]!.AsObject(), "/irpf/escalaEstatal", "/irpf/escalaEstatalx"),
+            (r => Rename(r["provenance"]!.AsObject(), "/irpf/escalaEstatal", "/irpf/escalaEstatalx"),
+             "/provenance/~1irpf~1escalaEstatalx"),
 
         ["tax scale with no provenance entry"] =
-            r => r["provenance"]!.AsObject().Remove("/regions/VC/escalaAutonomica"),
+            (r => r["provenance"]!.AsObject().Remove("/regions/VC/escalaAutonomica"),
+             "/regions/VC/escalaAutonomica"),
+
+        // The config carries neither bands nor credits yet, so these rules are exercised
+        // against data the mutation supplies. They arm before #5 and SPEC-006 fill the file.
+        ["gap between social security bands"] =
+            (r => r["seguridadSocial"]!["tramos"] = new JsonArray(Tramo(0, 670), Tramo(700, null)),
+             "/seguridadSocial/tramos/1/netFrom"),
+
+        ["social security band with baseMin above baseMax"] =
+            (r => r["seguridadSocial"]!["tramos"] = new JsonArray(Band(0, null, min: 900, max: 700)),
+             "/seguridadSocial/tramos/0"),
+
+        ["estatal credit citing a casilla that does not exist"] =
+            (r => r["deducciones"] = new JsonArray(Deduccion("estatal", "9999")),
+             "/deducciones/0/casilla"),
+
+        ["regional credit citing a state-style casilla"] =
+            (r => r["deducciones"] = new JsonArray(Deduccion("autonomica", "0003")),
+             "/deducciones/0/casilla"),
     };
 
     public static TheoryData<string> Names()
@@ -63,15 +99,21 @@ public class TaxYearValidationRejectsBadFiles
 
     [Theory]
     [MemberData(nameof(Names))]
-    public void MutatedFileIsRejected(string name)
+    public void MutatedFileIsRejectedWithAMessageNamingThePath(string name)
     {
         var path = TaxYearConfigFiles.All().First();
         var root = JsonNode.Parse(File.ReadAllText(path))!;
+        var (apply, pointer) = Mutations[name];
 
-        Mutations[name](root);
+        apply(root);
+        var failures = Validate(root, Path.GetFileName(path));
 
-        Assert.True(Validate(root, Path.GetFileName(path)).Count > 0,
+        Assert.True(failures.Count > 0,
             $"Mutation \"{name}\" was accepted. The rule meant to catch it is not running.");
+
+        Assert.True(failures.Any(f => f.Contains(pointer, StringComparison.Ordinal)),
+            $"Mutation \"{name}\" was rejected, but no message names {pointer}:\n\n"
+            + string.Join("\n", failures));
     }
 
     [Fact]
@@ -91,6 +133,26 @@ public class TaxYearValidationRejectsBadFiles
 
         return [.. results.Describe(), .. TaxYearRules.Check(root, fileName)];
     }
+
+    private static JsonObject Tramo(decimal from, decimal? upTo) => Band(from, upTo, min: 653.59m, max: 718.94m);
+
+    private static JsonObject Band(decimal from, decimal? upTo, decimal min, decimal max) => new()
+    {
+        ["name"] = "Reducida 1",
+        ["netFrom"] = from,
+        ["netUpTo"] = upTo,
+        ["baseMin"] = min,
+        ["baseMax"] = max,
+        ["cuotaMin"] = 205m,
+        ["cuotaMinKind"] = "approximate",
+    };
+
+    private static JsonObject Deduccion(string scope, string casilla) => new()
+    {
+        ["id"] = "TEST",
+        ["scope"] = scope,
+        ["casilla"] = casilla,
+    };
 
     private static void Rename(JsonObject obj, string from, string to)
     {

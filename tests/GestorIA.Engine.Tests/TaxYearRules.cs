@@ -1,10 +1,11 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Text.Json.Nodes;
 using static System.FormattableString;
 
 namespace GestorIA.Engine.Tests;
 
-internal static class TaxYearRules
+internal static partial class TaxYearRules
 {
     internal static IEnumerable<string> Check(JsonNode root, string fileName)
     {
@@ -76,6 +77,58 @@ internal static class TaxYearRules
             if (!provenance.Any(e => pointer == e.Key || pointer.StartsWith(e.Key + "/", StringComparison.Ordinal)))
             {
                 yield return $"{pointer} is a tax scale with no provenance entry; add one saying where the numbers came from";
+            }
+        }
+
+        var tramos = root["seguridadSocial"]!["tramos"]!.AsArray();
+
+        for (var i = 0; i < tramos.Count; i++)
+        {
+            var tramo = tramos[i] ?? throw new InvalidOperationException(
+                Invariant($"/seguridadSocial/tramos/{i} is JSON null; schema.json should have rejected the file."));
+
+            var baseMin = tramo["baseMin"]!.GetValue<decimal>();
+            var baseMax = tramo["baseMax"]!.GetValue<decimal>();
+
+            if (baseMin > baseMax)
+            {
+                yield return Invariant($"/seguridadSocial/tramos/{i} has baseMin {baseMin} above baseMax {baseMax}");
+            }
+
+            if (i == 0) { continue; }
+
+            var previousUpTo = tramos[i - 1]!["netUpTo"];
+            var netFrom = tramo["netFrom"]!.GetValue<decimal>();
+
+            if (previousUpTo is null)
+            {
+                yield return Invariant($"/seguridadSocial/tramos/{i - 1} is open-ended but is followed by another band");
+            }
+            else if (previousUpTo.GetValue<decimal>() != netFrom)
+            {
+                var previous = previousUpTo.GetValue<decimal>();
+
+                yield return Invariant(
+                    $"/seguridadSocial/tramos/{i}/netFrom is {netFrom}, leaving a gap after netUpTo {previous} in band {i - 1}; contribution bands must be contiguous");
+            }
+        }
+
+        var casillas = root["casillas"]!.AsObject();
+
+        foreach (var (index, deduccion) in root["deducciones"]!.AsArray().Index())
+        {
+            if (deduccion?["casilla"]?.GetValue<string>() is not { } casilla) { continue; }
+
+            var estatal = deduccion["scope"]?.GetValue<string>() == "estatal";
+
+            if (estatal && !casillas.ContainsKey(casilla))
+            {
+                yield return Invariant($"/deducciones/{index}/casilla is {casilla}, which is not a key of /casillas");
+            }
+
+            if (!estatal && !RegionalCasilla().IsMatch(casilla))
+            {
+                yield return Invariant($"/deducciones/{index}/casilla is {casilla}, which is not an annex identifier such as B.VC.12");
             }
         }
 
@@ -179,4 +232,6 @@ internal static class TaxYearRules
     private static string Escape(string pointer) =>
         pointer.Replace("~", "~0", StringComparison.Ordinal).Replace("/", "~1", StringComparison.Ordinal);
 
+    [GeneratedRegex(@"^[A-Z]\.[A-Z]{2}\.\d+$")]
+    private static partial Regex RegionalCasilla();
 }

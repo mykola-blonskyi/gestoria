@@ -138,6 +138,50 @@
         "$ref": "#/$defs/tranche"
       }
     },
+    "tramo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "netFrom",
+        "netUpTo",
+        "baseMin",
+        "baseMax",
+        "cuotaMin",
+        "cuotaMinKind"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "netFrom": {
+          "$ref": "#/$defs/money"
+        },
+        "netUpTo": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0
+        },
+        "baseMin": {
+          "$ref": "#/$defs/money"
+        },
+        "baseMax": {
+          "$ref": "#/$defs/money"
+        },
+        "cuotaMin": {
+          "$ref": "#/$defs/money"
+        },
+        "cuotaMinKind": {
+          "enum": [
+            "approximate",
+            "exact"
+          ]
+        }
+      }
+    },
     "calendarDay": {
       "type": "string",
       "pattern": "^(\\+1-)?(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
@@ -556,8 +600,9 @@
       "properties": {
         "tramos": {
           "type": "array",
+          "uniqueItems": true,
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/tramo"
           }
         },
         "tarifaPlana": {
@@ -566,7 +611,8 @@
           "required": [
             "amount",
             "months",
-            "extensionMonths"
+            "extensionMonths",
+            "extensionNetIncomeCap"
           ],
           "properties": {
             "amount": {
@@ -577,6 +623,13 @@
             },
             "extensionMonths": {
               "$ref": "#/$defs/years"
+            },
+            "extensionNetIncomeCap": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "exclusiveMinimum": 0
             }
           }
         },
