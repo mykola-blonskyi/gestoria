@@ -16,18 +16,19 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - [x] SPEC-001…013 drafted (`docs/specs/`)
 - [x] `config/tax-years/2025.example.json` with scales, minimums, employment relief, activity params, casilla map
 - [ ] Verify the values the first goldens touch against the AEAT Manual, not the vault: `escalaEstatal`, `regions.VC.escalaAutonomica`, `minimos.contribuyente`, `minimos.descendientes`, `minimos.menor3`, `trabajo.otrosGastos`, and the seven values in `trabajo.reduccion`
-- [ ] Move `sources` from file level down to per value, so each scale cites the BOE article it came from
+- [x] Record where each value came from. Landed as the `provenance` block keyed by JSON Pointer at the granularity of the verifiable unit (SPEC-007 §1.1), not as a per-value `{value, source, verified}` wrapper — that form roughly triples the file and buries changed numbers among changed dates. Every entry reads `kind: "theory"` today; sorting by `verified` ascending is the January queue
 - [ ] Drop the Madrid `_todo` block (ADR-0013) and rename `2025.example.json` to `2025.json`
 - [ ] Fill `seguridadSocial.tramos` before January: the registration decision on contribution base and tarifa plana depends on it (ADR-0014)
 - [ ] Fill `modelo130.lines`, `modelo130.minoracion`, `modelo303.lines` and `modelo349` before the Q1 2027 forms
 - [ ] Confirm ROI/VIES is on the Modelo 036 filed in January; without it, EU invoices carry Spanish IVA they should not
 - [ ] Master key escrow and a rehearsed MinIO restore, before the first real document is uploaded (ADR-0015)
 - [ ] Start `config/tax-years/2026.json` and `2027.json`. Both are release blockers; BOE publishes 2027 around December 2026
-- [ ] Write `config/tax-years/schema.json` (SPEC-007) and a startup validator
-- [ ] Add projects: `src/GestorIA.Engine`, `src/GestorIA.Application`, `tests/GestorIA.Engine.Tests`; register in `GestorIA.slnx`
-- [ ] `Directory.Build.props`: nullable, warnings-as-errors, banned `double`/`float` for money (ADR-0004)
+- [x] Write `config/tax-years/schema.json` (SPEC-007), validated in CI: schema plus cross-field rules in C# and mutation tests that prove both run (#4)
+- [ ] Run the same validation at startup, from the typed loader (#14). Issue #4 covers CI only
+- [x] Add projects: `src/GestorIA.Engine`, `tests/GestorIA.Engine.Tests`; register in `GestorIA.slnx` (#17). `src/GestorIA.Application` is not created yet and has no caller
+- [x] `Directory.Build.props`: nullable, warnings-as-errors, banned `double`/`float` for money (ADR-0004). Two mechanisms, because the analyzer catches member access but not declarations: `BannedApiAnalyzers` plus the `NoBinaryFloatsInEngine` guard test (#17, fixed in #18 where `BannedSymbols.txt` had shipped empty)
 - [ ] `services/ocr` skeleton: FastAPI `/health`, `pyproject.toml`, `uv.lock`, `ruff`, `pytest`
-- [ ] CI: GitHub Actions running `dotnet test` + `pytest`
+- [ ] CI: GitHub Actions runs `dotnet test` (#17). `pytest` waits for the `services/ocr` skeleton
 - [x] Fill `.claude/CLAUDE.local.md`, `knowledge/*`
 - [x] Repo under git; prototype deleted; `dotnet build` and `dotnet test` green (2026-09-18)
 
