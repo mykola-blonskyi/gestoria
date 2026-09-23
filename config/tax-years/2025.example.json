@@ -85,5 +85,22 @@
     "0596": "pagosACuenta.retTrabajo", "0599": "pagosACuenta.retActividad", "0604": "pagosACuenta.pagos130",
     "0670": "resultado"
   },
-  "deducciones": []
+  "deducciones": [],
+  "provenance": {
+    "/irpf/escalaEstatal":          { "kind": "theory", "ref": "Theory §4.1, ed. 2" },
+    "/irpf/escalaAhorro":           { "kind": "theory", "ref": "Theory §4.3, ed. 2" },
+    "/irpf/minimos":                { "kind": "theory", "ref": "Theory §5.1, ed. 2" },
+    "/irpf/trabajo":                { "kind": "theory", "ref": "Theory §5.2, ed. 2" },
+    "/irpf/actividad":              { "kind": "theory", "ref": "Theory §7, ed. 2" },
+    "/irpf/ahorro":                 { "kind": "theory", "ref": "Theory §4.3, ed. 2" },
+    "/irpf/inmuebles":              { "kind": "theory", "ref": "Theory §8.2, ed. 2" },
+    "/irpf/reducciones":            { "kind": "theory", "ref": "Theory §5.4, ed. 2" },
+    "/irpf/obligacion":             { "kind": "theory", "ref": "Theory §3.1, ed. 2" },
+    "/regions/VC/escalaAutonomica": { "kind": "theory", "ref": "Theory §4.2, ed. 2" },
+    "/modelo130":                   { "kind": "theory", "ref": "Theory §7.3, ed. 2" },
+    "/iva/rates":                   { "kind": "theory", "ref": "Theory §9.1, ed. 2" },
+    "/seguridadSocial/tramos":      { "kind": "theory", "ref": "Theory §6.2, ed. 2" },
+    "/seguridadSocial/tarifaPlana": { "kind": "theory", "ref": "Theory §6.3, ed. 2" },
+    "/calendar":                    { "kind": "theory", "ref": "Theory §15.3, ed. 2" }
+  }
 }

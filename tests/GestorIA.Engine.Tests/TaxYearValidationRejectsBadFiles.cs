@@ -37,6 +37,21 @@ public class TaxYearValidationRejectsBadFiles
 
         ["taxYear disagrees with the file name"] =
             r => r["taxYear"] = 2024,
+
+        ["provenance entry verified against a source but carrying no date"] =
+            r => r["provenance"]!["/irpf/escalaEstatal"]!["kind"] = "boe",
+
+        ["provenance kind outside the enum"] =
+            r => r["provenance"]!["/irpf/escalaEstatal"]!["kind"] = "BOE",
+
+        ["provenance key that is not a JSON Pointer"] =
+            r => Rename(r["provenance"]!.AsObject(), "/irpf/escalaEstatal", "irpf/escalaEstatal"),
+
+        ["provenance pointer at a node that does not exist"] =
+            r => Rename(r["provenance"]!.AsObject(), "/irpf/escalaEstatal", "/irpf/escalaEstatalx"),
+
+        ["tax scale with no provenance entry"] =
+            r => r["provenance"]!.AsObject().Remove("/regions/VC/escalaAutonomica"),
     };
 
     public static TheoryData<string> Names()

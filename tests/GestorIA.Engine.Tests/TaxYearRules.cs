@@ -61,6 +61,24 @@ internal static class TaxYearRules
             }
         }
 
+        var provenance = root["provenance"]!.AsObject();
+
+        foreach (var (pointer, _) in provenance)
+        {
+            if (Resolve(root, pointer) is null)
+            {
+                yield return $"/provenance/{Escape(pointer)} points at {pointer}, which does not exist in this file";
+            }
+        }
+
+        foreach (var (pointer, _) in Scales(root))
+        {
+            if (!provenance.Any(e => pointer == e.Key || pointer.StartsWith(e.Key + "/", StringComparison.Ordinal)))
+            {
+                yield return $"{pointer} is a tax scale with no provenance entry; add one saying where the numbers came from";
+            }
+        }
+
         var stem = fileName.Split('.')[0];
         var taxYear = root["taxYear"]!.GetValue<int>();
         if (stem != taxYear.ToString())
@@ -134,4 +152,31 @@ internal static class TaxYearRules
 
         return (nextYear ? 10000 : 0) + (month * 100) + date;
     }
+
+    // A JSON Pointer segment escapes "~" as "~0" and "/" as "~1" (RFC 6901).
+    private static JsonNode? Resolve(JsonNode root, string pointer)
+    {
+        var node = root;
+
+        foreach (var raw in pointer.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var segment = raw.Replace("~1", "/", StringComparison.Ordinal).Replace("~0", "~", StringComparison.Ordinal);
+
+            node = node switch
+            {
+                JsonObject obj => obj[segment],
+                JsonArray array when int.TryParse(segment, CultureInfo.InvariantCulture, out var i)
+                    && i >= 0 && i < array.Count => array[i],
+                _ => null,
+            };
+
+            if (node is null) { return null; }
+        }
+
+        return node;
+    }
+
+    private static string Escape(string pointer) =>
+        pointer.Replace("~", "~0", StringComparison.Ordinal).Replace("/", "~1", StringComparison.Ordinal);
+
 }

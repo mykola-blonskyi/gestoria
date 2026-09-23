@@ -15,7 +15,8 @@
     "seguridadSocial",
     "calendar",
     "casillas",
-    "deducciones"
+    "deducciones",
+    "provenance"
   ],
   "properties": {
     "$schema": {
@@ -67,7 +68,7 @@
       "type": "array"
     },
     "provenance": {
-      "type": "object"
+      "$ref": "#/$defs/provenance"
     }
   },
   "$defs": {
@@ -697,6 +698,60 @@
             "$ref": "#/$defs/rate"
           }
         }
+      }
+    },
+    "provenanceEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "boe",
+            "aeat-manual",
+            "tgss",
+            "published-example",
+            "theory"
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verified": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      },
+      "if": {
+        "not": {
+          "properties": {
+            "kind": {
+              "const": "theory"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      },
+      "then": {
+        "required": [
+          "verified"
+        ]
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^(/[^/]+)+$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/provenanceEntry"
       }
     }
   }
