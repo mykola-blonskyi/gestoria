@@ -67,7 +67,7 @@
     },
     "MD": { "name": "Comunidad de Madrid", "escalaAutonomica": [], "minimosOverride": null, "_todo": "fill in Phase 2" }
   },
-  "modelo130": { "rate": 0.20, "retencionExemptionShare": 0.70, "mortgageCap": 660.14, "applyDj": false, "minoracion": [], "lines": {}, "_todo": "minoracion bands and line numbers" },
+  "modelo130": { "rate": 0.20, "retencionExemptionShare": 0.70, "mortgageRate": 0.02, "mortgageCap": 660.14, "applyDj": false, "minoracion": [], "lines": {}, "_todo": "minoracion bands and line numbers" },
   "modelo303": { "lines": {}, "_todo": "line numbers" },
   "iva": { "rates": { "general": 0.21, "reducido": 0.10, "superreducido": 0.04 } },
   "seguridadSocial": { "tramos": [], "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12 }, "_todo": "copy tramos table (Theory §6.2) for the contribution year" },

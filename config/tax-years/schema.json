@@ -634,6 +634,7 @@
       "required": [
         "rate",
         "retencionExemptionShare",
+        "mortgageRate",
         "mortgageCap",
         "applyDj",
         "minoracion",
@@ -644,6 +645,9 @@
           "$ref": "#/$defs/rate"
         },
         "retencionExemptionShare": {
+          "$ref": "#/$defs/rate"
+        },
+        "mortgageRate": {
           "$ref": "#/$defs/rate"
         },
         "mortgageCap": {
