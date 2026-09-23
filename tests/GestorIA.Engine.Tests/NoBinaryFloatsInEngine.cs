@@ -31,8 +31,12 @@ public class NoBinaryFloatsInEngine
             "ADR-0004: money is decimal. Binary floats found:\n" + string.Join("\n", offenders));
     }
 
-    private static string EngineRoot([CallerFilePath] string here = "") =>
-        Path.GetFullPath(
-                Path.Combine(Path.GetDirectoryName(here)!, "..", "..", "src", "GestorIA.Engine")
-        );
+    private static string EngineRoot([CallerFilePath] string here = "")
+    {
+        var dir = Path.GetDirectoryName(here)
+            ?? throw new InvalidOperationException(
+                $"[CallerFilePath] resolved to '{here}', which has no directory part.");
+
+        return Path.GetFullPath(Path.Combine(dir, "..", "..", "src", "GestorIA.Engine"));
+    }
 }
