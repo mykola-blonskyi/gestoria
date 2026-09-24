@@ -138,6 +138,22 @@
         "$ref": "#/$defs/tranche"
       }
     },
+    "minoracionBand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prevYearNetUpTo",
+        "amountPerQuarter"
+      ],
+      "properties": {
+        "prevYearNetUpTo": {
+          "$ref": "#/$defs/money"
+        },
+        "amountPerQuarter": {
+          "$ref": "#/$defs/money"
+        }
+      }
+    },
     "tramo": {
       "type": "object",
       "additionalProperties": false,
@@ -710,7 +726,11 @@
           "type": "boolean"
         },
         "minoracion": {
-          "type": "array"
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/minoracionBand"
+          }
         },
         "lines": {
           "type": "object"

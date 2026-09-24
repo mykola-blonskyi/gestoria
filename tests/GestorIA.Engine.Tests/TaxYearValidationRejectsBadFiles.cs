@@ -88,6 +88,10 @@ public class TaxYearValidationRejectsBadFiles
         ["regional credit citing a state-style casilla"] =
             (r => r["deducciones"] = new JsonArray(Deduccion("autonomica", "0003")),
              "/deducciones/0/casilla"),
+
+        ["minoracion band with a misspelled property"] =
+            (r => Rename(r["modelo130"]!["minoracion"]![0]!.AsObject(), "amountPerQuarter", "amountPerQuater"),
+             "/modelo130/minoracion/0"),
     };
 
     public static TheoryData<string> Names()
