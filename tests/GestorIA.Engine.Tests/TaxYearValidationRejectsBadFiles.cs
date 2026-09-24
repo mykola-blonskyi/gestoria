@@ -30,7 +30,7 @@ public class TaxYearValidationRejectsBadFiles
             (r => Rename(r["casillas"]!.AsObject(), "0003", "003"), "/casillas/003"),
 
         ["_todo removed while block still empty"] =
-            (r => r["seguridadSocial"]!.AsObject().Remove("_todo"), "/seguridadSocial/tramos"),
+            (r => r["regions"]!["MD"]!.AsObject().Remove("_todo"), "/regions/MD"),
 
         ["_todo misspelled, which re-arms the gate"] =
             (r => Rename(r["modelo303"]!.AsObject(), "_todo", "_tood"), "/modelo303"),

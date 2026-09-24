@@ -3,7 +3,10 @@
   "schemaVersion": 1,
   "sources": [
     { "ref": "AEAT Manual práctico Renta 2025", "url": "https://sede.agenciatributaria.gob.es" },
-    { "ref": "Theory doc (vault) §4, §5.2, §7, §8.2, §15.3 — edition 2, Sept 2026" }
+    { "ref": "Theory doc (vault) §4, §5.2, §7, §8.2, §15.3 — edition 2, Sept 2026" },
+    { "ref": "Orden PJC/178/2025, de 25 de febrero, art. 18 (bases y tipos RETA) y art. 37 (cese de actividad, formación profesional)", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-3780" },
+    { "ref": "Ley 20/2007 (Estatuto del Trabajo Autónomo), art. 38 ter, redacción RDL 13/2022, D.T. 5.ª (tarifa plana 2023–2025)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-13409" },
+    { "ref": "Real Decreto 439/2007 (Reglamento IRPF), art. 110.3.c (minoración pagos fraccionados)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820" }
   ],
   "irpf": {
     "escalaEstatal": [
@@ -67,10 +70,39 @@
     },
     "MD": { "name": "Comunidad de Madrid", "escalaAutonomica": [], "minimosOverride": null, "_todo": "fill in Phase 2" }
   },
-  "modelo130": { "rate": 0.20, "retencionExemptionShare": 0.70, "mortgageRate": 0.02, "mortgageCap": 660.14, "applyDj": false, "minoracion": [], "lines": {}, "_todo": "minoracion bands and line numbers" },
+  "modelo130": {
+    "rate": 0.20, "retencionExemptionShare": 0.70, "mortgageRate": 0.02, "mortgageCap": 660.14, "applyDj": false,
+    "minoracion": [
+      { "prevYearNetUpTo": 9000, "amountPerQuarter": 100 },
+      { "prevYearNetUpTo": 10000, "amountPerQuarter": 75 },
+      { "prevYearNetUpTo": 11000, "amountPerQuarter": 50 },
+      { "prevYearNetUpTo": 12000, "amountPerQuarter": 25 }
+    ],
+    "lines": {},
+    "_todo": "line numbers for the Modelo 130 form; minoracion is filled (#5). First-activity-year case (no ejercicio anterior to reference) is not addressed by art. 110.3.c; unresolved, see PR notes"
+  },
   "modelo303": { "lines": {}, "_todo": "line numbers" },
   "iva": { "rates": { "general": 0.21, "reducido": 0.10, "superreducido": 0.04 } },
-  "seguridadSocial": { "tramos": [], "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12, "extensionNetIncomeCap": null }, "_todo": "copy tramos table (Theory §6.2) for the contribution year" },
+  "seguridadSocial": {
+    "tramos": [
+      { "name": "Reducida 1", "netFrom": 0, "netUpTo": 670, "baseMin": 653.59, "baseMax": 718.94, "cuotaMin": 205.23, "cuotaMinKind": "exact" },
+      { "name": "Reducida 2", "netFrom": 670, "netUpTo": 900, "baseMin": 718.95, "baseMax": 900.00, "cuotaMin": 225.75, "cuotaMinKind": "exact" },
+      { "name": "Reducida 3", "netFrom": 900, "netUpTo": 1166.70, "baseMin": 849.67, "baseMax": 1166.70, "cuotaMin": 266.80, "cuotaMinKind": "exact" },
+      { "name": "General 1", "netFrom": 1166.70, "netUpTo": 1300, "baseMin": 950.98, "baseMax": 1300.00, "cuotaMin": 298.61, "cuotaMinKind": "exact" },
+      { "name": "General 2", "netFrom": 1300, "netUpTo": 1500, "baseMin": 960.78, "baseMax": 1500.00, "cuotaMin": 301.68, "cuotaMinKind": "exact" },
+      { "name": "General 3", "netFrom": 1500, "netUpTo": 1700, "baseMin": 960.78, "baseMax": 1700.00, "cuotaMin": 301.68, "cuotaMinKind": "exact" },
+      { "name": "General 4", "netFrom": 1700, "netUpTo": 1850, "baseMin": 1143.79, "baseMax": 1850.00, "cuotaMin": 359.15, "cuotaMinKind": "exact" },
+      { "name": "General 5", "netFrom": 1850, "netUpTo": 2030, "baseMin": 1209.15, "baseMax": 2030.00, "cuotaMin": 379.67, "cuotaMinKind": "exact" },
+      { "name": "General 6", "netFrom": 2030, "netUpTo": 2330, "baseMin": 1274.51, "baseMax": 2330.00, "cuotaMin": 400.20, "cuotaMinKind": "exact" },
+      { "name": "General 7", "netFrom": 2330, "netUpTo": 2760, "baseMin": 1356.21, "baseMax": 2760.00, "cuotaMin": 425.85, "cuotaMinKind": "exact" },
+      { "name": "General 8", "netFrom": 2760, "netUpTo": 3190, "baseMin": 1437.91, "baseMax": 3190.00, "cuotaMin": 451.50, "cuotaMinKind": "exact" },
+      { "name": "General 9", "netFrom": 3190, "netUpTo": 3620, "baseMin": 1519.61, "baseMax": 3620.00, "cuotaMin": 477.16, "cuotaMinKind": "exact" },
+      { "name": "General 10", "netFrom": 3620, "netUpTo": 4050, "baseMin": 1601.31, "baseMax": 4050.00, "cuotaMin": 502.81, "cuotaMinKind": "exact" },
+      { "name": "General 11", "netFrom": 4050, "netUpTo": 6000, "baseMin": 1732.03, "baseMax": 4909.50, "cuotaMin": 543.86, "cuotaMinKind": "exact" },
+      { "name": "General 12", "netFrom": 6000, "netUpTo": null, "baseMin": 1928.10, "baseMax": 4909.50, "cuotaMin": 605.42, "cuotaMinKind": "exact" }
+    ],
+    "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12, "extensionNetIncomeCap": null }
+  },
   "calendar": {
     "modelo130": [["04-01", "04-20"], ["07-01", "07-20"], ["10-01", "10-20"], ["+1-01-01", "+1-01-30"]],
     "renta": ["+1-04-02", "+1-06-30"],
@@ -98,9 +130,10 @@
     "/irpf/obligacion":             { "kind": "theory", "ref": "Theory §3.1, ed. 2" },
     "/regions/VC/escalaAutonomica": { "kind": "theory", "ref": "Theory §4.2, ed. 2" },
     "/modelo130":                   { "kind": "theory", "ref": "Theory §7.3, ed. 2" },
+    "/modelo130/minoracion":        { "kind": "boe", "ref": "RD 439/2007 (RIRPF) art. 110.3.c", "verified": "2026-09-25" },
     "/iva/rates":                   { "kind": "theory", "ref": "Theory §9.1, ed. 2" },
-    "/seguridadSocial/tramos":      { "kind": "theory", "ref": "Theory §6.2, ed. 2" },
-    "/seguridadSocial/tarifaPlana": { "kind": "theory", "ref": "Theory §6.3, ed. 2" },
+    "/seguridadSocial/tramos":      { "kind": "boe", "ref": "Orden PJC/178/2025 art. 18.1 (bases); art. 18.2 y 37.5–37.6 (tipos: 28,30% + 1,30% + 0,90% + 0,10% + 0,80% MEI = 31,40%, aplicado a baseMin para cuotaMin)", "verified": "2026-09-25" },
+    "/seguridadSocial/tarifaPlana": { "kind": "boe", "ref": "Ley 20/2007 art. 38 ter, D.T. 5.ª RDL 13/2022 (80€/mes vigente 2023–2025)", "verified": "2026-09-25" },
     "/calendar":                    { "kind": "theory", "ref": "Theory §15.3, ed. 2" }
   }
 }
