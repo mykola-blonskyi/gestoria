@@ -13,14 +13,10 @@ public class TaxYearGapsAreRegistered
             "Madrid is out of v1.0 scope (ADR-0013). Closes by deleting the block, not by filling it.",
 
         ["/modelo130"] =
-            "minoracion bands and line numbers. Due before the Q1 2027 forms (plans/current.md, Phase 0).",
+            "line numbers. Due before the Q1 2027 forms (plans/current.md, Phase 0). minoracion bands filled (#5).",
 
         ["/modelo303"] =
             "line numbers. Due before the Q1 2027 forms (plans/current.md, Phase 0).",
-
-        ["/seguridadSocial"] =
-            "tramos table (Theory §6.2). Due before January 2027: the registration decision on "
-            + "contribution base and tarifa plana depends on it (ADR-0014).",
     };
 
     public static TheoryData<string> Files()

@@ -30,7 +30,7 @@ public class TaxYearValidationRejectsBadFiles
             (r => Rename(r["casillas"]!.AsObject(), "0003", "003"), "/casillas/003"),
 
         ["_todo removed while block still empty"] =
-            (r => r["seguridadSocial"]!.AsObject().Remove("_todo"), "/seguridadSocial/tramos"),
+            (r => r["regions"]!["MD"]!.AsObject().Remove("_todo"), "/regions/MD"),
 
         ["_todo misspelled, which re-arms the gate"] =
             (r => Rename(r["modelo303"]!.AsObject(), "_todo", "_tood"), "/modelo303"),
@@ -88,6 +88,10 @@ public class TaxYearValidationRejectsBadFiles
         ["regional credit citing a state-style casilla"] =
             (r => r["deducciones"] = new JsonArray(Deduccion("autonomica", "0003")),
              "/deducciones/0/casilla"),
+
+        ["minoracion band with a misspelled property"] =
+            (r => Rename(r["modelo130"]!["minoracion"]![0]!.AsObject(), "amountPerQuarter", "amountPerQuater"),
+             "/modelo130/minoracion/0"),
     };
 
     public static TheoryData<string> Names()
