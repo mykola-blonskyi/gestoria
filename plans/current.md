@@ -42,6 +42,7 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - [ ] Find published worked examples for G4, G5, G9 and G10; the simulator cannot express them (SPEC-011 §1)
 - [ ] `Money`, `Rate`, `TaxYear`, `Region`, `Nif` value objects (SPEC-001)
 - [x] `ScaleCalculator` + property tests (#6)
+- [x] `MonthlyCuotaCalculator`: TGSS cuota with the tarifa plana window and the prorated month of alta (#7)
 - [ ] `EmploymentIncomeCalculator` → golden #1, #2, #8
 - [ ] `MinimoCalculator` → golden #7
 - [ ] `ActivityIncomeCalculator` → golden #3, #4
