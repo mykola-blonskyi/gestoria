@@ -1,3 +1,4 @@
+using System.Globalization;
 using GestorIA.Domain.ValueObjects;
 using Xunit;
 
@@ -87,5 +88,29 @@ public class MoneyTests
     public void ZeroEqualsExplicitZero()
     {
         Assert.Equal(Money.Zero, new Money(0m));
+    }
+
+    [Fact]
+    public void ToStringPrintsTheUnroundedAmount()
+    {
+        Assert.Equal("0.333 EUR", new Money(0.333m).ToString());
+        Assert.Equal("0.005 EUR", new Money(0.005m).ToString());
+    }
+
+    [Fact]
+    public void ToStringIsNotAffectedByCurrentCulture()
+    {
+        var original = CultureInfo.CurrentCulture;
+
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("es-ES");
+
+            Assert.Equal("1234.50 EUR", new Money(1234.50m).ToString());
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = original;
+        }
     }
 }

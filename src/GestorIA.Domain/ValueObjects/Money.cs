@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace GestorIA.Domain.ValueObjects;
 
 // SPEC-001 §2, ADR-0004: decimal only, currency fixed to EUR, rounding always explicit.
@@ -28,5 +30,5 @@ public readonly record struct Money : IComparable<Money>
 
     public int CompareTo(Money other) => Amount.CompareTo(other.Amount);
 
-    public override string ToString() => $"{Amount:0.00} {Currency}";
+    public override string ToString() => $"{Amount.ToString(CultureInfo.InvariantCulture)} {Currency}";
 }

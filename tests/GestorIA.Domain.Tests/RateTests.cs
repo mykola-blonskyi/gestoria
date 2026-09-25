@@ -31,4 +31,27 @@ public class RateTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() => new Rate(parsed));
     }
+
+    [Fact]
+    public void ToStringPrintsTheUnroundedValue()
+    {
+        Assert.Equal("0.0333", new Rate(0.0333m).ToString());
+    }
+
+    [Fact]
+    public void ToStringIsNotAffectedByCurrentCulture()
+    {
+        var original = CultureInfo.CurrentCulture;
+
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("es-ES");
+
+            Assert.Equal("0.21", new Rate(0.21m).ToString());
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = original;
+        }
+    }
 }
