@@ -40,7 +40,8 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - [ ] **First:** enter G1, G2, G3, G6, G7 into the AEAT simulator; record inputs, outputs and run date as fixtures (ADR-0011)
 - [ ] Add G8b (salary + savings income reaching the same 6,500 € cap as G8) and enter it into the simulator
 - [ ] Find published worked examples for G4, G5, G9 and G10; the simulator cannot express them (SPEC-011 §1)
-- [ ] `Money`, `Rate`, `TaxYear`, `Region`, `Nif` value objects (SPEC-001)
+- [x] `Money`, `Rate` value objects (SPEC-001, #13)
+- [ ] `TaxYear`, `Region`, `Nif` value objects (SPEC-001)
 - [x] `ScaleCalculator` + property tests (#6)
 - [x] `MonthlyCuotaCalculator`: TGSS cuota with the tarifa plana window and the prorated month of alta (#7)
 - [ ] `EmploymentIncomeCalculator` → golden #1, #2, #8
