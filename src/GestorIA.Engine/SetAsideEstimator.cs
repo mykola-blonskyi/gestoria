@@ -221,6 +221,7 @@ public static class SetAsideEstimator
             "MonthlyCuotaCalculator for each month of alta; the same tramo every month, tarifa plana while it lasts"));
 
         var lastTarifaPlanaMonth = tarifaPlana.LastMonth(alta);
+        var monthsInForce = lastTarifaPlanaMonth.MonthsSince(altaMonth);
         var lapse = lastTarifaPlanaMonth.AddMonths(1);
         var cuotaAfterLapse = MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, expectedAnnualNet, lapse), tramos, tarifaPlana).FullMonthCuota;
         var lapseWhen = lapse.MonthsSince(new YearMonth(taxYear, 1)) < 0 ? "before this tax year"
@@ -230,10 +231,10 @@ public static class SetAsideEstimator
             "set-aside.tarifa-plana-lapse",
             TraceSection.SeguridadSocial,
             "Fin de la tarifa plana",
-            [new("alta", Invariant($"{alta:yyyy-MM-dd}")), new("tarifaPlanaMonths", Invariant($"{tarifaPlana.Months}")), new("tarifaPlana", Show(tarifaPlana.Amount))],
-            Invariant($"{altaMonth} + {tarifaPlana.Months} complete months → tarifa plana through {lastTarifaPlanaMonth}; from {lapse}, {lapseWhen}, the tramo cuota {cuotaAfterLapse}"),
+            [new("alta", Invariant($"{alta:yyyy-MM-dd}")), new("tarifaPlanaMonths", Invariant($"{monthsInForce}")), new("tarifaPlana", Show(tarifaPlana.Amount))],
+            Invariant($"{altaMonth} + {monthsInForce} complete months → tarifa plana through {lastTarifaPlanaMonth}; from {lapse}, {lapseWhen}, the tramo cuota {cuotaAfterLapse}"),
             cuotaAfterLapse,
-            "Ley 20/2007 art. 38 ter.1 (boe.es consolidated text, read 2026-09-26): from the alta through the twelve complete calendar months after it; config seguridadSocial.tarifaPlana. "
+            "Ley 20/2007 art. 38 ter.1 (boe.es consolidated text, read 2026-09-27): from the alta through the complete calendar months after it, eleven when the alta is on the 1st (itself a complete calendar month) and twelve otherwise, per Seguridad Social's own reading of the benefit as the first 12 months of alta (portal.seg-social.gob.es); config seguridadSocial.tarifaPlana. "
                 + "The art. 38 ter.2 extension for a net below the SMI must be requested and is not assumed, which over-reserves"));
 
         var carry = Modelo130Carry.StartOfYear;

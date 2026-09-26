@@ -54,6 +54,30 @@ public class MonthlyCuotaExamples
     }
 
     [Fact]
+    public void AltaOnTheFirst_TwelfthMonthIsStillTarifaPlana()
+    {
+        var result = Run(new YearMonth(2027, 12), alta: new DateOnly(2027, 1, 1));
+
+        Assert.Equal(80m, result.Cuota);
+    }
+
+    [Fact]
+    public void AltaOnTheFirst_ThirteenthMonthLapses()
+    {
+        var result = Run(new YearMonth(2028, 1), alta: new DateOnly(2027, 1, 1));
+
+        Assert.Equal(425.85m, result.Cuota);
+    }
+
+    [Fact]
+    public void AltaOnTheSecond_ThirteenthMonthIsStillTarifaPlana()
+    {
+        var result = Run(new YearMonth(2028, 1), alta: new DateOnly(2027, 1, 2));
+
+        Assert.Equal(80m, result.Cuota);
+    }
+
+    [Fact]
     public void TraceNamesTheTramoAndTheIncomeThatSelectedIt()
     {
         var step = Run(new YearMonth(2027, 2)).Trace.Steps.Single(s => s.Id == "ss.tramo");
