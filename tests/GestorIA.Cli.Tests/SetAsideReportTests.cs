@@ -79,6 +79,15 @@ public class SetAsideReportTests
         Assert.Contains("The annual return will want 1258.44 € more, payable by 2026-06-30.", report, StringComparison.Ordinal);
     }
 
+    // 20 April 2025 is a Sunday and 21 April Easter Monday, a holiday in the Comunitat Valenciana.
+    [Fact]
+    public void TheDueDatePrintedIsTheWorkingDayTheDeadlineMovesTo()
+    {
+        var report = Render("G16");
+
+        Assert.Contains("  Next Modelo 130, Q1                     317.92 €, due 2025-04-01 to 2025-04-22\n", report, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void WarningsPrintBeforeInformation()
     {

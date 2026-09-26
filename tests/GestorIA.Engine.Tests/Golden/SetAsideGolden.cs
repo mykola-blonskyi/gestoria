@@ -73,7 +73,8 @@ internal static class SetAsideGolden
         }
 
         var wantDueWindow = wantNextPayment["dueWindow"]!.AsArray().Select(v => v!.GetValue<string>()).ToList();
-        var gotDueWindow = new[] { result.NextPayment.DueWindow.Start.ToString(), result.NextPayment.DueWindow.End.ToString() };
+        var gotDueWindow = new[] { result.NextPayment.DueWindow.Start, result.NextPayment.DueWindow.End }
+            .Select(day => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         if (!wantDueWindow.SequenceEqual(gotDueWindow))
         {
             mismatches.Add($"nextPayment.dueWindow: expected [{string.Join(", ", wantDueWindow)}], got [{string.Join(", ", gotDueWindow)}]");

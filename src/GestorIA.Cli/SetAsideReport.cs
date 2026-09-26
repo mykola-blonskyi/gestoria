@@ -48,7 +48,7 @@ public static class SetAsideReport
         text.AppendLine();
         text.AppendLine("Estimate");
         Row(text, "Hold back from every payment received", Percent(result.HoldBackShare));
-        Row(text, Invariant($"Next Modelo 130, {next.Quarter}"), Invariant($"{Euros(next.AIngresar)}, due {Day(next.DueWindow.Start, taxYear)} to {Day(next.DueWindow.End, taxYear)}"));
+        Row(text, Invariant($"Next Modelo 130, {next.Quarter}"), Invariant($"{Euros(next.AIngresar)}, due {Day(next.DueWindow.Start)} to {Day(next.DueWindow.End)}"));
         Row(text, "Cuota SS per month this quarter", Euros(result.MonthlyCuotaSs));
         Row(text, "Annual return (Renta) gap", Invariant($"{Euros(result.AnnualTrueUpGap)}, payable by the end of {result.AnnualTrueUpPayableIn}"));
         Row(text, "IVA to set aside", Euros(result.IvaToSetAside));
@@ -75,8 +75,7 @@ public static class SetAsideReport
     // The "%" in a custom format multiplies by 100 as it formats; the stored Rate is unchanged.
     private static string Percent(Rate rate) => rate.Value.ToString("0.00 %", CultureInfo.InvariantCulture);
 
-    private static string Day(CalendarDay day, int taxYear) =>
-        new DateOnly(taxYear + day.YearOffset, day.Month, day.Day).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    private static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     private static void Row(StringBuilder text, string label, string value) => text.AppendLine("  " + label.PadRight(40) + value);
 }

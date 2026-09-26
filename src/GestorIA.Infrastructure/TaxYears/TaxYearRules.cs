@@ -62,6 +62,30 @@ internal static partial class TaxYearRules
             }
         }
 
+        // A holiday list that names no day of a year a window ends in was never filled for that year.
+        var holidayLists = new List<(string Pointer, JsonNode List)> { ("/calendar/holidays", root["calendar"]!["holidays"]!) };
+
+        foreach (var (code, region) in root["regions"]!.AsObject())
+        {
+            if (region!["_todo"] is null) { holidayLists.Add(($"/regions/{code}/holidays", region["holidays"]!)); }
+        }
+
+        // DistinctBy keeps the first element for each key, like lodash's uniqBy: one failure per list and year, not per window.
+        var lastDays = Windows(root["calendar"]!)
+            .Select(w => (w.Pointer, End: TaxYearConfigParser.ParseDay(w.Window[1]!.Read<string>())))
+            .DistinctBy(w => w.End.YearOffset);
+
+        foreach (var (pointer, end) in lastDays)
+        {
+            foreach (var (listPointer, list) in holidayLists)
+            {
+                if (!list.AsArray().Any(day => TaxYearConfigParser.ParseDay(day!.Read<string>()).YearOffset == end.YearOffset))
+                {
+                    yield return $"{listPointer} names no day in the year of {end}, where {pointer} ends; list that year's holidays or the deadline cannot move off one";
+                }
+            }
+        }
+
         var provenance = root["provenance"]!.AsObject();
 
         foreach (var (pointer, _) in provenance)

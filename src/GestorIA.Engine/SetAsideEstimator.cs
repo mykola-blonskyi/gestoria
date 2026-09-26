@@ -278,7 +278,7 @@ public static class SetAsideEstimator
             }
 
             var result = Modelo130Calculator.Pago(
-                new Modelo130Input(quarter, ingresosYtd, gastosYtd, input.Activity.Retenciones, input.Profile.Activity.PreviousYear),
+                new Modelo130Input(quarter, ingresosYtd, gastosYtd, input.Activity.Retenciones, input.Profile.Activity.PreviousYear, input.Profile.Region),
                 carry,
                 config);
 

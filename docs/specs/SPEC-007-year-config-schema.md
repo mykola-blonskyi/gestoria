@@ -50,7 +50,7 @@
                        "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12,
                                         "extensionNetIncomeCap": null } },                      // SMI; UNVERIFIED, see §2.1
   "calendar": { "modelo130": [ ["04-01","04-20"], ["07-01","07-20"], ["10-01","10-20"], ["+1-01-01","+1-01-30"] ],
-                "renta": ["+1-04-02","+1-06-30"], "holidays": [ ... ] },
+                "renta": ["+1-04-08","+1-06-30"], "holidays": [ "01-01", ..., "+1-01-01", ... ] },  // regional ones in regions.XX.holidays
   "casillas": { "0003": "trabajo.ingresos", ... },          // SPEC-008
   "deducciones": [ ... ],                                     // SPEC-006
   "provenance": { "/irpf/escalaEstatal": { ... }, ... }        // §1.1
@@ -125,6 +125,7 @@ That line is not stylistic. JSON Schema can express some ordering constraints th
 | Every `provenance` pointer dereferences to a real node | pointer resolution; a dangling pointer is silent rot |
 | `taxYear` equals the filename stem | the filename is outside the document |
 | Calendar windows chronological, `start <= end` | pairwise |
+| `calendar.holidays` and each complete region's `holidays` name at least one day in every year a window ends in | cross-node; a list never filled for the next year would leave the Q4 and renta deadlines unmoved |
 
 **Casilla namespaces are not one namespace.** SPEC-008 §2's `casillas` keys are four-digit Modelo 100 fields. SPEC-006 §2's regional credits carry annex identifiers such as `B.VC.12`. So "every `deducciones[].casilla` exists in `casillas`", as earlier drafts of this section said, is false: it would reject the first regional credit anyone adds. The check splits by `scope` — `estatal` resolves against `casillas`, `autonomica` matches the annex pattern.
 

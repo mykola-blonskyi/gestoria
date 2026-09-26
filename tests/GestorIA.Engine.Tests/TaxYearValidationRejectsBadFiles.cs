@@ -52,6 +52,12 @@ public class TaxYearValidationRejectsBadFiles
         ["Modelo 130 calendar without a window for every quarter"] =
             (r => r["calendar"]!["modelo130"]!.AsArray().RemoveAt(3), "/calendar/modelo130"),
 
+        ["national holidays that stop before the year the renta window ends in"] =
+            (r => RemoveNextYear(r["calendar"]!["holidays"]!.AsArray()), "/calendar/holidays"),
+
+        ["regional holidays that stop before the year the renta window ends in"] =
+            (r => RemoveNextYear(r["regions"]!["VC"]!["holidays"]!.AsArray()), "/regions/VC/holidays"),
+
         ["taxYear disagrees with the file name"] =
             (r => r["taxYear"] = 2024, "/taxYear"),
 
@@ -167,6 +173,14 @@ public class TaxYearValidationRejectsBadFiles
         var value = obj[from];
         obj.Remove(from);
         obj[to] = value;
+    }
+
+    private static void RemoveNextYear(JsonArray days)
+    {
+        foreach (var day in days.Where(d => d!.GetValue<string>().StartsWith("+1-", StringComparison.Ordinal)).ToList())
+        {
+            days.Remove(day);
+        }
     }
 
     private static void Swap(JsonArray array, int i, int j)
