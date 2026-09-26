@@ -21,7 +21,7 @@ public class AnnualTrueUpExamples
                 region),
             config ?? TaxYearConfigFiles.Year2025);
 
-    private static decimal Output(AnnualTrueUpResult result, string id) => result.Trace.Steps.Single(s => s.Id == id).Output;
+    private static decimal Output(AnnualTrueUpResult result, string id) => result.Trace.Steps.Single(s => s.Id == id).Euros();
 
     // Difícil justificación off, so the activity's rendimiento neto is exactly ingresos − gastos.
     private static TaxYearConfig WithoutDificilJustificacion()
@@ -188,7 +188,7 @@ public class AnnualTrueUpExamples
         var established = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 4787.54m);
         var started = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 4787.54m, newActivity: FirstPeriod());
 
-        Assert.Equal(4787.544m, ReduccionInicio(started).Output);
+        Assert.Equal(4787.544m, ReduccionInicio(started).Euros());
         Assert.Equal(54550.176m, Output(started, "renta.stacked.base-liquidable"));
         Assert.Equal(new Money(7259.02m), started.LiabilityOnActivity);
         Assert.Equal(1958.105496m, Output(established, "renta.liability-on-activity") - Output(started, "renta.liability-on-activity"));
@@ -199,7 +199,7 @@ public class AnnualTrueUpExamples
     {
         var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, newActivity: new NewActivity.Started(NewActivityPeriod.Following, Money.Zero));
 
-        Assert.Equal(4787.544m, ReduccionInicio(result).Output);
+        Assert.Equal(4787.544m, ReduccionInicio(result).Euros());
     }
 
     [Fact]
@@ -207,7 +207,7 @@ public class AnnualTrueUpExamples
     {
         var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m);
 
-        Assert.Equal(0m, ReduccionInicio(result).Output);
+        Assert.Equal(0m, ReduccionInicio(result).Euros());
         Assert.Equal(59337.72m, Output(result, "renta.stacked.base-liquidable"));
     }
 
@@ -216,7 +216,7 @@ public class AnnualTrueUpExamples
     {
         var result = Run(salary: 40000m, ss: 2600m, ingresos: 1000m, gastos: 9000m, newActivity: FirstPeriod());
 
-        Assert.Equal(0m, ReduccionInicio(result).Output);
+        Assert.Equal(0m, ReduccionInicio(result).Euros());
         Assert.Equal(27400m, Output(result, "renta.stacked.base-liquidable"));
     }
 
@@ -233,7 +233,7 @@ public class AnnualTrueUpExamples
     {
         var result = Run(salary: 0m, ss: 0m, ingresos: net, gastos: 0m, config: WithoutDificilJustificacion(), newActivity: FirstPeriod());
 
-        Assert.Equal(reduccion, ReduccionInicio(result).Output);
+        Assert.Equal(reduccion, ReduccionInicio(result).Euros());
     }
 
     // LIRPF art. 32.3, last paragraph: "más del 50 por ciento", so exactly half still gets the reduction.
@@ -243,8 +243,8 @@ public class AnnualTrueUpExamples
         var half = Run(salary: 0m, ss: 0m, ingresos: 30000m, gastos: 0m, config: WithoutDificilJustificacion(), newActivity: FirstPeriod(fromFormerEmployer: 15000m));
         var overHalf = Run(salary: 0m, ss: 0m, ingresos: 30000m, gastos: 0m, config: WithoutDificilJustificacion(), newActivity: FirstPeriod(fromFormerEmployer: 15000.01m));
 
-        Assert.Equal(6000m, ReduccionInicio(half).Output);
-        Assert.Equal(0m, ReduccionInicio(overHalf).Output);
+        Assert.Equal(6000m, ReduccionInicio(half).Euros());
+        Assert.Equal(0m, ReduccionInicio(overHalf).Euros());
         Assert.StartsWith("ingresos from a former employer 15000.01 > 0.50 × 30000 → 0", ReduccionInicio(overHalf).Formula);
     }
 
@@ -255,7 +255,7 @@ public class AnnualTrueUpExamples
     {
         var result = Run(salary: 20000m, ss: 1300m, ingresos: 8000m, gastos: 0m, newActivity: FirstPeriod());
 
-        Assert.Equal(1520m, ReduccionInicio(result).Output);
+        Assert.Equal(1520m, ReduccionInicio(result).Euros());
         Assert.Equal(0m, Output(result, "renta.trabajo.reduccion.stacked"));
         Assert.Equal(new Money(1194.15m), result.ReduccionTrabajoLost);
         Assert.Contains(result.Warnings, w => w.Code == WarningCodes.ReduccionTrabajoLost);

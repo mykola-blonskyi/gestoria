@@ -88,11 +88,24 @@ internal static class SetAsideGolden
 
         foreach (var (id, wantNode) in expected["traceOutputs"]!.AsObject())
         {
-            var want = DecimalOf(wantNode);
             var got = result.Trace.Steps.Single(s => s.Id == id).Output;
-            if (want != got)
+
+            // The fixture stores a plain string; parse it into whatever kind the engine actually produced for this step,
+            // so a Money and a Count fixture read the same way they were written, and TraceValue's own equality compares them.
+            TraceValue? want = got switch
             {
-                mismatches.Add(string.Create(CultureInfo.InvariantCulture, $"traceOutputs.{id}: expected {want}, got {got}"));
+                TraceValue.Money => new TraceValue.Money(MoneyOf(wantNode)),
+                TraceValue.Count => new TraceValue.Count(int.Parse(wantNode!.GetValue<string>(), NumberStyles.None, CultureInfo.InvariantCulture)),
+                _ => null,
+            };
+
+            if (want is null)
+            {
+                mismatches.Add($"traceOutputs.{id}: no fixture format for a {got.GetType().Name} output");
+            }
+            else if (want != got)
+            {
+                mismatches.Add($"traceOutputs.{id}: expected {want}, got {got}");
             }
         }
 

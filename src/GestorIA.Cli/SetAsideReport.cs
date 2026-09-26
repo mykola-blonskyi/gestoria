@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using GestorIA.Domain.ValueObjects;
 using GestorIA.Engine;
@@ -19,7 +18,7 @@ public static class SetAsideReport
         text.AppendLine(Invariant($"GestorIA set-aside estimate, tax year {taxYear}"));
         text.AppendLine(Invariant($"{result.Trace.Steps.Count} calculation steps first; the estimate and {result.Warnings.Count} notices ({warnings} warnings) follow at the end."));
         text.AppendLine();
-        text.AppendLine("Calculation (SPEC-002 §6 trace; figures as the engine computed them, unrounded)");
+        text.AppendLine("Calculation (SPEC-002 §6 trace; results shown to the cent, formulas as the engine computed them, unrounded)");
 
         TraceSection? section = null;
 
@@ -40,7 +39,7 @@ public static class SetAsideReport
             }
 
             text.AppendLine("       formula: " + step.Formula);
-            text.AppendLine(Invariant($"       result:  {step.Output}"));
+            text.AppendLine(Invariant($"       result:  {step.Output.Display()}"));
             text.AppendLine("       source:  " + step.Reference);
         }
 
@@ -70,13 +69,12 @@ public static class SetAsideReport
         return text.ToString();
     }
 
-    // SPEC-010 §5: two decimals and the euro sign.
-    private static string Euros(Money money) => money.Amount.ToString("0.00", CultureInfo.InvariantCulture) + " €";
+    // Delegates to the TraceValue cases so "0.00 €" / "0.00 %" / yyyy-MM-dd live in one place (#42).
+    private static string Euros(Money money) => new TraceValue.Money(money).Display();
 
-    // The "%" in a custom format multiplies by 100 as it formats; the stored Rate is unchanged.
-    private static string Percent(Rate rate) => rate.Value.ToString("0.00 %", CultureInfo.InvariantCulture);
+    private static string Percent(Rate rate) => new TraceValue.Rate(rate).Display();
 
-    private static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    private static string Day(DateOnly day) => new TraceValue.Date(day).Display();
 
     private static void Row(StringBuilder text, string label, string value) => text.AppendLine("  " + label.PadRight(40) + value);
 }

@@ -84,7 +84,7 @@ public class MonthlyCuotaExamples
 
         Assert.Contains(new TraceInput("tramo", "General 7"), step.Inputs);
         Assert.Contains(new TraceInput("rendimientoNetoMensual", "2500"), step.Inputs);
-        Assert.Equal(425.85m, step.Output);
+        Assert.Equal(425.85m, step.Euros());
     }
 
     [Fact]

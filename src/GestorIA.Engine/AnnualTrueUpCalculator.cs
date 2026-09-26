@@ -123,7 +123,7 @@ public static class AnnualTrueUpCalculator
             "Cuota íntegra que añade la actividad",
             [new("cuotaStacked", Show(stacked)), new("cuotaSolo", Show(solo))],
             Invariant($"{Show(stacked)} − {Show(solo)} = {Show(liability)}"),
-            liability.Amount,
+            new TraceValue.Money(liability),
             "Set-aside estimator spec (#2), marginal rate: the activity income is taxed at the rates it reaches on top of the employment income, including any reducción por trabajo it destroys"));
 
         var estatalRate = ScaleCalculator.MarginalRate(irpf.EscalaEstatal, stackedBase.Amount);
@@ -135,7 +135,7 @@ public static class AnnualTrueUpCalculator
             "Tipo marginal en la base con la actividad",
             [new("baseLiquidable", Show(stackedBase)), new("region", input.Region)],
             Invariant($"{estatalRate} estatal + {autonomicaRate} autonómico = {marginalRate}"),
-            marginalRate.Value,
+            new TraceValue.Rate(marginalRate),
             $"{Lirpf} art. 63.1 and 74.1: the rate of the tranche of each scale that the next euro of base falls in"));
 
         steps.Add(new TraceStep(
@@ -144,11 +144,12 @@ public static class AnnualTrueUpCalculator
             "Pagos fraccionados del Modelo 130 del ejercicio",
             [new("modelo130Advances", Show(input.Modelo130Advances))],
             Invariant($"Σ Modelo 130 a ingresar over the year = {Show(input.Modelo130Advances)}"),
-            input.Modelo130Advances.Amount,
+            new TraceValue.Money(input.Modelo130Advances),
             "Modelo130Calculator at config modelo130.rate. Retenciones on activity invoices are not credited here; they are zero for foreign payers (SPEC-003 §0)"));
 
         var gap = Positive(liability - input.Modelo130Advances).Round2();
-        var window = FilingDeadline.Renta(input.Region, config);
+        var (window, dueStep) = FilingDeadline.Renta(input.Region, config);
+        steps.Add(dueStep);
         var payableIn = YearMonth.Of(window.End);
         steps.Add(new TraceStep(
             "renta.gap",
@@ -156,8 +157,8 @@ public static class AnnualTrueUpCalculator
             "Lo que la declaración anual pedirá además del Modelo 130",
             [new("liabilityOnActivity", Show(liability)), new("modelo130Advances", Show(input.Modelo130Advances)), new("renta", Invariant($"{Day(window.Start)} … {Day(window.End)}"))],
             Invariant($"max(0, {Show(liability)} − {Show(input.Modelo130Advances)}) = {Show(gap)}, due {Day(window.Start)} … {Day(window.End)}, so by the end of {payableIn}"),
-            gap.Amount,
-            $"config calendar.renta; {FilingDeadline.Rule}. Assumes the employer's retenciones settle the tax on the employment income alone, so only the activity's share is left. "
+            new TraceValue.Money(gap),
+            "Assumes the employer's retenciones settle the tax on the employment income alone, so only the activity's share is left. "
                 + "Conservative (#2): a refund is not counted on, no deducciones (SPEC-006) are applied, and the LIRPF art. 32.2.3º reduction of the activity net is not applied"));
 
         var warnings = new List<Warning>();
@@ -203,7 +204,7 @@ public static class AnnualTrueUpCalculator
                 $"Base liquidable general, {label}",
                 [new("rendimientoTrabajoReducido", Show(trabajoReducido)), new("rendimientoActividad", Show(rendimientoActividad))],
                 Invariant($"max(0, {Show(trabajoReducido)} + {Show(rendimientoActividad)}) = {Show(baseLiquidable)}"),
-                baseLiquidable.Amount,
+                new TraceValue.Money(baseLiquidable),
                 $"{Lirpf} art. 48 and 50: a negative balance is not taxed"));
 
             var estatal = ScalePart(
@@ -238,7 +239,7 @@ public static class AnnualTrueUpCalculator
             "Rendimiento neto del trabajo antes de otros gastos",
             [new("ingresos", Show(employment.Ingresos)), new("seguridadSocial", Show(employment.SeguridadSocial))],
             Invariant($"{Show(employment.Ingresos)} − {Show(employment.SeguridadSocial)} = {Show(rnArt20)}"),
-            rnArt20.Amount,
+            new TraceValue.Money(rnArt20),
             $"{Lirpf} art. 19.2.a. Art. 20 measures the reducción on this figure, before the art. 19.2.f otros gastos"));
 
         var otrosGastos = Min(otrosGastosConfig, Positive(rnArt20));
@@ -249,7 +250,7 @@ public static class AnnualTrueUpCalculator
             "Rendimiento neto del trabajo",
             [new("rendimientoNetoPrevio", Show(rnArt20)), new("otrosGastos", Show(otrosGastosConfig))],
             Invariant($"{Show(rnArt20)} − min({Show(otrosGastosConfig)}, max(0, {Show(rnArt20)})) = {Show(rendimientoNeto)}"),
-            rendimientoNeto.Amount,
+            new TraceValue.Money(rendimientoNeto),
             $"config irpf.trabajo.otrosGastos; {Lirpf} art. 19.2.f, limited to the rendimiento íntegro less the other deductible expenses"));
 
         return new TrabajoNeto(rnArt20, rendimientoNeto);
@@ -267,7 +268,7 @@ public static class AnnualTrueUpCalculator
             "Rendimiento neto de la actividad",
             [new("ingresos", Show(activity.Ingresos)), new("gastos", Show(activity.Gastos)), new("pct", dificilJustificacion.Pct.ToString()), new("max", Show(dificilJustificacion.Max))],
             Invariant($"previo = {Show(activity.Ingresos)} − {Show(activity.Gastos)} = {Show(previo)}; {Show(previo)} − min({dificilJustificacion.Pct} × max(0, {Show(previo)}), {Show(dificilJustificacion.Max)}) = {Show(rendimientoNeto)}"),
-            rendimientoNeto.Amount,
+            new TraceValue.Money(rendimientoNeto),
             "SPEC-002 step 2, business rule 7; config irpf.actividad.dificilJustificacion. Gastos include the RETA cuota, a deductible expense of the titular (AEAT Manual práctico Renta 2025, cap. 7)"));
 
         return rendimientoNeto;
@@ -308,7 +309,7 @@ public static class AnnualTrueUpCalculator
                 new("formerEmployerShare", config.FormerEmployerShare.ToString()),
             ],
             Invariant($"{formula}; rendimiento neto reducido = {Show(rendimientoNeto)} − {Show(reduccion)} = {Show(rendimientoNeto - reduccion)}"),
-            reduccion.Amount,
+            new TraceValue.Money(reduccion),
             $"{Lirpf} art. 32.3, {status.Period}; config irpf.actividad.inicioActividad; AEAT Manual práctico Renta 2025, cap. 7, fase 3. "
                 + "Art. 32.2.1º is ruled out for this profile (SPEC-003 §0): it requires every sale to go to one client or the taxpayer to be a TRADE (2.º b), "
                 + "at least 70 % of ingresos under retención, which foreign payers never withhold (2.º f), and no employment income (2.º e). "
@@ -336,7 +337,7 @@ public static class AnnualTrueUpCalculator
             title,
             [new("rendimientoNetoArt20", Show(rn)), new("otrasRentas", Show(otrasRentas)), new("otherIncomeCap", Show(config.OtherIncomeCap))],
             Invariant($"{formula}; limited to max(0, {Show(trabajo.RendimientoNeto)}) = {Show(applied)}"),
-            applied.Amount,
+            new TraceValue.Money(applied),
             $"config irpf.trabajo.reduccion; {Lirpf} art. 20, where the third band starts from the second band's value at t2; business rule 6. "
                 + "Otras rentas are the activity's rendimiento neto before its art. 32.3 reduction (AEAT Manual práctico Renta 2025, cap. 3, fase 3), the only income other than employment this calculation is given"));
 
@@ -362,7 +363,7 @@ public static class AnnualTrueUpCalculator
             title,
             [new("baseLiquidable", Show(baseLiquidable)), new("minimo", Show(minimo))],
             Invariant($"scale({Show(baseLiquidable)}) − scale({Show(minimo)}) = {onBase} − {onMinimo} = {Show(cuota)}"),
-            cuota.Amount,
+            new TraceValue.Money(cuota),
             reference));
 
         return cuota;

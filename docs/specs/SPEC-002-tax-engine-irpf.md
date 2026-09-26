@@ -115,8 +115,9 @@ No rounding inside steps. `Modelo100Mapper` rounds each casilla to 2 dp `AwayFro
 ```
 TraceStep { Id, Section (Trabajo|Actividad|Ahorro|Inmuebles|Bases|Minimo|Cuota|Deducciones|Resultado),
             Title, Inputs: {name: value}, Formula: string (template with resolved numbers),
-            Output: Money|Rate|Bool, References: { theory: "§7.2", casillas: [0224], ledgerRowIds: [...] } }
+            Output: Money|Rate|Count|Date, References: { theory: "§7.2", casillas: [0224], ledgerRowIds: [...] } }
 ```
+`Output` is the closed union `TraceValue` (#42): a step cannot be built without saying which kind its output is, and the value is stored unrounded (§5). `Display()` formats it for a reader, culture-invariant for now: money to the cent with €, rates as a percentage, counts as integers, dates as `yyyy-MM-dd` (SPEC-010 §5). A kind is added when a step needs one; no step emits a Bool yet.
 `Trace.Render(Culture)` must reproduce the tabular breakdown of Theory §5.3 / §7.2.
 
 ## 7. Warnings the engine must raise (non-exhaustive)

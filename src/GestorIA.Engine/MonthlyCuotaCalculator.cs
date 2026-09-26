@@ -1,3 +1,4 @@
+using GestorIA.Domain.ValueObjects;
 using static System.FormattableString;
 
 namespace GestorIA.Engine;
@@ -31,7 +32,7 @@ public static class MonthlyCuotaCalculator
             "Rendimiento neto mensual esperado",
             [new("expectedAnnualNet", Invariant($"{input.ExpectedAnnualNet}"))],
             Invariant($"{input.ExpectedAnnualNet} / 12 = {monthlyNet}"),
-            monthlyNet,
+            new TraceValue.Money(new Money(monthlyNet)),
             "LGSS art. 308.1.c: promedio mensual de los rendimientos netos anuales; the 7 % gastos genéricos deduction is not applied, which over-reserves"));
 
         var tramo = tramos.For(monthlyNet);
@@ -43,7 +44,7 @@ public static class MonthlyCuotaCalculator
             "Tramo de cotización",
             [new("rendimientoNetoMensual", Invariant($"{monthlyNet}")), new("tramo", tramo.Name)],
             Invariant($"{tramo.NetFrom.Amount} < {monthlyNet} <= {upTo} → {tramo.Name}, cuota at base mínima = {tramo.CuotaMin.Amount}"),
-            tramo.CuotaMin.Amount,
+            new TraceValue.Money(tramo.CuotaMin),
             "config seguridadSocial.tramos; cuotaMin is the cuota at the tramo's base mínima"));
 
         var monthsInForce = tarifaPlana.LastMonth(input.Alta).MonthsSince(altaMonth);
@@ -58,7 +59,7 @@ public static class MonthlyCuotaCalculator
             tarifaPlanaInForce
                 ? Invariant($"months since alta {monthsSinceAlta} <= {monthsInForce} → {tarifaPlana.Amount.Amount}")
                 : Invariant($"months since alta {monthsSinceAlta} > {monthsInForce} → tramo cuota {tramo.CuotaMin.Amount}"),
-            fullMonth,
+            new TraceValue.Money(new Money(fullMonth)),
             "Ley 20/2007 art. 38 ter.1: the alta month plus the complete calendar months after it, eleven when the alta is on the 1st (itself a complete calendar month) and twelve otherwise, per Seguridad Social's own reading of the benefit as the first 12 months of alta (portal.seg-social.gob.es)"));
 
         var cuota = fullMonth;
@@ -74,7 +75,7 @@ public static class MonthlyCuotaCalculator
                 "Prorrateo del mes de alta",
                 [new("cuotaMensual", Invariant($"{fullMonth}")), new("diasDeAlta", Invariant($"{days}"))],
                 Invariant($"{fullMonth} × {days} / 30 = {cuota}"),
-                cuota,
+                new TraceValue.Money(new Money(cuota)),
                 "RD 2064/1995 art. 45.1 (Ley 6/2017, disposición final 2.ª.3): charged per day of alta, monthly cuota divided by thirty; assumes one of the first three altas of the year (RD 84/1996 art. 46.2.a))"));
         }
 

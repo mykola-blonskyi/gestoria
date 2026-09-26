@@ -132,7 +132,10 @@ public static class Modelo130Calculator
             resultado,
             $"{Instrucciones}, casillas 17 and 19; RD 439/2007 art. 110.3.c: only a minoración above casilla 12 leaves a negative result, which pays zero and is deducted in later quarters of the same year"));
 
-        return new Modelo130Result(input.Quarter, resultado, next, FilingDeadline.Modelo130(input.Quarter, input.Region, config), new CalculationTrace(steps));
+        var (dueWindow, dueStep) = FilingDeadline.Modelo130(input.Quarter, input.Region, config);
+        steps.Add(dueStep);
+
+        return new Modelo130Result(input.Quarter, resultado, next, dueWindow, new CalculationTrace(steps));
     }
 
     // Business rule 7: 5 % of a positive rendimiento neto previo, capped, never negative.
@@ -202,7 +205,7 @@ public static class Modelo130Calculator
     }
 
     private static TraceStep Step(string id, string title, IReadOnlyList<TraceInput> inputs, string formula, Money output, string reference) =>
-        new(id, TraceSection.Modelo130, title, inputs, formula, output.Amount, reference);
+        new(id, TraceSection.Modelo130, title, inputs, formula, new TraceValue.Money(output), reference);
 
     private static Money Positive(Money money) => money > Money.Zero ? money : Money.Zero;
 
