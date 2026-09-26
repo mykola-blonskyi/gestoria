@@ -46,19 +46,20 @@ public static class MonthlyCuotaCalculator
             tramo.CuotaMin.Amount,
             "config seguridadSocial.tramos; cuotaMin is the cuota at the tramo's base mínima"));
 
-        var tarifaPlanaInForce = input.Month.MonthsSince(tarifaPlana.LastMonth(input.Alta)) <= 0;
+        var monthsInForce = tarifaPlana.LastMonth(input.Alta).MonthsSince(altaMonth);
+        var tarifaPlanaInForce = monthsSinceAlta <= monthsInForce;
         var fullMonth = tarifaPlanaInForce ? tarifaPlana.Amount.Amount : tramo.CuotaMin.Amount;
 
         steps.Add(new TraceStep(
             "ss.tarifa-plana",
             TraceSection.SeguridadSocial,
             tarifaPlanaInForce ? "Tarifa plana en vigor" : "Tarifa plana agotada",
-            [new("alta", Invariant($"{input.Alta:yyyy-MM-dd}")), new("month", input.Month.ToString()), new("tarifaPlanaMonths", Invariant($"{tarifaPlana.Months}"))],
+            [new("alta", Invariant($"{input.Alta:yyyy-MM-dd}")), new("month", input.Month.ToString()), new("tarifaPlanaMonths", Invariant($"{monthsInForce}"))],
             tarifaPlanaInForce
-                ? Invariant($"months since alta {monthsSinceAlta} <= {tarifaPlana.Months} → {tarifaPlana.Amount.Amount}")
-                : Invariant($"months since alta {monthsSinceAlta} > {tarifaPlana.Months} → tramo cuota {tramo.CuotaMin.Amount}"),
+                ? Invariant($"months since alta {monthsSinceAlta} <= {monthsInForce} → {tarifaPlana.Amount.Amount}")
+                : Invariant($"months since alta {monthsSinceAlta} > {monthsInForce} → tramo cuota {tramo.CuotaMin.Amount}"),
             fullMonth,
-            "Ley 20/2007 art. 38 ter.1: the month of alta plus the twelve complete calendar months following it"));
+            "Ley 20/2007 art. 38 ter.1: the alta month plus the complete calendar months after it, eleven when the alta is on the 1st (itself a complete calendar month) and twelve otherwise, per Seguridad Social's own reading of the benefit as the first 12 months of alta (portal.seg-social.gob.es)"));
 
         var cuota = fullMonth;
 
