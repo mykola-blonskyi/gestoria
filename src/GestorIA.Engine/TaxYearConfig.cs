@@ -23,9 +23,13 @@ public sealed record TrabajoConfig(Money OtrosGastos, ReduccionTrabajoConfig Red
 // K1 and K2 multiply a euro amount and exceed 1, so they are plain coefficients rather than a Rate.
 public sealed record ReduccionTrabajoConfig(Money Fixed, Money T1, Money T2, Money T3, decimal K1, decimal K2, Money OtherIncomeCap);
 
-public sealed record ActividadConfig(DificilJustificacionConfig DificilJustificacion);
+public sealed record ActividadConfig(DificilJustificacionConfig DificilJustificacion, InicioActividadConfig InicioActividad);
 
 public sealed record DificilJustificacionConfig(Rate Pct, Money Max);
+
+// LIRPF art. 32.3: Pct of the positive net, on at most MaxRendimiento of it, unless more than FormerEmployerShare of the
+// period's ingresos come from a payer of the taxpayer's employment income in the year before the activity started.
+public sealed record InicioActividadConfig(Rate Pct, Money MaxRendimiento, Rate FormerEmployerShare);
 
 public sealed record RegionConfig(string Name, Scale EscalaAutonomica);
 

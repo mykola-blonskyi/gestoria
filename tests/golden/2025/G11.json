@@ -33,7 +33,7 @@
     "inputs": {
       "region": "VC",
       "employment": { "ingresos": "40000.00", "seguridadSocial": "2600.00" },
-      "activity": { "ingresos": "30000.00", "gastos": "4802.40" },
+      "activity": { "ingresos": "30000.00", "gastos": "4802.40", "newActivity": "established" },
       "modelo130Advances": "5039.52"
     },
     "expected": {

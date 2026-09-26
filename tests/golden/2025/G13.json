@@ -1,0 +1,47 @@
+{
+  "golden": "G13",
+  "scenario": "Pluriactividad in the first year of a new activity: G11's salary of 40,000 (employee SS 2,600) plus an activity started in January 2025, invoicing 30,000 to foreign clients, VC. No economic activity was carried on in 2024, none of the clients paid the taxpayer a salary in 2024, and the only expense is twelve months of the RETA tarifa plana at 80 € (960). This is the activity's first period with a positive net, so the LIRPF art. 32.3 reduction takes 20 % off it in the annual return. The Modelo 130 advances are computed on the unreduced net, with the minoración of a taxpayer who had no activity the year before.",
+  "config": "2025.example.json",
+  "modelo130": {
+    "oracle": "theory",
+    "oracleRef": "Arithmetic under SPEC-003 §1 and AEAT, instrucciones del modelo 130, casillas 03–19 (read 2026-09-26): casilla 03 is ingresos less gastos, with only art. 32.1 applied before it, never art. 32.3, so 0.20 of a cumulative net growing by 7,260 a quarter. No activity in 2024 counts as a previous-year net of zero, which is in the 9,000 band of RD 439/2007 art. 110.3.c: a minoración of 100 each quarter.",
+    "oracleRunDate": "2026-09-26",
+    "inputs": {
+      "retenciones": "foreignPayersOnly",
+      "quarters": [
+        { "quarter": "Q1", "ingresosYtd": "7500.00", "gastosYtd": "240.00" },
+        { "quarter": "Q2", "ingresosYtd": "15000.00", "gastosYtd": "480.00" },
+        { "quarter": "Q3", "ingresosYtd": "22500.00", "gastosYtd": "720.00" },
+        { "quarter": "Q4", "ingresosYtd": "30000.00", "gastosYtd": "960.00" }
+      ]
+    },
+    "expected": {
+      "quarters": [
+        { "quarter": "Q1", "rendimientoNeto": "7260.00", "pagoBruto": "1452.00", "pagosAnteriores": "0.00", "resultado": "1352.00", "aIngresar": "1352.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q2", "rendimientoNeto": "14520.00", "pagoBruto": "2904.00", "pagosAnteriores": "1452.00", "resultado": "1352.00", "aIngresar": "1352.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q3", "rendimientoNeto": "21780.00", "pagoBruto": "4356.00", "pagosAnteriores": "2904.00", "resultado": "1352.00", "aIngresar": "1352.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q4", "rendimientoNeto": "29040.00", "pagoBruto": "5808.00", "pagosAnteriores": "4356.00", "resultado": "1352.00", "aIngresar": "1352.00", "negativosPendientes": "0.00" }
+      ],
+      "totalAIngresar": "5408.00"
+    }
+  },
+  "rentaTrueUp": {
+    "oracle": "theory",
+    "oracleRef": "Arithmetic under SPEC-002 steps 1, 2, 4 and 6 and LIRPF art. 19, 20, 32.3, 56, 63 and 74 (boe.es consolidated text of Ley 35/2006, read 2026-09-26), with art. 32.3 as the AEAT Manual práctico Renta 2025, cap. 7, fase 3, explains it (read 2026-09-26). Salary alone as in G11: 35,400, cuota 7,748.00. Activity: 29,040 − 1,452 difícil justificación = 27,588, above the 6,500 cap, so no reducción por trabajo (Manual cap. 3, fase 3: the cap is tested before the activity's own reductions). Art. 32.3: 0.20 × 27,588 = 5,517.60, leaving 22,070.40. Stacked base 57,470.40, cuota 7,955.524 estatal + 8,245.8696 VC = 16,201.3936. The activity adds 8,453.39 at a marginal rate of 0.185 + 0.224, the advances cover 5,408.00, and the gap is 3,045.39, due with Renta 2025 by 30 June 2026. Without art. 32.3 the activity would add 10,854.31, so the reduction is worth 2,400.92. Uses the state mínimo for the regional scale, which cancels out of the liability as in G11 (#29).",
+    "oracleRunDate": "2026-09-26",
+    "inputs": {
+      "region": "VC",
+      "employment": { "ingresos": "40000.00", "seguridadSocial": "2600.00" },
+      "activity": { "ingresos": "30000.00", "gastos": "960.00", "newActivity": { "period": "first", "ingresosFromFormerEmployer": "0.00" } },
+      "modelo130Advances": "5408.00"
+    },
+    "expected": {
+      "liabilityOnActivity": "8453.39",
+      "marginalRate": "0.409",
+      "reduccionTrabajoLost": "0.00",
+      "gap": "3045.39",
+      "payableIn": "2026-06",
+      "warnings": ["MARGINAL_VS_EFFECTIVE"]
+    }
+  }
+}

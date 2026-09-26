@@ -11,11 +11,12 @@ public class AnnualTrueUpExamples
         decimal gastos,
         decimal advances = 0m,
         string region = "VC",
-        TaxYearConfig? config = null) =>
+        TaxYearConfig? config = null,
+        NewActivity? newActivity = null) =>
         AnnualTrueUpCalculator.Gap(
             new AnnualTrueUpInput(
                 new EmploymentIncome(new Money(salary), new Money(ss)),
-                new ActivityIncome(new Money(ingresos), new Money(gastos)),
+                new ActivityIncome(new Money(ingresos), new Money(gastos), newActivity ?? new NewActivity.Established()),
                 new Money(advances),
                 region),
             config ?? TaxYearConfigFiles.Year2025);
@@ -26,7 +27,7 @@ public class AnnualTrueUpExamples
     private static TaxYearConfig WithoutDificilJustificacion()
     {
         var config = TaxYearConfigFiles.Year2025;
-        return config with { Irpf = config.Irpf with { Actividad = new ActividadConfig(new DificilJustificacionConfig(Rate.Zero, Money.Zero)) } };
+        return config with { Irpf = config.Irpf with { Actividad = config.Irpf.Actividad with { DificilJustificacion = new DificilJustificacionConfig(Rate.Zero, Money.Zero) } } };
     }
 
     [Fact]
@@ -164,5 +165,97 @@ public class AnnualTrueUpExamples
         var warning = Assert.Single(result.Warnings, w => w.Code == WarningCodes.MarginalVsEffective);
         Assert.DoesNotContain("Stacked", warning.Text);
         Assert.Contains("With no employment income, the 40400.00 € of activity net income is taxed 9548.00 €: an effective rate of 23.63 %, and 36.00 % on its last euro.", warning.Text);
+    }
+
+    private static NewActivity.Started FirstPeriod(decimal fromFormerEmployer = 0m) => new(NewActivityPeriod.First, new Money(fromFormerEmployer));
+
+    private static TraceStep ReduccionInicio(AnnualTrueUpResult result) => result.Trace.Steps.Single(s => s.Id == "renta.actividad.reduccion-inicio");
+
+    // G11 as a new activity: 20 % of the 23,937.72 net comes off the stacked base. The #9 verifier estimated about 1,958 less tax.
+    [Fact]
+    public void AFirstPositivePeriodTakesTwentyPercentOffTheActivityNet()
+    {
+        var established = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 5039.52m);
+        var started = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 5039.52m, newActivity: FirstPeriod());
+
+        Assert.Equal(4787.544m, ReduccionInicio(started).Output);
+        Assert.Equal(54550.176m, Output(started, "renta.stacked.base-liquidable"));
+        Assert.Equal(new Money(7259.02m), started.LiabilityOnActivity);
+        Assert.Equal(1958.105496m, Output(established, "renta.liability-on-activity") - Output(started, "renta.liability-on-activity"));
+    }
+
+    [Fact]
+    public void ThePeriodAfterTheFirstPositiveOneIsReducedToo()
+    {
+        var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, newActivity: new NewActivity.Started(NewActivityPeriod.Following, Money.Zero));
+
+        Assert.Equal(4787.544m, ReduccionInicio(result).Output);
+    }
+
+    [Fact]
+    public void AnEstablishedActivityIsNotReduced()
+    {
+        var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m);
+
+        Assert.Equal(0m, ReduccionInicio(result).Output);
+        Assert.Equal(59337.72m, Output(result, "renta.stacked.base-liquidable"));
+    }
+
+    [Fact]
+    public void ALossInTheFirstPeriodIsNotEnlarged()
+    {
+        var result = Run(salary: 40000m, ss: 2600m, ingresos: 1000m, gastos: 9000m, newActivity: FirstPeriod());
+
+        Assert.Equal(0m, ReduccionInicio(result).Output);
+        Assert.Equal(27400m, Output(result, "renta.stacked.base-liquidable"));
+    }
+
+    [Theory]
+    [InlineData(100000, 20000)]
+    [InlineData(150000, 20000)]
+    [InlineData(99999.99, 19999.998)]
+    public void OnlyTheFirst100000OfNetIsReduced(decimal net, decimal reduccion)
+    {
+        var result = Run(salary: 0m, ss: 0m, ingresos: net, gastos: 0m, config: WithoutDificilJustificacion(), newActivity: FirstPeriod());
+
+        Assert.Equal(reduccion, ReduccionInicio(result).Output);
+    }
+
+    // LIRPF art. 32.3, last paragraph: "más del 50 por ciento", so exactly half still gets the reduction.
+    [Fact]
+    public void MoreThanHalfTheIngresosFromAFormerEmployerRemovesTheReduction()
+    {
+        var half = Run(salary: 0m, ss: 0m, ingresos: 30000m, gastos: 0m, config: WithoutDificilJustificacion(), newActivity: FirstPeriod(fromFormerEmployer: 15000m));
+        var overHalf = Run(salary: 0m, ss: 0m, ingresos: 30000m, gastos: 0m, config: WithoutDificilJustificacion(), newActivity: FirstPeriod(fromFormerEmployer: 15000.01m));
+
+        Assert.Equal(6000m, ReduccionInicio(half).Output);
+        Assert.Equal(0m, ReduccionInicio(overHalf).Output);
+        Assert.StartsWith("ingresos from a former employer 15000.01 > 0.50 × 30000 → 0", ReduccionInicio(overHalf).Formula);
+    }
+
+    // G08 as a new activity. Its 7,600 net is reduced to 6,080, under the 6,500 cap, but the cap is tested on the 7,600
+    // (AEAT Manual práctico Renta 2025, cap. 3, fase 3), so the reducción por trabajo is still lost.
+    [Fact]
+    public void TheOtherIncomeCapIsTestedOnTheNetBeforeTheNewActivityReduction()
+    {
+        var result = Run(salary: 20000m, ss: 1300m, ingresos: 8000m, gastos: 0m, newActivity: FirstPeriod());
+
+        Assert.Equal(1520m, ReduccionInicio(result).Output);
+        Assert.Equal(0m, Output(result, "renta.trabajo.reduccion.stacked"));
+        Assert.Equal(new Money(1194.15m), result.ReduccionTrabajoLost);
+        Assert.Contains(result.Warnings, w => w.Code == WarningCodes.ReduccionTrabajoLost);
+    }
+
+    [Fact]
+    public void TheTraceNamesTheArticleAndThePeriod()
+    {
+        var first = ReduccionInicio(Run(salary: 0m, ss: 0m, ingresos: 30000m, gastos: 0m, newActivity: FirstPeriod()));
+        var following = ReduccionInicio(Run(salary: 0m, ss: 0m, ingresos: 30000m, gastos: 0m, newActivity: new NewActivity.Started(NewActivityPeriod.Following, Money.Zero)));
+        var established = ReduccionInicio(Run(salary: 0m, ss: 0m, ingresos: 30000m, gastos: 0m));
+
+        Assert.StartsWith("Ley 35/2006 (LIRPF) art. 32.3, first period with a positive net", first.Reference);
+        Assert.StartsWith("Ley 35/2006 (LIRPF) art. 32.3, period after the first positive one", following.Reference);
+        Assert.StartsWith("Ley 35/2006 (LIRPF) art. 32.3, not a newly started activity", established.Reference);
+        Assert.Contains("Art. 32.2.1º is ruled out for this profile", first.Reference);
     }
 }
