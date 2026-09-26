@@ -19,7 +19,7 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - [x] Record where each value came from. Landed as the `provenance` block keyed by JSON Pointer at the granularity of the verifiable unit (SPEC-007 §1.1), not as a per-value `{value, source, verified}` wrapper — that form roughly triples the file and buries changed numbers among changed dates. Every entry reads `kind: "theory"` today; sorting by `verified` ascending is the January queue
 - [ ] Drop the Madrid `_todo` block (ADR-0013) and rename `2025.example.json` to `2025.json`
 - [x] Fill `seguridadSocial.tramos` before January: the registration decision on contribution base and tarifa plana depends on it (ADR-0014). Filled with real 2025 BOE data (Orden PJC/178/2025), `tarifaPlana` confirmed against Ley 20/2007 art. 38 ter (#5)
-- [x] Fill `modelo130.minoracion` (RD 439/2007 art. 110.3.c). First-activity-year case is unresolved — the article does not address a taxpayer with no `ejercicio anterior` (#5)
+- [x] Fill `modelo130.minoracion` (RD 439/2007 art. 110.3.c) (#5). First-activity-year case settled by the AEAT instructions for casilla 13: no activity last year counts as a net of zero (#8)
 - [ ] Fill `modelo130.lines`, `modelo303.lines` and `modelo349` before the Q1 2027 forms
 - [ ] Confirm ROI/VIES is on the Modelo 036 filed in January; without it, EU invoices carry Spanish IVA they should not
 - [ ] Master key escrow and a rehearsed MinIO restore, before the first real document is uploaded (ADR-0015)
@@ -47,7 +47,8 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - [ ] `EmploymentIncomeCalculator` → golden #1, #2, #8
 - [ ] `MinimoCalculator` → golden #7
 - [ ] `ActivityIncomeCalculator` → golden #3, #4
-- [ ] `Modelo130Calculator` → golden #3, #5; `Modelo303Calculator`; `Modelo349Calculator`
+- [x] `Modelo130Calculator` → golden #3 (quarterly half), #5, both at oracle tier `theory` (#8)
+- [ ] `Modelo303Calculator`; `Modelo349Calculator`
 - [ ] `SavingsIncomeCalculator` → golden #6
 - [ ] `IrpfAnnualCalculator` + `CalculationTrace`
 - [ ] `Modelo100Mapper` (SPEC-008); `FilingObligationChecker` → golden #10
