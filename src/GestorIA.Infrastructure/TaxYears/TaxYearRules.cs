@@ -196,14 +196,11 @@ internal static partial class TaxYearRules
     }
 
     // "04-20" -> 420, "+1-01-30" -> 10130: comparable, and no date arithmetic needed.
-    private static int Ordinal(string day)
+    private static int Ordinal(string token)
     {
-        var nextYear = day.StartsWith("+1-", StringComparison.Ordinal);
-        var token = nextYear ? day[3..] : day;
-        var month = int.Parse(token[..2], CultureInfo.InvariantCulture);
-        var date = int.Parse(token[3..], CultureInfo.InvariantCulture);
+        var day = TaxYearConfigParser.ParseDay(token);
 
-        return (nextYear ? 10000 : 0) + (month * 100) + date;
+        return (day.YearOffset * 10000) + (day.Month * 100) + day.Day;
     }
 
     // A JSON Pointer segment escapes "~" as "~0" and "/" as "~1" (RFC 6901).

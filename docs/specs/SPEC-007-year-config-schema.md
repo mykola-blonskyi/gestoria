@@ -141,6 +141,8 @@ Writing an unverified number into a file the engine treats as authoritative conv
 ## 3. Loading
 `TaxYearConfigLoader.Load(year)` → immutable `TaxYearConfig` record; SHA-256 of the file stored as `ConfigHash` on every result. Unknown region or year → `ConfigNotFoundException` (never default).
 
+A region block carrying `_todo` has declared itself unusable, so asking for it raises `ConfigNotFoundException` quoting the note, exactly as an absent region does. Computing with its empty scale would be the silent default this section forbids.
+
 **The loader does not live in `GestorIA.Engine`.** The engine is pure by definition, no I/O and no file system (`docs/architecture.md`), so reading a file and evaluating a schema at startup belongs in Infrastructure or Application. The instinct is to put the loader next to the engine that consumes its output; resist it, or the engine's purity becomes a comment rather than a property.
 
 ## 4. New year runbook (`docs/runbooks/new-tax-year.md`, Phase 6)

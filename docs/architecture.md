@@ -123,7 +123,7 @@ src/GestorIA.Engine          calculators, mappers, rule evaluator               
 src/GestorIA.Application     use cases, DTOs, validators, ports (interfaces)    (→ Domain, Engine)
 src/GestorIA.Infrastructure  EF Core, blob storage, OCR client, parsers, jobs   (→ Application)     SPEC-004/005
 src/GestorIA.Api             endpoints, auth, OpenAPI, composition root         (→ Application, Infrastructure)  SPEC-009
-tests/GestorIA.Engine.Tests  golden + property tests                            (→ Engine)          SPEC-011
+tests/GestorIA.Engine.Tests  golden + property tests                            (→ Engine; Infrastructure to load real config)  SPEC-011
 tests/GestorIA.Api.Tests     integration tests (Testcontainers Postgres)        (→ Api)
 ```
 

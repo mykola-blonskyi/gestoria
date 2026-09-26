@@ -4,32 +4,9 @@ namespace GestorIA.Engine.Tests;
 
 public class ScaleCalculatorExamples
 {
-    // config/tax-years/2025.example.json /irpf/escalaEstatal
-    internal static readonly Scale Estatal2025 = new(
-    [
-        TrancheOf(12450m, 0.095m),
-        TrancheOf(20200m, 0.12m),
-        TrancheOf(35200m, 0.15m),
-        TrancheOf(60000m, 0.185m),
-        TrancheOf(300000m, 0.225m),
-        TrancheOf(null, 0.245m),
-    ]);
+    private static Scale Estatal2025 => TaxYearConfigFiles.Year2025.Irpf.EscalaEstatal;
 
-    // config/tax-years/2025.example.json /regions/VC/escalaAutonomica
-    internal static readonly Scale Valenciana2025 = new(
-    [
-        TrancheOf(12000m, 0.09m),
-        TrancheOf(22000m, 0.12m),
-        TrancheOf(32000m, 0.15m),
-        TrancheOf(42000m, 0.175m),
-        TrancheOf(52000m, 0.199m),
-        TrancheOf(62000m, 0.224m),
-        TrancheOf(72000m, 0.249m),
-        TrancheOf(100000m, 0.266m),
-        TrancheOf(150000m, 0.279m),
-        TrancheOf(200000m, 0.289m),
-        TrancheOf(null, 0.295m),
-    ]);
+    private static Scale Valenciana2025 => TaxYearConfigFiles.Year2025.Regions.For("VC").EscalaAutonomica;
 
     [Fact]
     public void GoldenG1_EstatalOnBase26050_Is2990_25()
@@ -74,6 +51,6 @@ public class ScaleCalculatorExamples
         Assert.Throws<ArgumentException>(() => new Scale([TrancheOf(100m, 0.1m)]));
     }
 
-    internal static Tranche TrancheOf(decimal? upTo, decimal rate) =>
+    private static Tranche TrancheOf(decimal? upTo, decimal rate) =>
         new(upTo is { } u ? new Money(u) : null, new Rate(rate));
 }

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GestorIA.Domain\GestorIA.Domain.csproj" />
+    <ProjectReference Include="..\GestorIA.Engine\GestorIA.Engine.csproj" />
   </ItemGroup>
 
   <ItemGroup>

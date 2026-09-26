@@ -33,8 +33,11 @@ flowchart TD
 ```
 
 `GestorIA.Application` is dashed because it does not exist yet — a Phase 0 deliverable
-(`plans/current.md`). Today the graph is `Api → Infrastructure → Domain` and
-`Engine → Domain`, with nothing referencing `Engine` but its test project.
+(`plans/current.md`). Today the graph is `Api → Infrastructure → Engine → Domain`,
+with `Infrastructure → Domain` as well. `Infrastructure` references `Engine` directly
+because `TaxYearConfigLoader` builds the Engine's `TaxYearConfig`; once `Application`
+exists that edge runs through it. `GestorIA.Engine.Tests` references `Infrastructure`
+to load the real `config/tax-years` files instead of hand-copying their numbers.
 
 Two edges are deliberate and easy to get wrong:
 
@@ -55,7 +58,7 @@ Every rule below is a build or test failure, not a convention in a document.
 | No `double` / `float` for money (ADR-0004) | `BannedApiAnalyzers`, plus a guard test for declarations the analyzer cannot see | `src/GestorIA.Engine/GestorIA.Engine.csproj`, `src/GestorIA.Engine/BannedSymbols.txt`, `tests/GestorIA.Engine.Tests/NoBinaryFloatsInEngine.cs` |
 | Any warning fails the build | `TreatWarningsAsErrors` + `MSBuildTreatWarningsAsErrors` | `Directory.Build.props` |
 | One version per package, solution-wide | central package management | `Directory.Packages.props` |
-| No tax number in code (ADR-0003) | JSON Schema + a startup validator + schema tests | `config/tax-years/schema.json`, `tests/GestorIA.Engine.Tests/TaxYearFilesMatchSchema.cs` |
+| No tax number in code (ADR-0003) | JSON Schema + cross-field rules, run by the loader on every load and by the tests on every file | `config/tax-years/schema.json`, `src/GestorIA.Infrastructure/TaxYears/TaxYearConfigValidator.cs`, `tests/GestorIA.Engine.Tests/TaxYearFilesAreValid.cs` |
 | Determinism | golden tests, FsCheck property tests, `ConfigHash` on every result | `tests/GestorIA.Engine.Tests/` |
 | Sole authorship | `commit-msg` hook rejecting AI and co-author trailers | `.githooks/commit-msg` |
 | `main` stays green | GitHub Actions: restore → build → test on .NET 10 | `.github/workflows/ci.yml` |
@@ -75,7 +78,7 @@ than features:
 | Package | Why |
 |---|---|
 | `Microsoft.CodeAnalysis.BannedApiAnalyzers` 4.14.0 | ADR-0004 — `double` / `float` in the Engine is a build error |
-| `JsonSchema.Net` 9.4.0 | validating `config/tax-years/*.json` against `schema.json` |
+| `JsonSchema.Net` 9.4.0 | validating `config/tax-years/*.json` against `schema.json`, in `Infrastructure` at load |
 | `Microsoft.NET.Test.Sdk` 18.9.0 · `xunit` 2.9.3 · `xunit.runner.visualstudio` 4.0.0 | the test host |
 
 ### Planned, per spec and ADR
