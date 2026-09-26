@@ -1,45 +1,46 @@
 {
   "golden": "G11",
-  "scenario": "Pluriactividad, the #9 worked example: salary 40,000 (employee SS 2,600) plus a first year of activity invoicing 30,000 to foreign clients, with the twelve months of tarifa plana (960) as the only expense, VC. Modelo 130 collects 20 % of the activity net less the minoración; stacked on the salary the activity income is taxed well above that, and the annual return collects the difference in June of the following year.",
+  "scenario": "Pluriactividad, the #9 worked example: salary 40,000 (employee SS 2,600) plus an established activity invoicing 30,000 to foreign clients, VC. The only expense is twelve months of the RETA cuota at the base mínima of tramo General 6 (4,802.40). The activity is past its first two profitable years, so the LIRPF art. 32.3 reduction for a new activity does not apply, and last year's net of 25,000 is above every minoración band. Modelo 130 collects 20 % of the activity net; stacked on the salary the activity income is taxed well above that, and the annual return collects the difference in June of the following year.",
   "config": "2025.example.json",
   "modelo130": {
     "oracle": "theory",
-    "oracleRef": "Arithmetic under SPEC-003 §1 and AEAT, instrucciones del modelo 130, casillas 03–19: 0.20 of a cumulative net growing by 7,260 a quarter, less the casilla 13 minoración of 100 a quarter (RD 439/2007 art. 110.3.c) that a first activity year gets, since no activity last year counts as a net of zero.",
+    "oracleRef": "Arithmetic under SPEC-003 §1 and AEAT, instrucciones del modelo 130, casillas 03–19: 0.20 of a cumulative net growing by 6,299.40 a quarter, with no minoración because the previous year's net of 25,000 is above the 12,000 band of RD 439/2007 art. 110.3.c.",
     "oracleRunDate": "2026-09-26",
     "inputs": {
+      "previousYear": { "rendimientoNeto": "25000.00" },
       "retenciones": "foreignPayersOnly",
       "quarters": [
-        { "quarter": "Q1", "ingresosYtd": "7500.00", "gastosYtd": "240.00" },
-        { "quarter": "Q2", "ingresosYtd": "15000.00", "gastosYtd": "480.00" },
-        { "quarter": "Q3", "ingresosYtd": "22500.00", "gastosYtd": "720.00" },
-        { "quarter": "Q4", "ingresosYtd": "30000.00", "gastosYtd": "960.00" }
+        { "quarter": "Q1", "ingresosYtd": "7500.00", "gastosYtd": "1200.60" },
+        { "quarter": "Q2", "ingresosYtd": "15000.00", "gastosYtd": "2401.20" },
+        { "quarter": "Q3", "ingresosYtd": "22500.00", "gastosYtd": "3601.80" },
+        { "quarter": "Q4", "ingresosYtd": "30000.00", "gastosYtd": "4802.40" }
       ]
     },
     "expected": {
       "quarters": [
-        { "quarter": "Q1", "rendimientoNeto": "7260.00", "pagoBruto": "1452.00", "pagosAnteriores": "0.00", "resultado": "1352.00", "aIngresar": "1352.00", "negativosPendientes": "0.00" },
-        { "quarter": "Q2", "rendimientoNeto": "14520.00", "pagoBruto": "2904.00", "pagosAnteriores": "1452.00", "resultado": "1352.00", "aIngresar": "1352.00", "negativosPendientes": "0.00" },
-        { "quarter": "Q3", "rendimientoNeto": "21780.00", "pagoBruto": "4356.00", "pagosAnteriores": "2904.00", "resultado": "1352.00", "aIngresar": "1352.00", "negativosPendientes": "0.00" },
-        { "quarter": "Q4", "rendimientoNeto": "29040.00", "pagoBruto": "5808.00", "pagosAnteriores": "4356.00", "resultado": "1352.00", "aIngresar": "1352.00", "negativosPendientes": "0.00" }
+        { "quarter": "Q1", "rendimientoNeto": "6299.40", "pagoBruto": "1259.88", "pagosAnteriores": "0.00", "resultado": "1259.88", "aIngresar": "1259.88", "negativosPendientes": "0.00" },
+        { "quarter": "Q2", "rendimientoNeto": "12598.80", "pagoBruto": "2519.76", "pagosAnteriores": "1259.88", "resultado": "1259.88", "aIngresar": "1259.88", "negativosPendientes": "0.00" },
+        { "quarter": "Q3", "rendimientoNeto": "18898.20", "pagoBruto": "3779.64", "pagosAnteriores": "2519.76", "resultado": "1259.88", "aIngresar": "1259.88", "negativosPendientes": "0.00" },
+        { "quarter": "Q4", "rendimientoNeto": "25197.60", "pagoBruto": "5039.52", "pagosAnteriores": "3779.64", "resultado": "1259.88", "aIngresar": "1259.88", "negativosPendientes": "0.00" }
       ],
-      "totalAIngresar": "5408.00"
+      "totalAIngresar": "5039.52"
     }
   },
   "rentaTrueUp": {
     "oracle": "theory",
-    "oracleRef": "Arithmetic under SPEC-002 steps 1, 2, 4 and 6 and LIRPF art. 19, 20, 56, 63 and 74 (boe.es consolidated text, read 2026-09-26), cross-checked by an independent script. Salary alone: 40,000 − 2,600 − 2,000 = 35,400, no reducción, cuota 7,748.00. Stacked: activity 29,040 − 1,452 difícil justificación = 27,588, base 62,988, cuota 18,602.312. The activity adds 10,854.31, the advances cover 5,408.00, the gap is 5,446.31, due with Renta 2025 by 30 June 2026. Uses the state mínimo for the regional scale; VC's own (6,105, Ley 13/1997 art. 2 bis) would lower both cuotas by 49.95 and leave the gap unchanged.",
+    "oracleRef": "Arithmetic under SPEC-002 steps 1, 2, 4 and 6 and LIRPF art. 19, 20, 56, 63 and 74 (boe.es consolidated text of Ley 35/2006, read 2026-09-26). Salary alone: 40,000 − 2,600 − 2,000 = 35,400, no reducción, cuota 3,872.50 estatal + 3,875.50 VC = 7,748.00. Stacked: activity 25,197.60 − 1,259.88 difícil justificación = 23,937.72, base 59,337.72, cuota 8,300.9782 + 8,664.14928 = 16,965.12748. The activity adds 9,217.13 at a marginal rate of 0.185 + 0.224, the advances cover 5,039.52, and the gap is 4,177.61, due with Renta 2025 by 30 June 2026. Uses the state mínimo for the regional scale; VC's own (6,105, Ley 13/1997 art. 2 bis) would lower both cuotas by 49.95 and leave the gap unchanged.",
     "oracleRunDate": "2026-09-26",
     "inputs": {
       "region": "VC",
       "employment": { "ingresos": "40000.00", "seguridadSocial": "2600.00" },
-      "activity": { "ingresos": "30000.00", "gastos": "960.00" },
-      "modelo130Advances": "5408.00"
+      "activity": { "ingresos": "30000.00", "gastos": "4802.40" },
+      "modelo130Advances": "5039.52"
     },
     "expected": {
-      "liabilityOnActivity": "10854.31",
-      "marginalRate": "0.474",
+      "liabilityOnActivity": "9217.13",
+      "marginalRate": "0.409",
       "reduccionTrabajoLost": "0.00",
-      "gap": "5446.31",
+      "gap": "4177.61",
       "payableIn": "2026-06",
       "warnings": ["MARGINAL_VS_EFFECTIVE"]
     }

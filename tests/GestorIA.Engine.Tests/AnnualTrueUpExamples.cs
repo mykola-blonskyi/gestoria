@@ -52,10 +52,19 @@ public class AnnualTrueUpExamples
     }
 
     [Fact]
+    public void ALowSalaryGetsTheWholeFixedReduccion()
+    {
+        var result = Run(salary: 14852m, ss: 0m, ingresos: 0m, gastos: 0m);
+
+        Assert.Equal(7302m, Output(result, "renta.trabajo.reduccion.solo"));
+    }
+
+    [Fact]
     public void ActivityNetOfExactlyTheCapKeepsTheReduccion()
     {
         var result = Run(salary: 20000m, ss: 1300m, ingresos: 6500m, gastos: 0m, config: WithoutDificilJustificacion());
 
+        Assert.Equal(1194.1528m, Output(result, "renta.trabajo.reduccion.stacked"));
         Assert.Equal(Money.Zero, result.ReduccionTrabajoLost);
         Assert.DoesNotContain(result.Warnings, w => w.Code == WarningCodes.ReduccionTrabajoLost);
     }
@@ -110,17 +119,40 @@ public class AnnualTrueUpExamples
     {
         var result = Run(salary: 5000m, ss: 300m, ingresos: 1000m, gastos: 9000m);
 
+        // The 7,302 reducción is cut to the 2,700 of rendimiento neto, so the salary alone is not taxed.
+        Assert.Equal(2700m, Output(result, "renta.trabajo.reduccion.solo"));
         Assert.Equal(0m, Output(result, "renta.stacked.base-liquidable"));
         Assert.Equal(Money.Zero, result.Gap);
     }
 
     [Fact]
+    public void AnActivityLossLowersTheTaxOnTheSalaryAndLeavesNoGap()
+    {
+        // Base 35,400 falls to 27,400: cuota 7,748.00 falls to 5,256.00.
+        var result = Run(salary: 40000m, ss: 2600m, ingresos: 1000m, gastos: 9000m);
+
+        Assert.Equal(new Money(-2492m), result.LiabilityOnActivity);
+        Assert.Equal(Money.Zero, result.Gap);
+        Assert.Empty(result.Warnings);
+    }
+
+    [Fact]
+    public void StepsKeepTheUnroundedAmountAndOnlyTheResultIsRounded()
+    {
+        var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 5039.52m);
+
+        Assert.Equal(9217.12748m, Output(result, "renta.liability-on-activity"));
+        Assert.Equal(new Money(9217.13m), result.LiabilityOnActivity);
+    }
+
+    [Fact]
     public void TheGapWarningNamesTheAmountAndTheDayItIsPayable()
     {
-        var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 960m, advances: 5408m);
+        var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 5039.52m);
 
         Assert.Equal(new YearMonth(2026, 6), result.PayableIn);
         var warning = Assert.Single(result.Warnings, w => w.Code == WarningCodes.MarginalVsEffective);
-        Assert.Contains("5446.31 EUR more, payable by 2026-06-30", warning.Text);
+        Assert.Contains("23937.7200 EUR of activity net income adds 9217.13 EUR of tax", warning.Text);
+        Assert.Contains("4177.61 EUR more, payable by 2026-06-30", warning.Text);
     }
 }
