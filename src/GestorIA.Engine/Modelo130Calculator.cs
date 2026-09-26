@@ -59,12 +59,13 @@ public static class Modelo130Calculator
 
         var dj = DificilJustificacion(input, modelo130.ApplyDj, config.Irpf.Actividad.DificilJustificacion, steps);
 
-        var rendimientoNeto = input.IngresosYtd - input.GastosYtd - dj;
+        var casilla02 = (input.GastosYtd + dj).Round2();
+        var rendimientoNeto = input.IngresosYtd - casilla02;
         steps.Add(Step(
             "m130.rendimiento-neto",
             "Rendimiento neto desde el 1 de enero (casilla 03)",
             [new("ingresosYtd", Show(input.IngresosYtd)), new("gastosYtd", Show(input.GastosYtd)), new("dificilJustificacion", Show(dj))],
-            Invariant($"{Show(input.IngresosYtd)} − {Show(input.GastosYtd)} − {Show(dj)} = {Show(rendimientoNeto)}"),
+            Invariant($"{Show(input.IngresosYtd)} − ({Show(input.GastosYtd)} + {Show(dj)}) = {Show(rendimientoNeto)}"),
             rendimientoNeto,
             $"{Instrucciones}, casillas 01–03"));
 
@@ -96,15 +97,24 @@ public static class Modelo130Calculator
             casilla07,
             $"{Instrucciones}, casilla 07"));
 
+        var casilla12 = Positive(casilla07);
+        steps.Add(Step(
+            "m130.casilla-12",
+            "Suma de pagos fraccionados previos (casilla 12)",
+            [new("casilla07", Show(casilla07))],
+            Invariant($"max(0, {Show(casilla07)}) = {Show(casilla12)}"),
+            casilla12,
+            $"{Instrucciones}, casilla 12: 07 + 11, a negative sum is entered as zero; casilla 11 (agricultural activities in estimación objetiva) does not apply"));
+
         var minoracion = Minoracion(input.PreviousYear, modelo130.Minoracion, steps);
 
-        var casilla14 = casilla07 - minoracion;
+        var casilla14 = casilla12 - minoracion;
         var negativosDeducidos = carry.NegativosPendientes < Positive(casilla14) ? carry.NegativosPendientes : Positive(casilla14);
         steps.Add(Step(
             "m130.negativos-anteriores",
             "Resultados negativos de trimestres anteriores (casilla 15)",
             [new("casilla14", Show(casilla14)), new("negativosPendientes", Show(carry.NegativosPendientes))],
-            Invariant($"casilla 14 = {Show(casilla07)} − {Show(minoracion)} = {Show(casilla14)}; deducted = {Show(negativosDeducidos)}, at most a positive casilla 14"),
+            Invariant($"casilla 14 = {Show(casilla12)} − {Show(minoracion)} = {Show(casilla14)}; deducted = {Show(negativosDeducidos)}, at most a positive casilla 14"),
             negativosDeducidos,
             $"{Instrucciones}, casillas 14–15; business rule 14"));
 
@@ -118,7 +128,7 @@ public static class Modelo130Calculator
             [new("casilla14", Show(casilla14)), new("casilla15", Show(negativosDeducidos))],
             Invariant($"{Show(casilla14)} − {Show(negativosDeducidos)} = {Show(resultado)}; negatives still pending for later quarters = {Show(next.NegativosPendientes)}"),
             resultado,
-            $"{Instrucciones}, casillas 17 and 19; business rule 14: a negative result pays zero and carries to later quarters of the same year"));
+            $"{Instrucciones}, casillas 17 and 19; RD 439/2007 art. 110.3.c: only a minoración above casilla 12 leaves a negative result, which pays zero and is deducted in later quarters of the same year"));
 
         return new Modelo130Result(input.Quarter, resultado, next, config.Calendar.Modelo130[(int)input.Quarter - 1], new CalculationTrace(steps));
     }
@@ -140,7 +150,7 @@ public static class Modelo130Calculator
         }
 
         var previo = input.IngresosYtd - input.GastosYtd;
-        var pct = (Positive(previo) * config.Pct).Round2();
+        var pct = Positive(previo) * config.Pct;
         var dj = pct < config.Max ? pct : config.Max;
 
         steps.Add(Step(

@@ -50,13 +50,38 @@ public class Modelo130Examples
     }
 
     [Fact]
-    public void ANegativeResultPaysZeroAndIsPendingForTheNextQuarter()
+    public void MinoracionAboveCasilla12GivesANegativeResultThatPaysZeroAndIsPending()
     {
-        var result = Run(ingresos: 20000m, gastos: 0m, quarter: Quarter.Q3, carry: new Modelo130Carry(new Money(4240m), Money.Zero));
+        var result = Run(ingresos: 250m, gastos: 0m, previousYear: new PreviousYear.NoActivity());
 
-        Assert.Equal(new Money(-240m), result.Resultado);
+        Assert.Equal(50m, Step(result, "m130.casilla-12").Output);
+        Assert.Equal(new Money(-50m), result.Resultado);
         Assert.Equal(Money.Zero, result.AIngresar);
-        Assert.Equal(new Modelo130Carry(new Money(4240m), new Money(240m)), result.Carry);
+        Assert.Equal(new Modelo130Carry(new Money(50m), new Money(50m)), result.Carry);
+    }
+
+    [Fact]
+    public void AQuarterWhoseLossToDateUndercutsEarlierPaymentsCarriesNothingAndTheNextQuarterCatchesUpThroughTheCumulativeBase()
+    {
+        var q1 = Run(ingresos: 5000m, gastos: 0m);
+        var q2 = Run(ingresos: 4000m, gastos: 0m, quarter: Quarter.Q2, carry: q1.Carry);
+        var q3 = Run(ingresos: 10000m, gastos: 0m, quarter: Quarter.Q3, carry: q2.Carry);
+
+        Assert.Equal(-200m, Step(q2, "m130.casilla-07").Output);
+        Assert.Equal(0m, Step(q2, "m130.casilla-12").Output);
+        Assert.Equal(Money.Zero, q2.Resultado);
+        Assert.Equal(new Modelo130Carry(new Money(1000m), Money.Zero), q2.Carry);
+        Assert.Equal(new Money(1000m), q3.Resultado);
+    }
+
+    [Fact]
+    public void RetencionesAboveThePagoBrutoCarryNothing()
+    {
+        var result = Run(ingresos: 5000m, gastos: 0m, retenciones: new Retenciones.Withheld(new Money(2000m)));
+
+        Assert.Equal(-1000m, Step(result, "m130.casilla-07").Output);
+        Assert.Equal(Money.Zero, result.Resultado);
+        Assert.Equal(Modelo130Carry.StartOfYear, result.Carry);
     }
 
     [Fact]
@@ -72,7 +97,7 @@ public class Modelo130Examples
     [Fact]
     public void ASecondNegativeQuarterAddsToThePendingNegatives()
     {
-        var result = Run(ingresos: 0m, gastos: 0m, quarter: Quarter.Q3, carry: new Modelo130Carry(new Money(100m), new Money(50m)));
+        var result = Run(ingresos: 0m, gastos: 0m, quarter: Quarter.Q3, carry: new Modelo130Carry(new Money(100m), new Money(50m)), previousYear: new PreviousYear.NoActivity());
 
         Assert.Equal(new Money(-100m), result.Resultado);
         Assert.Equal(new Money(150m), result.Carry.NegativosPendientes);
