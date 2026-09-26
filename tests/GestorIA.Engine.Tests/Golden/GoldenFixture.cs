@@ -33,6 +33,21 @@ internal static class GoldenFixture
 
     internal static Money MoneyOf(JsonNode? amount) => new(DecimalOf(amount));
 
+    // "established", or { "period": "first" | "following", "ingresosFromFormerEmployer": "0.00" }. A fixture without it fails.
+    internal static NewActivity NewActivityOf(JsonNode? newActivity) => newActivity switch
+    {
+        JsonValue established when established.GetValue<string>() == "established" => new NewActivity.Established(),
+        JsonObject started => new NewActivity.Started(
+            started["period"]!.GetValue<string>() switch
+            {
+                "first" => NewActivityPeriod.First,
+                "following" => NewActivityPeriod.Following,
+                var other => throw new InvalidOperationException($"activity.newActivity.period must be \"first\" or \"following\", not \"{other}\""),
+            },
+            MoneyOf(started["ingresosFromFormerEmployer"])),
+        _ => throw new InvalidOperationException($"activity.newActivity must be \"established\" or an object, not {newActivity?.ToJsonString() ?? "missing"}"),
+    };
+
     private static string Root([CallerFilePath] string here = "") =>
         Path.GetFullPath(Path.Combine(Path.GetDirectoryName(here)!, "..", "..", "golden", "2025"));
 }

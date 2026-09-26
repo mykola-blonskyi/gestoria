@@ -15,4 +15,7 @@ public static class WarningCodes
     public const string SsRegularizacionAhead = "SS_REGULARIZACION_AHEAD";
     public const string ReduccionTrabajoLost = "REDUCCION_TRABAJO_LOST";
     public const string MarginalVsEffective = "MARGINAL_VS_EFFECTIVE";
+
+    // SPEC-010 §3.
+    public const string SetAsideEstimate = "SET_ASIDE_ESTIMATE";
 }
