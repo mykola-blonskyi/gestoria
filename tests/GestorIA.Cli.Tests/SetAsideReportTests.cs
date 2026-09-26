@@ -89,6 +89,18 @@ public class SetAsideReportTests
     }
 
     [Fact]
+    public void TheDueDateSaysLocalHolidaysAreNotApplied()
+    {
+        var report = Render("G16");
+
+        Assert.Contains(
+            "due 2025-04-01 to 2025-04-22\n"
+                + "                                          (municipal holidays where the taxpayer lives are not applied, so the date shown can be early but never late)\n",
+            report,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void WarningsPrintBeforeInformation()
     {
         var report = Render("G16");

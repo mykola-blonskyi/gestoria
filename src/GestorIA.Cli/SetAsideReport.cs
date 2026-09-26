@@ -49,6 +49,7 @@ public static class SetAsideReport
         text.AppendLine("Estimate");
         Row(text, "Hold back from every payment received", Percent(result.HoldBackShare));
         Row(text, Invariant($"Next Modelo 130, {next.Quarter}"), Invariant($"{Euros(next.AIngresar)}, due {Day(next.DueWindow.Start)} to {Day(next.DueWindow.End)}"));
+        Row(text, "", "(" + FilingDeadline.LocalHolidaysNotApplied + ")");
         Row(text, "Cuota SS per month this quarter", Euros(result.MonthlyCuotaSs));
         Row(text, "Annual return (Renta) gap", Invariant($"{Euros(result.AnnualTrueUpGap)}, payable by the end of {result.AnnualTrueUpPayableIn}"));
         Row(text, "IVA to set aside", Euros(result.IvaToSetAside));
