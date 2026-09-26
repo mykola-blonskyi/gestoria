@@ -1,6 +1,5 @@
-using System.Text.Json;
 using System.Text.Json.Nodes;
-using Json.Schema;
+using GestorIA.Infrastructure.TaxYears;
 
 namespace GestorIA.Engine.Tests;
 
@@ -110,7 +109,7 @@ public class TaxYearValidationRejectsBadFiles
         var (apply, pointer) = Mutations[name];
 
         apply(root);
-        var failures = Validate(root, Path.GetFileName(path));
+        var failures = TaxYearConfigValidator.Validate(root, Path.GetFileName(path));
 
         Assert.True(failures.Count > 0,
             $"Mutation \"{name}\" was accepted. The rule meant to catch it is not running.");
@@ -126,16 +125,7 @@ public class TaxYearValidationRejectsBadFiles
         var path = TaxYearConfigFiles.All().First();
         var root = JsonNode.Parse(File.ReadAllText(path))!;
 
-        Assert.Empty(Validate(root, Path.GetFileName(path)));
-    }
-
-    private static List<string> Validate(JsonNode root, string fileName)
-    {
-        var element = JsonSerializer.Deserialize<JsonElement>(root);
-        var results = TaxYearConfigFiles.Schema()
-            .Evaluate(element, new EvaluationOptions { OutputFormat = OutputFormat.List });
-
-        return [.. results.Describe(), .. TaxYearRules.Check(root, fileName)];
+        Assert.Empty(TaxYearConfigValidator.Validate(root, Path.GetFileName(path)));
     }
 
     private static JsonObject Tramo(decimal from, decimal? upTo) => Band(from, upTo, min: 653.59m, max: 718.94m);

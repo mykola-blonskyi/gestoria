@@ -1,3 +1,5 @@
+using GestorIA.Domain.ValueObjects;
+
 namespace GestorIA.Engine;
 
-public sealed record Tranche(decimal? UpTo, decimal Rate);
+public sealed record Tranche(Money? UpTo, Rate Rate);

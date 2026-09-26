@@ -25,7 +25,7 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - [ ] Master key escrow and a rehearsed MinIO restore, before the first real document is uploaded (ADR-0015)
 - [ ] Start `config/tax-years/2026.json` and `2027.json`. Both are release blockers; BOE publishes 2027 around December 2026
 - [x] Write `config/tax-years/schema.json` (SPEC-007), validated in CI: schema plus cross-field rules in C# and mutation tests that prove both run (#4)
-- [ ] Run the same validation at startup, from the typed loader (#14). Issue #4 covers CI only
+- [x] Run the same validation at startup, from the typed loader (#14). Schema and cross-field rules moved into `GestorIA.Infrastructure`; `TaxYearConfigParser` refuses a file that fails either
 - [x] Add projects: `src/GestorIA.Engine`, `tests/GestorIA.Engine.Tests`; register in `GestorIA.slnx` (#17). `src/GestorIA.Application` is not created yet and has no caller
 - [x] `Directory.Build.props`: nullable, warnings-as-errors, banned `double`/`float` for money (ADR-0004). Two mechanisms, because the analyzer catches member access but not declarations: `BannedApiAnalyzers` plus the `NoBinaryFloatsInEngine` guard test (#17, fixed in #18 where `BannedSymbols.txt` had shipped empty)
 - [ ] `services/ocr` skeleton: FastAPI `/health`, `pyproject.toml`, `uv.lock`, `ruff`, `pytest`

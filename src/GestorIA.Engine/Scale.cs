@@ -1,3 +1,5 @@
+using GestorIA.Domain.ValueObjects;
+
 namespace GestorIA.Engine;
 
 public sealed class Scale
@@ -11,17 +13,12 @@ public sealed class Scale
             throw new ArgumentException("A scale needs at least one tranche.", nameof(tranches));
         }
 
-        decimal lower = 0m;
+        var lower = Money.Zero;
 
         for (int i = 0; i < tranches.Count; i++)
         {
             var tranche = tranches[i];
             var isLast = i == tranches.Count - 1;
-
-            if (tranche.Rate < 0m || tranche.Rate > 1m)
-            {
-                throw new ArgumentException($"Tranche {i} has rate {tranche.Rate}, outside [0, 1].", nameof(tranches));
-            }
 
             if (isLast)
             {

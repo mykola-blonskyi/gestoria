@@ -1,6 +1,6 @@
 using Json.Schema;
 
-namespace GestorIA.Engine.Tests;
+namespace GestorIA.Infrastructure.TaxYears;
 
 internal static class SchemaFailures
 {
