@@ -283,7 +283,6 @@ public sealed class TaxYearConfigLoading : IDisposable
         foreach (var value in ScaleValues("/regions/VC/escalaAutonomica", valenciana.EscalaAutonomica)) { yield return value; }
 
         yield return ("/modelo130/rate", c.Modelo130.Rate);
-        yield return ("/modelo130/applyDj", c.Modelo130.ApplyDj);
 
         yield return ("/modelo130/minoracion", new Length(c.Modelo130.Minoracion.Count));
 

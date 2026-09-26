@@ -1,10 +1,10 @@
 {
   "golden": "G05",
-  "scenario": "Modelo 130 with a loss-making Q3: Example B, except that the net income to date falls to 20,000 at the end of Q3. Q3 pays nothing, and Q4 catches up through the cumulative base: 20 % of the annual net less what Q1 and Q2 paid.",
+  "scenario": "Modelo 130 with a loss-making Q3: Example B, except that the net income to date before difícil justificación falls to 20,000 at the end of Q3. Q3 pays nothing, and Q4 catches up through the cumulative base: 20 % of the annual net less what Q1 and Q2 paid.",
   "config": "2025.example.json",
   "modelo130": {
     "oracle": "theory",
-    "oracleRef": "Theory §7.3, ed. 2: loss-making quarter example (Q3 net to date 20,000, 4,240 already paid, Q3 payable 0, the 240 credited against Q4). Q1, Q2 and Q4 figures are Example B's; Q3 expenses keep Example B's 5,700. The Q4 amount is not in the theory; it is arithmetic under AEAT, instrucciones del modelo 130, casillas 05, 07, 12, 15 and 19 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026): casilla 12 floors Q3's negative casilla 07 at zero, so nothing carries into casilla 15, and Q4's 4,240 is the theory's 240 credit against the 4,480 accrued since Q3.",
+    "oracleRef": "Arithmetic under SPEC-003 §1, RD 439/2007 (RIRPF) art. 30.2ª and 110.1.a (boe.es consolidated text of BOE-A-2007-6820, read 2026-09-26) and AEAT, instrucciones del modelo 130 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026, read 2026-09-26), casillas 02, 05, 07, 12, 15 and 19: casilla 02 includes difícil justificación of 5 % of the net to date, at most 2,000 a year. The inputs are Theory §7.3, ed. 2, loss-making quarter example: Q3 net to date 20,000 before difícil justificación; Q1, Q2 and Q4 are Example B's and Q3 expenses keep Example B's 5,700. The theory's figures (4,240 paid by Q2, 240 credited against Q4) leave difícil justificación out (#33). With it Q1 and Q2 pay 4,028 on nets of 7,695 and 20,140. Q3's 0.20 × 19,000 = 3,800 is below that, so casilla 07 is −228, casilla 12 floors it at zero and nothing carries into casilla 15. Q4 pays 0.20 × 40,400 − 4,028 = 4,052, and Σ 130 is 8,080.",
     "oracleRunDate": "2026-09-26",
     "inputs": {
       "previousYear": { "rendimientoNeto": "42400.00" },
@@ -18,12 +18,12 @@
     },
     "expected": {
       "quarters": [
-        { "quarter": "Q1", "rendimientoNeto": "8100.00", "pagoBruto": "1620.00", "pagosAnteriores": "0.00", "resultado": "1620.00", "aIngresar": "1620.00", "negativosPendientes": "0.00" },
-        { "quarter": "Q2", "rendimientoNeto": "21200.00", "pagoBruto": "4240.00", "pagosAnteriores": "1620.00", "resultado": "2620.00", "aIngresar": "2620.00", "negativosPendientes": "0.00" },
-        { "quarter": "Q3", "rendimientoNeto": "20000.00", "pagoBruto": "4000.00", "pagosAnteriores": "4240.00", "resultado": "0.00", "aIngresar": "0.00", "negativosPendientes": "0.00" },
-        { "quarter": "Q4", "rendimientoNeto": "42400.00", "pagoBruto": "8480.00", "pagosAnteriores": "4240.00", "resultado": "4240.00", "aIngresar": "4240.00", "negativosPendientes": "0.00" }
+        { "quarter": "Q1", "rendimientoNeto": "7695.00", "pagoBruto": "1539.00", "pagosAnteriores": "0.00", "resultado": "1539.00", "aIngresar": "1539.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q2", "rendimientoNeto": "20140.00", "pagoBruto": "4028.00", "pagosAnteriores": "1539.00", "resultado": "2489.00", "aIngresar": "2489.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q3", "rendimientoNeto": "19000.00", "pagoBruto": "3800.00", "pagosAnteriores": "4028.00", "resultado": "0.00", "aIngresar": "0.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q4", "rendimientoNeto": "40400.00", "pagoBruto": "8080.00", "pagosAnteriores": "4028.00", "resultado": "4052.00", "aIngresar": "4052.00", "negativosPendientes": "0.00" }
       ],
-      "totalAIngresar": "8480.00"
+      "totalAIngresar": "8080.00"
     }
   }
 }
