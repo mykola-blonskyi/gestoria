@@ -48,10 +48,10 @@ public class SetAsideReportTests
     }
 
     [Fact]
-    public void TheTraceIsEveryStepInOrderWithItsUnroundedResult()
+    public void TheTraceIsEveryStepInOrderEachRenderedByItsOutputKind()
     {
         var result = RepoFiles.Estimate("G15");
-        var report = SetAsideReport.Render(result, 2025, RepoFiles.ConfigFileName);
+        var report = SetAsideReport.Render(result, 2025, RepoFiles.ConfigFileName).ReplaceLineEndings("\n");
 
         var at = 0;
         foreach (var (step, number) in result.Trace.Steps.Select((step, index) => (step, index + 1)))
@@ -61,8 +61,34 @@ public class SetAsideReportTests
             Assert.Contains("       formula: " + step.Formula, report, StringComparison.Ordinal);
         }
 
-        Assert.Contains("       result:  9019.82179", report, StringComparison.Ordinal);
         Assert.DoesNotContain("\"Formula\"", report, StringComparison.Ordinal);
+
+        // Money: the result line rounds to the cent, the formula above it keeps the unrounded figure (#42).
+        Assert.Contains("9019.82179", result.Trace.Steps.Single(s => s.Id == "renta.liability-on-activity").Formula, StringComparison.Ordinal);
+        ResultLineIs(report, "renta.liability-on-activity", "9019.82 €");
+
+        ResultLineIs(report, "set-aside.hold-back-share", "45.59 %");
+        ResultLineIs(report, "renta.marginal-rate", "40.90 %");
+
+        ResultLineIs(report, "set-aside.projected-months", "6");
+
+        ResultLineIs(report, "Q3.m130.due-date", "2025-10-20");
+    }
+
+    // Ties a "result:" line to the one step it belongs to, by anchoring on that step's own header line first: a loose
+    // Contains on the value alone could match a different step that happens to render the same text.
+    private static void ResultLineIs(string report, string stepId, string expected)
+    {
+        var header = report.IndexOf("(" + stepId + ")", StringComparison.Ordinal);
+        Assert.True(header >= 0, $"step {stepId} is missing");
+
+        const string resultLabel = "\n       result:  ";
+        var resultAt = report.IndexOf(resultLabel, header, StringComparison.Ordinal);
+        Assert.True(resultAt >= 0, $"step {stepId} has no result line");
+
+        var start = resultAt + resultLabel.Length;
+        var end = report.IndexOf('\n', start);
+        Assert.Equal(expected, report[start..end]);
     }
 
     [Fact]
@@ -73,7 +99,7 @@ public class SetAsideReportTests
         var estimate = report.IndexOf("\nEstimate\n", StringComparison.Ordinal);
         var warnings = report.IndexOf("\nNotices (4, 3 of them warnings): read these before relying on the figures above\n", StringComparison.Ordinal);
         Assert.True(estimate > 0 && warnings > estimate, "the warnings follow the estimate at the end of the output");
-        Assert.StartsWith("GestorIA set-aside estimate, tax year 2025\n76 calculation steps first; the estimate and 4 notices (3 warnings) follow at the end.\n", report, StringComparison.Ordinal);
+        Assert.StartsWith("GestorIA set-aside estimate, tax year 2025\n81 calculation steps first; the estimate and 4 notices (3 warnings) follow at the end.\n", report, StringComparison.Ordinal);
         Assert.Contains("  !! WARNING REDUCCION_TRABAJO_LOST\n     Activity net income of 8358.48 € is above the 6500.00 € cap on income other than employment, so the reducción por trabajo of 1194.15 € is lost entirely.", report, StringComparison.Ordinal);
         Assert.Contains("  !! WARNING MARGINAL_VS_EFFECTIVE\n", report, StringComparison.Ordinal);
         Assert.Contains("The annual return will want 1258.44 € more, payable by 2026-06-30.", report, StringComparison.Ordinal);

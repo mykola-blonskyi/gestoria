@@ -41,7 +41,7 @@ public class SetAsideExamples
         var result = SetAsideEstimator.Estimate(G12Input());
 
         var step = result.Trace.Steps.Single(s => s.Id == "Q1.m130.retenciones");
-        Assert.Equal(0m, step.Output);
+        Assert.Equal(0m, step.Euros());
         Assert.Contains("SPEC-003 §0", step.Reference);
     }
 
@@ -110,9 +110,9 @@ public class SetAsideExamples
 
         var result = SetAsideEstimator.Estimate(G12Input(ingresos: Money.Zero, gastos: Money.Zero, actuals: wholeYear, asOf: Quarter.Q4));
 
-        Assert.Equal(28000m, result.Trace.Steps.Single(s => s.Id == "set-aside.annual-ingresos").Output);
-        Assert.Equal(1500m, result.Trace.Steps.Single(s => s.Id == "set-aside.annual-gastos").Output);
-        Assert.Equal(0m, result.Trace.Steps.Single(s => s.Id == "set-aside.projected-months").Output);
+        Assert.Equal(28000m, result.Trace.Steps.Single(s => s.Id == "set-aside.annual-ingresos").Euros());
+        Assert.Equal(1500m, result.Trace.Steps.Single(s => s.Id == "set-aside.annual-gastos").Euros());
+        Assert.Equal(0, result.Trace.Steps.Single(s => s.Id == "set-aside.projected-months").Count());
     }
 
     // G14's input: Q1 actuals of 6,000 invoiced and 345.33 spent, the cuotas included; 27,000 and 900 projected for April to December.
@@ -124,8 +124,8 @@ public class SetAsideExamples
         var result = SetAsideEstimator.Estimate(G12Input(ingresos: new Money(27000.00m), gastos: new Money(900.00m), actuals: actuals, asOf: Quarter.Q2));
         TraceStep Step(string id) => result.Trace.Steps.Single(s => s.Id == id);
 
-        Assert.Equal(6000m, Step("set-aside.actuals").Output);
-        Assert.Equal(9m, Step("set-aside.projected-months").Output);
+        Assert.Equal(6000m, Step("set-aside.actuals").Euros());
+        Assert.Equal(9, Step("set-aside.projected-months").Count());
         Assert.Equal("actuals as stated: ingresos 6000.00, gastos 345.33", Step("set-aside.Q1.to-date").Formula);
         Assert.Equal("ingresos 6000.00 real + 27000.00 × 3 / 9 = 15000.00; gastos 345.33 real + 900.00 × 3 / 9 + 240 = 885.33", Step("set-aside.Q2.to-date").Formula);
         Assert.Equal("6000.00 real + 27000.00 projected = 33000.00", Step("set-aside.annual-ingresos").Formula);
@@ -151,8 +151,8 @@ public class SetAsideExamples
 
         var result = SetAsideEstimator.Estimate(input);
 
-        Assert.Equal(4063.50m, result.Trace.Steps.Single(s => s.Id == "set-aside.cuotas-ss-to-date").Output);
-        Assert.Equal(33163.50m, result.Trace.Steps.Single(s => s.Id == "set-aside.rendimiento-computable").Output);
+        Assert.Equal(4063.50m, result.Trace.Steps.Single(s => s.Id == "set-aside.cuotas-ss-to-date").Euros());
+        Assert.Equal(33163.50m, result.Trace.Steps.Single(s => s.Id == "set-aside.rendimiento-computable").Euros());
         Assert.Equal(new Money(451.50m), result.MonthlyCuotaSs);
     }
 

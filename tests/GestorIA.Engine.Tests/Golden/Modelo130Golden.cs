@@ -77,5 +77,5 @@ internal static class Modelo130Golden
     }
 
     private static decimal Output(Modelo130Result result, string stepId) =>
-        result.Trace.Steps.Single(s => s.Id == stepId).Output;
+        result.Trace.Steps.Single(s => s.Id == stepId).Euros();
 }

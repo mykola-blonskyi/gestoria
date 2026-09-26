@@ -13,7 +13,7 @@ public class FilingDeadlineExamples
     {
         var renta = Config.Calendar.Renta with { End = new CalendarDay(yearOffset, month, day) };
 
-        return FilingDeadline.Renta("VC", Config with { Calendar = Config.Calendar with { Renta = renta } }).End;
+        return FilingDeadline.Renta("VC", Config with { Calendar = Config.Calendar with { Renta = renta } }).Window.End;
     }
 
     [Theory]
@@ -35,5 +35,25 @@ public class FilingDeadlineExamples
         var error = Assert.Throws<ConfigNotFoundException>(() => FilingDeadline.Modelo130(Quarter.Q1, "MD", Config));
 
         Assert.Contains("Region MD is declared incomplete", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheModelo130DueDateStepListsEveryDaySkippedOnTheWayToAWorkingDay()
+    {
+        var (_, step) = FilingDeadline.Modelo130(Quarter.Q1, "VC", Config);
+
+        Assert.Equal(new TraceValue.Date(new DateOnly(2025, 4, 22)), step.Output);
+        Assert.Equal("2025-04-20 Sunday; 2025-04-21 Monday, holiday → 2025-04-22", step.Formula);
+        Assert.Contains(FilingDeadline.Rule, step.Reference, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheRentaDueDateStepNamesTheConfiguredDayWhenItIsAlreadyAWorkingDay()
+    {
+        var (window, step) = FilingDeadline.Renta("VC", Config);
+
+        Assert.Equal(new DateOnly(2026, 6, 30), window.End);
+        Assert.Equal(DayOfWeek.Tuesday, window.End.DayOfWeek);
+        Assert.Equal("2026-06-30 Tuesday, a working day → 2026-06-30", step.Formula);
     }
 }

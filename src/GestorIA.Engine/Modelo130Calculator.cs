@@ -11,15 +11,25 @@ public enum Quarter
     Q4 = 4,
 }
 
-// An abstract record with a private constructor admits only the records nested inside it: a closed union, like a TypeScript discriminated union.
+// An abstract record whose only cases are the records nested inside it: a closed union, like a TypeScript discriminated union.
+// A private constructor is not enough, because another assembly can still chain to the record's synthesized protected copy
+// constructor; a private protected abstract member, which only code in this assembly can override, shuts that door.
 public abstract record Retenciones
 {
     private Retenciones() { }
 
-    // SPEC-003 §0, business rule 3b: EU and US payers have no Spanish withholding obligation.
-    public sealed record ForeignPayersOnly : Retenciones;
+    private protected abstract void CloseTheUnion();
 
-    public sealed record Withheld(Money YearToDate) : Retenciones;
+    // SPEC-003 §0, business rule 3b: EU and US payers have no Spanish withholding obligation.
+    public sealed record ForeignPayersOnly : Retenciones
+    {
+        private protected override void CloseTheUnion() { }
+    }
+
+    public sealed record Withheld(Money YearToDate) : Retenciones
+    {
+        private protected override void CloseTheUnion() { }
+    }
 }
 
 // Selects the casilla 13 minoración band.
@@ -27,10 +37,18 @@ public abstract record PreviousYear
 {
     private PreviousYear() { }
 
-    public sealed record NoActivity : PreviousYear;
+    private protected abstract void CloseTheUnion();
+
+    public sealed record NoActivity : PreviousYear
+    {
+        private protected override void CloseTheUnion() { }
+    }
 
     // The previous year's activity net before any LIRPF art. 32 reduction (AEAT, instrucciones del modelo 130, casilla 13).
-    public sealed record RendimientoNeto(Money Amount) : PreviousYear;
+    public sealed record RendimientoNeto(Money Amount) : PreviousYear
+    {
+        private protected override void CloseTheUnion() { }
+    }
 }
 
 // Figures from 1 January to the end of the quarter. GastosYtd includes the cuota SS and excludes difícil justificación.
@@ -132,7 +150,10 @@ public static class Modelo130Calculator
             resultado,
             $"{Instrucciones}, casillas 17 and 19; RD 439/2007 art. 110.3.c: only a minoración above casilla 12 leaves a negative result, which pays zero and is deducted in later quarters of the same year"));
 
-        return new Modelo130Result(input.Quarter, resultado, next, FilingDeadline.Modelo130(input.Quarter, input.Region, config), new CalculationTrace(steps));
+        var (dueWindow, dueStep) = FilingDeadline.Modelo130(input.Quarter, input.Region, config);
+        steps.Add(dueStep);
+
+        return new Modelo130Result(input.Quarter, resultado, next, dueWindow, new CalculationTrace(steps));
     }
 
     // Business rule 7: 5 % of a positive rendimiento neto previo, capped, never negative.
@@ -202,7 +223,7 @@ public static class Modelo130Calculator
     }
 
     private static TraceStep Step(string id, string title, IReadOnlyList<TraceInput> inputs, string formula, Money output, string reference) =>
-        new(id, TraceSection.Modelo130, title, inputs, formula, output.Amount, reference);
+        new(id, TraceSection.Modelo130, title, inputs, formula, new TraceValue.Money(output), reference);
 
     private static Money Positive(Money money) => money > Money.Zero ? money : Money.Zero;
 

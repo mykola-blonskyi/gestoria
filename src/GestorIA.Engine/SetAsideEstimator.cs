@@ -115,7 +115,7 @@ public static class SetAsideEstimator
             "Meses de alta en el ejercicio",
             [new("alta", Invariant($"{alta:yyyy-MM-dd}")), new("taxYear", Invariant($"{taxYear}"))],
             Invariant($"{activeMonths[0]} … {new YearMonth(taxYear, 12)} = {n} meses"),
-            n,
+            new TraceValue.Count(n),
             "The months of alta in the tax year: TGSS averages the rendimiento over them"));
 
         steps.Add(new TraceStep(
@@ -126,7 +126,7 @@ public static class SetAsideEstimator
             last is null
                 ? "no closed quarter stated → 0; the projection covers every month of alta"
                 : Invariant($"to the end of {last.Quarter} ({new YearMonth(taxYear, actualThrough)}): ingresos {Show(actualIngresos)}, gastos {Show(actualGastos)}"),
-            actualIngresos.Amount,
+            new TraceValue.Money(actualIngresos),
             "#2, #15: what the taxpayer invoiced and spent, cumulative from 1 January as Modelo 130 casillas 01 and 02 take them, the RETA cuotas charged "
                 + "included in gastos. For the quarters they cover they replace the projection, and earlier Modelo 130s are recomputed from them"));
 
@@ -136,7 +136,7 @@ public static class SetAsideEstimator
             "Meses que cubre la proyección",
             [new("ingresos", Show(projection.Ingresos)), new("gastos", Show(projection.Gastos))],
             projectedCount == 0 ? "none: the actuals cover the year = 0 meses" : Invariant($"{projectedMonths[0]} … {projectedMonths.Last()} = {projectedCount} meses"),
-            projectedCount,
+            new TraceValue.Count(projectedCount),
             "#15: the projection covers the months of alta after the last closed quarter, spread evenly over them. An assumption of the estimate, not a rule"));
 
         var netToDate = actualIngresos - actualGastos;
@@ -174,7 +174,7 @@ public static class SetAsideEstimator
             cuotasToDate.Count == 0
                 ? "no actuals → 0"
                 : Invariant($"priced at the net they lead to, {pricedAt}: {string.Join(" + ", cuotasToDate.Select(c => Invariant($"{c.Month} {c.Cuota}")))} = {addedBack}"),
-            addedBack,
+            new TraceValue.Money(new Money(addedBack)),
             "LGSS art. 308.1.c (boe.es consolidated RDL 8/2015, read 2026-09-26): the rendimiento computable is the IRPF net increased by the titular's own cuotas, "
                 + "and the gastos to date already deduct them, so they are added back, estimated with MonthlyCuotaCalculator. The cuotas and the tramo depend on each other "
                 + "and more than one tramo can be consistent; pricing comes down from the top tramo, so the add-back settles on the highest consistent one: conservative (#2). "
@@ -187,7 +187,7 @@ public static class SetAsideEstimator
             "Rendimiento computable para la cuota SS, anualizado",
             [new("netoHastaHoy", Show(netToDate)), new("cuotasSumadas", Invariant($"{addedBack}")), new("netoProyectado", Show(projectedNet)), new("meses", Invariant($"{n}"))],
             Invariant($"({Show(netToDate)} + {addedBack} + {Show(projectedNet)}) × 12 / {n} = {expectedAnnualNet}"),
-            expectedAnnualNet,
+            new TraceValue.Money(new Money(expectedAnnualNet)),
             "LGSS art. 308.1.c: the IRPF rendimiento neto plus the titular's own cuotas, so the actuals with their cuotas added back and the projection before the RETA cuota, "
                 + "averaged over the months of alta. Difícil justificación is not deducted, which over-reserves (#2)"));
 
@@ -204,7 +204,7 @@ public static class SetAsideEstimator
             "Cuota SS mensual a reservar este trimestre",
             [new("quarter", input.AsOf.ToString())],
             Invariant($"max({string.Join(", ", quarterCuotas.Select(c => Invariant($"{c.Month} {c.Result.FullMonthCuota}")))}) = {chosen.Result.FullMonthCuota} ({chosen.Month})"),
-            chosen.Result.FullMonthCuota,
+            new TraceValue.Money(new Money(chosen.Result.FullMonthCuota)),
             "#2, bias conservative: the whole-month cuota, before the one-off proration of the month of alta, in the quarter's highest month. "
                 + "So an alta late in the quarter shows what TGSS debits every month from the next one, not the prorated first charge, "
                 + "and a quarter in which tarifa plana lapses shows the cuota after it"));
@@ -217,7 +217,7 @@ public static class SetAsideEstimator
             "Cuotas SS del ejercicio",
             [new("meses", Invariant($"{n}"))],
             Invariant($"{string.Join(" + ", cuotas.Select(c => Invariant($"{c.Month} {c.Result.Cuota}")))} = {Show(annualTgss)}"),
-            annualTgss.Amount,
+            new TraceValue.Money(annualTgss),
             "MonthlyCuotaCalculator for each month of alta; the same tramo every month, tarifa plana while it lasts"));
 
         var lastTarifaPlanaMonth = tarifaPlana.LastMonth(alta);
@@ -233,7 +233,7 @@ public static class SetAsideEstimator
             "Fin de la tarifa plana",
             [new("alta", Invariant($"{alta:yyyy-MM-dd}")), new("tarifaPlanaMonths", Invariant($"{monthsInForce}")), new("tarifaPlana", Show(tarifaPlana.Amount))],
             Invariant($"{altaMonth} + {monthsInForce} complete months → tarifa plana through {lastTarifaPlanaMonth}; from {lapse}, {lapseWhen}, the tramo cuota {cuotaAfterLapse}"),
-            cuotaAfterLapse,
+            new TraceValue.Money(new Money(cuotaAfterLapse)),
             "Ley 20/2007 art. 38 ter.1 (boe.es consolidated text, read 2026-09-27): from the alta through the complete calendar months after it, eleven when the alta is on the 1st (itself a complete calendar month) and twelve otherwise, per Seguridad Social's own reading of the benefit as the first 12 months of alta (portal.seg-social.gob.es); config seguridadSocial.tarifaPlana. "
                 + "The art. 38 ter.2 extension for a net below the SMI must be requested and is not assumed, which over-reserves"));
 
@@ -258,7 +258,7 @@ public static class SetAsideEstimator
                     Invariant($"Ingresos y gastos reales desde el 1 de enero, {quarter}"),
                     [new("ingresosYtd", Show(ingresosYtd)), new("gastosYtd", Show(gastosYtd))],
                     Invariant($"actuals as stated: ingresos {Show(ingresosYtd)}, gastos {Show(gastosYtd)}"),
-                    ingresosYtd.Amount,
+                    new TraceValue.Money(ingresosYtd),
                     "The taxpayer's own figures for a closed quarter, RETA cuotas included in gastos as Modelo 130 casilla 02 takes them"));
             }
             else
@@ -273,7 +273,7 @@ public static class SetAsideEstimator
                     Invariant($"Ingresos y gastos desde el 1 de enero, reales y proyectados, {quarter}"),
                     [new("realesHasta", last?.Quarter.ToString() ?? "none"), new("mesesProyectadosHastaFinTrimestre", Invariant($"{k}")), new("mesesProyectados", Invariant($"{projectedCount}")), new("cuotasSsProyectadas", Show(cuotasProjected))],
                     Invariant($"ingresos {Show(actualIngresos)} real + {Show(projection.Ingresos)} × {k} / {projectedCount} = {Show(ingresosYtd)}; gastos {Show(actualGastos)} real + {Show(projection.Gastos)} × {k} / {projectedCount} + {Show(cuotasProjected)} = {Show(gastosYtd)}"),
-                    ingresosYtd.Amount,
+                    new TraceValue.Money(ingresosYtd),
                     "#15: the actuals to the last closed quarter plus the projection spread evenly over the months after it, an assumption of the estimate, not a rule. "
                         + "Gastos add the projected RETA cuotas of those months, as Modelo 130 casilla 02 does. Rounded to cents because both enter casillas"));
             }
@@ -295,7 +295,7 @@ public static class SetAsideEstimator
             "Modelo 130 del ejercicio",
             [.. quarters.Select(q => new TraceInput(q.Quarter.ToString(), Show(q.AIngresar)))],
             Invariant($"{string.Join(" + ", quarters.Select(q => Show(q.AIngresar)))} = {Show(modelo130Year)}"),
-            modelo130Year.Amount,
+            new TraceValue.Money(modelo130Year),
             "Σ a ingresar (casilla 19, never below zero) over the quarters from the alta's on, each chained to the next through casillas 05 and 15, "
                 + "so a loss to date lowers the cumulative net of the quarters after it and a minoración left over carries as a negative result. "
                 + "A quarter that ends before the alta has no activity and so no pago fraccionado (RD 439/2007 art. 109.1), and no minoración to carry"));
@@ -308,7 +308,7 @@ public static class SetAsideEstimator
             "Ingresos del ejercicio, reales y proyectados",
             [new("reales", Show(actualIngresos)), new("proyectados", Show(projection.Ingresos))],
             Invariant($"{Show(actualIngresos)} real + {Show(projection.Ingresos)} projected = {Show(annualIngresos)}"),
-            annualIngresos.Amount,
+            new TraceValue.Money(annualIngresos),
             "#15: the actuals to the last closed quarter and the projection for the months after it"));
         steps.Add(new TraceStep(
             "set-aside.annual-gastos",
@@ -316,7 +316,7 @@ public static class SetAsideEstimator
             "Gastos del ejercicio, reales y proyectados, con las cuotas SS",
             [new("reales", Show(actualGastos)), new("proyectados", Show(projection.Gastos)), new("cuotasSsProyectadas", Show(cuotasProjectedYear))],
             Invariant($"{Show(actualGastos)} real + {Show(projection.Gastos)} projected + {Show(cuotasProjectedYear)} projected cuotas SS = {Show(annualGastos)}"),
-            annualGastos.Amount,
+            new TraceValue.Money(annualGastos),
             "#15: the actual gastos already hold the cuotas charged to date; the RETA cuota is a deductible expense of the titular (AEAT Manual práctico Renta 2025, cap. 7)"));
 
         var trueUp = AnnualTrueUpCalculator.Gap(
@@ -334,7 +334,7 @@ public static class SetAsideEstimator
             "IVA a reservar",
             [new("payers", "EU businesses and US clients")],
             "EU B2B is reverse charge and US services are outside Spanish IVA territory, so no invoice carries IVA repercutido → 0",
-            0m,
+            new TraceValue.Money(Money.Zero),
             "SPEC-003 §0. IVA soportado on Spanish purchases makes Modelo 303 a refund, which is not counted on"));
 
         var warnings = new List<Warning>
@@ -370,7 +370,7 @@ public static class SetAsideEstimator
             "Parte de cada cobro que no es tuya",
             [new("modelo130Year", Show(modelo130Year)), new("gap", Show(trueUp.Gap)), new("cuotasSs", Show(annualTgss)), new("ingresos", Show(annualIngresos))],
             Invariant($"min(1, ⌈({Show(modelo130Year)} + {Show(trueUp.Gap)} + {Show(annualTgss)}) / {Show(annualIngresos)}⌉) = min(1, ⌈{exact}⌉) = {share}"),
-            share,
+            new TraceValue.Rate(new Rate(share)),
             "#2: of the year's gross receipts, actual and projected (invoice bases; these clients pay no IVA), what belongs to AEAT and TGSS: the year's Modelo 130 advances, "
                 + "what the annual return wants beyond them (never below zero, so a refund is not counted on) and the year's TGSS cuotas. "
                 + "One share for the whole year, so what was already paid is not netted against what was set aside, which the estimator cannot see. "
