@@ -21,6 +21,7 @@ flowchart TD
   API --> INFRA
   API --> APPL
   INFRA --> APPL
+  INFRA --> ENGINE
   APPL --> ENGINE
   APPL --> DOMAIN
   ENGINE --> DOMAIN
@@ -35,8 +36,8 @@ flowchart TD
 `GestorIA.Application` is dashed because it does not exist yet — a Phase 0 deliverable
 (`plans/current.md`). Today the graph is `Api → Infrastructure → Engine → Domain`,
 with `Infrastructure → Domain` as well. `Infrastructure` references `Engine` directly
-because `TaxYearConfigLoader` builds the Engine's `TaxYearConfig`; once `Application`
-exists that edge runs through it. `GestorIA.Engine.Tests` references `Infrastructure`
+because `TaxYearConfigLoader` builds the Engine's `TaxYearConfig`. The edge stays when
+`Application` exists; it only gains an indirect path through it. `GestorIA.Engine.Tests` references `Infrastructure`
 to load the real `config/tax-years` files instead of hand-copying their numbers.
 
 Two edges are deliberate and easy to get wrong:
