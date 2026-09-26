@@ -1,6 +1,6 @@
 {
   "golden": "G03",
-  "scenario": "Autónomo, income 50,000, expenses 4,000, SS 3,600, VC, foreign clients only. The activity is established (last year's net was 42,400), so the LIRPF art. 32.3 reduction for a new activity does not apply. Each calculation below carries its own oracle, because the annual cuota íntegra and the quarterly advances are checked against different sources.",
+  "scenario": "Autónomo, income 50,000, expenses 4,000, SS 3,600, VC, foreign clients only. The activity is stipulated to be established, past the new-activity periods, so the LIRPF art. 32.3 reduction does not apply. Each calculation below carries its own oracle, because the annual cuota íntegra and the quarterly advances are checked against different sources.",
   "config": "2025.example.json",
   "modelo130": {
     "oracle": "theory",

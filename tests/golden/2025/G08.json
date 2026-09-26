@@ -1,6 +1,6 @@
 {
   "golden": "G08",
-  "scenario": "Salary 20,000 (employee SS 1,300) plus autónomo income of 8,000 with no expenses, VC. The activity's rendimiento neto of 7,600 is above the 6,500 cap on income other than employment, so the reducción por trabajo the salary alone would get is lost entirely. The activity is established (its Modelo 130 advances carry no minoración), so the LIRPF art. 32.3 reduction for a new activity does not apply.",
+  "scenario": "Salary 20,000 (employee SS 1,300) plus autónomo income of 8,000 with no expenses, VC. The activity's rendimiento neto of 7,600 is above the 6,500 cap on income other than employment, so the reducción por trabajo the salary alone would get is lost entirely. The activity is stipulated to be established, past the new-activity periods, so the LIRPF art. 32.3 reduction does not apply.",
   "config": "2025.example.json",
   "rentaTrueUp": {
     "oracle": "theory",

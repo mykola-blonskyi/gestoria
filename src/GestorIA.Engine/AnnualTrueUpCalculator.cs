@@ -8,7 +8,27 @@ namespace GestorIA.Engine;
 public sealed record EmploymentIncome(Money Ingresos, Money SeguridadSocial);
 
 // Projected for the whole tax year. Gastos include the titular's RETA cuota and exclude difícil justificación, as in Modelo130Input.
-public sealed record ActivityIncome(Money Ingresos, Money Gastos, NewActivity NewActivity);
+public sealed record ActivityIncome
+{
+    public Money Ingresos { get; }
+    public Money Gastos { get; }
+    public NewActivity NewActivity { get; }
+
+    public ActivityIncome(Money ingresos, Money gastos, NewActivity newActivity)
+    {
+        // Nullable annotations only warn at compile time; ThrowIfNull rejects a null that arrives anyway.
+        ArgumentNullException.ThrowIfNull(newActivity);
+
+        if (newActivity is NewActivity.Started started && started.IngresosFromFormerEmployer > ingresos)
+        {
+            throw new ArgumentOutOfRangeException(nameof(newActivity), started.IngresosFromFormerEmployer, "Ingresos from a former employer cannot exceed the activity's ingresos.");
+        }
+
+        Ingresos = ingresos;
+        Gastos = gastos;
+        NewActivity = newActivity;
+    }
+}
 
 // LIRPF art. 32.3, as the taxpayer states it. The engine cannot see earlier years, so it never infers or defaults this.
 public abstract record NewActivity
@@ -21,7 +41,28 @@ public abstract record NewActivity
     // No economic activity in the year before the start date, ignoring any that ceased without ever reaching a positive net.
     // IngresosFromFormerEmployer is the part of this period's Ingresos paid by someone who paid the taxpayer employment income
     // in the year before the activity started.
-    public sealed record Started(NewActivityPeriod Period, Money IngresosFromFormerEmployer) : NewActivity;
+    public sealed record Started : NewActivity
+    {
+        public NewActivityPeriod Period { get; }
+        public Money IngresosFromFormerEmployer { get; }
+
+        public Started(NewActivityPeriod period, Money ingresosFromFormerEmployer)
+        {
+            // An enum is an integer underneath, so (NewActivityPeriod)2 compiles; IsDefined rejects values with no name.
+            if (!Enum.IsDefined(period))
+            {
+                throw new ArgumentOutOfRangeException(nameof(period), period, "A new activity's period is First or Following.");
+            }
+
+            if (ingresosFromFormerEmployer < Money.Zero)
+            {
+                throw new ArgumentOutOfRangeException(nameof(ingresosFromFormerEmployer), ingresosFromFormerEmployer, "Ingresos from a former employer are never negative.");
+            }
+
+            Period = period;
+            IngresosFromFormerEmployer = ingresosFromFormerEmployer;
+        }
+    }
 }
 
 public enum NewActivityPeriod
@@ -38,8 +79,9 @@ public sealed record AnnualTrueUpInput(EmploymentIncome Employment, ActivityInco
 
 // LiabilityOnActivity is what the activity income adds to the annual cuota íntegra once stacked on the employment income;
 // it is negative when an activity loss lowers the tax on the salary. MarginalRate is the state plus regional tranche rate at
-// the stacked base. Gap is what the annual return wants beyond the Modelo 130 advances, never below zero, payable within
-// DueWindow and so by the end of PayableIn.
+// the stacked base: a rate on the base, not on activity receipts, which an art. 32.3 reduction lets into the base only in part.
+// Gap is what the annual return wants beyond the Modelo 130 advances, never below zero, payable within DueWindow and so by the
+// end of PayableIn.
 public sealed record AnnualTrueUpResult(
     Money LiabilityOnActivity,
     Rate MarginalRate,
@@ -63,7 +105,8 @@ public static class AnnualTrueUpCalculator
 
         var trabajo = Trabajo(input.Employment, irpf.Trabajo.OtrosGastos, steps);
         var actividad = Actividad(input.Activity, irpf.Actividad.DificilJustificacion, steps);
-        var actividadReducida = actividad - ReduccionInicioActividad(input.Activity, actividad, irpf.Actividad.InicioActividad, steps);
+        var reduccionInicio = ReduccionInicioActividad(input.Activity, actividad, irpf.Actividad.InicioActividad, steps);
+        var actividadReducida = actividad - reduccionInicio;
 
         // The other-income cap is tested on the activity net before its art. 32.3 reduction (AEAT Manual práctico Renta 2025, cap. 3, fase 3).
         var reduccionSolo = Reduccion("solo", "Reducción por trabajo, trabajo solo", trabajo, Money.Zero, irpf.Trabajo.Reduccion, steps);
@@ -131,6 +174,10 @@ public static class AnnualTrueUpCalculator
         {
             // A positive gap needs a positive liability, which only a positive activity net produces, so the division is safe.
             var effectiveRate = liability.Amount / actividad.Amount;
+            // Below the cap, the art. 32.3 reduction lets only (1 − pct) of another euro of activity net into the base.
+            var lastEuro = reduccionInicio > Money.Zero && actividad < irpf.Actividad.InicioActividad.MaxRendimiento
+                ? $"{Percent(marginalRate.Value * (1m - irpf.Actividad.InicioActividad.Pct.Value))} on its last euro ({Percent(marginalRate.Value)} on the base, which takes only {Percent(1m - irpf.Actividad.InicioActividad.Pct.Value)} of that euro after the LIRPF art. 32.3 reduction)"
+                : $"{Percent(marginalRate.Value)} on its last euro";
             var taxed = input.Employment.Ingresos > Money.Zero
                 ? $"Stacked on the employment income, the {Euros(actividad)} of activity net income adds {Euros(liability)} of tax"
                 : $"With no employment income, the {Euros(actividad)} of activity net income is taxed {Euros(liability)}";
@@ -139,7 +186,7 @@ public static class AnnualTrueUpCalculator
                 WarningCodes.MarginalVsEffective,
                 WarningSeverity.Warning,
                 $"Modelo 130 advances total {Euros(input.Modelo130Advances)} this year, {Percent(config.Modelo130.Rate.Value)} of the activity net income less any minoración. "
-                    + $"{taxed}: an effective rate of {Percent(effectiveRate)}, and {Percent(marginalRate.Value)} on its last euro. "
+                    + $"{taxed}: an effective rate of {Percent(effectiveRate)}, and {lastEuro}. "
                     + Invariant($"The annual return will want {Euros(gap)} more, payable by {payableIn.Year:D4}-{window.End.Month:D2}-{window.End.Day:D2}.")));
         }
 
@@ -229,36 +276,24 @@ public static class AnnualTrueUpCalculator
     // Art. 32.3 reduces the net left after the art. 32.1 and 32.2 reductions, and the engine applies neither of those.
     private static Money ReduccionInicioActividad(ActivityIncome activity, Money rendimientoNeto, InicioActividadConfig config, List<TraceStep> steps)
     {
-        var fromFormerEmployer = Money.Zero;
-        string period;
-        Money reduccion;
-        string formula;
-
-        if (activity.NewActivity is NewActivity.Started started)
+        // `Started { Period: First } started` matches the type, checks a property, and names the match, like a narrowed TypeScript union.
+        (string Period, NewActivity.Started? Started) status = activity.NewActivity switch
         {
-            fromFormerEmployer = started.IngresosFromFormerEmployer;
-            period = started.Period == NewActivityPeriod.First
-                ? "first period with a positive net (primer período impositivo en que sea positivo)"
-                : "period after the first positive one (período impositivo siguiente)";
+            NewActivity.Established => ("not a newly started activity, or past the period after its first positive one", null),
+            NewActivity.Started { Period: NewActivityPeriod.First } started => rendimientoNeto > Money.Zero
+                ? ("first period with a positive net (primer período impositivo en que sea positivo)", started)
+                : ("no positive period yet: this period's net is not positive either", started),
+            NewActivity.Started { Period: NewActivityPeriod.Following } started => ("period after the first positive one (período impositivo siguiente)", started),
+            _ => throw new ArgumentOutOfRangeException(nameof(activity), activity.NewActivity, "Unknown new-activity status."),
+        };
 
-            var formerEmployerLimit = activity.Ingresos * config.FormerEmployerShare;
-            if (fromFormerEmployer > formerEmployerLimit)
-            {
-                reduccion = Money.Zero;
-                formula = Invariant($"ingresos from a former employer {Show(fromFormerEmployer)} > {config.FormerEmployerShare} × {Show(activity.Ingresos)} → 0");
-            }
-            else
-            {
-                reduccion = Min(Positive(rendimientoNeto), config.MaxRendimiento) * config.Pct;
-                formula = Invariant($"{config.Pct} × min(max(0, {Show(rendimientoNeto)}), {Show(config.MaxRendimiento)}) = {Show(reduccion)}");
-            }
-        }
-        else
-        {
-            period = "not a newly started activity, or past the period after its first positive one";
-            reduccion = Money.Zero;
-            formula = "established activity → 0";
-        }
+        var fromFormerEmployer = status.Started?.IngresosFromFormerEmployer ?? Money.Zero;
+        var onPositiveNet = Min(Positive(rendimientoNeto), config.MaxRendimiento) * config.Pct;
+        var (reduccion, formula) =
+            status.Started is null ? (Money.Zero, "established activity → 0")
+            : fromFormerEmployer > activity.Ingresos * config.FormerEmployerShare
+                ? (Money.Zero, Invariant($"ingresos from a former employer {Show(fromFormerEmployer)} > {config.FormerEmployerShare} × {Show(activity.Ingresos)} → 0"))
+            : (onPositiveNet, Invariant($"{config.Pct} × min(max(0, {Show(rendimientoNeto)}), {Show(config.MaxRendimiento)}) = {Show(onPositiveNet)}"));
 
         steps.Add(new TraceStep(
             "renta.actividad.reduccion-inicio",
@@ -274,7 +309,7 @@ public static class AnnualTrueUpCalculator
             ],
             Invariant($"{formula}; rendimiento neto reducido = {Show(rendimientoNeto)} − {Show(reduccion)} = {Show(rendimientoNeto - reduccion)}"),
             reduccion.Amount,
-            $"{Lirpf} art. 32.3, {period}; config irpf.actividad.inicioActividad; AEAT Manual práctico Renta 2025, cap. 7, fase 3. "
+            $"{Lirpf} art. 32.3, {status.Period}; config irpf.actividad.inicioActividad; AEAT Manual práctico Renta 2025, cap. 7, fase 3. "
                 + "Art. 32.2.1º is ruled out for this profile (SPEC-003 §0): it requires every sale to go to one client or the taxpayer to be a TRADE (2.º b), "
                 + "at least 70 % of ingresos under retención, which foreign payers never withhold (2.º f), and no employment income (2.º e). "
                 + "Art. 32.2.3º, for rentas no exentas below 12,000 including the activity's, is not applied, and art. 32.1 (irregular income) has no input here; "

@@ -220,10 +220,15 @@ public class AnnualTrueUpExamples
         Assert.Equal(27400m, Output(result, "renta.stacked.base-liquidable"));
     }
 
+    public static TheoryData<decimal, decimal> ReduccionAroundTheCap() => new()
+    {
+        { 99999.99m, 19999.998m },
+        { 100000m, 20000m },
+        { 150000m, 20000m },
+    };
+
     [Theory]
-    [InlineData(100000, 20000)]
-    [InlineData(150000, 20000)]
-    [InlineData(99999.99, 19999.998)]
+    [MemberData(nameof(ReduccionAroundTheCap))]
     public void OnlyTheFirst100000OfNetIsReduced(decimal net, decimal reduccion)
     {
         var result = Run(salary: 0m, ss: 0m, ingresos: net, gastos: 0m, config: WithoutDificilJustificacion(), newActivity: FirstPeriod());
@@ -268,4 +273,69 @@ public class AnnualTrueUpExamples
         Assert.StartsWith("Ley 35/2006 (LIRPF) art. 32.3, not a newly started activity", established.Reference);
         Assert.Contains("Art. 32.2.1º is ruled out for this profile", first.Reference);
     }
+
+    // Below the 100,000 cap one more euro of net adds only 0.80 € to the base, so the base's 40.90 % costs 32.72 % of that euro.
+    [Fact]
+    public void WhileTheReductionAppliesTheLastEuroOfActivityIsTaxedAtTheReducedRate()
+    {
+        var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 960m, advances: 5408m, newActivity: FirstPeriod());
+
+        Assert.Equal(new Rate(0.409m), result.MarginalRate);
+        var warning = Assert.Single(result.Warnings, w => w.Code == WarningCodes.MarginalVsEffective);
+        Assert.Contains("and 32.72 % on its last euro (40.90 % on the base, which takes only 80.00 % of that euro after the LIRPF art. 32.3 reduction)", warning.Text);
+    }
+
+    [Fact]
+    public void AboveTheCapTheLastEuroOfActivityIsTaxedAtTheFullRate()
+    {
+        var result = Run(salary: 0m, ss: 0m, ingresos: 150000m, gastos: 0m, config: WithoutDificilJustificacion(), newActivity: FirstPeriod());
+
+        var warning = Assert.Single(result.Warnings, w => w.Code == WarningCodes.MarginalVsEffective);
+        Assert.Contains(Percent(result.MarginalRate.Value) + " on its last euro.", warning.Text);
+    }
+
+    [Fact]
+    public void ANegativeAmountFromAFormerEmployerIsRejected()
+    {
+        var e = Assert.Throws<ArgumentOutOfRangeException>(() => new NewActivity.Started(NewActivityPeriod.First, new Money(-0.01m)));
+
+        Assert.Equal("ingresosFromFormerEmployer", e.ParamName);
+        Assert.StartsWith("Ingresos from a former employer are never negative.", e.Message);
+    }
+
+    [Fact]
+    public void MoreFromAFormerEmployerThanTheActivityInvoicedIsRejected()
+    {
+        var e = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new ActivityIncome(new Money(30000m), Money.Zero, FirstPeriod(fromFormerEmployer: 30000.01m)));
+
+        Assert.Equal("newActivity", e.ParamName);
+        Assert.StartsWith("Ingresos from a former employer cannot exceed the activity's ingresos.", e.Message);
+    }
+
+    [Fact]
+    public void AnUndefinedPeriodIsRejected()
+    {
+        var e = Assert.Throws<ArgumentOutOfRangeException>(() => new NewActivity.Started((NewActivityPeriod)2, Money.Zero));
+
+        Assert.Equal("period", e.ParamName);
+    }
+
+    [Fact]
+    public void AMissingNewActivityIsRejected()
+    {
+        var e = Assert.Throws<ArgumentNullException>(() => new ActivityIncome(new Money(30000m), Money.Zero, null!));
+
+        Assert.Equal("newActivity", e.ParamName);
+    }
+
+    [Fact]
+    public void AFirstPeriodWithoutAPositiveNetIsNotCalledThePositivePeriod()
+    {
+        var step = ReduccionInicio(Run(salary: 40000m, ss: 2600m, ingresos: 1000m, gastos: 9000m, newActivity: FirstPeriod()));
+
+        Assert.StartsWith("Ley 35/2006 (LIRPF) art. 32.3, no positive period yet", step.Reference);
+    }
+
+    private static string Percent(decimal fraction) => (fraction * 100m).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " %";
 }

@@ -70,7 +70,12 @@ internal static class RentaTrueUpGolden
     {
         JsonValue established when established.GetValue<string>() == "established" => new NewActivity.Established(),
         JsonObject started => new NewActivity.Started(
-            Enum.Parse<NewActivityPeriod>(started["period"]!.GetValue<string>(), ignoreCase: true),
+            started["period"]!.GetValue<string>() switch
+            {
+                "first" => NewActivityPeriod.First,
+                "following" => NewActivityPeriod.Following,
+                var other => throw new InvalidOperationException($"activity.newActivity.period must be \"first\" or \"following\", not \"{other}\""),
+            },
             MoneyOf(started["ingresosFromFormerEmployer"])),
         _ => throw new InvalidOperationException($"activity.newActivity must be \"established\" or an object, not {newActivity?.ToJsonString() ?? "missing"}"),
     };

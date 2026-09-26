@@ -61,6 +61,8 @@ Golden #3, #4, G13.
 
 `reduccionInicio` is LIRPF art. 32.3 (AEAT Manual práctico Renta 2025, cap. 7, fase 3). A new activity is one started with no economic activity at all in the year before its start date, ignoring any that ceased without a positive net; the reduction applies in the first period whose net is positive and in the period after it, and not in a period where more than half the ingresos come from someone who paid the taxpayer employment income in the year before the start. It is an annual-return reduction: Modelo 130 casilla 03 applies only art. 32.1 (AEAT instrucciones del modelo 130). Art. 32.2.1º–2º does not apply to the v1.0 profile (SPEC-003 §0), because it needs at least 70 % of ingresos under retención and foreign payers withhold none; art. 32.2.3º (rentas no exentas below 12,000) is not modelled, which can only overstate the tax.
 
+The annual true-up's `AnnualTrueUpResult.MarginalRate` is the state plus regional tranche rate at the stacked base liquidable: a rate on the base, not on activity receipts. While `reduccionInicio` applies and `rnActividad` is below `maxRendimiento`, one more euro of activity net adds only `1 − inicioActividad.pct` of a euro to the base, so a consumer that applies the rate to receipts (#10, #15) must scale it by that factor. The MARGINAL_VS_EFFECTIVE warning does.
+
 ### Step 3 — Savings and property
 - Capital mobiliario: Σ interest/dividends gross; retención Σ separately.
 - Ganancias/pérdidas: FIFO per asset; net; loss offsetting limited to `config.ahorro.lossOffsetPct` (25 %) of positive capital mobiliario; remainder carried forward `carryForwardYears` (v1: computed, stored as warning + value).
