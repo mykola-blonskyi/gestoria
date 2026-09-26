@@ -13,27 +13,28 @@ Expected values come from the AEAT Renta WEB Open Simulador, entered by hand bef
 | 2 | `published-example` | A worked example from AEAT or a published manual. Cite it |
 | 3 | `theory` | Nothing better exists. The weakest gate, and marked as such |
 
-The table below is an index. It is not the input. Each fixture states its inputs in full, because a golden whose inputs live in the vault is not a regression test: G1's expected 4,851.00 depends on an employee SS contribution of 1,950.00 that this table never mentions.
+The table below is an index. It is not the input. Each fixture states its inputs in full, because a golden whose inputs live in the vault is not a regression test: G1's expected 4,801.05 depends on an employee SS contribution of 1,950.00 that this table never mentions.
 
 All cases gate v1.0 (ADR-0013).
 
 | # | Scenario | Expected |
 |---|---|---|
-| G1 | Employee, 30,000 € gross, SS 1,950.00, VC, no children | cuota íntegra **4,851.00** |
+| G1 | Employee, 30,000 € gross, SS 1,950.00, VC, no children | cuota íntegra **4,801.05**: 2,463.00 estatal + 2,338.05 VC (#29) |
 | G2 | Employee, 18,000 € gross, SS 1,170.00, VC | reducción **3,840.50**, not the full 7,302: LIRPF art. 20 measures 16,830, before the 2,000 of otros gastos (#9). The cuota íntegra of 365.93 in Theory §5.4 rests on the full 7,302 and is to be re-taken from the simulator |
-| G3 | Autónomo, income 50,000, expenses 4,000, SS 3,600, VC | cuota íntegra **9,548.00**; Σ 130 = **8,480.00**; result **1,068.00 a ingresar** |
+| G3 | Autónomo, income 50,000, expenses 4,000, SS 3,600, VC | cuota íntegra **9,498.05**; Σ 130 = **8,480.00**; result **1,018.05 a ingresar** (#29) |
 | G4 | Difícil justificación | previo 42,400 → **2,000**; 10,000 → **500**; −500 → **0** |
 | G5 | 130 with loss-making Q3 | Q3 payable **0**, carry-over applied in Q4 |
 | G6 | Ahorro 4,500 → **855**; 7,000 → **1,350** | tranche boundary at 6,000 |
-| G7 | Minimum, two children (5, 2) | both parents individual → **9,500** each; single filer → **13,450** |
+| G7 | Minimum, two children (5, 2) | state mínimo: both parents individual → **9,500** each; single filer → **13,450**. VC mínimo for the regional scale: **10,450** each; **14,795** (#29) |
 | G8 | Salary 20,000 + autónomo 8,000 | reducción por trabajo = **0** (other income > 6,500); relief lost **1,194.15** (#9) |
 | G8b | Salary 20,000 + savings income 8,000 | reducción por trabajo = **0**. Same cap, different route; an employee reaches it through dividends (SPEC-002 step 1) |
 | G9 | Bank credit 1,060 from one invoice | base **1,000**, IVA **210**, retención **150** |
 | G10 | Obligation | 21,000 single payer → not required; 16,000 + 2,000 → required |
 | G11 | Pluriactividad: salary 40,000 (SS 2,600) + established activity 30,000 (RETA 4,802.40), VC | Σ 130 = **5,039.52**; the activity adds **9,217.13**; true-up gap **4,177.61**, payable by 30 June 2026 (#9) |
-| G12 | Set-aside estimate in the first month of activity, projection only: alta 15 January, no employment, no activity the year before, projected 30,000 invoiced and 1,200 of expenses besides the RETA cuota, EU and US clients, VC, as of Q1 | hold back **0.2034** of each payment; Q1 Modelo 130 **1,298.93**, due 1–20 April; TGSS **80.00** a month, 925.33 for the year; true-up gap **0.00**, since the advances of 5,174.93 exceed the 4,980.28 the activity is taxed; IVA **0.00** with its reason (#10) |
+| G12 | Set-aside estimate in the first month of activity, projection only: alta 15 January, no employment, no activity the year before, projected 30,000 invoiced and 1,200 of expenses besides the RETA cuota, EU and US clients, VC, as of Q1 | hold back **0.2034** of each payment; Q1 Modelo 130 **1,298.93**, due 1–20 April; TGSS **80.00** a month, 925.33 for the year; true-up gap **0.00**, since the advances of 5,174.93 exceed the 3,365.93 the activity is taxed once LIRPF art. 32.3 takes 20 % off a new activity's first positive period; IVA **0.00** with its reason (#10) |
+| G13 | G11's salary plus a new activity in its first positive period: 30,000 to foreign clients, RETA tarifa plana 960, VC | Σ 130 = **5,408.00** on the unreduced net; LIRPF art. 32.3 takes **5,517.60** off the activity net; the activity adds **8,453.39**; gap **3,045.39** (#30) |
 
-G1, G3, G8, G11 and G12 apply the state mínimo of 5,550 to the regional scale as well, because the configuration holds no regional mínimos (#29). The AEAT Manual práctico Renta 2025, cap. 14, gives VC residents a regional mínimo of 6,105 (Ley 13/1997 art. 2 bis), which lowers the regional cuota of any base above it by 49.95. G1's cuota íntegra and G3's cuota, liability and gap overstate the tax by that amount. In G08 and G11 both the salary-alone and the stacked base are above 6,105, so the same 49.95 sits in both cuotas and cancels out of the liability on the activity and the gap. G12 uses the state mínimo too; its liability overstates by the same 49.95, but the advances exceed it either way, so its gap and hold-back share do not move.
+The regional scale is measured against the region's own mínimo personal y familiar (LIRPF art. 56.3 and 74.1). For VC that is Ley 13/1997 art. 2 bis, repeated in the AEAT Manual práctico Renta 2025, cap. 14: a mínimo del contribuyente of 6,105 against the state 5,550, which lowers the VC cuota of any base above 6,105 by 555 × 0.09 = 49.95, and descendientes amounts about 10 % above the state's (#29). Theory §4.4, §5.3, §7.2 and §15.6 apply the state mínimo to both scales, so G1, G3 and G7 above depart from the theory: G1 and G3 by 49.95, G7 by adding the VC figures. In G08, G11 and G13 both the salary-alone and the stacked base are above 6,105, so the 49.95 sits in both cuotas and cancels out of the liability on the activity and the gap.
 
 Each golden lives in `tests/golden/2025/G0N.json`, run by `tests/GestorIA.Engine.Tests/Golden/G0N_*.cs`. The fixture holds the inputs as well as the expected values, and the runner builds the engine input from the fixture, so the file alone states the case. Expected values are compared as numbers, not as strings.
 

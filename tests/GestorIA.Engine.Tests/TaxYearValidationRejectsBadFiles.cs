@@ -91,6 +91,17 @@ public class TaxYearValidationRejectsBadFiles
             (r => r["deducciones"] = new JsonArray(Deduccion("autonomica", "0003")),
              "/deducciones/0/casilla"),
 
+        // The provenance entry goes too, or the dangling-pointer rule would catch the gap instead of schema.json.
+        ["regional mínimos override missing a value"] =
+            (r =>
+            {
+                r["regions"]!["VC"]!["minimosOverride"]!.AsObject().Remove("menor3");
+                r["provenance"]!.AsObject().Remove("/regions/VC/minimosOverride/menor3");
+            }, "/regions/VC/minimosOverride"),
+
+        ["regional mínimos override with a key the loader does not know"] =
+            (r => r["regions"]!["VC"]!["minimosOverride"]!["hijos"] = 2640m, "/regions/VC/minimosOverride"),
+
         ["minoracion band with a misspelled property"] =
             (r => Rename(r["modelo130"]!["minoracion"]![0]!.AsObject(), "amountPerQuarter", "amountPerQuater"),
              "/modelo130/minoracion/0"),

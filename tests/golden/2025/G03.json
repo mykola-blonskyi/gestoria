@@ -1,6 +1,6 @@
 {
   "golden": "G03",
-  "scenario": "Autónomo, income 50,000, expenses 4,000, SS 3,600, VC, foreign clients only. Each calculation below carries its own oracle, because the annual cuota íntegra and the quarterly advances are checked against different sources.",
+  "scenario": "Autónomo, income 50,000, expenses 4,000, SS 3,600, VC, foreign clients only. The activity is stipulated to be established, past the new-activity periods, so the LIRPF art. 32.3 reduction does not apply. Each calculation below carries its own oracle, because the annual cuota íntegra and the quarterly advances are checked against different sources.",
   "config": "2025.example.json",
   "modelo130": {
     "oracle": "theory",
@@ -28,19 +28,19 @@
   },
   "rentaTrueUp": {
     "oracle": "theory",
-    "oracleRef": "SPEC-011 §1 G3 and Theory §7.2, ed. 2, Example B steps 1–10: cuota íntegra 9,548.00, Σ 130 8,480.00, result 1,068.00 a ingresar. With no employment income the whole cuota is the activity's, so liabilityOnActivity is the cuota íntegra and gap is the result. marginalRate is not in the theory; it is the tranche rates at a base of 40,400 (0.185 estatal + 0.175 VC). The theory applies the state mínimo of 5,550 to the regional scale too; the AEAT Manual práctico Renta 2025, cap. 14, gives VC residents a regional mínimo of 6,105 (Ley 13/1997 art. 2 bis), which would lower both figures by 49.95 (#29).",
+    "oracleRef": "Theory §7.2, ed. 2, Example B steps 1–10 for the inputs and the cuota íntegra estatal of 5,324.75 − 527.25 = 4,797.50. The theory takes the VC cuota as 5,250.00 − 499.50, applying the state mínimo of 5,550 to the regional scale; LIRPF art. 56.3 and 74.1 (boe.es consolidated Ley 35/2006, read 2026-09-26) apply the region's own mínimo instead, which for VC is 6,105 (Ley 13/1997 art. 2 bis.1.a, boe.es consolidated BOE-A-1998-8202, read 2026-09-26; AEAT Manual práctico Renta 2025, cap. 14, Comunitat Valenciana: importes del mínimo personal y familiar). So the VC cuota is 5,250.00 − 549.45 = 4,700.55, the cuota íntegra 9,498.05, and with Σ 130 of 8,480.00 the result is 1,018.05 a ingresar (#29). With no employment income the whole cuota is the activity's, so liabilityOnActivity is the cuota íntegra and gap is the result. marginalRate is not in the theory; it is the tranche rates at a base of 40,400 (0.185 estatal + 0.175 VC).",
     "oracleRunDate": "2026-09-26",
     "inputs": {
       "region": "VC",
       "employment": { "ingresos": "0.00", "seguridadSocial": "0.00" },
-      "activity": { "ingresos": "50000.00", "gastos": "7600.00" },
+      "activity": { "ingresos": "50000.00", "gastos": "7600.00", "newActivity": "established" },
       "modelo130Advances": "8480.00"
     },
     "expected": {
-      "liabilityOnActivity": "9548.00",
+      "liabilityOnActivity": "9498.05",
       "marginalRate": "0.36",
       "reduccionTrabajoLost": "0.00",
-      "gap": "1068.00",
+      "gap": "1018.05",
       "payableIn": "2026-06",
       "warnings": ["MARGINAL_VS_EFFECTIVE"]
     }

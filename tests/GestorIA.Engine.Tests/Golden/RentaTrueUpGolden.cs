@@ -25,7 +25,7 @@ internal static class RentaTrueUpGolden
         var result = AnnualTrueUpCalculator.Gap(
             new AnnualTrueUpInput(
                 new EmploymentIncome(MoneyOf(inputs["employment"]!["ingresos"]), MoneyOf(inputs["employment"]!["seguridadSocial"])),
-                new ActivityIncome(MoneyOf(inputs["activity"]!["ingresos"]), MoneyOf(inputs["activity"]!["gastos"])),
+                new ActivityIncome(MoneyOf(inputs["activity"]!["ingresos"]), MoneyOf(inputs["activity"]!["gastos"]), NewActivityOf(inputs["activity"]!["newActivity"])),
                 advances,
                 inputs["region"]!.GetValue<string>()),
             TaxYearConfigFiles.Year2025);

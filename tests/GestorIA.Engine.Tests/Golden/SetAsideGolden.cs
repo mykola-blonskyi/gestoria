@@ -34,7 +34,7 @@ internal static class SetAsideGolden
             new TaxpayerProfile(
                 profileJson["region"]!.GetValue<string>(),
                 new EmploymentIncome(MoneyOf(employmentJson["ingresos"]), MoneyOf(employmentJson["seguridadSocial"])),
-                new AutonomoRegistration(alta, previousYear)),
+                new AutonomoRegistration(alta, previousYear, NewActivityOf(registrationJson["newActivity"]))),
             new ActivityPicture(actuals, new ActivityProjection(MoneyOf(projectionJson["ingresos"]), MoneyOf(projectionJson["gastos"])), new Retenciones.ForeignPayersOnly()),
             TaxYearConfigFiles.Year2025,
             Enum.Parse<Quarter>(inputs["asOf"]!.GetValue<string>()));

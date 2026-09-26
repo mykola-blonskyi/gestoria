@@ -6,8 +6,9 @@ namespace GestorIA.Engine;
 // The subset of SPEC-001's TaxpayerProfile the estimator reads. Employment is projected for the whole tax year, zero when there is none.
 public sealed record TaxpayerProfile(string Region, EmploymentIncome Employment, AutonomoRegistration Activity);
 
-// Modelo 036/037 facts. PreviousYear selects the casilla 13 minoración band and is stated, never inferred from Alta.
-public sealed record AutonomoRegistration(DateOnly Alta, PreviousYear PreviousYear);
+// Modelo 036/037 facts as the taxpayer states them, never inferred from Alta: PreviousYear selects the casilla 13 minoración
+// band, NewActivity the LIRPF art. 32.3 reduction in the annual return.
+public sealed record AutonomoRegistration(DateOnly Alta, PreviousYear PreviousYear, NewActivity NewActivity);
 
 // Cumulative figures from 1 January to the end of a closed quarter, with Modelo130Input's gastos semantics (RETA cuota included).
 public sealed record QuarterToDate(Quarter Quarter, Money IngresosYtd, Money GastosYtd);
@@ -152,7 +153,6 @@ public static class SetAsideEstimator
                 carry,
                 config);
 
-            // "with" copies a record and changes only the listed properties, like { ...step, id } in TypeScript.
             steps.AddRange(result.Trace.Steps.Select(step => step with { Id = Invariant($"{quarter}.{step.Id}") }));
             carry = result.Carry;
             quarters.Add(result);
@@ -171,7 +171,7 @@ public static class SetAsideEstimator
         var trueUp = AnnualTrueUpCalculator.Gap(
             new AnnualTrueUpInput(
                 input.Profile.Employment,
-                new ActivityIncome(projection.Ingresos, projection.Gastos + annualTgss),
+                new ActivityIncome(projection.Ingresos, projection.Gastos + annualTgss, input.Profile.Activity.NewActivity),
                 modelo130Year,
                 input.Profile.Region),
             config);

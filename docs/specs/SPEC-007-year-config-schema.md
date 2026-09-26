@@ -19,7 +19,9 @@
     "trabajo": { "otrosGastos": 2000, "movilidadExtra": 2000, "discapacidadExtra": 3500, "discapacidadExtra65": 7750,
                  "unionFeeCap": 500,
                  "reduccion": { "fixed": 7302, "t1": 14852, "t2": 17673.52, "t3": 19747.50, "k1": 1.75, "k2": 1.14, "otherIncomeCap": 6500 } },
-    "actividad": { "dificilJustificacion": { "pct": 0.05, "max": 2000 }, "homeUtilitiesFactor": 0.30,
+    "actividad": { "dificilJustificacion": { "pct": 0.05, "max": 2000 },
+                   "inicioActividad": { "pct": 0.20, "maxRendimiento": 100000, "formerEmployerShare": 0.50 },
+                   "homeUtilitiesFactor": 0.30,
                    "retencionProfesional": 0.15, "retencionNuevo": 0.07, "retencionNuevoYears": 3,
                    "depreciation": { "equipos": 4, "software": 3, "mobiliario": 10 } },
     "ahorro": { "lossOffsetPct": 0.25, "carryForwardYears": 4 },
@@ -28,7 +30,11 @@
     "obligacion": { "unPagador": 22000, "variosPagadores": 15876, "segundoPagadorMin": 1500, "ahorroCap": 1600, "imputadasCap": 1000 }
   },
   "regions": {
-    "VC": { "name": "Comunitat Valenciana", "escalaAutonomica": [ ... ], "minimosOverride": null },
+    "VC": { "name": "Comunitat Valenciana", "escalaAutonomica": [ ... ],
+            "minimosOverride": { "contribuyente": 6105, "mayor65": 1265, "mayor75": 1540,
+                                 "descendientes": [2640, 2970, 4400, 4950], "menor3": 3080,
+                                 "ascendiente": 1265, "ascendiente75": 1540,
+                                 "discapacidad33": 3300, "discapacidad65": 9900, "asistencia": 3300 } },
     "MD": { ... }
   },
   "modelo130": { "rate": 0.20, "retencionExemptionShare": 0.70,
@@ -51,6 +57,8 @@
 }
 ```
 Scales use `upTo` (upper bound of tranche, `null` = open) so a tranche's width is derived, avoiding off-by-one edits.
+
+`minimosOverride` holds the mínimos the region's own scale is measured against (LIRPF art. 56.3 and 74.1). `null` means the region approved no amounts of its own, and the state `irpf.minimos` apply to its scale as well. Otherwise it carries every amount of `irpf.minimos` except `descendienteIncomeCap` and `descendienteAgeCap`, which are conditions a region cannot change. A partial set is a schema error: taking the missing amounts from the state would mix two laws without saying so. VC's amounts are Ley 13/1997 art. 2 bis (#29). The engine reads only `contribuyente` today; the others wait for the mínimo calculator (golden #7).
 
 Social security bands carry **both** bounds. The theory gives them as a range (§6.2), and keeping only the upper bound makes a gap between two bands undetectable.
 

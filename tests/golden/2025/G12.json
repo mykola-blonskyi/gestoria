@@ -1,17 +1,17 @@
 {
   "golden": "G12",
-  "scenario": "Set-aside estimate in the first month of activity, from a projection alone. A new autónomo profesional registers on 15 January, has no employment income and no activity the year before, and invoices only EU business and US clients in VC. He expects to invoice 30,000 over the year with 1,200 of expenses besides his RETA cuota. Nothing has been invoiced yet, so the estimate as of Q1 rests entirely on that projection. Tarifa plana covers the whole year, the month of alta prorated. Modelo 130 collects more than the annual return will want, so the true-up gap is zero and the refund is not counted on.",
+  "scenario": "Set-aside estimate in the first month of activity, from a projection alone. A new autónomo profesional registers on 15 January, has no employment income, no activity the year before and no former employer among his clients, and invoices only EU business and US clients in VC. He expects to invoice 30,000 over the year with 1,200 of expenses besides his RETA cuota. Nothing has been invoiced yet, so the estimate as of Q1 rests entirely on that projection. Tarifa plana covers the whole year, the month of alta prorated. This is the activity's first positive period, so the annual return takes 20 % off its net (LIRPF art. 32.3); Modelo 130 does not. Modelo 130 collects more than the annual return will want, so the true-up gap is zero and the refund is not counted on.",
   "config": "2025.example.json",
   "setAside": {
     "oracle": "theory",
-    "oracleRef": "Arithmetic under the set-aside estimator's composition rules in #2 (Implementation Decisions) and #10, over sources checked 2026-09-26. TGSS: LGSS art. 308.1.c (boe.es consolidated RDL 8/2015, read 2026-09-26), rendimiento computable is the IRPF net plus the titular's own cuotas, averaged over the months of alta, so 28,800 / 12 = 2,400 a month, tramo General 7; tarifa plana 80 under Ley 20/2007 art. 38 ter.1 for the alta month and the twelve after it; January prorated 80 × 17 / 30 = 45.33 under LGSS art. 31.2; the year is 45.33 + 11 × 80 = 925.33 and the highest Q1 month is 80. Modelo 130 (SPEC-003 §1, AEAT instrucciones del modelo 130, casillas 01–19): the projection spread evenly over the twelve months of alta, gastos to date plus the cuotas to date, 20 % of the cumulative net, minoración 100 a quarter because no activity last year counts as a net of zero (casilla 13, RD 439/2007 art. 110.3.c); Q1 1,298.93 due 1–20 April, Q2 to Q4 1,292.00 each, Σ 5,174.93. Annual: LIRPF art. 30.2.4 difícil justificación 5 % of 27,874.67 = 1,393.7335, net 26,480.9365, cuota 2,527.640475 estatal + 2,452.640475 VC = 4,980.28095 (LIRPF art. 56, 63, 74, the state mínimo on both scales, #29), below the advances, so the gap is max(0, 4,980.28 − 5,174.93) = 0. Hold-back share (5,174.93 + 0 + 925.33) / 30,000 = 0.203342, rounded up to 0.2034. No AEAT simulator or published example covers a set-aside estimate; this is the weakest gate.",
+    "oracleRef": "Arithmetic under the set-aside estimator's composition rules in #2 (Implementation Decisions) and #10, over sources checked 2026-09-26. TGSS: LGSS art. 308.1.c (boe.es consolidated RDL 8/2015, read 2026-09-26), rendimiento computable is the IRPF net plus the titular's own cuotas, averaged over the months of alta, so 28,800 / 12 = 2,400 a month, tramo General 7; tarifa plana 80 under Ley 20/2007 art. 38 ter.1 for the alta month and the twelve after it; January prorated 80 × 17 / 30 = 45.33 under LGSS art. 31.2; the year is 45.33 + 11 × 80 = 925.33 and the highest Q1 month is 80. Modelo 130 (SPEC-003 §1, AEAT instrucciones del modelo 130, casillas 01–19): the projection spread evenly over the twelve months of alta, gastos to date plus the cuotas to date, 20 % of the cumulative net, minoración 100 a quarter because no activity last year counts as a net of zero (casilla 13, RD 439/2007 art. 110.3.c); Q1 1,298.93 due 1–20 April, Q2 to Q4 1,292.00 each, Σ 5,174.93. Annual: LIRPF art. 30.2.4 difícil justificación 5 % of 27,874.67 = 1,393.7335, net 26,480.9365; LIRPF art. 32.3 (AEAT Manual práctico Renta 2025, cap. 7, fase 3) takes 0.20 × 26,480.9365 = 5,296.1873 off a new activity's first positive period, base 21,184.7492; cuota 1,733.21238 estatal (state mínimo 5,550) + 1,632.719904 VC (VC mínimo 6,105, Ley 13/1997 art. 2 bis) = 3,365.932284 (LIRPF art. 56, 63, 74), below the advances, so the gap is max(0, 3,365.93 − 5,174.93) = 0. Hold-back share (5,174.93 + 0 + 925.33) / 30,000 = 0.203342, rounded up to 0.2034. No AEAT simulator or published example covers a set-aside estimate; this is the weakest gate.",
     "oracleRunDate": "2026-09-26",
     "inputs": {
       "asOf": "Q1",
       "profile": {
         "region": "VC",
         "employment": { "ingresos": "0.00", "seguridadSocial": "0.00" },
-        "activity": { "alta": "2025-01-15", "previousYear": "noActivity" }
+        "activity": { "alta": "2025-01-15", "previousYear": "noActivity", "newActivity": { "period": "first", "ingresosFromFormerEmployer": "0.00" } }
       },
       "activity": {
         "retenciones": "foreignPayersOnly",
@@ -28,7 +28,7 @@
       "traceOutputs": {
         "set-aside.cuota-ss-year": "925.33",
         "set-aside.modelo130-year": "5174.93",
-        "renta.liability-on-activity": "4980.28095"
+        "renta.liability-on-activity": "3365.932284"
       },
       "warnings": ["SET_ASIDE_ESTIMATE", "SS_REGULARIZACION_AHEAD"]
     }

@@ -4,8 +4,7 @@ namespace GestorIA.Engine.Tests;
 
 public class SetAsideExamples
 {
-    // The G12 golden scenario: alta 15 January 2025, no employment, no activity the year before, a projection of
-    // 30,000 ingresos and 1,200 gastos, asked as of Q1.
+    // G12's input: alta 15 January 2025, no employment, a new activity, 30,000 ingresos and 1,200 gastos projected, as of Q1.
     private static SetAsideInput G12Input(
         Money? ingresos = null,
         Money? gastos = null,
@@ -16,7 +15,7 @@ public class SetAsideExamples
             new TaxpayerProfile(
                 "VC",
                 new EmploymentIncome(Money.Zero, Money.Zero),
-                new AutonomoRegistration(alta ?? new DateOnly(2025, 1, 15), new PreviousYear.NoActivity())),
+                new AutonomoRegistration(alta ?? new DateOnly(2025, 1, 15), new PreviousYear.NoActivity(), new NewActivity.Started(NewActivityPeriod.First, Money.Zero))),
             new ActivityPicture(
                 actuals ?? [],
                 new ActivityProjection(ingresos ?? new Money(30000m), gastos ?? new Money(1200m)),

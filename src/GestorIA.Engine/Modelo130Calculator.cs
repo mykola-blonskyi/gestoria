@@ -29,6 +29,7 @@ public abstract record PreviousYear
 
     public sealed record NoActivity : PreviousYear;
 
+    // The previous year's activity net before any LIRPF art. 32 reduction (AEAT, instrucciones del modelo 130, casilla 13).
     public sealed record RendimientoNeto(Money Amount) : PreviousYear;
 }
 

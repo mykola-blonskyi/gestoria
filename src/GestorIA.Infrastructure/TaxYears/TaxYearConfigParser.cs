@@ -59,18 +59,20 @@ public static class TaxYearConfigParser
         var irpf = root["irpf"]!;
         var reduccion = irpf["trabajo"]!["reduccion"]!;
         var dificilJustificacion = irpf["actividad"]!["dificilJustificacion"]!;
+        var inicioActividad = irpf["actividad"]!["inicioActividad"]!;
         var modelo130 = root["modelo130"]!;
         var seguridadSocial = root["seguridadSocial"]!;
         var tarifaPlana = seguridadSocial["tarifaPlana"]!;
         var calendar = root["calendar"]!;
         var taxYear = root["taxYear"]!.Read<int>();
+        var minimos = MinimosOf(irpf["minimos"]);
 
         return new TaxYearConfig(
             taxYear,
             configHash,
             new IrpfConfig(
                 ScaleOf(irpf["escalaEstatal"]),
-                new MinimosConfig(MoneyOf(irpf["minimos"]!["contribuyente"])),
+                minimos,
                 new TrabajoConfig(
                     MoneyOf(irpf["trabajo"]!["otrosGastos"]),
                     new ReduccionTrabajoConfig(
@@ -81,8 +83,10 @@ public static class TaxYearConfigParser
                         reduccion["k1"]!.Read<decimal>(),
                         reduccion["k2"]!.Read<decimal>(),
                         MoneyOf(reduccion["otherIncomeCap"]))),
-                new ActividadConfig(new DificilJustificacionConfig(RateOf(dificilJustificacion["pct"]), MoneyOf(dificilJustificacion["max"])))),
-            RegionsOf(root["regions"]!.AsObject()),
+                new ActividadConfig(
+                    new DificilJustificacionConfig(RateOf(dificilJustificacion["pct"]), MoneyOf(dificilJustificacion["max"])),
+                    new InicioActividadConfig(RateOf(inicioActividad["pct"]), MoneyOf(inicioActividad["maxRendimiento"]), RateOf(inicioActividad["formerEmployerShare"])))),
+            RegionsOf(root["regions"]!.AsObject(), minimos),
             new Modelo130Config(
                 RateOf(modelo130["rate"]),
                 modelo130["applyDj"]!.Read<bool>(),
@@ -98,7 +102,7 @@ public static class TaxYearConfigParser
             ProvenanceOf(root["provenance"]!.AsObject()));
     }
 
-    private static RegionTable RegionsOf(JsonObject regions)
+    private static RegionTable RegionsOf(JsonObject regions, MinimosConfig estatal)
     {
         var complete = new Dictionary<string, RegionConfig>();
         var declaredIncomplete = new Dictionary<string, string>();
@@ -109,14 +113,12 @@ public static class TaxYearConfigParser
             {
                 declaredIncomplete[code] = todo.Read<string>();
             }
-            else if (region["minimosOverride"] is not null)
-            {
-                // Not modelled yet; dropping it would apply the state mínimos to this region without saying so.
-                throw new ArgumentException($"/regions/{code}/minimosOverride is set, and the loader does not read regional mínimos yet.");
-            }
             else
             {
-                complete[code] = new RegionConfig(region["name"]!.Read<string>(), ScaleOf(region["escalaAutonomica"]));
+                complete[code] = new RegionConfig(
+                    region["name"]!.Read<string>(),
+                    ScaleOf(region["escalaAutonomica"]),
+                    region["minimosOverride"] is { } own ? MinimosOf(own) : estatal);
             }
         }
 
@@ -162,6 +164,8 @@ public static class TaxYearConfigParser
             ? date
             : throw new ArgumentException($"The provenance entry for {pointer} was verified on {text}, which is not a calendar date.");
     }
+
+    private static MinimosConfig MinimosOf(JsonNode? minimos) => new(MoneyOf(minimos!["contribuyente"]));
 
     private static Scale ScaleOf(JsonNode? scale) =>
         new([.. scale!.AsArray().Select(tranche => new Tranche(OptionalMoneyOf(tranche!["upTo"]), RateOf(tranche["rate"])))]);

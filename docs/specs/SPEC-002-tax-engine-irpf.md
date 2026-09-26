@@ -50,10 +50,18 @@ Deductible(f) = f.Base × f.DeductibleShare  (+ IVA if not deductible for IVA pu
 previo     = ingresos − gastos
 dj         = previo > 0 ? min(previo × config.actividad.dificilJustificacion.pct, config.actividad.dificilJustificacion.max) : 0
 rnActividad = previo − dj
+reduccionInicio = profile says new activity, first positive period or the one after it (never inferred)
+                  and ingresosFromFormerEmployer ≤ ingresos × config.actividad.inicioActividad.formerEmployerShare (0.50)
+                ? config.actividad.inicioActividad.pct (0.20) × min(max(0, rnActividad), config.actividad.inicioActividad.maxRendimiento (100,000)) : 0
+rnActividadReducido = rnActividad − reduccionInicio          // enters BIG; the step 1 otrasRentas cap still uses rnActividad
 retActividad = Σ FacturaEmitida.RetencionAmount
 pagos130   = Σ Pago130.AmountPaid for Year
 ```
-Golden #3, #4.
+Golden #3, #4, G13.
+
+`reduccionInicio` is LIRPF art. 32.3 (AEAT Manual práctico Renta 2025, cap. 7, fase 3). A new activity is one started with no economic activity at all in the year before its start date, ignoring any that ceased without a positive net; the reduction applies in the first period whose net is positive and in the period after it, and not in a period where more than half the ingresos come from someone who paid the taxpayer employment income in the year before the start. It is an annual-return reduction: Modelo 130 casilla 03 applies only art. 32.1 (AEAT instrucciones del modelo 130). Art. 32.2.1º–2º does not apply to the v1.0 profile (SPEC-003 §0), because it needs at least 70 % of ingresos under retención and foreign payers withhold none; art. 32.2.3º (rentas no exentas below 12,000) is not modelled, which can only overstate the tax.
+
+The annual true-up's `AnnualTrueUpResult.MarginalRate` is the state plus regional tranche rate at the stacked base liquidable: a rate on the base, not on activity receipts. While `reduccionInicio` applies and `rnActividad` is below `maxRendimiento`, one more euro of activity net adds only `1 − inicioActividad.pct` of a euro to the base, so a consumer that applies the rate to receipts (#10, #15) must scale it by that factor. The MARGINAL_VS_EFFECTIVE warning does.
 
 ### Step 3 — Savings and property
 - Capital mobiliario: Σ interest/dividends gross; retención Σ separately.
@@ -76,10 +84,12 @@ BLA = max(0, BIA − remainder)     // only what BIG could not absorb
 ### Step 6 — Cuotas
 ```
 Cuota(scale, base) = Σ over tranches: rate_i × clamp(base − lower_i, 0, upper_i − lower_i)
-Minimo = MinimoCalculator(profile)                                // golden #7
-CIE = max(0, Cuota(Estatal, BLG) − Cuota(Estatal, Minimo)) + Cuota(AhorroEstatal, BLA)
-CIA = max(0, Cuota(Autonomica[region], BLG) − Cuota(Autonomica[region], Minimo)) + Cuota(AhorroAutonomica, BLA)
+MinimoEstatal    = MinimoCalculator(profile, config.irpf.minimos)                    // golden #7
+MinimoAutonomico = MinimoCalculator(profile, config.regions[region].minimosOverride ?? config.irpf.minimos)
+CIE = max(0, Cuota(Estatal, BLG) − Cuota(Estatal, MinimoEstatal)) + Cuota(AhorroEstatal, BLA)
+CIA = max(0, Cuota(Autonomica[region], BLG) − Cuota(Autonomica[region], MinimoAutonomico)) + Cuota(AhorroAutonomica, BLA)
 ```
+Each scale is measured against its own mínimo (LIRPF art. 56.3 and 74.1). A region that approved amounts of its own uses them for its scale; VC's are Ley 13/1997 art. 2 bis, a mínimo del contribuyente of 6,105 against the state 5,550 for 2025 (#29). The state scale always keeps the state mínimo.
 The savings scale in config is stored as combined rates plus `estatalShare`, so both casillas 0545/0546 and the total can be produced. Golden #1, #2, #6.
 
 ### Step 7 — Cuota líquida
