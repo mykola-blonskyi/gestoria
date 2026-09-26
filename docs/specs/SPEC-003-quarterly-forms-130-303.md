@@ -24,16 +24,19 @@ ingresosYTD  = Σ FacturaEmitida.Base, AccrualDate in [1 Jan, quarter end]
 gastosYTD    = Σ deductible expenses + cuotaSS, same window     (same rules as SPEC-002 step 2; difícil justificación applied only if config.modelo130.applyDj)
 netYTD       = ingresosYTD − gastosYTD
 base         = max(0, netYTD)
-pago         = config.modelo130.rate (0.20) × base
+casilla07    = config.modelo130.rate (0.20) × base
+             − Σ pagos130 already paid this year      (casilla 05: the positive casilla 07 of earlier quarters, not the amounts paid)
              − Σ retenciones YTD
-             − Σ pagos130 already paid this year                 (casilla 05: the positive casilla 07 of earlier quarters, not the amounts paid)
-             − minoración (config: net income last year < 12,000 → banded reduction)
+casilla12    = max(0, casilla07)                     (07 + 11; casilla 11 is agricultural estimación objetiva and does not apply)
+casilla14    = casilla12 − minoración                (config: net income last year ≤ 12,000 → banded reduction per quarter)
+casilla15    = min(pendingNegative, casilla14) if casilla14 > 0, else 0
+pago         = casilla14 − casilla15
              − mortgage deduction min(config.modelo130.mortgageRate × ingresosYTD, config.modelo130.mortgageCap)
-result       = max(0, pago); carryNegative = min(0, pago)   // carried to next quarter of same year
+result       = max(0, pago); pendingNegative += max(0, −pago)   // only a minoración above casilla 12 makes pago negative; deducted in later quarters of the same year
 ```
 Golden #3 (Σ = 8,480), #5 (loss-making quarter → 0 and carry-over).
 
-Two points the AEAT instructions for the form settle (casillas 05, 13, 15, 19; checked 2026-09-26, #8). Casilla 05 sums casilla 07, which comes before the minoración and before earlier negatives are deducted, so each quarter's minoración is kept rather than clawed back by the next quarter. A negative result stays pending across quarters until a positive casilla 14 absorbs it, so with a loss-making quarter the year's 130 sum falls below `rate × annual net` by the amount deducted. With no activity in the previous year, the previous year's net counts as zero, which takes the lowest minoración band.
+Three points the AEAT instructions for the form settle (casillas 05, 07, 12, 13, 15, 19; checked 2026-09-26, #8). Casilla 05 sums the positive casilla 07 of earlier quarters, which comes before the minoración, so each quarter's minoración is kept rather than clawed back by the next quarter. Casilla 12 enters a negative casilla 07 as zero: a quarter whose loss to date or retenciones undercut earlier payments pays nothing and carries nothing, because the cumulative base already carries the loss into the next quarter (G5: Q3 pays 0, Q4 pays 4,240, Σ 8,480). Only a minoración above casilla 12 leaves a negative result, which later quarters of the same year deduct up to a positive casilla 14 (RD 439/2007 art. 110.3.c). With no activity in the previous year, the previous year's net counts as zero, which takes the lowest minoración band.
 
 The mortgage rate is `config.modelo130.mortgageRate` (0.02 for 2025, Theory §7.3), not a literal. It was written as `2 %` here until 2026-09-21, which put a tax number in a spec formula and from there into code, against ADR-0003. `mortgageCap` is per quarter.
 

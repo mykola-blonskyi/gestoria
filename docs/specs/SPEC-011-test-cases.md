@@ -31,17 +31,23 @@ All cases gate v1.0 (ADR-0013).
 | G9 | Bank credit 1,060 from one invoice | base **1,000**, IVA **210**, retención **150** |
 | G10 | Obligation | 21,000 single payer → not required; 16,000 + 2,000 → required |
 
-Each golden lives in `tests/GestorIA.Engine.Tests/Golden/G0N_*.cs` with the input built by a fluent test builder and the expected trace stored as a JSON snapshot in `tests/golden/2025/G0N.json` (asserted with a semantic diff, not string equality).
+Each golden lives in `tests/golden/2025/G0N.json`, run by `tests/GestorIA.Engine.Tests/Golden/G0N_*.cs`. The fixture holds the inputs as well as the expected values, and the runner builds the engine input from the fixture, so the file alone states the case. Expected values are compared as numbers, not as strings.
 
-Every fixture carries its provenance:
+A fixture has one object per calculation it checks, and each object carries its own provenance. A golden such as G3 checks the annual cuota íntegra and the four Modelo 130 advances, and the two can rest on different oracles. `tests/golden/2025/G03.json` and `G05.json` are the reference (#8):
 
 ```json
-{ "oracle": "aeat-simulator", "oracleRunDate": "2026-09-25",
-  "inputs": { "grossSalary": "30000.00", "ssTrabajador": "1950.00", "region": "VC", ... },
-  "expected": { "cuotaIntegra": "4851.00", ... } }
+{ "golden": "G03",
+  "scenario": "Autónomo, income 50,000, expenses 4,000, SS 3,600, VC, foreign clients only. ...",
+  "config": "2025.example.json",
+  "modelo130": {
+    "oracle": "theory",
+    "oracleRef": "Theory §7.3, ed. 2: Example B quarter by quarter ...",
+    "oracleRunDate": "2026-09-26",
+    "inputs":   { "previousYear": { "rendimientoNeto": "42400.00" }, "retenciones": "foreignPayersOnly", "quarters": [ ... ] },
+    "expected": { "quarters": [ ... ], "totalAIngresar": "8480.00" } } }
 ```
 
-`oracle` is one of the three tiers above, and the fixture also records `oracleRef` for a `published-example`. G5 and G9 cannot use the simulator at all; G4 and G10 are components rather than whole returns. Those four are the cases to hunt published examples for.
+Amounts are strings with two decimals. `oracle` is one of the tiers above. `oracleRef` is always recorded and names the exact source: the spec or theory section for `theory`, the document and page or URL for `published-example`. The runner fails a fixture that lacks `oracle`, `oracleRef` or a valid `oracleRunDate`. G5 and G9 cannot use the simulator at all; G4 and G10 are components rather than whole returns. Those four are the cases to hunt published examples for.
 
 ## 2. Additional test layers
 - **Property-based** (FsCheck): scale monotonicity/continuity; `Money` arithmetic; classifier never assigns `DEDUCTIBLE_EXPENSE` without invoice link.
