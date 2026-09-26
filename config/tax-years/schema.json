@@ -548,7 +548,8 @@
         "required": [
           "name",
           "escalaAutonomica",
-          "minimosOverride"
+          "minimosOverride",
+          "holidays"
         ],
         "properties": {
           "name": {
@@ -617,6 +618,13 @@
               }
             }
           },
+          "holidays": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/$defs/calendarDay"
+            }
+          },
           "_todo": {
             "$ref": "#/$defs/todoNote"
           }
@@ -631,6 +639,9 @@
         "then": {
           "properties": {
             "escalaAutonomica": {
+              "minItems": 1
+            },
+            "holidays": {
               "minItems": 1
             }
           }

@@ -148,16 +148,16 @@ public static class AnnualTrueUpCalculator
             "Modelo130Calculator at config modelo130.rate. Retenciones on activity invoices are not credited here; they are zero for foreign payers (SPEC-003 §0)"));
 
         var gap = Positive(liability - input.Modelo130Advances).Round2();
-        var window = config.Calendar.Renta;
-        var payableIn = new YearMonth(config.TaxYear + window.End.YearOffset, window.End.Month);
+        var window = FilingDeadline.Renta(input.Region, config);
+        var payableIn = YearMonth.Of(window.End);
         steps.Add(new TraceStep(
             "renta.gap",
             TraceSection.Resultado,
             "Lo que la declaración anual pedirá además del Modelo 130",
-            [new("liabilityOnActivity", Show(liability)), new("modelo130Advances", Show(input.Modelo130Advances)), new("renta", Invariant($"{window.Start} … {window.End}"))],
-            Invariant($"max(0, {Show(liability)} − {Show(input.Modelo130Advances)}) = {Show(gap)}, due {window.Start} … {window.End} after tax year {config.TaxYear}, so by the end of {payableIn}"),
+            [new("liabilityOnActivity", Show(liability)), new("modelo130Advances", Show(input.Modelo130Advances)), new("renta", Invariant($"{Day(window.Start)} … {Day(window.End)}"))],
+            Invariant($"max(0, {Show(liability)} − {Show(input.Modelo130Advances)}) = {Show(gap)}, due {Day(window.Start)} … {Day(window.End)}, so by the end of {payableIn}"),
             gap.Amount,
-            "config calendar.renta. Assumes the employer's retenciones settle the tax on the employment income alone, so only the activity's share is left. "
+            $"config calendar.renta; {FilingDeadline.Rule}. Assumes the employer's retenciones settle the tax on the employment income alone, so only the activity's share is left. "
                 + "Conservative (#2): a refund is not counted on, no deducciones (SPEC-006) are applied, and the LIRPF art. 32.2.3º reduction of the activity net is not applied"));
 
         var warnings = new List<Warning>();
@@ -187,7 +187,7 @@ public static class AnnualTrueUpCalculator
                 WarningSeverity.Warning,
                 $"Modelo 130 advances total {Euros(input.Modelo130Advances)} this year, {Percent(config.Modelo130.Rate.Value)} of the activity net income less any minoración. "
                     + $"{taxed}: an effective rate of {Percent(effectiveRate)}, and {lastEuro}. "
-                    + Invariant($"The annual return will want {Euros(gap)} more, payable by {payableIn.Year:D4}-{window.End.Month:D2}-{window.End.Day:D2}.")));
+                    + $"The annual return will want {Euros(gap)} more, payable by {Day(window.End)}."));
         }
 
         return new AnnualTrueUpResult(liability.Round2(), marginalRate, reduccionLost, gap, window, payableIn, new CalculationTrace(steps), warnings);
@@ -373,6 +373,8 @@ public static class AnnualTrueUpCalculator
     private static Money Min(Money a, Money b) => a < b ? a : b;
 
     private static string Show(Money money) => Invariant($"{money.Amount}");
+
+    private static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     // SPEC-010 §5: text for the user shows two decimals and the euro sign. "0.00" formats without changing the stored value.
     private static string Euros(Money money) => money.Amount.ToString("0.00", CultureInfo.InvariantCulture) + " €";

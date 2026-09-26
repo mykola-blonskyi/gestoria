@@ -17,7 +17,7 @@ public class Modelo130Examples
         PreviousYear? previousYear = null,
         TaxYearConfig? config = null) =>
         Modelo130Calculator.Pago(
-            new Modelo130Input(quarter, new Money(ingresos), new Money(gastos), retenciones ?? new Retenciones.ForeignPayersOnly(), previousYear ?? AboveEveryBand),
+            new Modelo130Input(quarter, new Money(ingresos), new Money(gastos), retenciones ?? new Retenciones.ForeignPayersOnly(), previousYear ?? AboveEveryBand, "VC"),
             carry ?? Modelo130Carry.StartOfYear,
             config ?? TaxYearConfigFiles.Year2025);
 
@@ -171,15 +171,15 @@ public class Modelo130Examples
         Assert.Equal(new Money(850m), q2.Resultado);
     }
 
+    // 20 April 2025 is a Sunday and 21 April Easter Monday, a VC holiday; 30 January 2026 is a Friday.
     [Theory]
-    [InlineData(Quarter.Q1, "04-01", "04-20")]
-    [InlineData(Quarter.Q4, "+1-01-01", "+1-01-30")]
-    public void TheDueWindowComesFromTheCalendar(Quarter quarter, string start, string end)
+    [InlineData(Quarter.Q1, "2025-04-01", "2025-04-22")]
+    [InlineData(Quarter.Q4, "2026-01-01", "2026-01-30")]
+    public void TheDueWindowEndsOnAWorkingDay(Quarter quarter, string start, string end)
     {
         var window = Run(ingresos: 10000m, gastos: 0m, quarter: quarter).DueWindow;
 
-        Assert.Equal(start, window.Start.ToString());
-        Assert.Equal(end, window.End.ToString());
+        Assert.Equal(new DueWindow(DateOnly.Parse(start, CultureInfo.InvariantCulture), DateOnly.Parse(end, CultureInfo.InvariantCulture)), window);
     }
 
     [Fact]

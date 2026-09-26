@@ -46,7 +46,7 @@ The mortgage rate is `config.modelo130.mortgageRate` (0.02 for 2025, Theory §7.
 Output: `Modelo130Result { Quarter, Lines: { "01": ingresosYTD, "02": gastosYTD + dj, "03": netYTD, … "19": resultado }, Trace, DueWindow }`. Line numbers come from `config.modelo130.lines`.
 
 ### Deadlines
-From `config.calendar`: Q1 1–20 Apr, Q2 1–20 Jul, Q3 1–20 Oct, Q4 1–30 Jan (next year); if direct debit, warn 5 days earlier; weekend/holiday shift to next working day (national holidays in config; regional holidays v1.x).
+From `config.calendar`: Q1 1–20 Apr, Q2 1–20 Jul, Q3 1–20 Oct, Q4 1–30 Jan (next year); if direct debit, warn 5 days earlier; a last day that is a Saturday, a Sunday or a national or regional holiday moves to the next working day (Orden EHA/672/2007 art. 7; Ley 39/2015 art. 30.2, 30.5 and 30.6; `FilingDeadline`, #40). National días inhábiles in `calendar.holidays`, the region's own in `regions.XX.holidays`. Local (municipal) holidays also count but are not modelled, so a deadline one of them would move can show early, never late. The console and the trace say so.
 
 ## 2. Modelo 303
 

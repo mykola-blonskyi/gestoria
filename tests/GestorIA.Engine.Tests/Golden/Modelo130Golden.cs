@@ -34,7 +34,7 @@ internal static class Modelo130Golden
             var quarter = Enum.Parse<Quarter>(quarterInput["quarter"]!.GetValue<string>());
 
             var result = Modelo130Calculator.Pago(
-                new Modelo130Input(quarter, MoneyOf(quarterInput["ingresosYtd"]), MoneyOf(quarterInput["gastosYtd"]), new Retenciones.ForeignPayersOnly(), previousYear),
+                new Modelo130Input(quarter, MoneyOf(quarterInput["ingresosYtd"]), MoneyOf(quarterInput["gastosYtd"]), new Retenciones.ForeignPayersOnly(), previousYear, inputs["region"]!.GetValue<string>()),
                 carry,
                 TaxYearConfigFiles.Year2025);
 

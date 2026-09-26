@@ -75,9 +75,10 @@
         "descendientes": [2640, 2970, 4400, 4950], "menor3": 3080,
         "ascendiente": 1265, "ascendiente75": 1540,
         "discapacidad33": 3300, "discapacidad65": 9900, "asistencia": 3300
-      }
+      },
+      "holidays": ["03-19", "04-21", "06-24", "10-09", "+1-03-19", "+1-04-06", "+1-06-24", "+1-10-09"]
     },
-    "MD": { "name": "Comunidad de Madrid", "escalaAutonomica": [], "minimosOverride": null, "_todo": "fill in Phase 2" }
+    "MD": { "name": "Comunidad de Madrid", "escalaAutonomica": [], "minimosOverride": null, "holidays": [], "_todo": "fill in Phase 2" }
   },
   "modelo130": {
     "rate": 0.20, "retencionExemptionShare": 0.70, "mortgageRate": 0.02, "mortgageCap": 660.14,
@@ -114,8 +115,11 @@
   },
   "calendar": {
     "modelo130": [["04-01", "04-20"], ["07-01", "07-20"], ["10-01", "10-20"], ["+1-01-01", "+1-01-30"]],
-    "renta": ["+1-04-02", "+1-06-30"],
-    "holidays": ["01-01", "01-06", "05-01", "08-15", "10-12", "11-01", "12-06", "12-08", "12-25"]
+    "renta": ["+1-04-08", "+1-06-30"],
+    "holidays": [
+      "01-01", "01-06", "04-18", "05-01", "08-15", "12-08", "12-25",
+      "+1-01-01", "+1-01-06", "+1-04-03", "+1-05-01", "+1-10-12", "+1-12-08", "+1-12-25"
+    ]
   },
   "casillas": {
     "0003": "trabajo.ingresos", "0013": "trabajo.ss", "0019": "trabajo.otrosGastos", "0023": "trabajo.reduccion",
@@ -154,6 +158,10 @@
     "/iva/rates":                   { "kind": "theory", "ref": "Theory §9.1, ed. 2" },
     "/seguridadSocial/tramos":      { "kind": "boe", "ref": "Orden PJC/178/2025 art. 18.1 (bases); art. 18.2 y 37.5–37.6 (tipos: 28,30% + 1,30% + 0,90% + 0,10% + 0,80% MEI = 31,40%, aplicado a baseMin para cuotaMin)", "verified": "2026-09-25" },
     "/seguridadSocial/tarifaPlana": { "kind": "boe", "ref": "Ley 20/2007 art. 38 ter, D.T. 5.ª RDL 13/2022 (80€/mes vigente 2023–2025)", "verified": "2026-09-25" },
-    "/calendar":                    { "kind": "theory", "ref": "Theory §15.3, ed. 2" }
+    "/calendar":                    { "kind": "theory", "ref": "Theory §15.3, ed. 2" },
+    "/calendar/modelo130":          { "kind": "boe", "ref": "RD 439/2007 (RIRPF) art. 111.1; Orden EHA/672/2007 art. 7", "verified": "2026-09-27" },
+    "/calendar/renta":              { "kind": "boe", "ref": "Orden HAC/277/2026 art. 7.1 (Renta 2025: 8 de abril a 30 de junio de 2026)", "verified": "2026-09-27" },
+    "/calendar/holidays":           { "kind": "boe", "ref": "Días inhábiles en todo el territorio nacional that fall Monday to Friday: Resolución de 16 de diciembre de 2024 de la Secretaría de Estado de Función Pública (BOE-A-2024-26935) for 2025, Resolución de 18 de noviembre de 2025 (BOE-A-2025-23702) for 2026", "verified": "2026-09-27" },
+    "/regions/VC/holidays":         { "kind": "boe", "ref": "Días inhábiles de la Comunitat Valenciana beyond the national ones, Monday to Friday: BOE-A-2024-26935 for 2025, BOE-A-2025-23702 for 2026; the same days as Decreto 100/2024 and Decreto 100/2025 del Consell (DOGV 9913 and 10145)", "verified": "2026-09-27" }
   }
 }

@@ -32,7 +32,8 @@ public sealed record DificilJustificacionConfig(Rate Pct, Money Max);
 public sealed record InicioActividadConfig(Rate Pct, Money MaxRendimiento, Rate FormerEmployerShare);
 
 // Minimos are the ones LIRPF art. 56.3 applies to the regional scale: the region's own where it approved any, otherwise the state's.
-public sealed record RegionConfig(string Name, Scale EscalaAutonomica, MinimosConfig Minimos);
+// Holidays are the region's own, on top of the national calendar.holidays.
+public sealed record RegionConfig(string Name, Scale EscalaAutonomica, MinimosConfig Minimos, IReadOnlyList<CalendarDay> Holidays);
 
 public sealed record Modelo130Config(Rate Rate, IReadOnlyList<MinoracionBand> Minoracion);
 
@@ -40,13 +41,16 @@ public sealed record MinoracionBand(Money PrevYearNetUpTo, Money AmountPerQuarte
 
 public sealed record SeguridadSocialConfig(TramoTable Tramos, TarifaPlana TarifaPlana);
 
-public sealed record TaxCalendar(IReadOnlyList<DueWindow> Modelo130, DueWindow Renta, IReadOnlyList<CalendarDay> Holidays);
+// The windows as the regulations state them. FilingDeadline turns one into the DueWindow a taxpayer files within.
+public sealed record TaxCalendar(IReadOnlyList<CalendarWindow> Modelo130, CalendarWindow Renta, IReadOnlyList<CalendarDay> Holidays);
 
-public sealed record DueWindow(CalendarDay Start, CalendarDay End);
+public sealed record CalendarWindow(CalendarDay Start, CalendarDay End);
 
 // A calendar token from the file: "04-20" is 20 April of the tax year, "+1-01-30" is 30 January of the year after.
 public readonly record struct CalendarDay(int YearOffset, int Month, int Day)
 {
+    public DateOnly In(int taxYear) => new(taxYear + YearOffset, Month, Day);
+
     public override string ToString() =>
         YearOffset == 0 ? Invariant($"{Month:D2}-{Day:D2}") : Invariant($"+{YearOffset}-{Month:D2}-{Day:D2}");
 }

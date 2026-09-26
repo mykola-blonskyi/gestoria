@@ -88,5 +88,5 @@ Tax theory (the *why* behind the rules) lives **outside** the repo in the Obsidi
 - v1 does not support estimación objetiva (módulos), IS, IRNR, foral regimes (PV/NC), wealth tax, Modelo 720/721 filing, or e-filing to AEAT — it produces a casilla sheet for manual entry in Renta WEB.
 - Criterio de caja is a flag with a warning; calculations still follow devengo.
 - Loss carry-forward across years and the foreign-tax credit are computed/flagged but not fully modelled.
-- Regional holidays are not in the calendar yet (national only).
+- Local (municipal) holidays are not in the calendar: the engine does not know the municipality, so a deadline one of them would move can show early, never late (#40).
 - `config/tax-years/2025.example.json` still has `_todo` blocks (Madrid scale, 130/303 line numbers). `seguridadSocial.tramos` and `modelo130.minoracion` are filled (#5).

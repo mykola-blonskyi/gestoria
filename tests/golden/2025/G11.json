@@ -7,6 +7,7 @@
     "oracleRef": "Arithmetic under SPEC-003 §1, RD 439/2007 (RIRPF) art. 30.2ª and 110.1.a (boe.es consolidated text of BOE-A-2007-6820, read 2026-09-26) and AEAT, instrucciones del modelo 130 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026, read 2026-09-26), casillas 02–19: casilla 02 includes difícil justificación of 5 % of the net to date, which stays below the 2,000 cap (5 % × 25,197.60 = 1,259.88). So 0.20 of a cumulative net growing by 6,299.40 − 314.97 = 5,984.43 a quarter. Casilla 04 is rounded to the cent each quarter (1,196.89, 2,393.77, 3,590.66, 4,787.54), so the payments alternate 1,196.89 and 1,196.88. No minoración because the previous year's net of 25,000 is above the 12,000 band of RD 439/2007 art. 110.3.c.",
     "oracleRunDate": "2026-09-26",
     "inputs": {
+      "region": "VC",
       "previousYear": { "rendimientoNeto": "25000.00" },
       "retenciones": "foreignPayersOnly",
       "quarters": [

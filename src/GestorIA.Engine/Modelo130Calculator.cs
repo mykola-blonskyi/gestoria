@@ -34,7 +34,8 @@ public abstract record PreviousYear
 }
 
 // Figures from 1 January to the end of the quarter. GastosYtd includes the cuota SS and excludes difícil justificación.
-public sealed record Modelo130Input(Quarter Quarter, Money IngresosYtd, Money GastosYtd, Retenciones Retenciones, PreviousYear PreviousYear);
+// Region is where the taxpayer lives, whose holidays can move the due date.
+public sealed record Modelo130Input(Quarter Quarter, Money IngresosYtd, Money GastosYtd, Retenciones Retenciones, PreviousYear PreviousYear, string Region);
 
 // What the earlier quarters of the same year hand to this one: casilla 05 and the casilla 19 negatives not yet deducted.
 public sealed record Modelo130Carry(Money PagosAnteriores, Money NegativosPendientes)
@@ -131,7 +132,7 @@ public static class Modelo130Calculator
             resultado,
             $"{Instrucciones}, casillas 17 and 19; RD 439/2007 art. 110.3.c: only a minoración above casilla 12 leaves a negative result, which pays zero and is deducted in later quarters of the same year"));
 
-        return new Modelo130Result(input.Quarter, resultado, next, config.Calendar.Modelo130[(int)input.Quarter - 1], new CalculationTrace(steps));
+        return new Modelo130Result(input.Quarter, resultado, next, FilingDeadline.Modelo130(input.Quarter, input.Region, config), new CalculationTrace(steps));
     }
 
     // Business rule 7: 5 % of a positive rendimiento neto previo, capped, never negative.

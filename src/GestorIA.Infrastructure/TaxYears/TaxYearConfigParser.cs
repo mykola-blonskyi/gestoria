@@ -86,7 +86,7 @@ public static class TaxYearConfigParser
                 new ActividadConfig(
                     new DificilJustificacionConfig(RateOf(dificilJustificacion["pct"]), MoneyOf(dificilJustificacion["max"])),
                     new InicioActividadConfig(RateOf(inicioActividad["pct"]), MoneyOf(inicioActividad["maxRendimiento"]), RateOf(inicioActividad["formerEmployerShare"])))),
-            RegionsOf(root["regions"]!.AsObject(), minimos),
+            RegionsOf(root["regions"]!.AsObject(), minimos, taxYear),
             new Modelo130Config(
                 RateOf(modelo130["rate"]),
                 [.. modelo130["minoracion"]!.AsArray().Select(band =>
@@ -97,11 +97,11 @@ public static class TaxYearConfigParser
             new TaxCalendar(
                 [.. calendar["modelo130"]!.AsArray().Select(window => WindowOf(window, taxYear))],
                 WindowOf(calendar["renta"], taxYear),
-                [.. calendar["holidays"]!.AsArray().Select(day => DayIn(day, taxYear))]),
+                HolidaysOf(calendar["holidays"], taxYear)),
             ProvenanceOf(root["provenance"]!.AsObject()));
     }
 
-    private static RegionTable RegionsOf(JsonObject regions, MinimosConfig estatal)
+    private static RegionTable RegionsOf(JsonObject regions, MinimosConfig estatal, int taxYear)
     {
         var complete = new Dictionary<string, RegionConfig>();
         var declaredIncomplete = new Dictionary<string, string>();
@@ -117,7 +117,8 @@ public static class TaxYearConfigParser
                 complete[code] = new RegionConfig(
                     region["name"]!.Read<string>(),
                     ScaleOf(region["escalaAutonomica"]),
-                    region["minimosOverride"] is { } own ? MinimosOf(own) : estatal);
+                    region["minimosOverride"] is { } own ? MinimosOf(own) : estatal,
+                    HolidaysOf(region["holidays"], taxYear));
             }
         }
 
@@ -172,7 +173,10 @@ public static class TaxYearConfigParser
     private static Tramo TramoOf(JsonNode? tramo) =>
         new(tramo!["name"]!.Read<string>(), MoneyOf(tramo["netFrom"]), OptionalMoneyOf(tramo["netUpTo"]), MoneyOf(tramo["cuotaMin"]));
 
-    private static DueWindow WindowOf(JsonNode? window, int taxYear) =>
+    private static CalendarDay[] HolidaysOf(JsonNode? holidays, int taxYear) =>
+        [.. holidays!.AsArray().Select(day => DayIn(day, taxYear))];
+
+    private static CalendarWindow WindowOf(JsonNode? window, int taxYear) =>
         new(DayIn(window![0], taxYear), DayIn(window[1], taxYear));
 
     // The schema's calendarDay pattern admits 02-30, and 02-29 exists only in some years.

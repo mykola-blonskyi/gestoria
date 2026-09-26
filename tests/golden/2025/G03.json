@@ -7,6 +7,7 @@
     "oracleRef": "Arithmetic under SPEC-003 §1, RD 439/2007 (RIRPF) art. 30.2ª and 110.1.a (boe.es consolidated text of BOE-A-2007-6820, read 2026-09-26) and AEAT, instrucciones del modelo 130 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026, read 2026-09-26), casillas 02–19: under estimación directa simplificada casilla 02 includes difícil justificación of 5 % of the net to date, at most 2,000 a year. The inputs are Theory §7.3, ed. 2, Example B quarter by quarter, whose nets to date before difícil justificación are 8,100, 21,200, 27,300 and 42,400. With it they are 7,695, 20,140, 25,935 and 40,400 (the cap binds in Q4, where 5 % would be 2,120), so Σ 130 is 0.20 × 40,400 = 8,080. Example B leaves difícil justificación out of the 130 and gets 8,480, which is not the legal figure (#33). The theory table applies no minoración, so previousYear is set above the last band.",
     "oracleRunDate": "2026-09-26",
     "inputs": {
+      "region": "VC",
       "previousYear": { "rendimientoNeto": "42400.00" },
       "retenciones": "foreignPayersOnly",
       "quarters": [
