@@ -1,0 +1,75 @@
+{
+  "golden": "G19",
+  "scenario": "A loss-making first quarter carried forward. Alta on 1 January 2025, no employment, no activity in 2024, a new activity, VC, EU and US clients. Q1 closes at a loss: 1,000 invoiced against 3,240 of expenses, 240 of tarifa plana included. The projection for April to December is 27,000 and 900. As of Q2 the Q1 loss lowers the cumulative net and Q1's unused minoración carries into Q2 as a negative result.",
+  "config": "2025.example.json",
+  "setAside": {
+    "oracle": "theory",
+    "oracleRef": "Arithmetic under the set-aside composition rules of #10 and #15, computed by an independent Decimal script written from those rules and the sources below, not by running the engine. Actuals are the cumulative closed quarters; the projection is spread evenly over the months after the last of them. TGSS: LGSS art. 308.1.c (boe.es consolidated RDL 8/2015, read 2026-09-26): rendimiento computable = IRPF net plus the titular's cuotas, so the actual net with the cuotas charged to date added back (estimated at the tramo of the net before them) plus the projected net, averaged over the months of alta; tarifa plana 80 for the alta month and the twelve complete calendar months after it, Ley 20/2007 art. 38 ter.1 (boe.es consolidated text, read 2026-09-26); proration LGSS art. 31.2. Modelo 130: AEAT instrucciones del modelo 130 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026, read 2026-09-26), casillas 01–19, and RD 439/2007 art. 30.2ª and 110 (difícil justificación in casilla 02; casilla 12 floors 07 at zero; casilla 14 = 12 − 13 may be negative; casilla 15 deducts earlier negative casilla 19 results, at most a positive casilla 14). Annual: SPEC-002 steps 1, 2, 4 and 6, LIRPF art. 19, 20, 30.2.4ª, 32.3, 56, 63 and 74, VC mínimo 6,105 (Ley 13/1997 art. 2 bis). Hold-back share (Σ 130 + gap + Σ cuotas SS) / annual ingresos, rounded up to 0.0001. No AEAT simulator, published example or gestor covers a set-aside estimate; this is the weakest gate. Q1: casilla 03 1,000 − 3,240 = −2,240 (no difícil justificación on a negative net), casilla 04 0, 07 0, 12 0, minoración 100, casilla 14 −100, casilla 19 −100: nothing to pay and 100 carried (AEAT instructions, casillas 14, 15 and 19; RD 439/2007 art. 110.3.c). Q2 to date 1,000 + 9,000 = 10,000 and 3,240 + 300 + 240 = 3,780: net 6,220 after the loss, difícil justificación 311, casilla 03 5,909, 20 % 1,181.80, casilla 14 1,081.80, casilla 15 deducts the 100, Q2 pays 981.80, due 1–20 July. Q3 and Q4 pay 1,507.40 each; Σ 3,996.60. TGSS all tarifa plana, 960. Annual: 28,000 − 4,860 = 23,140, net 21,983, art. 32.3 leaves 17,586.40, cuota 2,472.786, below the advances, gap 0. Share (3,996.60 + 0 + 960) / 28,000 = 0.17702…, rounded up 0.1771.",
+    "oracleRunDate": "2026-09-26",
+    "inputs": {
+      "asOf": "Q2",
+      "profile": {
+        "region": "VC",
+        "employment": {
+          "ingresos": "0.00",
+          "seguridadSocial": "0.00"
+        },
+        "activity": {
+          "alta": "2025-01-01",
+          "previousYear": "noActivity",
+          "newActivity": {
+            "period": "first",
+            "ingresosFromFormerEmployer": "0.00"
+          }
+        }
+      },
+      "activity": {
+        "retenciones": "foreignPayersOnly",
+        "actuals": [
+          {
+            "quarter": "Q1",
+            "ingresosYtd": "1000.00",
+            "gastosYtd": "3240.00"
+          }
+        ],
+        "projection": {
+          "ingresos": "27000.00",
+          "gastos": "900.00"
+        }
+      }
+    },
+    "expected": {
+      "holdBackShare": "0.1771",
+      "nextPayment": {
+        "quarter": "Q2",
+        "aIngresar": "981.80",
+        "dueWindow": [
+          "07-01",
+          "07-20"
+        ]
+      },
+      "monthlyCuotaSs": "80.00",
+      "annualTrueUpGap": "0.00",
+      "annualTrueUpPayableIn": "2026-06",
+      "ivaToSetAside": "0.00",
+      "traceOutputs": {
+        "Q1.m130.rendimiento-neto": "-2240.00",
+        "Q1.m130.pago-bruto": "0",
+        "Q1.m130.resultado": "-100",
+        "Q2.m130.negativos-anteriores": "100",
+        "Q2.m130.resultado": "981.80",
+        "set-aside.modelo130-year": "3996.60",
+        "set-aside.cuota-ss-year": "960",
+        "renta.liability-on-activity": "2472.786"
+      },
+      "warnings": [
+        "SET_ASIDE_ESTIMATE",
+        "SET_ASIDE_ESTIMATE",
+        "SS_REGULARIZACION_AHEAD"
+      ],
+      "warningTexts": {
+        "SET_ASIDE_ESTIMATE": "from 2026-02 TGSS charges 379.67 € a month instead of 80.00 €"
+      }
+    }
+  }
+}

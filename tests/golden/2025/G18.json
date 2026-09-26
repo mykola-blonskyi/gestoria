@@ -1,0 +1,77 @@
+{
+  "golden": "G18",
+  "scenario": "The quarter after tarifa plana lapses. G17's taxpayer, now as of Q3 with Q2 closed as well: 17,000 invoiced and 880 spent to June, 480 of tarifa plana included, and 18,000 and 400 projected for July to December. Tarifa plana ended with June 2025, so every month of Q3 is at the General 8 cuota and the estimate reserves it.",
+  "config": "2025.example.json",
+  "setAside": {
+    "oracle": "theory",
+    "oracleRef": "Arithmetic under the set-aside composition rules of #10 and #15, computed by an independent Decimal script written from those rules and the sources below, not by running the engine. Actuals are the cumulative closed quarters; the projection is spread evenly over the months after the last of them. TGSS: LGSS art. 308.1.c (boe.es consolidated RDL 8/2015, read 2026-09-26): rendimiento computable = IRPF net plus the titular's cuotas, so the actual net with the cuotas charged to date added back (estimated at the tramo of the net before them) plus the projected net, averaged over the months of alta; tarifa plana 80 for the alta month and the twelve complete calendar months after it, Ley 20/2007 art. 38 ter.1 (boe.es consolidated text, read 2026-09-26); proration LGSS art. 31.2. Modelo 130: AEAT instrucciones del modelo 130 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026, read 2026-09-26), casillas 01–19, and RD 439/2007 art. 30.2ª and 110 (difícil justificación in casilla 02; casilla 12 floors 07 at zero; casilla 14 = 12 − 13 may be negative; casilla 15 deducts earlier negative casilla 19 results, at most a positive casilla 14). Annual: SPEC-002 steps 1, 2, 4 and 6, LIRPF art. 19, 20, 30.2.4ª, 32.3, 56, 63 and 74, VC mínimo 6,105 (Ley 13/1997 art. 2 bis). Hold-back share (Σ 130 + gap + Σ cuotas SS) / annual ingresos, rounded up to 0.0001. No AEAT simulator, published example or gestor covers a set-aside estimate; this is the weakest gate. Tarifa plana ended with 2025-06 (Ley 20/2007 art. 38 ter.1). TGSS: 16,120 + 480 added back + 17,600 = 34,200, General 8, 451.50 from July; year 3,189; the Q3 months are 451.50 each, so the monthly cuota is 451.50 and no tarifa plana warning is raised. Modelo 130: Q1 and Q2 as stated pay 1,361.40 and 1,551.40; Q3 to date 17,000 + 18,000 × 3 / 6 = 26,000 and 880 + 200 + 1,354.50 = 2,434.50, difícil justificación 1,178.275, casilla 03 22,387.22, 20 % 4,477.44 − 3,062.80 − 75 = 1,339.64, due 1–20 October; Σ 5,592.09. The annual figures equal G17's by construction: 35,000 and 3,989, cuota 4,056.558, gap 0, share 0.2509.",
+    "oracleRunDate": "2026-09-26",
+    "inputs": {
+      "asOf": "Q3",
+      "profile": {
+        "region": "VC",
+        "employment": {
+          "ingresos": "0.00",
+          "seguridadSocial": "0.00"
+        },
+        "activity": {
+          "alta": "2024-06-10",
+          "previousYear": {
+            "rendimientoNeto": "9500.00"
+          },
+          "newActivity": {
+            "period": "following",
+            "ingresosFromFormerEmployer": "0.00"
+          }
+        }
+      },
+      "activity": {
+        "retenciones": "foreignPayersOnly",
+        "actuals": [
+          {
+            "quarter": "Q1",
+            "ingresosYtd": "8000.00",
+            "gastosYtd": "440.00"
+          },
+          {
+            "quarter": "Q2",
+            "ingresosYtd": "17000.00",
+            "gastosYtd": "880.00"
+          }
+        ],
+        "projection": {
+          "ingresos": "18000.00",
+          "gastos": "400.00"
+        }
+      }
+    },
+    "expected": {
+      "holdBackShare": "0.2509",
+      "nextPayment": {
+        "quarter": "Q3",
+        "aIngresar": "1339.64",
+        "dueWindow": [
+          "10-01",
+          "10-20"
+        ]
+      },
+      "monthlyCuotaSs": "451.50",
+      "annualTrueUpGap": "0.00",
+      "annualTrueUpPayableIn": "2026-06",
+      "ivaToSetAside": "0.00",
+      "traceOutputs": {
+        "set-aside.cuotas-ss-to-date": "480",
+        "set-aside.rendimiento-computable": "34200.00",
+        "set-aside.cuota-ss-year": "3189.00",
+        "set-aside.tarifa-plana-lapse": "451.50",
+        "set-aside.modelo130-year": "5592.09",
+        "set-aside.annual-gastos": "3989.00"
+      },
+      "warnings": [
+        "SET_ASIDE_ESTIMATE",
+        "SS_REGULARIZACION_AHEAD"
+      ],
+      "warningTexts": {}
+    }
+  }
+}

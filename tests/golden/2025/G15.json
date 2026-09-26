@@ -1,0 +1,80 @@
+{
+  "golden": "G15",
+  "scenario": "Pluriactividad mid-year: G11's salary of 40,000 (employee SS 2,600) plus an established activity registered in March 2020, whose 2024 net was 30,000, so no minoración. Q1 and Q2 are closed: 15,000 invoiced and 3,155.10 spent to June, six months of the General 7 cuota of 425.85 included. The projection for July to December is 16,000 of invoices and 600 of expenses besides the cuota. Stacked on the salary the activity is taxed well above the 20 % Modelo 130 rate, so the annual return will want more, payable by 30 June 2026.",
+  "config": "2025.example.json",
+  "setAside": {
+    "oracle": "theory",
+    "oracleRef": "Arithmetic under the set-aside composition rules of #10 and #15, computed by an independent Decimal script written from those rules and the sources below, not by running the engine. Actuals are the cumulative closed quarters; the projection is spread evenly over the months after the last of them. TGSS: LGSS art. 308.1.c (boe.es consolidated RDL 8/2015, read 2026-09-26): rendimiento computable = IRPF net plus the titular's cuotas, so the actual net with the cuotas charged to date added back (estimated at the tramo of the net before them) plus the projected net, averaged over the months of alta; tarifa plana 80 for the alta month and the twelve complete calendar months after it, Ley 20/2007 art. 38 ter.1 (boe.es consolidated text, read 2026-09-26); proration LGSS art. 31.2. Modelo 130: AEAT instrucciones del modelo 130 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026, read 2026-09-26), casillas 01–19, and RD 439/2007 art. 30.2ª and 110 (difícil justificación in casilla 02; casilla 12 floors 07 at zero; casilla 14 = 12 − 13 may be negative; casilla 15 deducts earlier negative casilla 19 results, at most a positive casilla 14). Annual: SPEC-002 steps 1, 2, 4 and 6, LIRPF art. 19, 20, 30.2.4ª, 32.3, 56, 63 and 74, VC mínimo 6,105 (Ley 13/1997 art. 2 bis). Hold-back share (Σ 130 + gap + Σ cuotas SS) / annual ingresos, rounded up to 0.0001. No AEAT simulator, published example or gestor covers a set-aside estimate; this is the weakest gate. Q1 and Q2 as stated pay 1,030.27 and 1,220.26. Q3 to date: 15,000 + 16,000 × 3 / 6 = 23,000; 3,155.10 + 300 + 3 × 425.85 = 4,732.65; casilla 03 17,353.98 after 913.3675 of difícil justificación; 20 % 3,470.80 − 2,250.53 = 1,220.27, no minoración, due 1–20 October. Σ 130 4,691.06. TGSS: 11,844.90 + 15,400 = 27,244.90 is General 6, so the six cuotas to date are added back at 400.20 (2,401.20), giving 29,646.10 and General 7, 425.85 every month, 5,110.20 for the year. Annual: 31,000 − 6,310.20 = 24,689.80, difícil justificación 1,234.49, net 23,455.31, above the cap. Salary alone 35,400, cuota 7,698.05; stacked base 58,855.31, cuota 8,211.73235 estatal + 8,506.13944 VC = 16,717.87179; the activity adds 9,019.82179, the advances cover 4,691.06, gap 4,328.76 payable by 2026-06-30 (config calendar.renta). Share (4,691.06 + 4,328.76 + 5,110.20) / 31,000 = 0.45580…, rounded up 0.4559.",
+    "oracleRunDate": "2026-09-26",
+    "inputs": {
+      "asOf": "Q3",
+      "profile": {
+        "region": "VC",
+        "employment": {
+          "ingresos": "40000.00",
+          "seguridadSocial": "2600.00"
+        },
+        "activity": {
+          "alta": "2020-03-01",
+          "previousYear": {
+            "rendimientoNeto": "30000.00"
+          },
+          "newActivity": "established"
+        }
+      },
+      "activity": {
+        "retenciones": "foreignPayersOnly",
+        "actuals": [
+          {
+            "quarter": "Q1",
+            "ingresosYtd": "7000.00",
+            "gastosYtd": "1577.55"
+          },
+          {
+            "quarter": "Q2",
+            "ingresosYtd": "15000.00",
+            "gastosYtd": "3155.10"
+          }
+        ],
+        "projection": {
+          "ingresos": "16000.00",
+          "gastos": "600.00"
+        }
+      }
+    },
+    "expected": {
+      "holdBackShare": "0.4559",
+      "nextPayment": {
+        "quarter": "Q3",
+        "aIngresar": "1220.27",
+        "dueWindow": [
+          "10-01",
+          "10-20"
+        ]
+      },
+      "monthlyCuotaSs": "425.85",
+      "annualTrueUpGap": "4328.76",
+      "annualTrueUpPayableIn": "2026-06",
+      "ivaToSetAside": "0.00",
+      "traceOutputs": {
+        "set-aside.actuals": "15000.00",
+        "set-aside.projected-months": "6",
+        "set-aside.cuotas-ss-to-date": "2401.20",
+        "set-aside.rendimiento-computable": "29646.10",
+        "set-aside.cuota-ss-year": "5110.20",
+        "set-aside.modelo130-year": "4691.06",
+        "set-aside.annual-gastos": "6310.20",
+        "renta.liability-on-activity": "9019.82179",
+        "renta.gap": "4328.76"
+      },
+      "warnings": [
+        "SET_ASIDE_ESTIMATE",
+        "SS_REGULARIZACION_AHEAD",
+        "MARGINAL_VS_EFFECTIVE"
+      ],
+      "warningTexts": {
+        "MARGINAL_VS_EFFECTIVE": "want 4328.76 € more, payable by 2026-06-30"
+      }
+    }
+  }
+}
