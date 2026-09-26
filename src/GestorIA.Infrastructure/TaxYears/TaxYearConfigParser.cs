@@ -110,14 +110,12 @@ public static class TaxYearConfigParser
             {
                 declaredIncomplete[code] = todo.Read<string>();
             }
-            else if (region["minimosOverride"] is not null)
-            {
-                // Not modelled yet; dropping it would apply the state mínimos to this region without saying so.
-                throw new ArgumentException($"/regions/{code}/minimosOverride is set, and the loader does not read regional mínimos yet.");
-            }
             else
             {
-                complete[code] = new RegionConfig(region["name"]!.Read<string>(), ScaleOf(region["escalaAutonomica"]), estatal);
+                complete[code] = new RegionConfig(
+                    region["name"]!.Read<string>(),
+                    ScaleOf(region["escalaAutonomica"]),
+                    region["minimosOverride"] is { } own ? MinimosOf(own) : estatal);
             }
         }
 

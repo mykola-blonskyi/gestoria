@@ -20,7 +20,7 @@ Code identifiers keep the Spanish term (see `docs/CONVENTIONS.md`). Full glossar
 | **Reducción por rendimientos del trabajo** | low-salary relief | `trabajo.reduccion`, golden #8 |
 | **Gastos de difícil justificación** | 5 % hard-to-justify expense allowance (cap 2,000) | `actividad.dj` |
 | **Base liquidable general / del ahorro (BLG/BLA)** | taxable base after reductions | `bases.blg/bla` |
-| **Mínimo personal y familiar** | tax-free minimum (applied via the scale, not subtracted) | `MinimoCalculator` |
+| **Mínimo personal y familiar** | tax-free minimum (applied via the scale, not subtracted); the regional scale uses the region's own amounts where it approved any | `MinimoCalculator`, `regions.*.minimosOverride` |
 | **Escala estatal / autonómica / del ahorro** | state / regional / savings rate scales | `config.irpf.*`, `regions.*` |
 | **Cuota íntegra (CIE/CIA)** | gross tax, state / regional part | casillas 0545/0546 |
 | **Deducción** | tax credit (reduces cuota, not base) | SPEC-006 |

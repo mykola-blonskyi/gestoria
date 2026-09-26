@@ -7,7 +7,9 @@
     { "ref": "Orden PJC/178/2025, de 25 de febrero, art. 18 (bases y tipos RETA) y art. 37 (cese de actividad, formación profesional)", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-3780" },
     { "ref": "Ley 20/2007 (Estatuto del Trabajo Autónomo), art. 38 ter, redacción RDL 13/2022, D.T. 5.ª (tarifa plana 2023–2025)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-13409" },
     { "ref": "Real Decreto 439/2007 (Reglamento IRPF), art. 110.3.c (minoración pagos fraccionados)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820" },
-    { "ref": "AEAT, Instrucciones del modelo 130, casillas 05, 13, 15 y 19 (página actualizada 11/09/2026): sin actividad en el ejercicio anterior, rendimiento neto cero", "url": "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html" }
+    { "ref": "AEAT, Instrucciones del modelo 130, casillas 05, 13, 15 y 19 (página actualizada 11/09/2026): sin actividad en el ejercicio anterior, rendimiento neto cero", "url": "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html" },
+    { "ref": "Ley 13/1997, de 23 de diciembre, de la Generalitat Valenciana (tramo autonómico del IRPF), art. 2 bis, añadido por el Decreto-ley 14/2022 (texto consolidado, última actualización 10/08/2026)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1998-8202" },
+    { "ref": "AEAT Manual práctico Renta 2025, cap. 14, Comunitat Valenciana: importes del mínimo personal y familiar (página actualizada 17/03/2026)", "url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025/c14-adecuacion-impuesto-circunstancias-personales/minimo-autonomico-personal-familiar/comunitat-valenciana-importes-minimo-personal-familiar.html" }
   ],
   "irpf": {
     "escalaEstatal": [
@@ -67,7 +69,12 @@
         { "upTo": 200000, "rate": 0.289 },
         { "upTo": null, "rate": 0.295 }
       ],
-      "minimosOverride": null
+      "minimosOverride": {
+        "contribuyente": 6105, "mayor65": 1265, "mayor75": 1540,
+        "descendientes": [2640, 2970, 4400, 4950], "menor3": 3080,
+        "ascendiente": 1265, "ascendiente75": 1540,
+        "discapacidad33": 3300, "discapacidad65": 9900, "asistencia": 3300
+      }
     },
     "MD": { "name": "Comunidad de Madrid", "escalaAutonomica": [], "minimosOverride": null, "_todo": "fill in Phase 2" }
   },
@@ -130,6 +137,16 @@
     "/irpf/reducciones":            { "kind": "theory", "ref": "Theory §5.4, ed. 2" },
     "/irpf/obligacion":             { "kind": "theory", "ref": "Theory §3.1, ed. 2" },
     "/regions/VC/escalaAutonomica": { "kind": "theory", "ref": "Theory §4.2, ed. 2" },
+    "/regions/VC/minimosOverride/contribuyente":  { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.1.a; AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },
+    "/regions/VC/minimosOverride/mayor65":        { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.1.b; AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },
+    "/regions/VC/minimosOverride/mayor75":        { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.1.b, adicionalmente; AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },
+    "/regions/VC/minimosOverride/descendientes":  { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.2.a; AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },
+    "/regions/VC/minimosOverride/menor3":         { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.2.b; AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },
+    "/regions/VC/minimosOverride/ascendiente":    { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.3.a; AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },
+    "/regions/VC/minimosOverride/ascendiente75":  { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.3.b; AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },
+    "/regions/VC/minimosOverride/discapacidad33": { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.4 (contribuyente) and 2 bis.4.b (ascendientes o descendientes); AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },
+    "/regions/VC/minimosOverride/discapacidad65": { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.4 (contribuyente) and 2 bis.4.b (ascendientes o descendientes), grado del 65 % o más; AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },
+    "/regions/VC/minimosOverride/asistencia":     { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.4 and 2 bis.4.b, the increase for the cases of LIRPF art. 60.1 and 60.2, párrafo segundo; AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },
     "/modelo130":                   { "kind": "theory", "ref": "Theory §7.3, ed. 2" },
     "/modelo130/minoracion":        { "kind": "boe", "ref": "RD 439/2007 (RIRPF) art. 110.3.c", "verified": "2026-09-25" },
     "/iva/rates":                   { "kind": "theory", "ref": "Theory §9.1, ed. 2" },
