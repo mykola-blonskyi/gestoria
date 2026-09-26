@@ -6,5 +6,5 @@ public class G03_Autonomo50000
     public void FourQuartersOver42400NetSumTo8480() => Modelo130Golden.Passes("G03");
 
     [Fact]
-    public void CuotaIntegraOf9548LeavesARentaOf1068BeyondTheAdvances() => RentaTrueUpGolden.Passes("G03");
+    public void CuotaIntegraOf9498_05LeavesARentaOf1018_05BeyondTheAdvances() => RentaTrueUpGolden.Passes("G03");
 }

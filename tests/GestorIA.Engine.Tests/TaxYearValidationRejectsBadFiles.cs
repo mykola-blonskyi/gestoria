@@ -91,6 +91,13 @@ public class TaxYearValidationRejectsBadFiles
             (r => r["deducciones"] = new JsonArray(Deduccion("autonomica", "0003")),
              "/deducciones/0/casilla"),
 
+        ["regional mínimos override missing a value"] =
+            (r => r["regions"]!["VC"]!["minimosOverride"]!.AsObject().Remove("menor3"), "/regions/VC/minimosOverride"),
+
+        ["regional mínimos override with a key the loader does not know"] =
+            (r => Rename(r["regions"]!["VC"]!["minimosOverride"]!.AsObject(), "contribuyente", "contribuyentes"),
+             "/regions/VC/minimosOverride"),
+
         ["minoracion band with a misspelled property"] =
             (r => Rename(r["modelo130"]!["minoracion"]![0]!.AsObject(), "amountPerQuarter", "amountPerQuater"),
              "/modelo130/minoracion/0"),
