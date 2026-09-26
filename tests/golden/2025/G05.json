@@ -1,0 +1,29 @@
+{
+  "golden": "G05",
+  "scenario": "Modelo 130 with a loss-making Q3: Example B, except that the net income to date falls to 20,000 at the end of Q3. Q3 pays nothing, and Q4 catches up through the cumulative base: 20 % of the annual net less what Q1 and Q2 paid.",
+  "config": "2025.example.json",
+  "modelo130": {
+    "oracle": "theory",
+    "oracleRef": "Theory §7.3, ed. 2: loss-making quarter example (Q3 net to date 20,000, 4,240 already paid, Q3 payable 0, the 240 credited against Q4). Q1, Q2 and Q4 figures are Example B's; Q3 expenses keep Example B's 5,700. The Q4 amount is not in the theory; it is arithmetic under AEAT, instrucciones del modelo 130, casillas 05, 07, 12, 15 and 19 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026): casilla 12 floors Q3's negative casilla 07 at zero, so nothing carries into casilla 15, and Q4's 4,240 is the theory's 240 credit against the 4,480 accrued since Q3.",
+    "oracleRunDate": "2026-09-26",
+    "inputs": {
+      "previousYear": { "rendimientoNeto": "42400.00" },
+      "retenciones": "foreignPayersOnly",
+      "quarters": [
+        { "quarter": "Q1", "ingresosYtd": "10000.00", "gastosYtd": "1900.00" },
+        { "quarter": "Q2", "ingresosYtd": "25000.00", "gastosYtd": "3800.00" },
+        { "quarter": "Q3", "ingresosYtd": "25700.00", "gastosYtd": "5700.00" },
+        { "quarter": "Q4", "ingresosYtd": "50000.00", "gastosYtd": "7600.00" }
+      ]
+    },
+    "expected": {
+      "quarters": [
+        { "quarter": "Q1", "rendimientoNeto": "8100.00", "pagoBruto": "1620.00", "pagosAnteriores": "0.00", "resultado": "1620.00", "aIngresar": "1620.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q2", "rendimientoNeto": "21200.00", "pagoBruto": "4240.00", "pagosAnteriores": "1620.00", "resultado": "2620.00", "aIngresar": "2620.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q3", "rendimientoNeto": "20000.00", "pagoBruto": "4000.00", "pagosAnteriores": "4240.00", "resultado": "0.00", "aIngresar": "0.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q4", "rendimientoNeto": "42400.00", "pagoBruto": "8480.00", "pagosAnteriores": "4240.00", "resultado": "4240.00", "aIngresar": "4240.00", "negativosPendientes": "0.00" }
+      ],
+      "totalAIngresar": "8480.00"
+    }
+  }
+}

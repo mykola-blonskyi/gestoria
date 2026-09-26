@@ -1,0 +1,29 @@
+{
+  "golden": "G03",
+  "scenario": "Autónomo, income 50,000, expenses 4,000, SS 3,600, VC, foreign clients only. Each calculation below carries its own oracle, because the annual cuota íntegra and the quarterly advances are checked against different sources.",
+  "config": "2025.example.json",
+  "modelo130": {
+    "oracle": "theory",
+    "oracleRef": "Theory §7.3, ed. 2: Example B quarter by quarter (cumulative income, expenses and payable per quarter, Σ 8,480). The theory table applies no minoración, so previousYear is set above the last band.",
+    "oracleRunDate": "2026-09-26",
+    "inputs": {
+      "previousYear": { "rendimientoNeto": "42400.00" },
+      "retenciones": "foreignPayersOnly",
+      "quarters": [
+        { "quarter": "Q1", "ingresosYtd": "10000.00", "gastosYtd": "1900.00" },
+        { "quarter": "Q2", "ingresosYtd": "25000.00", "gastosYtd": "3800.00" },
+        { "quarter": "Q3", "ingresosYtd": "33000.00", "gastosYtd": "5700.00" },
+        { "quarter": "Q4", "ingresosYtd": "50000.00", "gastosYtd": "7600.00" }
+      ]
+    },
+    "expected": {
+      "quarters": [
+        { "quarter": "Q1", "rendimientoNeto": "8100.00", "pagoBruto": "1620.00", "pagosAnteriores": "0.00", "resultado": "1620.00", "aIngresar": "1620.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q2", "rendimientoNeto": "21200.00", "pagoBruto": "4240.00", "pagosAnteriores": "1620.00", "resultado": "2620.00", "aIngresar": "2620.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q3", "rendimientoNeto": "27300.00", "pagoBruto": "5460.00", "pagosAnteriores": "4240.00", "resultado": "1220.00", "aIngresar": "1220.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q4", "rendimientoNeto": "42400.00", "pagoBruto": "8480.00", "pagosAnteriores": "5460.00", "resultado": "3020.00", "aIngresar": "3020.00", "negativosPendientes": "0.00" }
+      ],
+      "totalAIngresar": "8480.00"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 namespace GestorIA.Engine;
 
-// SPEC-002 §6. Section names are the IRPF ones plus SeguridadSocial for the TGSS cuota.
+// SPEC-002 §6. Section names are the IRPF ones plus SeguridadSocial for the TGSS cuota and Modelo130 for the quarterly advance.
 public enum TraceSection
 {
     Trabajo,
@@ -13,6 +13,7 @@ public enum TraceSection
     Deducciones,
     Resultado,
     SeguridadSocial,
+    Modelo130,
 }
 
 public sealed record TraceInput(string Name, string Value);

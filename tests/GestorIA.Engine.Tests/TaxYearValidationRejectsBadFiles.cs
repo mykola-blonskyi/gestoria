@@ -49,6 +49,9 @@ public class TaxYearValidationRejectsBadFiles
         ["calendar window that ends before it starts"] =
             (r => Swap(r["calendar"]!["modelo130"]![0]!.AsArray(), 0, 1), "/calendar/modelo130/0"),
 
+        ["Modelo 130 calendar without a window for every quarter"] =
+            (r => r["calendar"]!["modelo130"]!.AsArray().RemoveAt(3), "/calendar/modelo130"),
+
         ["taxYear disagrees with the file name"] =
             (r => r["taxYear"] = 2024, "/taxYear"),
 
