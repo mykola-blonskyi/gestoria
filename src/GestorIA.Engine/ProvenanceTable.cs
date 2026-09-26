@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace GestorIA.Engine;
 
 // SPEC-007 §1.1. One vocabulary with the golden oracle tiers of SPEC-011 §1.
@@ -19,7 +21,7 @@ public sealed class ProvenanceTable
 
     public ProvenanceTable(IReadOnlyDictionary<string, Provenance> entries)
     {
-        Entries = entries;
+        Entries = entries.ToFrozenDictionary();
     }
 
     // A value takes the entry of its nearest keyed ancestor: /irpf/escalaEstatal/2/rate is covered by /irpf/escalaEstatal.

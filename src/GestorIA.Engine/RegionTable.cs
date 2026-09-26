@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace GestorIA.Engine;
 
 public sealed class RegionTable
@@ -8,8 +10,9 @@ public sealed class RegionTable
     // declaredIncomplete maps a region code to its _todo note: the file names the region but says it cannot be used yet.
     public RegionTable(IReadOnlyDictionary<string, RegionConfig> complete, IReadOnlyDictionary<string, string> declaredIncomplete)
     {
-        this.complete = complete;
-        this.declaredIncomplete = declaredIncomplete;
+        // A frozen copy: whoever built the dictionaries passed in can no longer change what this table answers.
+        this.complete = complete.ToFrozenDictionary();
+        this.declaredIncomplete = declaredIncomplete.ToFrozenDictionary();
     }
 
     // SPEC-007 §3, SPEC-002 §7: an unusable region fails; it never falls back to another region or to the estatal scale alone.

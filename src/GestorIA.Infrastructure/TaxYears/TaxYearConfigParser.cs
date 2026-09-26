@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using GestorIA.Domain.ValueObjects;
 using GestorIA.Engine;
+using static System.FormattableString;
 
 namespace GestorIA.Infrastructure.TaxYears;
 
@@ -16,27 +17,29 @@ public static class TaxYearConfigParser
 
         try
         {
-            root = JsonNode.Parse(source);
+            root = JsonNode.Parse(source, documentOptions: new JsonDocumentOptions { AllowDuplicateProperties = false });
         }
         catch (JsonException e)
         {
             throw new InvalidTaxYearConfigException(fileName, [e.Message]);
         }
 
-        var failures = TaxYearConfigValidator.Validate(root, fileName);
-
-        if (failures.Count > 0)
-        {
-            throw new InvalidTaxYearConfigException(fileName, failures);
-        }
-
         try
         {
+            var failures = TaxYearConfigValidator.Validate(root, fileName);
+
+            if (failures.Count > 0)
+            {
+                throw new InvalidTaxYearConfigException(fileName, failures);
+            }
+
             return Map(root!, Convert.ToHexStringLower(SHA256.HashData(source)));
         }
-        catch (ArgumentException e)
+        // "when" filters the catch: any other exception type passes through untouched.
+        catch (Exception e) when (e is ArgumentException or InvalidOperationException)
         {
-            // Scale and TramoTable re-check their invariants when built; a file that breaks one is invalid, not a crash.
+            // Past the schema a value can still be unreadable (12.0 as a month count, 1e40 as an amount) or break an
+            // invariant that Scale and TramoTable re-check when built. Either way the file is invalid, not a crash.
             throw new InvalidTaxYearConfigException(fileName, [e.Message]);
         }
     }
@@ -61,9 +64,10 @@ public static class TaxYearConfigParser
         var seguridadSocial = root["seguridadSocial"]!;
         var tarifaPlana = seguridadSocial["tarifaPlana"]!;
         var calendar = root["calendar"]!;
+        var taxYear = root["taxYear"]!.GetValue<int>();
 
         return new TaxYearConfig(
-            root["taxYear"]!.GetValue<int>(),
+            taxYear,
             configHash,
             new IrpfConfig(
                 ScaleOf(irpf["escalaEstatal"]),
@@ -89,9 +93,9 @@ public static class TaxYearConfigParser
                 new TramoTable([.. seguridadSocial["tramos"]!.AsArray().Select(TramoOf)]),
                 new TarifaPlana(MoneyOf(tarifaPlana["amount"]), tarifaPlana["months"]!.GetValue<int>())),
             new TaxCalendar(
-                [.. calendar["modelo130"]!.AsArray().Select(WindowOf)],
-                WindowOf(calendar["renta"]),
-                [.. calendar["holidays"]!.AsArray().Select(day => ParseDay(day!.GetValue<string>()))]),
+                [.. calendar["modelo130"]!.AsArray().Select(window => WindowOf(window, taxYear))],
+                WindowOf(calendar["renta"], taxYear),
+                [.. calendar["holidays"]!.AsArray().Select(day => DayIn(day, taxYear))]),
             ProvenanceOf(root["provenance"]!.AsObject()));
     }
 
@@ -105,6 +109,11 @@ public static class TaxYearConfigParser
             if (region!["_todo"] is { } todo)
             {
                 declaredIncomplete[code] = todo.GetValue<string>();
+            }
+            else if (region["minimosOverride"] is not null)
+            {
+                // Not modelled yet; dropping it would apply the state mínimos to this region without saying so.
+                throw new ArgumentException($"/regions/{code}/minimosOverride is set, and the loader does not read regional mínimos yet.");
             }
             else
             {
@@ -161,8 +170,20 @@ public static class TaxYearConfigParser
     private static Tramo TramoOf(JsonNode? tramo) =>
         new(tramo!["name"]!.GetValue<string>(), MoneyOf(tramo["netFrom"]), OptionalMoneyOf(tramo["netUpTo"]), MoneyOf(tramo["cuotaMin"]));
 
-    private static DueWindow WindowOf(JsonNode? window) =>
-        new(ParseDay(window![0]!.GetValue<string>()), ParseDay(window[1]!.GetValue<string>()));
+    private static DueWindow WindowOf(JsonNode? window, int taxYear) =>
+        new(DayIn(window![0], taxYear), DayIn(window[1], taxYear));
+
+    // The schema's calendarDay pattern admits 02-30, and 02-29 exists only in some years.
+    private static CalendarDay DayIn(JsonNode? token, int taxYear)
+    {
+        var text = token!.GetValue<string>();
+        var day = ParseDay(text);
+        var year = taxYear + day.YearOffset;
+
+        return day.Day <= DateTime.DaysInMonth(year, day.Month)
+            ? day
+            : throw new ArgumentException(Invariant($"Calendar day {text} does not exist in {year}."));
+    }
 
     private static Money MoneyOf(JsonNode? amount) => new(amount!.GetValue<decimal>());
 

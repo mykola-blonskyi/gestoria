@@ -131,6 +131,47 @@ public sealed class TaxYearConfigLoading : IDisposable
     }
 
     [Fact]
+    public void ADuplicatedKeyIsRefusedAtLoad()
+    {
+        var text = Encoding.UTF8.GetString(Example2025Bytes()).Replace("\"fixed\": 7302,", "\"fixed\": 7302, \"fixed\": 9999,", StringComparison.Ordinal);
+
+        var error = Assert.Throws<InvalidTaxYearConfigException>(() => TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(text), TaxYearConfigFiles.Example2025));
+
+        Assert.Contains(error.Failures, f => f.Contains("fixed", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void AWholeNumberWrittenAsAFractionIsRefusedAtLoad()
+    {
+        var root = Example2025Node();
+        root["seguridadSocial"]!["tarifaPlana"]!["months"] = 12.0m;
+
+        Assert.Throws<InvalidTaxYearConfigException>(() => Parse(root));
+    }
+
+    [Fact]
+    public void ACalendarDayThatDoesNotExistIsRefusedAtLoad()
+    {
+        var root = Example2025Node();
+        root["calendar"]!["holidays"]![0] = "02-29";
+
+        var error = Assert.Throws<InvalidTaxYearConfigException>(() => Parse(root));
+
+        Assert.Contains(error.Failures, f => f.Contains("Calendar day 02-29 does not exist in 2025", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void ARegionalMinimosOverrideTheLoaderCannotReadIsRefusedRatherThanDropped()
+    {
+        var root = Example2025Node();
+        root["regions"]!["VC"]!["minimosOverride"] = new JsonObject { ["contribuyente"] = 6105m };
+
+        var error = Assert.Throws<InvalidTaxYearConfigException>(() => Parse(root));
+
+        Assert.Contains(error.Failures, f => f.Contains("/regions/VC/minimosOverride", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void ATheoryOnlyValueIsDistinguishableFromAVerifiedOne()
     {
         var provenance = TaxYearConfigFiles.Year2025.Provenance;

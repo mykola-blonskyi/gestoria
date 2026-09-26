@@ -1,4 +1,3 @@
-using System.Text.Json.Nodes;
 using GestorIA.Infrastructure.TaxYears;
 
 namespace GestorIA.Engine.Tests;
@@ -16,11 +15,11 @@ public class TaxYearFilesAreValid
 
     [Theory]
     [MemberData(nameof(Files))]
-    public void FilePassesSchemaAndCrossFieldRules(string path)
+    public void FileLoadsAsTheLoaderWouldReadIt(string path)
     {
-        var failures = TaxYearConfigValidator.Validate(JsonNode.Parse(File.ReadAllText(path)), Path.GetFileName(path));
+        var error = Record.Exception(() => TaxYearConfigParser.Parse(File.ReadAllBytes(path), Path.GetFileName(path)));
 
-        Assert.True(failures.Count == 0, $"{Path.GetFileName(path)} is not a valid tax-year file\n\n" + string.Join("\n", failures));
+        Assert.True(error is null, $"{Path.GetFileName(path)} does not load\n\n{error?.Message}");
     }
 
     [Fact]

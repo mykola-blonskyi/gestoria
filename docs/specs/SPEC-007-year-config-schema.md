@@ -130,7 +130,7 @@ A block that does **not** carry a `_todo` note must be complete: its arrays carr
 
 ### Out of scope here
 
-`casillas` values are aggregate paths such as `trabajo.ingresos`. Checking that each one resolves to a real engine aggregate needs a model of the engine, which does not exist yet. That check belongs with the typed loader (issue #14), and SPEC-008 §5 is where it is specified. It is named here so it is not mistaken for something this validation already covers.
+`casillas` values are aggregate paths such as `trabajo.ingresos`. Checking that each one resolves to a real engine aggregate needs a model of the engine, which does not exist yet. The typed loader (issue #14) does not do it either: it does not map `casillas`, because nothing reads them until the Modelo 100 mapper. The check lands with that mapper, as SPEC-008 §5 specifies. It is named here so it is not mistaken for something this validation already covers.
 
 ### Unverified values
 
