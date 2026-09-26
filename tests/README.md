@@ -4,6 +4,7 @@
 
 ```
 tests/
+├── GestorIA.Cli.Tests/                  # the console's input parsing and output formatting (#11)
 ├── GestorIA.Domain.Tests/               # BbvaParserTests; port to BankTransaction in Phase 4 (SPEC-004 §5)
 ├── GestorIA.Engine.Tests/               # Phase 1: golden + property tests (SPEC-011)
 │   └── Golden/G01_*.cs … G10_*.cs
