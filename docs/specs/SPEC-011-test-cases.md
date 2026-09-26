@@ -30,7 +30,7 @@ All cases gate v1.0 (ADR-0013).
 | G8b | Salary 20,000 + savings income 8,000 | reducción por trabajo = **0**. Same cap, different route; an employee reaches it through dividends (SPEC-002 step 1) |
 | G9 | Bank credit 1,060 from one invoice | base **1,000**, IVA **210**, retención **150** |
 | G10 | Obligation | 21,000 single payer → not required; 16,000 + 2,000 → required |
-| G11 | Pluriactividad: salary 40,000 (SS 2,600) + first-year activity 30,000 (expenses 960), VC | Σ 130 = **5,408.00**; the activity adds **10,854.31**; true-up gap **5,446.31**, payable by 30 June 2026 (#9) |
+| G11 | Pluriactividad: salary 40,000 (SS 2,600) + established activity 30,000 (RETA 4,802.40), VC | Σ 130 = **5,039.52**; the activity adds **9,217.13**; true-up gap **4,177.61**, payable by 30 June 2026 (#9) |
 
 G1, G3 and G11 apply the state mínimo of 5,550 to the regional scale as well, because the configuration holds no regional mínimos. The AEAT Manual práctico Renta 2025, cap. 14, gives VC residents a regional mínimo of 6,105 (Ley 13/1997 art. 2 bis), which lowers the regional cuota of any base above it by 49.95. Until the configuration carries it, those expected values overstate the tax by that amount.
 
