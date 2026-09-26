@@ -4,7 +4,7 @@
   "config": "2025.example.json",
   "setAside": {
     "oracle": "theory",
-    "oracleRef": "Arithmetic under the set-aside estimator's composition rules in #2 (Implementation Decisions) and #10, over sources checked 2026-09-26. TGSS: LGSS art. 308.1.c (boe.es consolidated RDL 8/2015, read 2026-09-26), rendimiento computable is the IRPF net plus the titular's own cuotas, averaged over the months of alta, so 28,800 / 12 = 2,400 a month, tramo General 7; tarifa plana 80 under Ley 20/2007 art. 38 ter.1 for the alta month and the twelve after it; January prorated 80 × 17 / 30 = 45.33 under LGSS art. 31.2; the year is 45.33 + 11 × 80 = 925.33 and the highest Q1 month is 80. Modelo 130 (SPEC-003 §1, AEAT instrucciones del modelo 130, casillas 01–19): the projection spread evenly over the twelve months of alta, gastos to date plus the cuotas to date; casilla 02 adds difícil justificación, 5 % of the net to date (RD 439/2007 art. 30.2ª and 110.1.a, #33), so Q1 is 505.33 + 349.7335 = 855.06 and casilla 03 is 6,644.94; 20 % of the cumulative net, minoración 100 a quarter because no activity last year counts as a net of zero (casilla 13, RD 439/2007 art. 110.3.c); Q1 1,228.99 due 1–20 April, Q2 to Q4 1,222.40 each, Σ 4,896.19. Annual: LIRPF art. 30.2.4 difícil justificación 5 % of 27,874.67 = 1,393.7335, net 26,480.9365; LIRPF art. 32.3 (AEAT Manual práctico Renta 2025, cap. 7, fase 3) takes 0.20 × 26,480.9365 = 5,296.1873 off a new activity's first positive period, base 21,184.7492; cuota 1,733.21238 estatal (state mínimo 5,550) + 1,632.719904 VC (VC mínimo 6,105, Ley 13/1997 art. 2 bis) = 3,365.932284 (LIRPF art. 56, 63, 74), below the advances, so the gap is max(0, 3,365.93 − 4,896.19) = 0. Hold-back share (4,896.19 + 0 + 925.33) / 30,000 = 0.194050666…, rounded up to 0.1941. No AEAT simulator or published example covers a set-aside estimate; this is the weakest gate.",
+    "oracleRef": "Arithmetic under the set-aside estimator's composition rules in #2 (Implementation Decisions) and #10, over sources checked 2026-09-26. TGSS: LGSS art. 308.1.c (boe.es consolidated RDL 8/2015, read 2026-09-26), rendimiento computable is the IRPF net plus the titular's own cuotas, averaged over the months of alta, so 28,800 / 12 = 2,400 a month, tramo General 7; tarifa plana 80 under Ley 20/2007 art. 38 ter.1 for the alta month and the twelve after it; January prorated 80 × 17 / 30 = 45.33 under LGSS art. 31.2; the year is 45.33 + 11 × 80 = 925.33 and the highest Q1 month is 80. Modelo 130 (SPEC-003 §1, AEAT instrucciones del modelo 130, casillas 01–19): the projection spread evenly over the twelve months of alta, gastos to date plus the cuotas to date; casilla 02 adds difícil justificación, 5 % of the net to date (RD 439/2007 art. 30.2ª and 110.1.a, #33), so Q1 is 505.33 + 349.7335 = 855.06 and casilla 03 is 6,644.94; 20 % of the cumulative net, minoración 100 a quarter because no activity last year counts as a net of zero (casilla 13, RD 439/2007 art. 110.3.c); Q1 1,228.99 due 1–20 April, Q2 to Q4 1,222.40 each, Σ 4,896.19. Annual: LIRPF art. 30.2.4 difícil justificación 5 % of 27,874.67 = 1,393.7335, net 26,480.9365; LIRPF art. 32.3 (AEAT Manual práctico Renta 2025, cap. 7, fase 3) takes 0.20 × 26,480.9365 = 5,296.1873 off a new activity's first positive period, base 21,184.7492; cuota 1,733.21238 estatal (state mínimo 5,550) + 1,632.719904 VC (VC mínimo 6,105, Ley 13/1997 art. 2 bis) = 3,365.932284 (LIRPF art. 56, 63, 74), below the advances, so the gap is max(0, 3,365.93 − 4,896.19) = 0. Hold-back share (4,896.19 + 0 + 925.33) / 30,000 = 0.194050666…, rounded up to 0.1941. No AEAT simulator or published example covers a set-aside estimate; this is the weakest gate. Added with #15: the gap is payable with Renta 2025, by the end of 2026-06 (config calendar.renta); tarifa plana runs through 2026-01, the alta month plus twelve complete months (Ley 20/2007 art. 38 ter.1, boe.es consolidated text read 2026-09-26), and from 2026-02 the cuota is General 7's 425.85 at the 2025 tramos, so a second SET_ASIDE_ESTIMATE warning announces the step.",
     "oracleRunDate": "2026-09-26",
     "inputs": {
       "asOf": "Q1",
@@ -24,13 +24,15 @@
       "nextPayment": { "quarter": "Q1", "aIngresar": "1228.99", "dueWindow": ["04-01", "04-20"] },
       "monthlyCuotaSs": "80.00",
       "annualTrueUpGap": "0.00",
+      "annualTrueUpPayableIn": "2026-06",
       "ivaToSetAside": "0.00",
       "traceOutputs": {
         "set-aside.cuota-ss-year": "925.33",
         "set-aside.modelo130-year": "4896.19",
         "renta.liability-on-activity": "3365.932284"
       },
-      "warnings": ["SET_ASIDE_ESTIMATE", "SS_REGULARIZACION_AHEAD"]
+      "warnings": ["SET_ASIDE_ESTIMATE", "SET_ASIDE_ESTIMATE", "SS_REGULARIZACION_AHEAD"],
+      "warningTexts": { "SET_ASIDE_ESTIMATE": "from 2026-02 TGSS charges 425.85 € a month instead of 80.00 €" }
     }
   }
 }

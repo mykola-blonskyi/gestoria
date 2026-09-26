@@ -1,0 +1,68 @@
+{
+  "golden": "G16",
+  "scenario": "G8's employee (salary 20,000, employee SS 1,300, VC) with an established side activity registered in September 2019, whose 2024 net was 8,000. As of Q1, projection only: 12,000 of invoices to EU and US clients and no expenses besides the cuota. The activity net after the RETA cuota and difícil justificación is 8,358.48, above the 6,500 cap on income other than employment, so the reducción por trabajo the salary alone would get, 1,194.15, is lost entirely, and the estimate says how much.",
+  "config": "2025.example.json",
+  "setAside": {
+    "oracle": "theory",
+    "oracleRef": "Arithmetic under the set-aside composition rules of #10 and #15, computed by an independent Decimal script written from those rules and the sources below, not by running the engine. Actuals are the cumulative closed quarters; the projection is spread evenly over the months after the last of them. TGSS: LGSS art. 308.1.c (boe.es consolidated RDL 8/2015, read 2026-09-26): rendimiento computable = IRPF net plus the titular's cuotas, so the actual net with the cuotas charged to date added back (priced at the highest tramo consistent with the net they lead to) plus the projected net, averaged over the months of alta; tarifa plana 80 for the alta month and the twelve complete calendar months after it, Ley 20/2007 art. 38 ter.1 (boe.es consolidated text, read 2026-09-26); the month of alta prorated by days of alta / 30 as MonthlyCuotaCalculator does (#7). Modelo 130: AEAT instrucciones del modelo 130 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026, read 2026-09-26), casillas 01–19, and RD 439/2007 art. 30.2ª and 110 (difícil justificación in casilla 02; casilla 12 floors 07 at zero; casilla 14 = 12 − 13 may be negative; casilla 15 deducts earlier negative casilla 19 results, at most a positive casilla 14). Annual: SPEC-002 steps 1, 2, 4 and 6, LIRPF art. 19, 20, 30.2.4ª, 32.3, 56, 63 and 74, VC mínimo 6,105 (Ley 13/1997 art. 2 bis). Hold-back share (Σ 130 + gap + Σ cuotas SS) / annual ingresos, rounded up to 0.0001. No AEAT simulator, published example or gestor covers a set-aside estimate; this is the weakest gate. TGSS: 12,000 / 12 = 1,000 a month, Reducida 3, 266.80 every month, 3,201.60 for the year. Modelo 130: 3,000 − (800.40 + 109.98) = 2,089.62, 20 % 417.92, minoración 100 (2024 net 8,000 is in the 9,000 band), Q1 pays 317.92, due 1–20 April; Σ 130 1,271.70. Annual: 12,000 − 3,201.60 = 8,798.40, difícil justificación 439.92, net 8,358.48 > 6,500. Reducción alone: rendimiento art. 20 18,700 in the third band, 2,364.34 − 1.14 × (18,700 − 17,673.52) = 1,194.1528, lost; LIRPF art. 20, business rule 6, G8. Salary alone base 15,505.8472, cuota 1,973.453328; stacked base 25,058.48, cuota 4,503.594; the activity adds 2,530.140672, gap 1,258.44 payable by 2026-06-30. Share (1,271.70 + 1,258.44 + 3,201.60) / 12,000 = 0.477645, rounded up 0.4777.",
+    "oracleRunDate": "2026-09-26",
+    "inputs": {
+      "asOf": "Q1",
+      "profile": {
+        "region": "VC",
+        "employment": {
+          "ingresos": "20000.00",
+          "seguridadSocial": "1300.00"
+        },
+        "activity": {
+          "alta": "2019-09-01",
+          "previousYear": {
+            "rendimientoNeto": "8000.00"
+          },
+          "newActivity": "established"
+        }
+      },
+      "activity": {
+        "retenciones": "foreignPayersOnly",
+        "actuals": [],
+        "projection": {
+          "ingresos": "12000.00",
+          "gastos": "0.00"
+        }
+      }
+    },
+    "expected": {
+      "holdBackShare": "0.4777",
+      "nextPayment": {
+        "quarter": "Q1",
+        "aIngresar": "317.92",
+        "dueWindow": [
+          "04-01",
+          "04-20"
+        ]
+      },
+      "monthlyCuotaSs": "266.80",
+      "annualTrueUpGap": "1258.44",
+      "annualTrueUpPayableIn": "2026-06",
+      "ivaToSetAside": "0.00",
+      "traceOutputs": {
+        "set-aside.cuota-ss-year": "3201.60",
+        "set-aside.modelo130-year": "1271.70",
+        "renta.actividad.rendimiento-neto": "8358.48",
+        "renta.trabajo.reduccion.solo": "1194.1528",
+        "renta.trabajo.reduccion.stacked": "0",
+        "renta.liability-on-activity": "2530.140672"
+      },
+      "warnings": [
+        "SET_ASIDE_ESTIMATE",
+        "SS_REGULARIZACION_AHEAD",
+        "REDUCCION_TRABAJO_LOST",
+        "MARGINAL_VS_EFFECTIVE"
+      ],
+      "warningTexts": {
+        "REDUCCION_TRABAJO_LOST": "the reducción por trabajo of 1194.15 € is lost entirely",
+        "MARGINAL_VS_EFFECTIVE": "want 1258.44 € more, payable by 2026-06-30"
+      }
+    }
+  }
+}
