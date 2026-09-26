@@ -1,0 +1,47 @@
+{
+  "golden": "G11",
+  "scenario": "Pluriactividad, the #9 worked example: salary 40,000 (employee SS 2,600) plus a first year of activity invoicing 30,000 to foreign clients, with the twelve months of tarifa plana (960) as the only expense, VC. Modelo 130 collects 20 % of the activity net less the minoración; stacked on the salary the activity income is taxed well above that, and the annual return collects the difference in June of the following year.",
+  "config": "2025.example.json",
+  "modelo130": {
+    "oracle": "theory",
+    "oracleRef": "Arithmetic under SPEC-003 §1 and AEAT, instrucciones del modelo 130, casillas 03–19: 0.20 of a cumulative net growing by 7,260 a quarter, less the casilla 13 minoración of 100 a quarter (RD 439/2007 art. 110.3.c) that a first activity year gets, since no activity last year counts as a net of zero.",
+    "oracleRunDate": "2026-09-26",
+    "inputs": {
+      "retenciones": "foreignPayersOnly",
+      "quarters": [
+        { "quarter": "Q1", "ingresosYtd": "7500.00", "gastosYtd": "240.00" },
+        { "quarter": "Q2", "ingresosYtd": "15000.00", "gastosYtd": "480.00" },
+        { "quarter": "Q3", "ingresosYtd": "22500.00", "gastosYtd": "720.00" },
+        { "quarter": "Q4", "ingresosYtd": "30000.00", "gastosYtd": "960.00" }
+      ]
+    },
+    "expected": {
+      "quarters": [
+        { "quarter": "Q1", "rendimientoNeto": "7260.00", "pagoBruto": "1452.00", "pagosAnteriores": "0.00", "resultado": "1352.00", "aIngresar": "1352.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q2", "rendimientoNeto": "14520.00", "pagoBruto": "2904.00", "pagosAnteriores": "1452.00", "resultado": "1352.00", "aIngresar": "1352.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q3", "rendimientoNeto": "21780.00", "pagoBruto": "4356.00", "pagosAnteriores": "2904.00", "resultado": "1352.00", "aIngresar": "1352.00", "negativosPendientes": "0.00" },
+        { "quarter": "Q4", "rendimientoNeto": "29040.00", "pagoBruto": "5808.00", "pagosAnteriores": "4356.00", "resultado": "1352.00", "aIngresar": "1352.00", "negativosPendientes": "0.00" }
+      ],
+      "totalAIngresar": "5408.00"
+    }
+  },
+  "rentaTrueUp": {
+    "oracle": "theory",
+    "oracleRef": "Arithmetic under SPEC-002 steps 1, 2, 4 and 6 and LIRPF art. 19, 20, 56, 63 and 74 (boe.es consolidated text, read 2026-09-26), cross-checked by an independent script. Salary alone: 40,000 − 2,600 − 2,000 = 35,400, no reducción, cuota 7,748.00. Stacked: activity 29,040 − 1,452 difícil justificación = 27,588, base 62,988, cuota 18,602.312. The activity adds 10,854.31, the advances cover 5,408.00, the gap is 5,446.31, due with Renta 2025 by 30 June 2026. Uses the state mínimo for the regional scale; VC's own (6,105, Ley 13/1997 art. 2 bis) would lower both cuotas by 49.95 and leave the gap unchanged.",
+    "oracleRunDate": "2026-09-26",
+    "inputs": {
+      "region": "VC",
+      "employment": { "ingresos": "40000.00", "seguridadSocial": "2600.00" },
+      "activity": { "ingresos": "30000.00", "gastos": "960.00" },
+      "modelo130Advances": "5408.00"
+    },
+    "expected": {
+      "liabilityOnActivity": "10854.31",
+      "marginalRate": "0.474",
+      "reduccionTrabajoLost": "0.00",
+      "gap": "5446.31",
+      "payableIn": "2026-06",
+      "warnings": ["MARGINAL_VS_EFFECTIVE"]
+    }
+  }
+}
