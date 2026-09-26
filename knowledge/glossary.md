@@ -19,6 +19,7 @@ Code identifiers keep the Spanish term (see `docs/CONVENTIONS.md`). Full glossar
 | **Rendimiento neto (RN)** | net income of a category | `trabajo.rn`, `actividad.rn` |
 | **Reducción por rendimientos del trabajo** | low-salary relief | `trabajo.reduccion`, golden #8 |
 | **Gastos de difícil justificación** | 5 % hard-to-justify expense allowance (cap 2,000) | `actividad.dj` |
+| **Reducción por inicio de actividad** | 20 % off a new activity's positive net in its first positive period and the next (LIRPF art. 32.3), annual return only | `actividad.inicioActividad`, `NewActivity`, golden G13 |
 | **Base liquidable general / del ahorro (BLG/BLA)** | taxable base after reductions | `bases.blg/bla` |
 | **Mínimo personal y familiar** | tax-free minimum (applied via the scale, not subtracted); the regional scale uses the region's own amounts where it approved any | `MinimoCalculator`, `regions.*.minimosOverride` |
 | **Escala estatal / autonómica / del ahorro** | state / regional / savings rate scales | `config.irpf.*`, `regions.*` |

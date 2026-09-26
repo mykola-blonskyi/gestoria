@@ -272,6 +272,9 @@ public sealed class TaxYearConfigLoading : IDisposable
 
         yield return ("/irpf/actividad/dificilJustificacion/pct", c.Irpf.Actividad.DificilJustificacion.Pct);
         yield return ("/irpf/actividad/dificilJustificacion/max", c.Irpf.Actividad.DificilJustificacion.Max);
+        yield return ("/irpf/actividad/inicioActividad/pct", c.Irpf.Actividad.InicioActividad.Pct);
+        yield return ("/irpf/actividad/inicioActividad/maxRendimiento", c.Irpf.Actividad.InicioActividad.MaxRendimiento);
+        yield return ("/irpf/actividad/inicioActividad/formerEmployerShare", c.Irpf.Actividad.InicioActividad.FormerEmployerShare);
 
         var valenciana = c.Regions.For("VC");
         yield return ("/regions/VC/name", valenciana.Name);

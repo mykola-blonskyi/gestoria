@@ -25,7 +25,7 @@ internal static class RentaTrueUpGolden
         var result = AnnualTrueUpCalculator.Gap(
             new AnnualTrueUpInput(
                 new EmploymentIncome(MoneyOf(inputs["employment"]!["ingresos"]), MoneyOf(inputs["employment"]!["seguridadSocial"])),
-                new ActivityIncome(MoneyOf(inputs["activity"]!["ingresos"]), MoneyOf(inputs["activity"]!["gastos"])),
+                new ActivityIncome(MoneyOf(inputs["activity"]!["ingresos"]), MoneyOf(inputs["activity"]!["gastos"]), NewActivityOf(inputs["activity"]!["newActivity"])),
                 advances,
                 inputs["region"]!.GetValue<string>()),
             TaxYearConfigFiles.Year2025);
@@ -64,4 +64,19 @@ internal static class RentaTrueUpGolden
 
         Assert.True(mismatches.Count == 0, $"{golden} rentaTrueUp:\n  " + string.Join("\n  ", mismatches));
     }
+
+    // "established", or { "period": "first" | "following", "ingresosFromFormerEmployer": "0.00" }. A fixture without it fails.
+    private static NewActivity NewActivityOf(JsonNode? newActivity) => newActivity switch
+    {
+        JsonValue established when established.GetValue<string>() == "established" => new NewActivity.Established(),
+        JsonObject started => new NewActivity.Started(
+            started["period"]!.GetValue<string>() switch
+            {
+                "first" => NewActivityPeriod.First,
+                "following" => NewActivityPeriod.Following,
+                var other => throw new InvalidOperationException($"activity.newActivity.period must be \"first\" or \"following\", not \"{other}\""),
+            },
+            MoneyOf(started["ingresosFromFormerEmployer"])),
+        _ => throw new InvalidOperationException($"activity.newActivity must be \"established\" or an object, not {newActivity?.ToJsonString() ?? "missing"}"),
+    };
 }

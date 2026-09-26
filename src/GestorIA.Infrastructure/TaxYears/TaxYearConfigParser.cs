@@ -59,6 +59,7 @@ public static class TaxYearConfigParser
         var irpf = root["irpf"]!;
         var reduccion = irpf["trabajo"]!["reduccion"]!;
         var dificilJustificacion = irpf["actividad"]!["dificilJustificacion"]!;
+        var inicioActividad = irpf["actividad"]!["inicioActividad"]!;
         var modelo130 = root["modelo130"]!;
         var seguridadSocial = root["seguridadSocial"]!;
         var tarifaPlana = seguridadSocial["tarifaPlana"]!;
@@ -82,7 +83,9 @@ public static class TaxYearConfigParser
                         reduccion["k1"]!.Read<decimal>(),
                         reduccion["k2"]!.Read<decimal>(),
                         MoneyOf(reduccion["otherIncomeCap"]))),
-                new ActividadConfig(new DificilJustificacionConfig(RateOf(dificilJustificacion["pct"]), MoneyOf(dificilJustificacion["max"])))),
+                new ActividadConfig(
+                    new DificilJustificacionConfig(RateOf(dificilJustificacion["pct"]), MoneyOf(dificilJustificacion["max"])),
+                    new InicioActividadConfig(RateOf(inicioActividad["pct"]), MoneyOf(inicioActividad["maxRendimiento"]), RateOf(inicioActividad["formerEmployerShare"])))),
             RegionsOf(root["regions"]!.AsObject(), minimos),
             new Modelo130Config(
                 RateOf(modelo130["rate"]),

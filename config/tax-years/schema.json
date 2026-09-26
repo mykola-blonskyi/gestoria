@@ -379,6 +379,7 @@
           "additionalProperties": false,
           "required": [
             "dificilJustificacion",
+            "inicioActividad",
             "homeUtilitiesFactor",
             "retencionProfesional",
             "retencionNuevo",
@@ -399,6 +400,26 @@
                 },
                 "max": {
                   "$ref": "#/$defs/money"
+                }
+              }
+            },
+            "inicioActividad": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "pct",
+                "maxRendimiento",
+                "formerEmployerShare"
+              ],
+              "properties": {
+                "pct": {
+                  "$ref": "#/$defs/rate"
+                },
+                "maxRendimiento": {
+                  "$ref": "#/$defs/money"
+                },
+                "formerEmployerShare": {
+                  "$ref": "#/$defs/rate"
                 }
               }
             },

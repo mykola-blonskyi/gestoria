@@ -44,6 +44,7 @@
     },
     "actividad": {
       "dificilJustificacion": { "pct": 0.05, "max": 2000 },
+      "inicioActividad": { "pct": 0.20, "maxRendimiento": 100000, "formerEmployerShare": 0.50 },
       "homeUtilitiesFactor": 0.30,
       "retencionProfesional": 0.15, "retencionNuevo": 0.07, "retencionNuevoYears": 3,
       "depreciation": { "equipos": 4, "software": 3, "mobiliario": 10 }
@@ -132,6 +133,7 @@
     "/irpf/minimos":                { "kind": "theory", "ref": "Theory §5.1, ed. 2" },
     "/irpf/trabajo":                { "kind": "theory", "ref": "Theory §5.2, ed. 2" },
     "/irpf/actividad":              { "kind": "theory", "ref": "Theory §7, ed. 2" },
+    "/irpf/actividad/inicioActividad": { "kind": "boe", "ref": "Ley 35/2006 (LIRPF) art. 32.3, párrafos primero, cuarto y quinto (redacción de la Ley 11/2013, vigente en 2025)", "verified": "2026-09-26" },
     "/irpf/ahorro":                 { "kind": "theory", "ref": "Theory §4.3, ed. 2" },
     "/irpf/inmuebles":              { "kind": "theory", "ref": "Theory §8.2, ed. 2" },
     "/irpf/reducciones":            { "kind": "theory", "ref": "Theory §5.4, ed. 2" },
