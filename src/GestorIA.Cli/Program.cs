@@ -27,9 +27,25 @@ catch (Exception e) when (e is InvalidInputFileException or InvalidTaxYearConfig
     or ArgumentException or NotSupportedException or IOException or UnauthorizedAccessException)
 {
     // The engine rejects inputs it cannot estimate with ArgumentException or NotSupportedException, and says why.
-    Console.Error.WriteLine("No estimate: " + e.Message);
+    Console.Error.WriteLine("No estimate: " + Reason(e));
     return 1;
 }
 
 Console.Write(SetAsideReport.Render(result, config.TaxYear, configFileName));
 return 0;
+
+// ArgumentException's Message appends " (Parameter 'input')", and ArgumentOutOfRangeException's a line with the actual
+// value. Neither means anything to whoever wrote the input file, so only the reason before them is printed.
+static string Reason(Exception e)
+{
+    if (e is not ArgumentException argument || argument.ParamName is null)
+    {
+        return e.Message;
+    }
+
+    var firstLine = argument.Message.Split(Environment.NewLine)[0];
+    var suffix = $" (Parameter '{argument.ParamName}')";
+
+    // [..^n] is a range: the string without its last n characters, like slice(0, -n).
+    return firstLine.EndsWith(suffix, StringComparison.Ordinal) ? firstLine[..^suffix.Length] : firstLine;
+}

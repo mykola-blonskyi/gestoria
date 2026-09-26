@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json.Nodes;
 using GestorIA.Domain.ValueObjects;
 using GestorIA.Engine;
@@ -43,12 +44,58 @@ public class SetAsideInputFileTests
     [InlineData("profile.activity.newActivity", "$.profile.activity.newActivity is missing.")]
     public void AMissingFieldIsRejectedByItsPath(string path, string message)
     {
-        var json = Edit(root =>
-        {
-            var segments = path.Split('.');
-            var parent = segments[..^1].Aggregate(root, (node, segment) => node[segment]!);
-            parent.AsObject().Remove(segments[^1]);
-        });
+        var json = Edit(root => ParentOf(root, path).AsObject().Remove(path.Split('.')[^1]));
+
+        var e = Assert.Throws<InvalidInputFileException>(() => SetAsideInputFile.Parse(json, RepoFiles.Config));
+        Assert.Equal(message, e.Message);
+    }
+
+    [Theory]
+    [InlineData("profile.region", "$.profile.region is null.")]
+    [InlineData("activity.actuals.0", "$.activity.actuals[0] is null.")]
+    public void ANullIsRejectedAtItsOwnPath(string path, string message)
+    {
+        var json = Edit(root => Set(root, path, null));
+
+        var e = Assert.Throws<InvalidInputFileException>(() => SetAsideInputFile.Parse(json, RepoFiles.Config));
+        Assert.Equal(message, e.Message);
+    }
+
+    [Theory]
+    [InlineData("profile.employment.ingresos", "$.profile.employment.ingresos")]
+    [InlineData("profile.employment.seguridadSocial", "$.profile.employment.seguridadSocial")]
+    [InlineData("profile.activity.newActivity.ingresosFromFormerEmployer", "$.profile.activity.newActivity.ingresosFromFormerEmployer")]
+    [InlineData("activity.actuals.0.ingresosYtd", "$.activity.actuals[0].ingresosYtd")]
+    [InlineData("activity.actuals.0.gastosYtd", "$.activity.actuals[0].gastosYtd")]
+    [InlineData("activity.projection.ingresos", "$.activity.projection.ingresos")]
+    [InlineData("activity.projection.gastos", "$.activity.projection.gastos")]
+    public void ANegativeAmountIsRejected(string path, string jsonPath)
+    {
+        var json = Edit(root => Set(root, path, "-5"));
+
+        var e = Assert.Throws<InvalidInputFileException>(() => SetAsideInputFile.Parse(json, RepoFiles.Config));
+        Assert.Equal($"{jsonPath} is \"-5\"; it must be zero or more.", e.Message);
+    }
+
+    [Fact]
+    public void APreviousYearLossIsANegativeNet()
+    {
+        var json = Edit(root => root["profile"]!["activity"]!["previousYear"] = new JsonObject { ["rendimientoNeto"] = "-3000.00" });
+
+        var input = SetAsideInputFile.Parse(json, RepoFiles.Config);
+
+        Assert.Equal(new PreviousYear.RendimientoNeto(new Money(-3000.00m)), input.Profile.Activity.PreviousYear);
+    }
+
+    [Theory]
+    [InlineData("taxYear", "$.taxYear is not a field the estimator reads; the fields of $ are asOf, profile, activity.")]
+    [InlineData("profile.activity.tarifaPlana", "$.profile.activity.tarifaPlana is not a field the estimator reads; the fields of $.profile.activity are alta, previousYear, newActivity.")]
+    [InlineData("profile.activity.newActivity.startedOn", "$.profile.activity.newActivity.startedOn is not a field the estimator reads; the fields of $.profile.activity.newActivity are period, ingresosFromFormerEmployer.")]
+    [InlineData("activity.actuals.0.note", "$.activity.actuals[0].note is not a field the estimator reads; the fields of $.activity.actuals[0] are quarter, ingresosYtd, gastosYtd.")]
+    [InlineData("activity.projection.iva", "$.activity.projection.iva is not a field the estimator reads; the fields of $.activity.projection are ingresos, gastos.")]
+    public void AnUnknownFieldIsRejected(string path, string message)
+    {
+        var json = Edit(root => Set(root, path, false));
 
         var e = Assert.Throws<InvalidInputFileException>(() => SetAsideInputFile.Parse(json, RepoFiles.Config));
         Assert.Equal(message, e.Message);
@@ -107,4 +154,24 @@ public class SetAsideInputFileTests
         change(root);
         return root.ToJsonString();
     }
+
+    // A dotted path such as "activity.actuals.0.gastosYtd", where a number indexes an array.
+    private static void Set(JsonNode root, string path, JsonNode? value)
+    {
+        var parent = ParentOf(root, path);
+        var last = path.Split('.')[^1];
+
+        if (parent is JsonArray array)
+        {
+            array[int.Parse(last, CultureInfo.InvariantCulture)] = value;
+        }
+        else
+        {
+            parent[last] = value;
+        }
+    }
+
+    private static JsonNode ParentOf(JsonNode root, string path) =>
+        path.Split('.')[..^1].Aggregate(root, (node, segment) =>
+            node is JsonArray array ? array[int.Parse(segment, CultureInfo.InvariantCulture)]! : node[segment]!);
 }

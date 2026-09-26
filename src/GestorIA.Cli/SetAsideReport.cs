@@ -6,7 +6,7 @@ using static System.FormattableString;
 
 namespace GestorIA.Cli;
 
-// Prints a SetAsideResult as text: the trace first, then the estimate and the warnings last, where the terminal leaves them
+// Prints a SetAsideResult as text: the trace first, then the estimate and the notices last, where the terminal leaves them
 // in view. Display only: amounts are formatted, never rounded or combined, and nothing depends on the current culture.
 public static class SetAsideReport
 {
@@ -14,9 +14,10 @@ public static class SetAsideReport
     {
         // StringBuilder appends to one growing buffer, like pushing lines to an array and joining them once at the end.
         var text = new StringBuilder();
+        var warnings = result.Warnings.Count(w => w.Severity != WarningSeverity.Info);
 
         text.AppendLine(Invariant($"GestorIA set-aside estimate, tax year {taxYear}"));
-        text.AppendLine(Invariant($"{result.Trace.Steps.Count} calculation steps first; the estimate and {result.Warnings.Count} warnings follow at the end."));
+        text.AppendLine(Invariant($"{result.Trace.Steps.Count} calculation steps first; the estimate and {result.Warnings.Count} notices ({warnings} warnings) follow at the end."));
         text.AppendLine();
         text.AppendLine("Calculation (SPEC-002 §6 trace; figures as the engine computed them, unrounded)");
 
@@ -55,9 +56,9 @@ public static class SetAsideReport
         Row(text, "Configuration", Invariant($"{configFileName}, sha256 {result.ConfigHash}"));
 
         text.AppendLine();
-        text.AppendLine(Invariant($"Warnings ({result.Warnings.Count}): read these before relying on the figures above"));
+        text.AppendLine(Invariant($"Notices ({result.Warnings.Count}, {warnings} of them warnings): read these before relying on the figures above"));
 
-        // OrderByDescending is a stable sort: warnings of the same severity keep the engine's order.
+        // OrderByDescending is a stable sort: notices of the same severity keep the engine's order.
         foreach (var warning in result.Warnings.OrderByDescending(w => w.Severity))
         {
             var marker = warning.Severity == WarningSeverity.Info ? "  " : "!!";

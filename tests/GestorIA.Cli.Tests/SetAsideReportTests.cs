@@ -71,8 +71,9 @@ public class SetAsideReportTests
         var report = Render("G16");
 
         var estimate = report.IndexOf("\nEstimate\n", StringComparison.Ordinal);
-        var warnings = report.IndexOf("\nWarnings (4): read these before relying on the figures above\n", StringComparison.Ordinal);
+        var warnings = report.IndexOf("\nNotices (4, 3 of them warnings): read these before relying on the figures above\n", StringComparison.Ordinal);
         Assert.True(estimate > 0 && warnings > estimate, "the warnings follow the estimate at the end of the output");
+        Assert.StartsWith("GestorIA set-aside estimate, tax year 2025\n76 calculation steps first; the estimate and 4 notices (3 warnings) follow at the end.\n", report, StringComparison.Ordinal);
         Assert.Contains("  !! WARNING REDUCCION_TRABAJO_LOST\n     Activity net income of 8358.48 € is above the 6500.00 € cap on income other than employment, so the reducción por trabajo of 1194.15 € is lost entirely.", report, StringComparison.Ordinal);
         Assert.Contains("  !! WARNING MARGINAL_VS_EFFECTIVE\n", report, StringComparison.Ordinal);
         Assert.Contains("The annual return will want 1258.44 € more, payable by 2026-06-30.", report, StringComparison.Ordinal);
