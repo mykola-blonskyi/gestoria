@@ -1,6 +1,6 @@
 {
   "golden": "G11",
-  "scenario": "Pluriactividad, the #9 worked example: salary 40,000 (employee SS 2,600) plus an established activity invoicing 30,000 to foreign clients, VC. The only expense is twelve months of the RETA cuota at the base mínima of tramo General 6 (4,802.40). The activity is past its first two profitable years, so the LIRPF art. 32.3 reduction for a new activity does not apply, and last year's net of 25,000 is above every minoración band. Modelo 130 collects 20 % of the activity net; stacked on the salary the activity income is taxed well above that, and the annual return collects the difference in June of the following year.",
+  "scenario": "Pluriactividad, the #9 worked example: salary 40,000 (employee SS 2,600) plus an established activity invoicing 30,000 to foreign clients, VC. The only expense is twelve months of the RETA cuota at the base mínima of tramo General 6 (4,802.40). The activity is past its first two profitable years, so the LIRPF art. 32.3 reduction for a new activity (#30) does not apply, and last year's net of 25,000 is above every minoración band. Modelo 130 collects 20 % of the activity net; stacked on the salary the activity income is taxed well above that, and the annual return collects the difference in June of the following year.",
   "config": "2025.example.json",
   "modelo130": {
     "oracle": "theory",
@@ -28,7 +28,7 @@
   },
   "rentaTrueUp": {
     "oracle": "theory",
-    "oracleRef": "Arithmetic under SPEC-002 steps 1, 2, 4 and 6 and LIRPF art. 19, 20, 56, 63 and 74 (boe.es consolidated text of Ley 35/2006, read 2026-09-26). Salary alone: 40,000 − 2,600 − 2,000 = 35,400, no reducción, cuota 3,872.50 estatal + 3,875.50 VC = 7,748.00. Stacked: activity 25,197.60 − 1,259.88 difícil justificación = 23,937.72, base 59,337.72, cuota 8,300.9782 + 8,664.14928 = 16,965.12748. The activity adds 9,217.13 at a marginal rate of 0.185 + 0.224, the advances cover 5,039.52, and the gap is 4,177.61, due with Renta 2025 by 30 June 2026. Uses the state mínimo for the regional scale; VC's own (6,105, Ley 13/1997 art. 2 bis) would lower both cuotas by 49.95 and leave the gap unchanged.",
+    "oracleRef": "Arithmetic under SPEC-002 steps 1, 2, 4 and 6 and LIRPF art. 19, 20, 56, 63 and 74 (boe.es consolidated text of Ley 35/2006, read 2026-09-26). Salary alone: 40,000 − 2,600 − 2,000 = 35,400, no reducción, cuota 3,872.50 estatal + 3,875.50 VC = 7,748.00. Stacked: activity 25,197.60 − 1,259.88 difícil justificación = 23,937.72, base 59,337.72, cuota 8,300.9782 + 8,664.14928 = 16,965.12748. The activity adds 9,217.13 at a marginal rate of 0.185 + 0.224, the advances cover 5,039.52, and the gap is 4,177.61, due with Renta 2025 by 30 June 2026. Uses the state mínimo for the regional scale; VC's own (6,105, Ley 13/1997 art. 2 bis) would lower both cuotas by 49.95 and leave the gap unchanged (#29).",
     "oracleRunDate": "2026-09-26",
     "inputs": {
       "region": "VC",

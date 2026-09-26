@@ -77,7 +77,7 @@ public class AnnualTrueUpExamples
         Assert.Equal(new Money(1194.15m), result.ReduccionTrabajoLost);
         Assert.Equal(0m, Output(result, "renta.trabajo.reduccion.stacked"));
         var warning = Assert.Single(result.Warnings, w => w.Code == WarningCodes.ReduccionTrabajoLost);
-        Assert.Contains("1194.15 EUR", warning.Text);
+        Assert.Contains("the reducción por trabajo of 1194.15 € is lost entirely", warning.Text);
     }
 
     [Fact]
@@ -152,7 +152,17 @@ public class AnnualTrueUpExamples
 
         Assert.Equal(new YearMonth(2026, 6), result.PayableIn);
         var warning = Assert.Single(result.Warnings, w => w.Code == WarningCodes.MarginalVsEffective);
-        Assert.Contains("23937.7200 EUR of activity net income adds 9217.13 EUR of tax", warning.Text);
-        Assert.Contains("4177.61 EUR more, payable by 2026-06-30", warning.Text);
+        Assert.Contains("Stacked on the employment income, the 23937.72 € of activity net income adds 9217.13 € of tax: an effective rate of 38.50 %, and 40.90 % on its last euro.", warning.Text);
+        Assert.Contains("4177.61 € more, payable by 2026-06-30", warning.Text);
+    }
+
+    [Fact]
+    public void WithNoSalaryTheWarningDoesNotSpeakOfStacking()
+    {
+        var result = Run(salary: 0m, ss: 0m, ingresos: 50000m, gastos: 7600m, advances: 8480m);
+
+        var warning = Assert.Single(result.Warnings, w => w.Code == WarningCodes.MarginalVsEffective);
+        Assert.DoesNotContain("Stacked", warning.Text);
+        Assert.Contains("With no employment income, the 40400.00 € of activity net income is taxed 9548.00 €: an effective rate of 23.63 %, and 36.00 % on its last euro.", warning.Text);
     }
 }

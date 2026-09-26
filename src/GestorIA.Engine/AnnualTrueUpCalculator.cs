@@ -1,3 +1,4 @@
+using System.Globalization;
 using GestorIA.Domain.ValueObjects;
 using static System.FormattableString;
 
@@ -89,7 +90,7 @@ public static class AnnualTrueUpCalculator
             Invariant($"max(0, {Show(liability)} − {Show(input.Modelo130Advances)}) = {Show(gap)}, due {window.Start} … {window.End} after tax year {config.TaxYear}, so by the end of {payableIn}"),
             gap.Amount,
             "config calendar.renta. Assumes the employer's retenciones settle the tax on the employment income alone, so only the activity's share is left. "
-                + "Conservative (#2): a refund is not counted on, no deducciones (SPEC-006) are applied, and the LIRPF art. 32.2 and 32.3 reductions of the activity net are not applied"));
+                + "Conservative (#2): a refund is not counted on, no deducciones (SPEC-006) are applied, and the LIRPF art. 32.2 and 32.3 reductions of the activity net are not applied (#30)"));
 
         var warnings = new List<Warning>();
 
@@ -98,17 +99,23 @@ public static class AnnualTrueUpCalculator
             warnings.Add(new Warning(
                 WarningCodes.ReduccionTrabajoLost,
                 WarningSeverity.Warning,
-                Invariant($"Activity net income of {actividad} is above the {irpf.Trabajo.Reduccion.OtherIncomeCap} cap on income other than employment, so the reducción por trabajo of {reduccionLost} is lost entirely.")));
+                $"Activity net income of {Euros(actividad)} is above the {Euros(irpf.Trabajo.Reduccion.OtherIncomeCap)} cap on income other than employment, so the reducción por trabajo of {Euros(reduccionLost)} is lost entirely."));
         }
 
         if (gap > Money.Zero)
         {
+            // A positive gap needs a positive liability, which only a positive activity net produces, so the division is safe.
+            var effectiveRate = liability.Amount / actividad.Amount;
+            var taxed = input.Employment.Ingresos > Money.Zero
+                ? $"Stacked on the employment income, the {Euros(actividad)} of activity net income adds {Euros(liability)} of tax"
+                : $"With no employment income, the {Euros(actividad)} of activity net income is taxed {Euros(liability)}";
+
             warnings.Add(new Warning(
                 WarningCodes.MarginalVsEffective,
                 WarningSeverity.Warning,
-                Invariant($"Modelo 130 advances total {input.Modelo130Advances} this year, {config.Modelo130.Rate} of the activity net income less any minoración. ")
-                    + Invariant($"Stacked on the employment income, the {actividad} of activity net income adds {liability.Round2()} of tax, and its last euro is taxed at {marginalRate}. ")
-                    + Invariant($"The annual return will want {gap} more, payable by {payableIn.Year:D4}-{window.End.Month:D2}-{window.End.Day:D2}.")));
+                $"Modelo 130 advances total {Euros(input.Modelo130Advances)} this year, {Percent(config.Modelo130.Rate.Value)} of the activity net income less any minoración. "
+                    + $"{taxed}: an effective rate of {Percent(effectiveRate)}, and {Percent(marginalRate.Value)} on its last euro. "
+                    + Invariant($"The annual return will want {Euros(gap)} more, payable by {payableIn.Year:D4}-{window.End.Month:D2}-{window.End.Day:D2}.")));
         }
 
         return new AnnualTrueUpResult(liability.Round2(), marginalRate, reduccionLost, gap, window, payableIn, new CalculationTrace(steps), warnings);
@@ -143,7 +150,7 @@ public static class AnnualTrueUpCalculator
                 baseLiquidable,
                 minimo,
                 $"{Lirpf} art. 74.1, business rule 9; config regions.{input.Region}. The state mínimo stands in for the regional one, which the config does not hold; "
-                    + "VC's own (Ley 13/1997 art. 2 bis) is higher, so this overstates the regional cuota",
+                    + "VC's own (Ley 13/1997 art. 2 bis) is higher, so this overstates the regional cuota (#29)",
                 steps);
 
             return (baseLiquidable, estatal + autonomica);
@@ -192,7 +199,7 @@ public static class AnnualTrueUpCalculator
             Invariant($"previo = {Show(activity.Ingresos)} − {Show(activity.Gastos)} = {Show(previo)}; {Show(previo)} − min({dificilJustificacion.Pct} × max(0, {Show(previo)}), {Show(dificilJustificacion.Max)}) = {Show(rendimientoNeto)}"),
             rendimientoNeto.Amount,
             "SPEC-002 step 2, business rule 7; config irpf.actividad.dificilJustificacion. Gastos include the RETA cuota, a deductible expense of the titular (AEAT Manual práctico Renta 2025, cap. 7). "
-                + "Not reduced by LIRPF art. 32.3 (20 % in the first two profitable years of a new activity) or art. 32.2, which overstates the net when either applies"));
+                + "Not reduced by LIRPF art. 32.3 (20 % in the first two profitable years of a new activity) or art. 32.2, which overstates the net when either applies (#30)"));
 
         return rendimientoNeto;
     }
@@ -252,4 +259,9 @@ public static class AnnualTrueUpCalculator
     private static Money Min(Money a, Money b) => a < b ? a : b;
 
     private static string Show(Money money) => Invariant($"{money.Amount}");
+
+    // SPEC-010 §5: text for the user shows two decimals and the euro sign. "0.00" formats without changing the stored value.
+    private static string Euros(Money money) => money.Amount.ToString("0.00", CultureInfo.InvariantCulture) + " €";
+
+    private static string Percent(decimal fraction) => (fraction * 100m).ToString("0.00", CultureInfo.InvariantCulture) + " %";
 }
