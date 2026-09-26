@@ -9,7 +9,7 @@ public sealed record MonthlyCuotaResult(decimal Cuota, decimal FullMonthCuota, C
 
 public static class MonthlyCuotaCalculator
 {
-    // LGSS art. 31.2 (Ley 6/2017): the monthly cuota is divided by thirty whatever the month's length.
+    // RD 2064/1995 art. 45.1, as worded since Ley 6/2017 (disposición final 2.ª.3): the monthly cuota is divided by thirty whatever the month's length.
     private const decimal DaysInMonthForProrating = 30m;
 
     public static MonthlyCuotaResult Cuota(MonthlyCuotaInput input, TramoTable tramos, TarifaPlana tarifaPlana)
@@ -74,7 +74,7 @@ public static class MonthlyCuotaCalculator
                 [new("cuotaMensual", Invariant($"{fullMonth}")), new("diasDeAlta", Invariant($"{days}"))],
                 Invariant($"{fullMonth} × {days} / 30 = {cuota}"),
                 cuota,
-                "LGSS art. 31.2 (Ley 6/2017): charged per day of alta, monthly cuota divided by thirty; assumes one of the first three altas of the year"));
+                "RD 2064/1995 art. 45.1 (Ley 6/2017, disposición final 2.ª.3): charged per day of alta, monthly cuota divided by thirty; assumes one of the first three altas of the year (RD 84/1996 art. 46.2.a))"));
         }
 
         var warnings = new[]
