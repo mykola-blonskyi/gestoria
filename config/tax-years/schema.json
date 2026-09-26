@@ -566,7 +566,56 @@
             "type": [
               "object",
               "null"
-            ]
+            ],
+            "additionalProperties": false,
+            "required": [
+              "contribuyente",
+              "mayor65",
+              "mayor75",
+              "descendientes",
+              "menor3",
+              "ascendiente",
+              "ascendiente75",
+              "discapacidad33",
+              "discapacidad65",
+              "asistencia"
+            ],
+            "properties": {
+              "contribuyente": {
+                "$ref": "#/$defs/money"
+              },
+              "mayor65": {
+                "$ref": "#/$defs/money"
+              },
+              "mayor75": {
+                "$ref": "#/$defs/money"
+              },
+              "descendientes": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/money"
+                }
+              },
+              "menor3": {
+                "$ref": "#/$defs/money"
+              },
+              "ascendiente": {
+                "$ref": "#/$defs/money"
+              },
+              "ascendiente75": {
+                "$ref": "#/$defs/money"
+              },
+              "discapacidad33": {
+                "$ref": "#/$defs/money"
+              },
+              "discapacidad65": {
+                "$ref": "#/$defs/money"
+              },
+              "asistencia": {
+                "$ref": "#/$defs/money"
+              }
+            }
           },
           "_todo": {
             "$ref": "#/$defs/todoNote"

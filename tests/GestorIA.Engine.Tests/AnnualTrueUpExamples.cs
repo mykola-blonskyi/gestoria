@@ -36,10 +36,20 @@ public class AnnualTrueUpExamples
         var result = Run(salary: 30000m, ss: 1950m, ingresos: 0m, gastos: 0m);
 
         Assert.Equal(2463.00m, Output(result, "renta.solo.cuota-estatal"));
-        Assert.Equal(2388.00m, Output(result, "renta.solo.cuota-autonomica"));
+        Assert.Equal(2338.05m, Output(result, "renta.solo.cuota-autonomica"));
         Assert.Equal(Money.Zero, result.LiabilityOnActivity);
         Assert.Equal(Money.Zero, result.Gap);
         Assert.Empty(result.Warnings);
+    }
+
+    // A base of 6,000 is above the state mínimo of 5,550 and below the Valencian 6,105.
+    [Fact]
+    public void ABaseBetweenTheStateAndTheRegionalMinimoPaysOnlyStateTax()
+    {
+        var result = Run(salary: 0m, ss: 0m, ingresos: 6000m, gastos: 0m, config: WithoutDificilJustificacion());
+
+        Assert.Equal(42.75m, Output(result, "renta.stacked.cuota-estatal"));
+        Assert.Equal(0m, Output(result, "renta.stacked.cuota-autonomica"));
     }
 
     // LIRPF art. 20: the reducción is measured before the 2,000 of art. 19.2.f. SPEC-011 G2 measures it after and applies the full 7,302.
@@ -106,11 +116,11 @@ public class AnnualTrueUpExamples
     [Fact]
     public void AdvancesAboveTheLiabilityGiveNoGapBecauseARefundIsNotCountedOn()
     {
-        // 10,000 net less 500 difícil justificación is taxed 730.75, below the 2,000 advanced.
+        // 10,000 net less 500 difícil justificación is taxed 680.80, below the 2,000 advanced.
         var result = Run(salary: 0m, ss: 0m, ingresos: 10000m, gastos: 0m, advances: 2000m);
 
-        Assert.Equal(new Money(730.75m), result.LiabilityOnActivity);
-        Assert.Equal(-1269.25m, Output(result, "renta.liability-on-activity") - Output(result, "renta.modelo130-advances"));
+        Assert.Equal(new Money(680.80m), result.LiabilityOnActivity);
+        Assert.Equal(-1319.20m, Output(result, "renta.liability-on-activity") - Output(result, "renta.modelo130-advances"));
         Assert.Equal(Money.Zero, result.Gap);
         Assert.DoesNotContain(result.Warnings, w => w.Code == WarningCodes.MarginalVsEffective);
     }
@@ -129,7 +139,7 @@ public class AnnualTrueUpExamples
     [Fact]
     public void AnActivityLossLowersTheTaxOnTheSalaryAndLeavesNoGap()
     {
-        // Base 35,400 falls to 27,400: cuota 7,748.00 falls to 5,256.00.
+        // Base 35,400 falls to 27,400: cuota 7,698.05 falls to 5,206.05.
         var result = Run(salary: 40000m, ss: 2600m, ingresos: 1000m, gastos: 9000m);
 
         Assert.Equal(new Money(-2492m), result.LiabilityOnActivity);
@@ -164,7 +174,7 @@ public class AnnualTrueUpExamples
 
         var warning = Assert.Single(result.Warnings, w => w.Code == WarningCodes.MarginalVsEffective);
         Assert.DoesNotContain("Stacked", warning.Text);
-        Assert.Contains("With no employment income, the 40400.00 € of activity net income is taxed 9548.00 €: an effective rate of 23.63 %, and 36.00 % on its last euro.", warning.Text);
+        Assert.Contains("With no employment income, the 40400.00 € of activity net income is taxed 9498.05 €: an effective rate of 23.51 %, and 36.00 % on its last euro.", warning.Text);
     }
 
     private static NewActivity.Started FirstPeriod(decimal fromFormerEmployer = 0m) => new(NewActivityPeriod.First, new Money(fromFormerEmployer));

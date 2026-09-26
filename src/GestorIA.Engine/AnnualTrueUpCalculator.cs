@@ -159,13 +159,12 @@ public static class AnnualTrueUpCalculator
                 baseLiquidable.Amount,
                 $"{Lirpf} art. 48 and 50: a negative balance is not taxed"));
 
-            var minimo = Min(irpf.Minimos.Contribuyente, baseLiquidable);
             var estatal = ScalePart(
                 $"renta.{scenario}.cuota-estatal",
                 $"Cuota íntegra estatal, {label}",
                 irpf.EscalaEstatal,
                 baseLiquidable,
-                minimo,
+                Min(irpf.Minimos.Contribuyente, baseLiquidable),
                 $"{Lirpf} art. 56.2 and 63.1; config irpf.escalaEstatal, irpf.minimos.contribuyente",
                 steps);
             var autonomica = ScalePart(
@@ -173,9 +172,8 @@ public static class AnnualTrueUpCalculator
                 $"Cuota íntegra autonómica ({input.Region}), {label}",
                 region.EscalaAutonomica,
                 baseLiquidable,
-                minimo,
-                $"{Lirpf} art. 74.1, business rule 9; config regions.{input.Region}. The state mínimo stands in for the regional one, which the config does not hold; "
-                    + "VC's own (Ley 13/1997 art. 2 bis) is higher, so this overstates the regional cuota (#29)",
+                Min(region.Minimos.Contribuyente, baseLiquidable),
+                $"{Lirpf} art. 56.3 and 74.1, business rule 9; config regions.{input.Region}. The mínimo is the region's own (minimosOverride), or the state's where the region approved none",
                 steps);
 
             return (baseLiquidable, estatal + autonomica);

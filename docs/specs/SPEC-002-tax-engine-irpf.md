@@ -82,10 +82,12 @@ BLA = max(0, BIA − remainder)     // only what BIG could not absorb
 ### Step 6 — Cuotas
 ```
 Cuota(scale, base) = Σ over tranches: rate_i × clamp(base − lower_i, 0, upper_i − lower_i)
-Minimo = MinimoCalculator(profile)                                // golden #7
-CIE = max(0, Cuota(Estatal, BLG) − Cuota(Estatal, Minimo)) + Cuota(AhorroEstatal, BLA)
-CIA = max(0, Cuota(Autonomica[region], BLG) − Cuota(Autonomica[region], Minimo)) + Cuota(AhorroAutonomica, BLA)
+MinimoEstatal    = MinimoCalculator(profile, config.irpf.minimos)                    // golden #7
+MinimoAutonomico = MinimoCalculator(profile, config.regions[region].minimosOverride ?? config.irpf.minimos)
+CIE = max(0, Cuota(Estatal, BLG) − Cuota(Estatal, MinimoEstatal)) + Cuota(AhorroEstatal, BLA)
+CIA = max(0, Cuota(Autonomica[region], BLG) − Cuota(Autonomica[region], MinimoAutonomico)) + Cuota(AhorroAutonomica, BLA)
 ```
+Each scale is measured against its own mínimo (LIRPF art. 56.3 and 74.1). A region that approved amounts of its own uses them for its scale; VC's are Ley 13/1997 art. 2 bis, a mínimo del contribuyente of 6,105 against the state 5,550 for 2025 (#29). The state scale always keeps the state mínimo.
 The savings scale in config is stored as combined rates plus `estatalShare`, so both casillas 0545/0546 and the total can be produced. Golden #1, #2, #6.
 
 ### Step 7 — Cuota líquida

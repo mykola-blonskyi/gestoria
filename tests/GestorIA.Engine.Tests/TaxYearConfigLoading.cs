@@ -173,14 +173,30 @@ public sealed class TaxYearConfigLoading : IDisposable
     }
 
     [Fact]
-    public void ARegionalMinimosOverrideTheLoaderCannotReadIsRefusedRatherThanDropped()
+    public void TheValencianMinimoDelContribuyenteIsItsOwnAndLeavesTheStateOneAlone()
+    {
+        var config = TaxYearConfigFiles.Year2025;
+
+        Assert.Equal(new Money(6105m), config.Regions.For("VC").Minimos.Contribuyente);
+        Assert.Equal(new Money(5550m), config.Irpf.Minimos.Contribuyente);
+    }
+
+    // LIRPF art. 56.3: a region that approves no amounts of its own uses the state ones for its scale too.
+    [Fact]
+    public void ARegionWithNoMinimosOverrideTakesTheStateMinimos()
     {
         var root = Example2025Node();
-        root["regions"]!["VC"]!["minimosOverride"] = new JsonObject { ["contribuyente"] = 6105m };
+        root["regions"]!["VC"]!["minimosOverride"] = null;
+        var provenance = root["provenance"]!.AsObject();
 
-        var error = Assert.Throws<InvalidTaxYearConfigException>(() => Parse(root));
+        foreach (var pointer in provenance.Select(e => e.Key).Where(k => k.StartsWith("/regions/VC/minimosOverride", StringComparison.Ordinal)).ToList())
+        {
+            provenance.Remove(pointer);
+        }
 
-        Assert.Contains(error.Failures, f => f.Contains("/regions/VC/minimosOverride", StringComparison.Ordinal));
+        var config = Parse(root);
+
+        Assert.Equal(config.Irpf.Minimos, config.Regions.For("VC").Minimos);
     }
 
     [Fact]
@@ -262,6 +278,7 @@ public sealed class TaxYearConfigLoading : IDisposable
 
         var valenciana = c.Regions.For("VC");
         yield return ("/regions/VC/name", valenciana.Name);
+        yield return ("/regions/VC/minimosOverride/contribuyente", valenciana.Minimos.Contribuyente);
 
         foreach (var value in ScaleValues("/regions/VC/escalaAutonomica", valenciana.EscalaAutonomica)) { yield return value; }
 

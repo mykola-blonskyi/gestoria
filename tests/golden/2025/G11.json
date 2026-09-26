@@ -28,7 +28,7 @@
   },
   "rentaTrueUp": {
     "oracle": "theory",
-    "oracleRef": "Arithmetic under SPEC-002 steps 1, 2, 4 and 6 and LIRPF art. 19, 20, 56, 63 and 74 (boe.es consolidated text of Ley 35/2006, read 2026-09-26). Salary alone: 40,000 − 2,600 − 2,000 = 35,400, no reducción, cuota 3,872.50 estatal + 3,875.50 VC = 7,748.00. Stacked: activity 25,197.60 − 1,259.88 difícil justificación = 23,937.72, base 59,337.72, cuota 8,300.9782 + 8,664.14928 = 16,965.12748. The activity adds 9,217.13 at a marginal rate of 0.185 + 0.224, the advances cover 5,039.52, and the gap is 4,177.61, due with Renta 2025 by 30 June 2026. Uses the state mínimo for the regional scale; VC's own (6,105, Ley 13/1997 art. 2 bis) would lower both cuotas by 49.95 and leave the gap unchanged (#29).",
+    "oracleRef": "Arithmetic under SPEC-002 steps 1, 2, 4 and 6 and LIRPF art. 19, 20, 56, 63 and 74 (boe.es consolidated text of Ley 35/2006, read 2026-09-26). Salary alone: 40,000 − 2,600 − 2,000 = 35,400, no reducción, cuota 3,872.50 estatal + 3,825.55 VC = 7,698.05. Stacked: activity 25,197.60 − 1,259.88 difícil justificación = 23,937.72, base 59,337.72, cuota 8,300.9782 + 8,614.19928 = 16,915.17748. The activity adds 9,217.13 at a marginal rate of 0.185 + 0.224, the advances cover 5,039.52, and the gap is 4,177.61, due with Renta 2025 by 30 June 2026. The VC cuotas use VC's own mínimo of 6,105 (Ley 13/1997 art. 2 bis, #29); both bases are above it, so the state mínimo would raise both VC cuotas by 49.95 and leave the liability and the gap unchanged.",
     "oracleRunDate": "2026-09-26",
     "inputs": {
       "region": "VC",
