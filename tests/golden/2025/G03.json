@@ -25,5 +25,24 @@
       ],
       "totalAIngresar": "8480.00"
     }
+  },
+  "rentaTrueUp": {
+    "oracle": "theory",
+    "oracleRef": "SPEC-011 §1 G3 and Theory §7.2, ed. 2, Example B steps 1–10: cuota íntegra 9,548.00, Σ 130 8,480.00, result 1,068.00 a ingresar. With no employment income the whole cuota is the activity's, so liabilityOnActivity is the cuota íntegra and gap is the result. marginalRate is not in the theory; it is the tranche rates at a base of 40,400 (0.185 estatal + 0.175 VC). The theory applies the state mínimo of 5,550 to the regional scale too; the AEAT Manual práctico Renta 2025, cap. 14, gives VC residents a regional mínimo of 6,105 (Ley 13/1997 art. 2 bis), which would lower both figures by 49.95 (#29).",
+    "oracleRunDate": "2026-09-26",
+    "inputs": {
+      "region": "VC",
+      "employment": { "ingresos": "0.00", "seguridadSocial": "0.00" },
+      "activity": { "ingresos": "50000.00", "gastos": "7600.00" },
+      "modelo130Advances": "8480.00"
+    },
+    "expected": {
+      "liabilityOnActivity": "9548.00",
+      "marginalRate": "0.36",
+      "reduccionTrabajoLost": "0.00",
+      "gap": "1068.00",
+      "payableIn": "2026-06",
+      "warnings": ["MARGINAL_VS_EFFECTIVE"]
+    }
   }
 }

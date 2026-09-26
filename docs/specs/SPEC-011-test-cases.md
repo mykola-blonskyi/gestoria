@@ -20,16 +20,19 @@ All cases gate v1.0 (ADR-0013).
 | # | Scenario | Expected |
 |---|---|---|
 | G1 | Employee, 30,000 € gross, SS 1,950.00, VC, no children | cuota íntegra **4,851.00** |
-| G2 | Employee, 18,000 € gross, SS 1,170.00, VC | full reducción 7,302 applied; cuota íntegra **365.93** |
+| G2 | Employee, 18,000 € gross, SS 1,170.00, VC | reducción **3,840.50**, not the full 7,302: LIRPF art. 20 measures 16,830, before the 2,000 of otros gastos (#9). The cuota íntegra of 365.93 in Theory §5.4 rests on the full 7,302 and is to be re-taken from the simulator |
 | G3 | Autónomo, income 50,000, expenses 4,000, SS 3,600, VC | cuota íntegra **9,548.00**; Σ 130 = **8,480.00**; result **1,068.00 a ingresar** |
 | G4 | Difícil justificación | previo 42,400 → **2,000**; 10,000 → **500**; −500 → **0** |
 | G5 | 130 with loss-making Q3 | Q3 payable **0**, carry-over applied in Q4 |
 | G6 | Ahorro 4,500 → **855**; 7,000 → **1,350** | tranche boundary at 6,000 |
 | G7 | Minimum, two children (5, 2) | both parents individual → **9,500** each; single filer → **13,450** |
-| G8 | Salary 20,000 + autónomo 8,000 | reducción por trabajo = **0** (other income > 6,500) |
+| G8 | Salary 20,000 + autónomo 8,000 | reducción por trabajo = **0** (other income > 6,500); relief lost **1,194.15** (#9) |
 | G8b | Salary 20,000 + savings income 8,000 | reducción por trabajo = **0**. Same cap, different route; an employee reaches it through dividends (SPEC-002 step 1) |
 | G9 | Bank credit 1,060 from one invoice | base **1,000**, IVA **210**, retención **150** |
 | G10 | Obligation | 21,000 single payer → not required; 16,000 + 2,000 → required |
+| G11 | Pluriactividad: salary 40,000 (SS 2,600) + established activity 30,000 (RETA 4,802.40), VC | Σ 130 = **5,039.52**; the activity adds **9,217.13**; true-up gap **4,177.61**, payable by 30 June 2026 (#9) |
+
+G1, G3, G8 and G11 apply the state mínimo of 5,550 to the regional scale as well, because the configuration holds no regional mínimos (#29). The AEAT Manual práctico Renta 2025, cap. 14, gives VC residents a regional mínimo of 6,105 (Ley 13/1997 art. 2 bis), which lowers the regional cuota of any base above it by 49.95. G1's cuota íntegra and G3's cuota, liability and gap overstate the tax by that amount. In G08 and G11 both the salary-alone and the stacked base are above 6,105, so the same 49.95 sits in both cuotas and cancels out of the liability on the activity and the gap.
 
 Each golden lives in `tests/golden/2025/G0N.json`, run by `tests/GestorIA.Engine.Tests/Golden/G0N_*.cs`. The fixture holds the inputs as well as the expected values, and the runner builds the engine input from the fixture, so the file alone states the case. Expected values are compared as numbers, not as strings.
 

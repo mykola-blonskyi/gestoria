@@ -1,3 +1,5 @@
+using GestorIA.Domain.ValueObjects;
+
 namespace GestorIA.Engine;
 
 public static class ScaleCalculator
@@ -33,4 +35,8 @@ public static class ScaleCalculator
 
         return total;
     }
+
+    // The rate of the tranche the next euro above the base falls in, so a base on a boundary takes the upper tranche.
+    public static Rate MarginalRate(Scale scale, decimal baseLiquidable) =>
+        scale.Tranches.First(tranche => tranche.UpTo is not { } upTo || baseLiquidable < upTo.Amount).Rate;
 }

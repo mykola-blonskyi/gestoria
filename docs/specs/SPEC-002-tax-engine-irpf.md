@@ -34,10 +34,11 @@ public interface IIrpfAnnualCalculator { AnnualResult Run(AnnualInput input); }
 ingresos  = Σ nómina.TotalDevengado − Σ nómina.Exentas (+ en especie)      // if Certificado exists → use it, warn on mismatch
 ss        = Σ nómina.SsTrabajador (+ union fees ≤ config.trabajo.unionFeeCap, + colegio profesional if mandatory)
 ret       = Σ nómina.IrpfRetenido
-rn        = ingresos − ss − config.trabajo.otrosGastos (2000)   [+ mobility/disability extras per config]
-rnr       = max(0, rn − ReduccionTrabajo(rn, otrasRentas))
+rnPrevio  = ingresos − ss                                        // art. 19.2 a–e only
+rn        = rnPrevio − min(config.trabajo.otrosGastos (2000), max(0, rnPrevio))   [+ mobility/disability extras per config]
+rnr       = max(0, rn − ReduccionTrabajo(rnPrevio, otrasRentas))
 ```
-`ReduccionTrabajo` piecewise per `config.trabajo.reduccion` (thresholds t1/t2/t3 = 14,852 / 17,673.52 / 19,747.50; coefficients k1/k2 = 1.75 / 1.14; fixed 7,302 for 2025). **Guard:** if `otrasRentas > config.trabajo.reduccion.otherIncomeCap` (6,500) → 0 (golden #8). `otrasRentas` = all non-employment income (activity net, savings gross, rental net, imputed).
+`ReduccionTrabajo` piecewise per `config.trabajo.reduccion` (thresholds t1/t2/t3 = 14,852 / 17,673.52 / 19,747.50; coefficients k1/k2 = 1.75 / 1.14; fixed 7,302 for 2025). It is measured on `rnPrevio`, **before** the 2,000 of otros gastos: LIRPF art. 20 as in force for 2025 defines the rendimiento neto for this purpose as the íntegro less the expenses of art. 19.2 a) to e), and the AEAT Manual práctico Renta 2025 (cap. 3, fase 3) repeats it. **Guard:** if `otrasRentas > config.trabajo.reduccion.otherIncomeCap` (6,500) → 0 (golden #8). `otrasRentas` = the algebraic sum of all non-employment income, each at its net amount (after its expenses, before its own reductions): activity net, savings net, rental net, imputed income and gains, per the AEAT Manual práctico Renta 2025, cap. 3, fase 3. The activity net is therefore tested against the cap before any LIRPF art. 32 reduction, including the art. 32.3 reduction for a new activity (#30).
 
 ### Step 2 — Activity (`ActivityIncomeCalculator`)
 ```

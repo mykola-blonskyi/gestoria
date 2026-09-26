@@ -1,0 +1,24 @@
+{
+  "golden": "G08",
+  "scenario": "Salary 20,000 (employee SS 1,300) plus autónomo income of 8,000 with no expenses, VC. The activity's rendimiento neto of 7,600 is above the 6,500 cap on income other than employment, so the reducción por trabajo the salary alone would get is lost entirely.",
+  "config": "2025.example.json",
+  "rentaTrueUp": {
+    "oracle": "theory",
+    "oracleRef": "Theory §15.6, ed. 2, case 8 and SPEC-011 §1 G8: reducción por trabajo = 0 once other income passes 6,500 (SS 1,300 is the theory's, implied by its rendimiento neto of 16,700). The amount lost is re-derived here from LIRPF art. 20 as in force for 2025 (boe.es consolidated text of Ley 35/2006, read 2026-09-26): the reducción is measured on íntegro less the art. 19.2.a–e expenses, 18,700, before the 2,000 of art. 19.2.f, so the third band gives 2,364.34 − 1.14 × (18,700 − 17,673.52) = 1,194.15. The theory measures it after the 2,000 and gets 4,068. modelo130Advances is 0.20 × 8,000 with no minoración. The other figures are arithmetic under SPEC-002 steps 1, 2, 4 and 6 and LIRPF art. 56, 63 and 74.",
+    "oracleRunDate": "2026-09-26",
+    "inputs": {
+      "region": "VC",
+      "employment": { "ingresos": "20000.00", "seguridadSocial": "1300.00" },
+      "activity": { "ingresos": "8000.00", "gastos": "0.00" },
+      "modelo130Advances": "1600.00"
+    },
+    "expected": {
+      "liabilityOnActivity": "2302.60",
+      "marginalRate": "0.30",
+      "reduccionTrabajoLost": "1194.15",
+      "gap": "702.60",
+      "payableIn": "2026-06",
+      "warnings": ["REDUCCION_TRABAJO_LOST", "MARGINAL_VS_EFFECTIVE"]
+    }
+  }
+}
