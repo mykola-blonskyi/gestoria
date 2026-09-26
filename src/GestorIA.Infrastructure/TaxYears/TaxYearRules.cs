@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using System.Text.Json.Nodes;
 using static System.FormattableString;
 
-namespace GestorIA.Engine.Tests;
+namespace GestorIA.Infrastructure.TaxYears;
 
 internal static partial class TaxYearRules
 {

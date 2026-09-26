@@ -4,7 +4,12 @@
     <ProjectReference Include="..\GestorIA.Domain\GestorIA.Domain.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\config\tax-years\schema.json" LogicalName="GestorIA.Infrastructure.TaxYears.schema.json" />
+  </ItemGroup>
 
 </Project>

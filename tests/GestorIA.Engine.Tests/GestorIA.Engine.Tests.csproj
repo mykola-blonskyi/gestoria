@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\GestorIA.Engine\GestorIA.Engine.csproj" />
+    <ProjectReference Include="..\..\src\GestorIA.Infrastructure\GestorIA.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,7 +16,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="JsonSchema.Net" />
     <PackageReference Include="FsCheck.Xunit" />
   </ItemGroup>
 
