@@ -1,3 +1,5 @@
+using GestorIA.Domain.ValueObjects;
+
 namespace GestorIA.Engine;
 
 public sealed class TramoTable
@@ -11,7 +13,7 @@ public sealed class TramoTable
             throw new ArgumentException("A tramo table needs at least one tramo.", nameof(tramos));
         }
 
-        if (tramos[0].NetFrom != 0m)
+        if (tramos[0].NetFrom != Money.Zero)
         {
             throw new ArgumentException($"The first tramo must start at 0, got {tramos[0].NetFrom}.", nameof(tramos));
         }
@@ -21,7 +23,7 @@ public sealed class TramoTable
             var tramo = tramos[i];
             var isLast = i == tramos.Count - 1;
 
-            if (tramo.CuotaMin < 0m)
+            if (tramo.CuotaMin < Money.Zero)
             {
                 throw new ArgumentException($"Tramo {i} has cuotaMin {tramo.CuotaMin}, below zero.", nameof(tramos));
             }
@@ -57,5 +59,5 @@ public sealed class TramoTable
 
     // BOE tables read "> netFrom y <= netUpTo": the upper bound is inclusive.
     public Tramo For(decimal monthlyNet) =>
-        Tramos.First(t => t.NetUpTo is null || monthlyNet <= t.NetUpTo);
+        Tramos.First(t => t.NetUpTo is not { } upTo || monthlyNet <= upTo.Amount);
 }

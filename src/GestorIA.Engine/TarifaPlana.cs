@@ -1,3 +1,5 @@
+using GestorIA.Domain.ValueObjects;
+
 namespace GestorIA.Engine;
 
-public sealed record TarifaPlana(decimal Amount, int Months);
+public sealed record TarifaPlana(Money Amount, int Months);

@@ -1,6 +1,7 @@
 using FsCheck;
 using FsCheck.Fluent;
 using FsCheck.Xunit;
+using GestorIA.Domain.ValueObjects;
 
 namespace GestorIA.Engine.Tests;
 
@@ -24,10 +25,10 @@ public class ScaleCalculatorProperties
 
         for (var i = 0; i < upTos.Count; i++)
         {
-            tranches.Add(new Tranche(upTos[i], rates[i] / 1000m));
+            tranches.Add(new Tranche(new Money(upTos[i]), new Rate(rates[i] / 1000m)));
         }
 
-        tranches.Add(new Tranche(null, rates[upTos.Count] / 1000m));
+        tranches.Add(new Tranche(null, new Rate(rates[upTos.Count] / 1000m)));
 
         return new Scale(tranches);
     }
@@ -58,9 +59,9 @@ public class ScaleCalculatorProperties
         {
             for (var i = 0; i < scale.Tranches.Count - 1; i++)
             {
-                var boundary = scale.Tranches[i].UpTo!.Value;
-                var rateBelow = scale.Tranches[i].Rate;
-                var rateAbove = scale.Tranches[i + 1].Rate;
+                var boundary = scale.Tranches[i].UpTo!.Value.Amount;
+                var rateBelow = scale.Tranches[i].Rate.Value;
+                var rateAbove = scale.Tranches[i + 1].Rate.Value;
 
                 var at = ScaleCalculator.Cuota(scale, boundary);
                 var justBelow = ScaleCalculator.Cuota(scale, boundary - epsilon);

@@ -24,11 +24,11 @@ public static class ScaleCalculator
 
             if (tranche.UpTo is { } upTo)
             {
-                portion = Math.Min(portion, upTo - lower);
-                lower = upTo;
+                portion = Math.Min(portion, upTo.Amount - lower);
+                lower = upTo.Amount;
             }
 
-            total += tranche.Rate * portion;
+            total += tranche.Rate.Value * portion;
         }
 
         return total;
