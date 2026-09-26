@@ -30,7 +30,7 @@ If `CertificadoRetenciones` disagrees with Σ nóminas, use the certificate and 
 
 ## Rule 6 — Employment relief is lost entirely when other income > 6,500 €
 
-`ReduccionTrabajo` is zero if non-employment income exceeds the cap, however small the salary. For an employee the cap is reached through savings gross, rental net or imputed income, not only through activity income. — SPEC-002 step 1, golden #8, Theory §5.2.
+`ReduccionTrabajo` is zero if non-employment income exceeds the cap, however small the salary. Each other income counts at its net amount, after its expenses and before its own reductions (so activity income before any art. 32.3 reduction). For an employee the cap is reached through savings net, rental net or imputed income, not only through activity income. — SPEC-002 step 1, golden #8, Theory §5.2.
 
 ## Rule 7 — Difícil justificación is 5 % capped at 2,000 € and never negative
 
