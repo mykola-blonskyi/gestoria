@@ -1,22 +1,16 @@
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 using GestorIA.Domain.ValueObjects;
+using static GestorIA.Engine.Tests.Golden.GoldenFixture;
 
 namespace GestorIA.Engine.Tests.Golden;
 
 // Runs the "modelo130" part of a tests/golden/2025/G0N.json fixture: quarters in order, each one's carry fed to the next.
 internal static class Modelo130Golden
 {
-    private static readonly string[] OracleTiers = ["gestor-prepared", "aeat-simulator", "published-example", "theory"];
-
     internal static void Passes(string golden)
     {
-        var fixture = JsonNode.Parse(File.ReadAllText(Path.Combine(Root(), $"{golden}.json")))!;
-        var part = fixture["modelo130"]!;
-
-        Assert.Equal(golden, fixture["golden"]!.GetValue<string>());
-        Assert.Equal(TaxYearConfigFiles.Example2025, fixture["config"]!.GetValue<string>());
+        var part = Load(golden)["modelo130"]!;
         AssertProvenance(part);
 
         var inputs = part["inputs"]!;
@@ -82,20 +76,6 @@ internal static class Modelo130Golden
         Assert.True(mismatches.Count == 0, $"{golden} modelo130:\n  " + string.Join("\n  ", mismatches));
     }
 
-    // SPEC-011 §1: a golden without its oracle, the reference and the date it was run is not a gate.
-    private static void AssertProvenance(JsonNode part)
-    {
-        Assert.Contains(part["oracle"]!.GetValue<string>(), OracleTiers);
-        Assert.False(string.IsNullOrWhiteSpace(part["oracleRef"]!.GetValue<string>()));
-        Assert.True(DateOnly.TryParseExact(part["oracleRunDate"]!.GetValue<string>(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _));
-    }
-
     private static decimal Output(Modelo130Result result, string stepId) =>
         result.Trace.Steps.Single(s => s.Id == stepId).Output;
-
-    private static Money MoneyOf(JsonNode? amount) =>
-        new(decimal.Parse(amount!.GetValue<string>(), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture));
-
-    private static string Root([CallerFilePath] string here = "") =>
-        Path.GetFullPath(Path.Combine(Path.GetDirectoryName(here)!, "..", "..", "golden", "2025"));
 }
