@@ -1,0 +1,2 @@
+T:System.Double;Money is decimal (ADR-0004)
+T:System.Single;Money is decimal (ADR-0004)
