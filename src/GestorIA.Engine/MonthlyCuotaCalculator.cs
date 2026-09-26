@@ -46,7 +46,7 @@ public static class MonthlyCuotaCalculator
             tramo.CuotaMin.Amount,
             "config seguridadSocial.tramos; cuotaMin is the cuota at the tramo's base mínima"));
 
-        var tarifaPlanaInForce = monthsSinceAlta <= tarifaPlana.Months;
+        var tarifaPlanaInForce = input.Month.MonthsSince(tarifaPlana.LastMonth(input.Alta)) <= 0;
         var fullMonth = tarifaPlanaInForce ? tarifaPlana.Amount.Amount : tramo.CuotaMin.Amount;
 
         steps.Add(new TraceStep(

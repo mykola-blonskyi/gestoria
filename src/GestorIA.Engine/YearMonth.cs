@@ -20,5 +20,11 @@ public readonly record struct YearMonth
 
     public int MonthsSince(YearMonth other) => (Year * 12 + Month) - (other.Year * 12 + other.Month);
 
+    public YearMonth AddMonths(int months)
+    {
+        var index = Year * 12 + Month - 1 + months;
+        return new YearMonth(index / 12, index % 12 + 1);
+    }
+
     public override string ToString() => $"{Year:D4}-{Month:D2}";
 }

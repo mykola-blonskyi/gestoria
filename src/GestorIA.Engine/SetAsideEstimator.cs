@@ -202,9 +202,8 @@ public static class SetAsideEstimator
             annualTgss.Amount,
             "MonthlyCuotaCalculator for each month of alta; the same tramo every month, tarifa plana while it lasts"));
 
-        var altaFirstDay = new DateOnly(alta.Year, alta.Month, 1);
-        var lastTarifaPlanaMonth = YearMonth.Of(altaFirstDay.AddMonths(tarifaPlana.Months));
-        var lapse = YearMonth.Of(altaFirstDay.AddMonths(tarifaPlana.Months + 1));
+        var lastTarifaPlanaMonth = tarifaPlana.LastMonth(alta);
+        var lapse = lastTarifaPlanaMonth.AddMonths(1);
         var cuotaAfterLapse = MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, expectedAnnualNet, lapse), tramos, tarifaPlana).FullMonthCuota;
         var lapseWhen = lapse.MonthsSince(new YearMonth(taxYear, 1)) < 0 ? "before this tax year"
             : lapse.Year > taxYear ? Invariant($"after this tax year, at the {taxYear} tramos and projected net")
