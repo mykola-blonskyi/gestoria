@@ -1,0 +1,32 @@
+{
+  "asOf": "Q2",
+  "profile": {
+    "region": "VC",
+    "employment": {
+      "ingresos": "0.00",
+      "seguridadSocial": "0.00"
+    },
+    "activity": {
+      "alta": "2025-01-15",
+      "previousYear": "noActivity",
+      "newActivity": {
+        "period": "first",
+        "ingresosFromFormerEmployer": "0.00"
+      }
+    }
+  },
+  "activity": {
+    "retenciones": "foreignPayersOnly",
+    "actuals": [
+      {
+        "quarter": "Q1",
+        "ingresosYtd": "6000.00",
+        "gastosYtd": "345.33"
+      }
+    ],
+    "projection": {
+      "ingresos": "27000.00",
+      "gastos": "900.00"
+    }
+  }
+}

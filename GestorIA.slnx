@@ -1,11 +1,13 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/GestorIA.Api/GestorIA.Api.csproj" />
+    <Project Path="src/GestorIA.Cli/GestorIA.Cli.csproj" />
     <Project Path="src/GestorIA.Domain/GestorIA.Domain.csproj" />
     <Project Path="src/GestorIA.Infrastructure/GestorIA.Infrastructure.csproj" />
     <Project Path="src/GestorIA.Engine/GestorIA.Engine.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/GestorIA.Cli.Tests/GestorIA.Cli.Tests.csproj" />
     <Project Path="tests/GestorIA.Domain.Tests/GestorIA.Domain.Tests.csproj" />
     <Project Path="tests/GestorIA.Engine.Tests/GestorIA.Engine.Tests.csproj" />
   </Folder>

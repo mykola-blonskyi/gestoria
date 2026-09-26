@@ -23,3 +23,5 @@ src/
 ```
 
 Commands: `dotnet build`, `dotnet test`, `dotnet run --project src/GestorIA.Api`.
+
+`src/GestorIA.Cli/` prints a set-aside estimate from a file (#11). `src/GestorIA.Cli/README.md` says how to run it.
