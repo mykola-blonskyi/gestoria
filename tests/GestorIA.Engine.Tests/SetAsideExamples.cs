@@ -131,8 +131,34 @@ public class SetAsideExamples
         Assert.Equal("6000.00 real + 27000.00 projected = 33000.00", Step("set-aside.annual-ingresos").Formula);
     }
 
+    // An established activity with Q1–Q3 actuals: net to date 16,500 after nine cuotas, 12,600 projected, 29,100 before any add-back.
+    // Nine cuotas at General 7 (425.85) give 32,932.65, 2,744.39 a month, General 7; at General 8 (451.50) they give 33,163.50,
+    // 2,763.63 a month, General 8. Both are consistent, so the conservative estimate takes General 8.
+    [Fact]
+    public void TheCuotasAddedBackSettleOnTheHighestTramoTheyAreConsistentWith()
+    {
+        var input = G12Input(
+            ingresos: new Money(13000.00m),
+            gastos: new Money(400.00m),
+            actuals:
+            [
+                new(Quarter.Q1, new Money(7000.00m), new Money(1500.00m)),
+                new(Quarter.Q2, new Money(14000.00m), new Money(3000.00m)),
+                new(Quarter.Q3, new Money(21000.00m), new Money(4500.00m)),
+            ],
+            alta: new DateOnly(2020, 3, 1),
+            asOf: Quarter.Q3);
+
+        var result = SetAsideEstimator.Estimate(input);
+
+        Assert.Equal(4063.50m, result.Trace.Steps.Single(s => s.Id == "set-aside.cuotas-ss-to-date").Output);
+        Assert.Equal(33163.50m, result.Trace.Steps.Single(s => s.Id == "set-aside.rendimiento-computable").Output);
+        Assert.Equal(new Money(451.50m), result.MonthlyCuotaSs);
+    }
+
     // #2: where the estimator picks between two defensible figures it reserves the higher, and the step that picks says so.
     [Theory]
+    [InlineData("set-aside.cuotas-ss-to-date", "conservative")]
     [InlineData("set-aside.rendimiento-computable", "over-reserves")]
     [InlineData("set-aside.cuota-ss-month", "bias conservative")]
     [InlineData("set-aside.tarifa-plana-lapse", "over-reserves")]

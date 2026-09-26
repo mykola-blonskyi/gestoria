@@ -144,10 +144,27 @@ public static class SetAsideEstimator
         var tramos = config.SeguridadSocial.Tramos;
         var tarifaPlana = config.SeguridadSocial.TarifaPlana;
 
-        var withoutCuotas = (netToDate + projectedNet).Amount * 12m / n;
-        var cuotasToDate = actualMonths
-            .Select(month => (Month: month, Cuota: MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, withoutCuotas, month), tramos, tarifaPlana).Cuota))
+        List<(YearMonth Month, decimal Cuota)> CuotasToDateAt(decimal annualNet) => actualMonths
+            .Select(month => (month, MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, annualNet, month), tramos, tarifaPlana).Cuota))
             .ToList();
+
+        // The cuotas added back choose the tramo and the tramo prices the cuotas, so more than one tramo can be consistent. Pricing
+        // starts one euro a month into the top tramo and comes down until the net stops moving: the highest consistent tramo.
+        // With cuotas that never fall as the tramo rises, each pass either settles or drops a tramo, so the passes are bounded.
+        var pricedAt = (tramos.Tramos.Last().NetFrom.Amount + 1m) * 12m;
+        var cuotasToDate = CuotasToDateAt(pricedAt);
+        for (var pass = 0; pass <= tramos.Tramos.Count; pass++)
+        {
+            var net = (netToDate.Amount + cuotasToDate.Sum(c => c.Cuota) + projectedNet.Amount) * 12m / n;
+            if (net == pricedAt)
+            {
+                break;
+            }
+
+            pricedAt = net;
+            cuotasToDate = CuotasToDateAt(pricedAt);
+        }
+
         var addedBack = cuotasToDate.Sum(c => c.Cuota);
         steps.Add(new TraceStep(
             "set-aside.cuotas-ss-to-date",
@@ -156,11 +173,12 @@ public static class SetAsideEstimator
             [new("netoHastaHoy", Show(netToDate)), new("netoProyectado", Show(projectedNet)), new("meses", Invariant($"{n}"))],
             cuotasToDate.Count == 0
                 ? "no actuals → 0"
-                : Invariant($"at ({Show(netToDate)} + {Show(projectedNet)}) × 12 / {n} = {withoutCuotas}: {string.Join(" + ", cuotasToDate.Select(c => Invariant($"{c.Month} {c.Cuota}")))} = {addedBack}"),
+                : Invariant($"priced at the net they lead to, {pricedAt}: {string.Join(" + ", cuotasToDate.Select(c => Invariant($"{c.Month} {c.Cuota}")))} = {addedBack}"),
             addedBack,
             "LGSS art. 308.1.c (boe.es consolidated RDL 8/2015, read 2026-09-26): the rendimiento computable is the IRPF net increased by the titular's own cuotas, "
-                + "and the gastos to date already deduct them, so they are added back. Estimated with MonthlyCuotaCalculator at the tramo of the net before them, "
-                + "which is exact while tarifa plana applies"));
+                + "and the gastos to date already deduct them, so they are added back, estimated with MonthlyCuotaCalculator. The cuotas and the tramo depend on each other "
+                + "and more than one tramo can be consistent; pricing comes down from the top tramo, so the add-back settles on the highest consistent one: conservative (#2). "
+                + "Exact while tarifa plana applies, whatever the tramo"));
 
         var expectedAnnualNet = (netToDate.Amount + addedBack + projectedNet.Amount) * 12m / n;
         steps.Add(new TraceStep(
