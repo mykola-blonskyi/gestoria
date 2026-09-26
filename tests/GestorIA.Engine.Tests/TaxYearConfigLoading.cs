@@ -146,7 +146,19 @@ public sealed class TaxYearConfigLoading : IDisposable
         var root = Example2025Node();
         root["seguridadSocial"]!["tarifaPlana"]!["months"] = 12.0m;
 
-        Assert.Throws<InvalidTaxYearConfigException>(() => Parse(root));
+        var error = Assert.Throws<InvalidTaxYearConfigException>(() => Parse(root));
+
+        Assert.Contains(error.Failures, f => f.Contains("$.seguridadSocial.tarifaPlana.months", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void AnAmountBeyondDecimalRangeIsRefusedAtLoad()
+    {
+        var text = Encoding.UTF8.GetString(Example2025Bytes()).Replace("\"amount\": 80,", "\"amount\": 1e40,", StringComparison.Ordinal);
+
+        var error = Assert.Throws<InvalidTaxYearConfigException>(() => TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(text), TaxYearConfigFiles.Example2025));
+
+        Assert.Contains(error.Failures, f => f.Contains("$.seguridadSocial.tarifaPlana.amount", StringComparison.Ordinal));
     }
 
     [Fact]

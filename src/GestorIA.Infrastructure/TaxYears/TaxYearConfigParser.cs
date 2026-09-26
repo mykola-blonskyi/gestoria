@@ -35,11 +35,10 @@ public static class TaxYearConfigParser
 
             return Map(root!, Convert.ToHexStringLower(SHA256.HashData(source)));
         }
-        // "when" filters the catch: any other exception type passes through untouched.
-        catch (Exception e) when (e is ArgumentException or InvalidOperationException)
+        catch (ArgumentException e)
         {
-            // Past the schema a value can still be unreadable (12.0 as a month count, 1e40 as an amount) or break an
-            // invariant that Scale and TramoTable re-check when built. Either way the file is invalid, not a crash.
+            // Past the schema a value can still be unreadable (JsonValues.Read) or break an invariant that Scale and
+            // TramoTable re-check when built. Either way the file is at fault. Any other exception is a defect in this code.
             throw new InvalidTaxYearConfigException(fileName, [e.Message]);
         }
     }
@@ -64,7 +63,7 @@ public static class TaxYearConfigParser
         var seguridadSocial = root["seguridadSocial"]!;
         var tarifaPlana = seguridadSocial["tarifaPlana"]!;
         var calendar = root["calendar"]!;
-        var taxYear = root["taxYear"]!.GetValue<int>();
+        var taxYear = root["taxYear"]!.Read<int>();
 
         return new TaxYearConfig(
             taxYear,
@@ -79,19 +78,19 @@ public static class TaxYearConfigParser
                         MoneyOf(reduccion["t1"]),
                         MoneyOf(reduccion["t2"]),
                         MoneyOf(reduccion["t3"]),
-                        reduccion["k1"]!.GetValue<decimal>(),
-                        reduccion["k2"]!.GetValue<decimal>(),
+                        reduccion["k1"]!.Read<decimal>(),
+                        reduccion["k2"]!.Read<decimal>(),
                         MoneyOf(reduccion["otherIncomeCap"]))),
                 new ActividadConfig(new DificilJustificacionConfig(RateOf(dificilJustificacion["pct"]), MoneyOf(dificilJustificacion["max"])))),
             RegionsOf(root["regions"]!.AsObject()),
             new Modelo130Config(
                 RateOf(modelo130["rate"]),
-                modelo130["applyDj"]!.GetValue<bool>(),
+                modelo130["applyDj"]!.Read<bool>(),
                 [.. modelo130["minoracion"]!.AsArray().Select(band =>
                     new MinoracionBand(MoneyOf(band!["prevYearNetUpTo"]), MoneyOf(band["amountPerQuarter"])))]),
             new SeguridadSocialConfig(
                 new TramoTable([.. seguridadSocial["tramos"]!.AsArray().Select(TramoOf)]),
-                new TarifaPlana(MoneyOf(tarifaPlana["amount"]), tarifaPlana["months"]!.GetValue<int>())),
+                new TarifaPlana(MoneyOf(tarifaPlana["amount"]), tarifaPlana["months"]!.Read<int>())),
             new TaxCalendar(
                 [.. calendar["modelo130"]!.AsArray().Select(window => WindowOf(window, taxYear))],
                 WindowOf(calendar["renta"], taxYear),
@@ -108,7 +107,7 @@ public static class TaxYearConfigParser
         {
             if (region!["_todo"] is { } todo)
             {
-                declaredIncomplete[code] = todo.GetValue<string>();
+                declaredIncomplete[code] = todo.Read<string>();
             }
             else if (region["minimosOverride"] is not null)
             {
@@ -117,7 +116,7 @@ public static class TaxYearConfigParser
             }
             else
             {
-                complete[code] = new RegionConfig(region["name"]!.GetValue<string>(), ScaleOf(region["escalaAutonomica"]));
+                complete[code] = new RegionConfig(region["name"]!.Read<string>(), ScaleOf(region["escalaAutonomica"]));
             }
         }
 
@@ -131,8 +130,8 @@ public static class TaxYearConfigParser
         foreach (var (pointer, entry) in provenance)
         {
             entries[pointer] = new Provenance(
-                KindOf(entry!["kind"]!.GetValue<string>()),
-                entry["ref"]!.GetValue<string>(),
+                KindOf(entry!["kind"]!.Read<string>()),
+                entry["ref"]!.Read<string>(),
                 VerifiedOf(pointer, entry["verified"]));
         }
 
@@ -157,7 +156,7 @@ public static class TaxYearConfigParser
             return null;
         }
 
-        var text = verified.GetValue<string>();
+        var text = verified.Read<string>();
 
         return DateOnly.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
             ? date
@@ -168,7 +167,7 @@ public static class TaxYearConfigParser
         new([.. scale!.AsArray().Select(tranche => new Tranche(OptionalMoneyOf(tranche!["upTo"]), RateOf(tranche["rate"])))]);
 
     private static Tramo TramoOf(JsonNode? tramo) =>
-        new(tramo!["name"]!.GetValue<string>(), MoneyOf(tramo["netFrom"]), OptionalMoneyOf(tramo["netUpTo"]), MoneyOf(tramo["cuotaMin"]));
+        new(tramo!["name"]!.Read<string>(), MoneyOf(tramo["netFrom"]), OptionalMoneyOf(tramo["netUpTo"]), MoneyOf(tramo["cuotaMin"]));
 
     private static DueWindow WindowOf(JsonNode? window, int taxYear) =>
         new(DayIn(window![0], taxYear), DayIn(window[1], taxYear));
@@ -176,7 +175,7 @@ public static class TaxYearConfigParser
     // The schema's calendarDay pattern admits 02-30, and 02-29 exists only in some years.
     private static CalendarDay DayIn(JsonNode? token, int taxYear)
     {
-        var text = token!.GetValue<string>();
+        var text = token!.Read<string>();
         var day = ParseDay(text);
         var year = taxYear + day.YearOffset;
 
@@ -185,9 +184,9 @@ public static class TaxYearConfigParser
             : throw new ArgumentException(Invariant($"Calendar day {text} does not exist in {year}."));
     }
 
-    private static Money MoneyOf(JsonNode? amount) => new(amount!.GetValue<decimal>());
+    private static Money MoneyOf(JsonNode? amount) => new(amount!.Read<decimal>());
 
     private static Money? OptionalMoneyOf(JsonNode? amount) => amount is null ? null : MoneyOf(amount);
 
-    private static Rate RateOf(JsonNode? rate) => new(rate!.GetValue<decimal>());
+    private static Rate RateOf(JsonNode? rate) => new(rate!.Read<decimal>());
 }

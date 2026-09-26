@@ -20,8 +20,8 @@ internal static partial class TaxYearRules
                 var tranche = scale[i] ?? throw new InvalidOperationException(
                     Invariant($"{pointer}/{i} is JSON null; schema.json should have rejected the file."));
                 var upToNode = tranche["upTo"];
-                decimal? upTo = upToNode?.GetValue<decimal>();
-                var rate = tranche["rate"]!.GetValue<decimal>();
+                decimal? upTo = upToNode?.Read<decimal>();
+                var rate = tranche["rate"]!.Read<decimal>();
 
                 if (upTo is null)
                 {
@@ -53,8 +53,8 @@ internal static partial class TaxYearRules
 
         foreach (var (pointer, window) in Windows(root["calendar"]!))
         {
-            var from = Ordinal(window[0]!.GetValue<string>());
-            var to = Ordinal(window[1]!.GetValue<string>());
+            var from = Ordinal(window[0]!.Read<string>());
+            var to = Ordinal(window[1]!.Read<string>());
 
             if (from > to)
             {
@@ -87,8 +87,8 @@ internal static partial class TaxYearRules
             var tramo = tramos[i] ?? throw new InvalidOperationException(
                 Invariant($"/seguridadSocial/tramos/{i} is JSON null; schema.json should have rejected the file."));
 
-            var baseMin = tramo["baseMin"]!.GetValue<decimal>();
-            var baseMax = tramo["baseMax"]!.GetValue<decimal>();
+            var baseMin = tramo["baseMin"]!.Read<decimal>();
+            var baseMax = tramo["baseMax"]!.Read<decimal>();
 
             if (baseMin > baseMax)
             {
@@ -98,15 +98,15 @@ internal static partial class TaxYearRules
             if (i == 0) { continue; }
 
             var previousUpTo = tramos[i - 1]!["netUpTo"];
-            var netFrom = tramo["netFrom"]!.GetValue<decimal>();
+            var netFrom = tramo["netFrom"]!.Read<decimal>();
 
             if (previousUpTo is null)
             {
                 yield return Invariant($"/seguridadSocial/tramos/{i - 1} is open-ended but is followed by another band");
             }
-            else if (previousUpTo.GetValue<decimal>() != netFrom)
+            else if (previousUpTo.Read<decimal>() != netFrom)
             {
-                var previous = previousUpTo.GetValue<decimal>();
+                var previous = previousUpTo.Read<decimal>();
 
                 yield return Invariant(
                     $"/seguridadSocial/tramos/{i}/netFrom is {netFrom}, leaving a gap after netUpTo {previous} in band {i - 1}; contribution bands must be contiguous");
@@ -117,9 +117,9 @@ internal static partial class TaxYearRules
 
         foreach (var (index, deduccion) in root["deducciones"]!.AsArray().Index())
         {
-            if (deduccion?["casilla"]?.GetValue<string>() is not { } casilla) { continue; }
+            if (deduccion?["casilla"]?.Read<string>() is not { } casilla) { continue; }
 
-            var estatal = deduccion["scope"]?.GetValue<string>() == "estatal";
+            var estatal = deduccion["scope"]?.Read<string>() == "estatal";
 
             if (estatal && !casillas.ContainsKey(casilla))
             {
@@ -133,7 +133,7 @@ internal static partial class TaxYearRules
         }
 
         var stem = fileName.Split('.')[0];
-        var taxYear = root["taxYear"]!.GetValue<int>();
+        var taxYear = root["taxYear"]!.Read<int>();
         if (stem != taxYear.ToString())
         {
             yield return $"/taxYear is {taxYear} but the file is named {fileName}";

@@ -12,7 +12,7 @@ public enum ProvenanceKind
     Theory,
 }
 
-// Verified is null for Theory, which was never checked against anything; schema.json requires it for every other kind.
+// schema.json requires Verified for every kind except Theory, so only a Theory entry can leave it null.
 public sealed record Provenance(ProvenanceKind Kind, string Ref, DateOnly? Verified);
 
 public sealed class ProvenanceTable
