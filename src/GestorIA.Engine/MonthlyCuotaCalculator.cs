@@ -4,7 +4,8 @@ namespace GestorIA.Engine;
 
 public sealed record MonthlyCuotaInput(DateOnly Alta, decimal ExpectedAnnualNet, YearMonth Month);
 
-public sealed record MonthlyCuotaResult(decimal Cuota, CalculationTrace Trace, IReadOnlyList<Warning> Warnings);
+// FullMonthCuota is the month's cuota before the month of alta is prorated: what TGSS debits for a whole month.
+public sealed record MonthlyCuotaResult(decimal Cuota, decimal FullMonthCuota, CalculationTrace Trace, IReadOnlyList<Warning> Warnings);
 
 public static class MonthlyCuotaCalculator
 {
@@ -81,7 +82,7 @@ public static class MonthlyCuotaCalculator
             new Warning(WarningCodes.SsRegularizacionAhead, WarningSeverity.Warning, "TGSS trues the cuota up annually against real net income; this monthly figure is provisional."),
         };
 
-        return new MonthlyCuotaResult(cuota, new CalculationTrace(steps), warnings);
+        return new MonthlyCuotaResult(cuota, fullMonth, new CalculationTrace(steps), warnings);
     }
 
     private static decimal Round2(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);

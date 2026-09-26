@@ -107,16 +107,17 @@ public static class SetAsideEstimator
             .ToList();
 
         var quarterCuotas = cuotas.Where(c => (c.Month.Month + 2) / 3 == (int)input.AsOf).ToList();
-        var chosen = quarterCuotas.MaxBy(c => c.Result.Cuota);
+        var chosen = quarterCuotas.MaxBy(c => c.Result.FullMonthCuota);
         steps.AddRange(chosen.Result.Trace.Steps);
         steps.Add(new TraceStep(
             "set-aside.cuota-ss-month",
             TraceSection.SeguridadSocial,
             "Cuota SS mensual a reservar este trimestre",
             [new("quarter", input.AsOf.ToString())],
-            Invariant($"max({string.Join(", ", quarterCuotas.Select(c => Invariant($"{c.Month} {c.Result.Cuota}")))}) = {chosen.Result.Cuota} ({chosen.Month})"),
-            chosen.Result.Cuota,
-            "#2, bias conservative: the highest month of the quarter, so a prorated month of alta never understates the monthly outflow"));
+            Invariant($"max({string.Join(", ", quarterCuotas.Select(c => Invariant($"{c.Month} {c.Result.FullMonthCuota}")))}) = {chosen.Result.FullMonthCuota} ({chosen.Month})"),
+            chosen.Result.FullMonthCuota,
+            "#2, bias conservative: the whole-month cuota, before the one-off proration of the month of alta, in the quarter's highest month. "
+                + "So an alta late in the quarter shows what TGSS debits every month from the next one, not the prorated first charge"));
 
         // Sum adds up what the lambda selects from every element, like reduce((total, c) => total + c.Result.Cuota, 0).
         var annualTgss = new Money(cuotas.Sum(c => c.Result.Cuota));
@@ -133,10 +134,11 @@ public static class SetAsideEstimator
         var quarters = new List<Modelo130Result>();
 
         // Enum.GetValues<Quarter>() lists every value of the enum in numeric order, Q1 to Q4.
-        foreach (var quarter in Enum.GetValues<Quarter>())
+        foreach (var quarter in Enum.GetValues<Quarter>().Where(q => (int)q * 3 >= activeMonths[0].Month))
         {
-            var k = activeMonths.Count(month => month.Month <= (int)quarter * 3);
-            var cuotasToDate = new Money(cuotas.Take(k).Sum(c => c.Result.Cuota));
+            var quarterEnd = (int)quarter * 3;
+            var k = activeMonths.Count(month => month.Month <= quarterEnd);
+            var cuotasToDate = new Money(cuotas.Where(c => c.Month.Month <= quarterEnd).Sum(c => c.Result.Cuota));
             var ingresosYtd = new Money(projection.Ingresos.Amount * k / n).Round2();
             var gastosYtd = (new Money(projection.Gastos.Amount * k / n) + cuotasToDate).Round2();
             steps.Add(new TraceStep(
@@ -166,7 +168,8 @@ public static class SetAsideEstimator
             [.. quarters.Select(q => new TraceInput(q.Quarter.ToString(), Show(q.AIngresar)))],
             Invariant($"{string.Join(" + ", quarters.Select(q => Show(q.AIngresar)))} = {Show(modelo130Year)}"),
             modelo130Year.Amount,
-            "Σ a ingresar (casilla 19, never below zero) over the four quarters, each chained to the next through casillas 05 and 15"));
+            "Σ a ingresar (casilla 19, never below zero) over the quarters from the alta's on, each chained to the next through casillas 05 and 15. "
+                + "A quarter that ends before the alta has no activity and so no pago fraccionado (RD 439/2007 art. 109.1), and no minoración to carry"));
 
         var trueUp = AnnualTrueUpCalculator.Gap(
             new AnnualTrueUpInput(
@@ -209,12 +212,12 @@ public static class SetAsideEstimator
                 + "what the annual return wants beyond them (never below zero, so a refund is not counted on) and the year's TGSS cuotas. "
                 + "Rounded up to a hundredth of a percent and capped at the whole payment: conservative"));
 
-        var next = quarters[(int)input.AsOf - 1];
+        var next = quarters.Single(q => q.Quarter == input.AsOf);
 
         return new SetAsideResult(
             new Rate(share),
             new Modelo130Projection(next.Quarter, next.AIngresar, next.DueWindow),
-            new Money(chosen.Result.Cuota),
+            new Money(chosen.Result.FullMonthCuota),
             trueUp.Gap,
             Money.Zero,
             new CalculationTrace(steps),

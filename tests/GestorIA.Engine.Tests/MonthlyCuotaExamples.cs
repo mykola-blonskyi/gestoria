@@ -20,6 +20,7 @@ public class MonthlyCuotaExamples
         var result = Run(new YearMonth(2027, 1));
 
         Assert.Equal(45.33m, result.Cuota);
+        Assert.Equal(80m, result.FullMonthCuota);
         Assert.Contains(result.Trace.Steps, s => s.Id == "ss.prorrateo-mes-alta" && s.Formula == "80 × 17 / 30 = 45.33");
     }
 
