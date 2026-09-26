@@ -80,7 +80,7 @@
     "MD": { "name": "Comunidad de Madrid", "escalaAutonomica": [], "minimosOverride": null, "_todo": "fill in Phase 2" }
   },
   "modelo130": {
-    "rate": 0.20, "retencionExemptionShare": 0.70, "mortgageRate": 0.02, "mortgageCap": 660.14, "applyDj": false,
+    "rate": 0.20, "retencionExemptionShare": 0.70, "mortgageRate": 0.02, "mortgageCap": 660.14,
     "minoracion": [
       { "prevYearNetUpTo": 9000, "amountPerQuarter": 100 },
       { "prevYearNetUpTo": 10000, "amountPerQuarter": 75 },

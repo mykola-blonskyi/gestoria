@@ -89,7 +89,6 @@ public static class TaxYearConfigParser
             RegionsOf(root["regions"]!.AsObject(), minimos),
             new Modelo130Config(
                 RateOf(modelo130["rate"]),
-                modelo130["applyDj"]!.Read<bool>(),
                 [.. modelo130["minoracion"]!.AsArray().Select(band =>
                     new MinoracionBand(MoneyOf(band!["prevYearNetUpTo"]), MoneyOf(band["amountPerQuarter"])))]),
             new SeguridadSocialConfig(

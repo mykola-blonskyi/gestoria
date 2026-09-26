@@ -21,8 +21,9 @@ Required if `Profile.Activity != null` and (ActivityKind == Empresarial OR share
 ### Calculation (cumulative year-to-date)
 ```
 ingresosYTD  = Σ FacturaEmitida.Base, AccrualDate in [1 Jan, quarter end]
-gastosYTD    = Σ deductible expenses + cuotaSS, same window     (same rules as SPEC-002 step 2; difícil justificación applied only if config.modelo130.applyDj)
-netYTD       = ingresosYTD − gastosYTD
+gastosYTD    = Σ deductible expenses + cuotaSS, same window     (same rules as SPEC-002 step 2)
+dj           = min(config.irpf.actividad.dificilJustificacion.pct × max(0, ingresosYTD − gastosYTD), config.irpf.actividad.dificilJustificacion.max)
+netYTD       = ingresosYTD − (gastosYTD + dj)                  (casilla 02 = gastosYTD + dj)
 base         = max(0, netYTD)
 casilla07    = config.modelo130.rate (0.20) × base
              − Σ pagos130 already paid this year      (casilla 05: the positive casilla 07 of earlier quarters, not the amounts paid)
@@ -34,13 +35,15 @@ pago         = casilla14 − casilla15
              − mortgage deduction min(config.modelo130.mortgageRate × ingresosYTD, config.modelo130.mortgageCap)
 result       = max(0, pago); pendingNegative += max(0, −pago)   // only a minoración above casilla 12 makes pago negative; deducted in later quarters of the same year
 ```
-Golden #3 (Σ = 8,480), #5 (loss-making quarter → 0 and carry-over).
+Golden #3 (Σ = 8,080), #5 (loss-making quarter → 0 and carry-over).
 
-Three points the AEAT instructions for the form settle (casillas 05, 07, 12, 13, 15, 19; checked 2026-09-26, #8). Casilla 05 sums the positive casilla 07 of earlier quarters, which comes before the minoración, so each quarter's minoración is kept rather than clawed back by the next quarter. Casilla 12 enters a negative casilla 07 as zero: a quarter whose loss to date or retenciones undercut earlier payments pays nothing and carries nothing, because the cumulative base already carries the loss into the next quarter (G5: Q3 pays 0, Q4 pays 4,240, Σ 8,480). Only a minoración above casilla 12 leaves a negative result, which later quarters of the same year deduct up to a positive casilla 14 (RD 439/2007 art. 110.3.c). With no activity in the previous year, the previous year's net counts as zero, which takes the lowest minoración band.
+Difícil justificación is always in casilla 02, measured on the net to date and capped at the annual maximum, because v1 supports only estimación directa simplificada (glossary). RD 439/2007 art. 30.2ª sets it at 5 % of the net, at most 2,000 a year; art. 110.1.a takes the pago fraccionado as 20 % of that rendimiento neto under estimación directa in any modality; and the AEAT instructions put it in casilla 02 for the simplified modality (checked 2026-09-26, #33). Until #33 a `config.modelo130.applyDj` flag, set to `false`, left it out, which reproduced Theory §7.3 Example B (Σ 8,480) but not the law. If estimación directa normal is ever supported, the regime belongs on the taxpayer profile and gates both this and SPEC-002 step 2.
+
+Three points the AEAT instructions for the form settle (casillas 05, 07, 12, 13, 15, 19; checked 2026-09-26, #8). Casilla 05 sums the positive casilla 07 of earlier quarters, which comes before the minoración, so each quarter's minoración is kept rather than clawed back by the next quarter. Casilla 12 enters a negative casilla 07 as zero: a quarter whose loss to date or retenciones undercut earlier payments pays nothing and carries nothing, because the cumulative base already carries the loss into the next quarter (G5: Q3 pays 0, Q4 pays 4,052, Σ 8,080). Only a minoración above casilla 12 leaves a negative result, which later quarters of the same year deduct up to a positive casilla 14 (RD 439/2007 art. 110.3.c). With no activity in the previous year, the previous year's net counts as zero, which takes the lowest minoración band.
 
 The mortgage rate is `config.modelo130.mortgageRate` (0.02 for 2025, Theory §7.3), not a literal. It was written as `2 %` here until 2026-09-21, which put a tax number in a spec formula and from there into code, against ADR-0003. `mortgageCap` is per quarter.
 
-Output: `Modelo130Result { Quarter, Lines: { "01": ingresosYTD, "02": gastosYTD, "03": net, … "19": resultado }, Trace, DueWindow }`. Line numbers come from `config.modelo130.lines`.
+Output: `Modelo130Result { Quarter, Lines: { "01": ingresosYTD, "02": gastosYTD + dj, "03": netYTD, … "19": resultado }, Trace, DueWindow }`. Line numbers come from `config.modelo130.lines`.
 
 ### Deadlines
 From `config.calendar`: Q1 1–20 Apr, Q2 1–20 Jul, Q3 1–20 Oct, Q4 1–30 Jan (next year); if direct debit, warn 5 days earlier; weekend/holiday shift to next working day (national holidays in config; regional holidays v1.x).

@@ -34,7 +34,7 @@ public sealed record InicioActividadConfig(Rate Pct, Money MaxRendimiento, Rate 
 // Minimos are the ones LIRPF art. 56.3 applies to the regional scale: the region's own where it approved any, otherwise the state's.
 public sealed record RegionConfig(string Name, Scale EscalaAutonomica, MinimosConfig Minimos);
 
-public sealed record Modelo130Config(Rate Rate, bool ApplyDj, IReadOnlyList<MinoracionBand> Minoracion);
+public sealed record Modelo130Config(Rate Rate, IReadOnlyList<MinoracionBand> Minoracion);
 
 public sealed record MinoracionBand(Money PrevYearNetUpTo, Money AmountPerQuarter);
 

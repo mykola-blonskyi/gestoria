@@ -58,7 +58,7 @@ public static class Modelo130Calculator
         var modelo130 = config.Modelo130;
         var steps = new List<TraceStep>();
 
-        var dj = DificilJustificacion(input, modelo130.ApplyDj, config.Irpf.Actividad.DificilJustificacion, steps);
+        var dj = DificilJustificacion(input, config.Irpf.Actividad.DificilJustificacion, steps);
 
         var casilla02 = (input.GastosYtd + dj).Round2();
         var rendimientoNeto = input.IngresosYtd - casilla02;
@@ -135,32 +135,19 @@ public static class Modelo130Calculator
     }
 
     // Business rule 7: 5 % of a positive rendimiento neto previo, capped, never negative.
-    private static Money DificilJustificacion(Modelo130Input input, bool applyDj, DificilJustificacionConfig config, List<TraceStep> steps)
+    private static Money DificilJustificacion(Modelo130Input input, DificilJustificacionConfig config, List<TraceStep> steps)
     {
-        if (!applyDj)
-        {
-            steps.Add(Step(
-                "m130.dificil-justificacion",
-                "Difícil justificación no aplicada",
-                [new("applyDj", "false")],
-                "config modelo130.applyDj is false → 0",
-                Money.Zero,
-                "config modelo130.applyDj"));
-
-            return Money.Zero;
-        }
-
         var previo = input.IngresosYtd - input.GastosYtd;
         var pct = Positive(previo) * config.Pct;
         var dj = pct < config.Max ? pct : config.Max;
 
         steps.Add(Step(
             "m130.dificil-justificacion",
-            "Gastos de difícil justificación",
+            "Gastos de difícil justificación desde el 1 de enero (en casilla 02)",
             [new("rendimientoNetoPrevio", Show(previo)), new("pct", config.Pct.ToString()), new("max", Show(config.Max))],
             Invariant($"min({config.Pct} × max(0, {Show(previo)}), {Show(config.Max)}) = {Show(dj)}"),
             dj,
-            "config modelo130.applyDj, irpf.actividad.dificilJustificacion; business rule 7"));
+            $"RD 439/2007 art. 30.2ª: a percentage of the positive net before it, at most an annual amount; art. 110.1.a: the pago fraccionado is a percentage of that rendimiento neto under estimación directa in any modality; {Instrucciones}, casilla 02: under estimación directa simplificada it includes the difícil justificación of the period from 1 January; config irpf.actividad.dificilJustificacion; business rule 7"));
 
         return dj;
     }

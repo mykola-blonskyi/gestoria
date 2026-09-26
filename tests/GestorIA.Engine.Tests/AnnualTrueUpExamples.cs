@@ -150,7 +150,7 @@ public class AnnualTrueUpExamples
     [Fact]
     public void StepsKeepTheUnroundedAmountAndOnlyTheResultIsRounded()
     {
-        var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 5039.52m);
+        var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 4787.54m);
 
         Assert.Equal(9217.12748m, Output(result, "renta.liability-on-activity"));
         Assert.Equal(new Money(9217.13m), result.LiabilityOnActivity);
@@ -159,18 +159,18 @@ public class AnnualTrueUpExamples
     [Fact]
     public void TheGapWarningNamesTheAmountAndTheDayItIsPayable()
     {
-        var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 5039.52m);
+        var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 4787.54m);
 
         Assert.Equal(new YearMonth(2026, 6), result.PayableIn);
         var warning = Assert.Single(result.Warnings, w => w.Code == WarningCodes.MarginalVsEffective);
         Assert.Contains("Stacked on the employment income, the 23937.72 € of activity net income adds 9217.13 € of tax: an effective rate of 38.50 %, and 40.90 % on its last euro.", warning.Text);
-        Assert.Contains("4177.61 € more, payable by 2026-06-30", warning.Text);
+        Assert.Contains("4429.59 € more, payable by 2026-06-30", warning.Text);
     }
 
     [Fact]
     public void WithNoSalaryTheWarningDoesNotSpeakOfStacking()
     {
-        var result = Run(salary: 0m, ss: 0m, ingresos: 50000m, gastos: 7600m, advances: 8480m);
+        var result = Run(salary: 0m, ss: 0m, ingresos: 50000m, gastos: 7600m, advances: 8080m);
 
         var warning = Assert.Single(result.Warnings, w => w.Code == WarningCodes.MarginalVsEffective);
         Assert.DoesNotContain("Stacked", warning.Text);
@@ -185,8 +185,8 @@ public class AnnualTrueUpExamples
     [Fact]
     public void AFirstPositivePeriodTakesTwentyPercentOffTheActivityNet()
     {
-        var established = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 5039.52m);
-        var started = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 5039.52m, newActivity: FirstPeriod());
+        var established = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 4787.54m);
+        var started = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 4787.54m, newActivity: FirstPeriod());
 
         Assert.Equal(4787.544m, ReduccionInicio(started).Output);
         Assert.Equal(54550.176m, Output(started, "renta.stacked.base-liquidable"));
