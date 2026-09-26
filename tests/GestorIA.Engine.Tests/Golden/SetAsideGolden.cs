@@ -79,6 +79,12 @@ internal static class SetAsideGolden
             mismatches.Add($"nextPayment.dueWindow: expected [{string.Join(", ", wantDueWindow)}], got [{string.Join(", ", gotDueWindow)}]");
         }
 
+        var wantPayableIn = expected["annualTrueUpPayableIn"]!.GetValue<string>();
+        if (wantPayableIn != result.AnnualTrueUpPayableIn.ToString())
+        {
+            mismatches.Add($"annualTrueUpPayableIn: expected {wantPayableIn}, got {result.AnnualTrueUpPayableIn}");
+        }
+
         foreach (var (id, wantNode) in expected["traceOutputs"]!.AsObject())
         {
             var want = DecimalOf(wantNode);
@@ -94,6 +100,16 @@ internal static class SetAsideGolden
         if (!wantWarnings.SequenceEqual(gotWarnings))
         {
             mismatches.Add($"warnings: expected [{string.Join(", ", wantWarnings)}], got [{string.Join(", ", gotWarnings)}]");
+        }
+
+        // Each entry names a warning code and text that one warning with that code must contain, such as the amount it reports.
+        foreach (var (code, textNode) in expected["warningTexts"]!.AsObject())
+        {
+            var text = textNode!.GetValue<string>();
+            if (!result.Warnings.Any(w => w.Code == code && w.Text.Contains(text, StringComparison.Ordinal)))
+            {
+                mismatches.Add($"warningTexts.{code}: no {code} warning contains \"{text}\"");
+            }
         }
 
         if (result.ConfigHash != TaxYearConfigFiles.Year2025.ConfigHash)
