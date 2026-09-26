@@ -11,15 +11,25 @@ public enum Quarter
     Q4 = 4,
 }
 
-// An abstract record with a private constructor admits only the records nested inside it: a closed union, like a TypeScript discriminated union.
+// An abstract record whose only cases are the records nested inside it: a closed union, like a TypeScript discriminated union.
+// A private constructor is not enough, because another assembly can still chain to the record's synthesized protected copy
+// constructor; a private protected abstract member, which only code in this assembly can override, shuts that door.
 public abstract record Retenciones
 {
     private Retenciones() { }
 
-    // SPEC-003 §0, business rule 3b: EU and US payers have no Spanish withholding obligation.
-    public sealed record ForeignPayersOnly : Retenciones;
+    private protected abstract void CloseTheUnion();
 
-    public sealed record Withheld(Money YearToDate) : Retenciones;
+    // SPEC-003 §0, business rule 3b: EU and US payers have no Spanish withholding obligation.
+    public sealed record ForeignPayersOnly : Retenciones
+    {
+        private protected override void CloseTheUnion() { }
+    }
+
+    public sealed record Withheld(Money YearToDate) : Retenciones
+    {
+        private protected override void CloseTheUnion() { }
+    }
 }
 
 // Selects the casilla 13 minoración band.
@@ -27,10 +37,18 @@ public abstract record PreviousYear
 {
     private PreviousYear() { }
 
-    public sealed record NoActivity : PreviousYear;
+    private protected abstract void CloseTheUnion();
+
+    public sealed record NoActivity : PreviousYear
+    {
+        private protected override void CloseTheUnion() { }
+    }
 
     // The previous year's activity net before any LIRPF art. 32 reduction (AEAT, instrucciones del modelo 130, casilla 13).
-    public sealed record RendimientoNeto(Money Amount) : PreviousYear;
+    public sealed record RendimientoNeto(Money Amount) : PreviousYear
+    {
+        private protected override void CloseTheUnion() { }
+    }
 }
 
 // Figures from 1 January to the end of the quarter. GastosYtd includes the cuota SS and excludes difícil justificación.

@@ -35,8 +35,13 @@ public abstract record NewActivity
 {
     private NewActivity() { }
 
+    private protected abstract void CloseTheUnion();
+
     // Some economic activity was carried on in the year before this one started, or the period after the first positive one is over.
-    public sealed record Established : NewActivity;
+    public sealed record Established : NewActivity
+    {
+        private protected override void CloseTheUnion() { }
+    }
 
     // No economic activity in the year before the start date, ignoring any that ceased without ever reaching a positive net.
     // IngresosFromFormerEmployer is the part of this period's Ingresos paid by someone who paid the taxpayer employment income
@@ -62,6 +67,8 @@ public abstract record NewActivity
             Period = period;
             IngresosFromFormerEmployer = ingresosFromFormerEmployer;
         }
+
+        private protected override void CloseTheUnion() { }
     }
 }
 

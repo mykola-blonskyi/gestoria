@@ -37,21 +37,26 @@ public class TraceStepDoesNotCompileWithoutAKind
         Assert.Contains(errors, d => d.Id == "CS8625");
     }
 
-    [Fact]
-    public void ARecordOutsideTheEngineCannotDeriveFromTraceValue()
+    // A record chaining to the base's synthesized protected copy constructor gets past a private constructor, so this is
+    // the shape a new case would take. CS0534 is the closing member left unimplemented, not just "some error".
+    [Theory]
+    [InlineData("TraceValue", "public override string Display() => \"\";")]
+    [InlineData("Retenciones", "")]
+    [InlineData("PreviousYear", "")]
+    [InlineData("NewActivity", "")]
+    public void NoRecordOutsideTheEngineCanAddACaseToAUnion(string union, string members)
     {
         var errors = Compile(
-            """
-            sealed record Smuggled : GestorIA.Engine.TraceValue
+            $$"""
+            sealed record Smuggled : GestorIA.Engine.{{union}}
             {
-                public override string Display() => "";
+                public Smuggled(GestorIA.Engine.{{union}} original) : base(original) { }
+                {{members}}
             }
             """,
             wrapInMethod: false);
 
-        // TraceValue's constructor is private, so a record declared anywhere else has no accessible constructor to
-        // chain to: CS7036, not just "some error", so a later, unrelated compile error can't make this pass for the wrong reason.
-        Assert.Contains(errors, d => d.Id == "CS7036");
+        Assert.Contains(errors, d => d.Id == "CS0534");
     }
 
     [Fact]
