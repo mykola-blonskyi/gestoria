@@ -39,7 +39,7 @@
   },
   "modelo130": { "rate": 0.20, "retencionExemptionShare": 0.70,
                  "mortgageRate": 0.02, "mortgageCap": 660.14,          // cap is per quarter; rate applies to ingresosYTD
-                 "applyDj": false, "minoracion": [ { "netUpTo": ..., "amountPerQuarter": ... }, ... ], "lines": { ... } },
+                 "minoracion": [ { "netUpTo": ..., "amountPerQuarter": ... }, ... ], "lines": { ... } },
   "modelo303": { "lines": { ... } },
   "modelo349": { "periodThresholdEurPerYear": null,                    // above it, filing turns monthly; UNVERIFIED, see §2.1
                  "lines": { ... } },

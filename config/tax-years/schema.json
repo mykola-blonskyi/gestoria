@@ -776,7 +776,6 @@
         "retencionExemptionShare",
         "mortgageRate",
         "mortgageCap",
-        "applyDj",
         "minoracion",
         "lines"
       ],
@@ -792,9 +791,6 @@
         },
         "mortgageCap": {
           "$ref": "#/$defs/money"
-        },
-        "applyDj": {
-          "type": "boolean"
         },
         "minoracion": {
           "type": "array",
