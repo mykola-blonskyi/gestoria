@@ -67,3 +67,7 @@ Recommend the cheaper option and explain the difference. — SPEC-002 step 9, Th
 ## Rule 15 — Personal data never appears in logs, fixtures or the repo
 
 — SPEC-013, SPEC-011 §3.
+
+## Rule 16 — The RETA tramo is chosen on the rendimiento computable, not the IRPF net
+
+Rendimiento computable = the IRPF rendimiento neto (Modelo 100 casilla 0224: after difícil justificación, before any LIRPF art. 32 reduction) + the titular's own cuotas (casilla 0186), less 7 % gastos genéricos, spread over the months of alta. The cuotas and the tramo depend on each other; the estimator takes the highest consistent tramo. — LGSS art. 308.1.c 1.ª–3.ª, AEAT "Información para determinar el rendimiento neto", #15, #39.

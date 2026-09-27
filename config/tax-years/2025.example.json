@@ -7,6 +7,7 @@
     { "ref": "Orden PJC/178/2025, de 25 de febrero, art. 18 (bases y tipos RETA) y art. 37 (cese de actividad, formación profesional)", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-3780" },
     { "ref": "Ley 20/2007 (Estatuto del Trabajo Autónomo), art. 38 ter, redacción RDL 13/2022, D.T. 5.ª (tarifa plana 2023–2025)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-13409" },
     { "ref": "Real Decreto 439/2007 (Reglamento IRPF), art. 110.3.c (minoración pagos fraccionados)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820" },
+    { "ref": "Real Decreto Legislativo 8/2015 (LGSS), art. 308.1.c, redacción del RDL 13/2022 (rendimiento computable de los autónomos)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11724" },
     { "ref": "AEAT, Instrucciones del modelo 130, casillas 05, 13, 15 y 19 (página actualizada 11/09/2026): sin actividad en el ejercicio anterior, rendimiento neto cero", "url": "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html" },
     { "ref": "Ley 13/1997, de 23 de diciembre, de la Generalitat Valenciana (tramo autonómico del IRPF), art. 2 bis, añadido por el Decreto-ley 14/2022 (texto consolidado, última actualización 10/08/2026)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1998-8202" },
     { "ref": "AEAT Manual práctico Renta 2025, cap. 14, Comunitat Valenciana: importes del mínimo personal y familiar (página actualizada 17/03/2026)", "url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025/c14-adecuacion-impuesto-circunstancias-personales/minimo-autonomico-personal-familiar/comunitat-valenciana-importes-minimo-personal-familiar.html" }
@@ -111,7 +112,8 @@
       { "name": "General 11", "netFrom": 4050, "netUpTo": 6000, "baseMin": 1732.03, "baseMax": 4909.50, "cuotaMin": 543.86, "cuotaMinKind": "exact" },
       { "name": "General 12", "netFrom": 6000, "netUpTo": null, "baseMin": 1928.10, "baseMax": 4909.50, "cuotaMin": 605.42, "cuotaMinKind": "exact" }
     ],
-    "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12, "extensionNetIncomeCap": null }
+    "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12, "extensionNetIncomeCap": null },
+    "gastosGenericos": 0.07
   },
   "calendar": {
     "modelo130": [["04-01", "04-20"], ["07-01", "07-20"], ["10-01", "10-20"], ["+1-01-01", "+1-01-30"]],
@@ -158,6 +160,7 @@
     "/iva/rates":                   { "kind": "theory", "ref": "Theory §9.1, ed. 2" },
     "/seguridadSocial/tramos":      { "kind": "boe", "ref": "Orden PJC/178/2025 art. 18.1 (bases); art. 18.2 y 37.5–37.6 (tipos: 28,30% + 1,30% + 0,90% + 0,10% + 0,80% MEI = 31,40%, aplicado a baseMin para cuotaMin)", "verified": "2026-09-25" },
     "/seguridadSocial/tarifaPlana": { "kind": "boe", "ref": "Ley 20/2007 art. 38 ter, D.T. 5.ª RDL 13/2022 (80€/mes vigente 2023–2025)", "verified": "2026-09-25" },
+    "/seguridadSocial/gastosGenericos": { "kind": "boe", "ref": "RDL 8/2015 (LGSS) art. 308.1.c, regla 2.ª (redacción del RDL 13/2022, vigente desde 2023-01-01): deducción por gastos genéricos del 7 %; 3 % only for the art. 305.2.b and e societarios, not modelled", "verified": "2026-09-27" },
     "/calendar":                    { "kind": "theory", "ref": "Theory §15.3, ed. 2" },
     "/calendar/modelo130":          { "kind": "boe", "ref": "RD 439/2007 (RIRPF) art. 111.1; Orden EHA/672/2007 art. 7", "verified": "2026-09-27" },
     "/calendar/renta":              { "kind": "boe", "ref": "Orden HAC/277/2026 art. 7.1 (Renta 2025: 8 de abril a 30 de junio de 2026)", "verified": "2026-09-27" },

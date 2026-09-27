@@ -92,7 +92,6 @@ public static class SetAsideEstimator
         var actualThrough = last is null ? 0 : (int)last.Quarter * 3;
         var actualIngresos = last?.IngresosYtd ?? Money.Zero;
         var actualGastos = last?.GastosYtd ?? Money.Zero;
-        var actualMonths = activeMonths.Where(m => m.Month <= actualThrough).ToList();
         var projectedMonths = activeMonths.Where(m => m.Month > actualThrough).ToList();
         var projectedCount = projectedMonths.Count;
 
@@ -141,31 +140,45 @@ public static class SetAsideEstimator
 
         var netToDate = actualIngresos - actualGastos;
         var projectedNet = projection.Ingresos - projection.Gastos;
-        var tramos = config.SeguridadSocial.Tramos;
-        var tarifaPlana = config.SeguridadSocial.TarifaPlana;
+        var seguridadSocial = config.SeguridadSocial;
+        var tramos = seguridadSocial.Tramos;
+        var tarifaPlana = seguridadSocial.TarifaPlana;
 
-        List<(YearMonth Month, decimal Cuota)> CuotasToDateAt(decimal annualNet) => actualMonths
-            .Select(month => (month, MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, annualNet, month), tramos, tarifaPlana).Cuota))
+        List<(YearMonth Month, MonthlyCuotaResult Result)> CuotasAt(decimal annualComputable) => activeMonths
+            .Select(month => (month, MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, annualComputable, month), seguridadSocial)))
             .ToList();
 
-        // The cuotas added back choose the tramo and the tramo prices the cuotas, so more than one tramo can be consistent. Pricing
-        // starts one euro a month into the top tramo and comes down until the net stops moving: the highest consistent tramo.
-        // With cuotas that never fall as the tramo rises, each pass either settles or drops a tramo, so the passes are bounded.
-        var pricedAt = (tramos.Tramos.Last().NetFrom.Amount + 1m) * 12m;
-        var cuotasToDate = CuotasToDateAt(pricedAt);
+        (Money ToDate, Money Projected, Money Previo, Money DificilJustificacion, Money RendimientoNeto, decimal Annualized) ComputableFrom(
+            List<(YearMonth Month, MonthlyCuotaResult Result)> priced)
+        {
+            var toDate = new Money(priced.Where(c => c.Month.Month <= actualThrough).Sum(c => c.Result.Cuota));
+            var projected = new Money(priced.Where(c => c.Month.Month > actualThrough).Sum(c => c.Result.Cuota));
+            var previo = netToDate + projectedNet - projected;
+            var dj = config.Irpf.Actividad.DificilJustificacion.On(previo);
+            var rendimientoNeto = previo - dj;
+            return (toDate, projected, previo, dj, rendimientoNeto, (rendimientoNeto + toDate + projected).Amount * 12m / n);
+        }
+
+        // The cuotas choose the tramo and the tramo prices the cuotas, so more than one tramo can be consistent. Pricing starts one
+        // euro a month into the top tramo, after the gastos genéricos, and comes down until the computable stops moving: the highest
+        // consistent tramo. Higher cuotas never lower the computable, since casilla 0224 falls by at most what casilla 0186 gains,
+        // so each pass either settles or drops a tramo and the passes are bounded.
+        var pricedAt = (tramos.Tramos.Last().NetFrom.Amount + 1m) * 12m / (1m - seguridadSocial.GastosGenericos.Value);
+        var cuotas = CuotasAt(pricedAt);
+        var computable = ComputableFrom(cuotas);
         for (var pass = 0; pass <= tramos.Tramos.Count; pass++)
         {
-            var net = (netToDate.Amount + cuotasToDate.Sum(c => c.Cuota) + projectedNet.Amount) * 12m / n;
-            if (net == pricedAt)
+            if (computable.Annualized == pricedAt)
             {
                 break;
             }
 
-            pricedAt = net;
-            cuotasToDate = CuotasToDateAt(pricedAt);
+            pricedAt = computable.Annualized;
+            cuotas = CuotasAt(pricedAt);
+            computable = ComputableFrom(cuotas);
         }
 
-        var addedBack = cuotasToDate.Sum(c => c.Cuota);
+        var cuotasToDate = cuotas.Where(c => c.Month.Month <= actualThrough).ToList();
         steps.Add(new TraceStep(
             "set-aside.cuotas-ss-to-date",
             TraceSection.SeguridadSocial,
@@ -173,27 +186,36 @@ public static class SetAsideEstimator
             [new("netoHastaHoy", Show(netToDate)), new("netoProyectado", Show(projectedNet)), new("meses", Invariant($"{n}"))],
             cuotasToDate.Count == 0
                 ? "no actuals → 0"
-                : Invariant($"priced at the net they lead to, {pricedAt}: {string.Join(" + ", cuotasToDate.Select(c => Invariant($"{c.Month} {c.Cuota}")))} = {addedBack}"),
-            new TraceValue.Money(new Money(addedBack)),
-            "LGSS art. 308.1.c (boe.es consolidated RDL 8/2015, read 2026-09-26): the rendimiento computable is the IRPF net increased by the titular's own cuotas, "
+                : Invariant($"priced at the computable they lead to, {pricedAt}: {string.Join(" + ", cuotasToDate.Select(c => Invariant($"{c.Month} {c.Result.Cuota}")))} = {Show(computable.ToDate)}"),
+            new TraceValue.Money(computable.ToDate),
+            "LGSS art. 308.1.c 1.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): the rendimiento computable is the IRPF rendimiento neto increased by the titular's own cuotas, "
                 + "and the gastos to date already deduct them, so they are added back, estimated with MonthlyCuotaCalculator. The cuotas and the tramo depend on each other "
                 + "and more than one tramo can be consistent; pricing comes down from the top tramo, so the add-back settles on the highest consistent one: conservative (#2). "
                 + "Exact while tarifa plana applies, whatever the tramo"));
 
-        var expectedAnnualNet = (netToDate.Amount + addedBack + projectedNet.Amount) * 12m / n;
         steps.Add(new TraceStep(
             "set-aside.rendimiento-computable",
             TraceSection.SeguridadSocial,
             "Rendimiento computable para la cuota SS, anualizado",
-            [new("netoHastaHoy", Show(netToDate)), new("cuotasSumadas", Invariant($"{addedBack}")), new("netoProyectado", Show(projectedNet)), new("meses", Invariant($"{n}"))],
-            Invariant($"({Show(netToDate)} + {addedBack} + {Show(projectedNet)}) × 12 / {n} = {expectedAnnualNet}"),
-            new TraceValue.Money(new Money(expectedAnnualNet)),
-            "LGSS art. 308.1.c: the IRPF rendimiento neto plus the titular's own cuotas, so the actuals with their cuotas added back and the projection before the RETA cuota, "
-                + "averaged over the months of alta. Difícil justificación is not deducted, which over-reserves (#2)"));
-
-        var cuotas = activeMonths
-            .Select(month => (Month: month, Result: MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, expectedAnnualNet, month), tramos, tarifaPlana)))
-            .ToList();
+            [
+                new("netoHastaHoy", Show(netToDate)),
+                new("netoProyectado", Show(projectedNet)),
+                new("cuotasSsHastaHoy", Show(computable.ToDate)),
+                new("cuotasSsProyectadas", Show(computable.Projected)),
+                new("dificilJustificacion", Show(computable.DificilJustificacion)),
+                new("meses", Invariant($"{n}")),
+            ],
+            Invariant($"previo {Show(netToDate)} + {Show(projectedNet)} − {Show(computable.Projected)} = {Show(computable.Previo)}; ")
+                + Invariant($"casilla 0224 {Show(computable.Previo)} − {Show(computable.DificilJustificacion)} = {Show(computable.RendimientoNeto)}; ")
+                + Invariant($"({Show(computable.RendimientoNeto)} + {Show(computable.ToDate)} + {Show(computable.Projected)}) × 12 / {n} = {computable.Annualized}"),
+            new TraceValue.Money(new Money(computable.Annualized)),
+            "LGSS art. 308.1.c 1.ª and 3.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): the IRPF rendimiento neto increased by the titular's own cuotas, "
+                + "spread over the months of alta. AEAT, Información para determinar el rendimiento neto (sede.agenciatributaria.gob.es, updated 18 Sep 2026, read 2026-09-27): "
+                + "TGSS takes Modelo 100 casilla 0224 plus casilla 0186, the cuotas. Casilla 0224 is after the difícil justificación (RD 439/2007 art. 30.2ª, "
+                + "config irpf.actividad.dificilJustificacion) and before every LIRPF art. 32 reduction and the other reductions Modelo 100 2025 takes after it (casillas 0225, 0232–0234 and 0236–0237), "
+                + "so the art. 32.3 reduction does not lower it. Previo is the year's ingresos less its gastos, the actual ones with the cuotas charged "
+                + "and the projected ones with the projected cuotas. The regularisation of earlier years' RETA cuotas (casillas 0196 and 0197) is not modelled. "
+                + "The 2.ª gastos genéricos are deducted in ss.rendimiento-neto-mensual"));
 
         var quarterCuotas = cuotas.Where(c => (c.Month.Month + 2) / 3 == (int)input.AsOf).ToList();
         var chosen = quarterCuotas.MaxBy(c => c.Result.FullMonthCuota);
@@ -223,7 +245,7 @@ public static class SetAsideEstimator
         var lastTarifaPlanaMonth = tarifaPlana.LastMonth(alta);
         var monthsInForce = lastTarifaPlanaMonth.MonthsSince(altaMonth);
         var lapse = lastTarifaPlanaMonth.AddMonths(1);
-        var cuotaAfterLapse = MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, expectedAnnualNet, lapse), tramos, tarifaPlana).FullMonthCuota;
+        var cuotaAfterLapse = MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, computable.Annualized, lapse), seguridadSocial).FullMonthCuota;
         var lapseWhen = lapse.MonthsSince(new YearMonth(taxYear, 1)) < 0 ? "before this tax year"
             : lapse.Year > taxYear ? Invariant($"after this tax year, at the {taxYear} tramos and projected net")
             : "in this tax year";
@@ -300,8 +322,7 @@ public static class SetAsideEstimator
                 + "so a loss to date lowers the cumulative net of the quarters after it and a minoración left over carries as a negative result. "
                 + "A quarter that ends before the alta has no activity and so no pago fraccionado (RD 439/2007 art. 109.1), and no minoración to carry"));
 
-        var cuotasProjectedYear = new Money(cuotas.Where(c => c.Month.Month > actualThrough).Sum(c => c.Result.Cuota));
-        var annualGastos = actualGastos + projection.Gastos + cuotasProjectedYear;
+        var annualGastos = actualGastos + projection.Gastos + computable.Projected;
         steps.Add(new TraceStep(
             "set-aside.annual-ingresos",
             TraceSection.Actividad,
@@ -314,8 +335,8 @@ public static class SetAsideEstimator
             "set-aside.annual-gastos",
             TraceSection.Actividad,
             "Gastos del ejercicio, reales y proyectados, con las cuotas SS",
-            [new("reales", Show(actualGastos)), new("proyectados", Show(projection.Gastos)), new("cuotasSsProyectadas", Show(cuotasProjectedYear))],
-            Invariant($"{Show(actualGastos)} real + {Show(projection.Gastos)} projected + {Show(cuotasProjectedYear)} projected cuotas SS = {Show(annualGastos)}"),
+            [new("reales", Show(actualGastos)), new("proyectados", Show(projection.Gastos)), new("cuotasSsProyectadas", Show(computable.Projected))],
+            Invariant($"{Show(actualGastos)} real + {Show(projection.Gastos)} projected + {Show(computable.Projected)} projected cuotas SS = {Show(annualGastos)}"),
             new TraceValue.Money(annualGastos),
             "#15: the actual gastos already hold the cuotas charged to date; the RETA cuota is a deductible expense of the titular (AEAT Manual práctico Renta 2025, cap. 7)"));
 

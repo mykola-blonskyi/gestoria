@@ -311,6 +311,7 @@ public sealed class TaxYearConfigLoading : IDisposable
 
         yield return ("/seguridadSocial/tarifaPlana/amount", c.SeguridadSocial.TarifaPlana.Amount);
         yield return ("/seguridadSocial/tarifaPlana/months", c.SeguridadSocial.TarifaPlana.Months);
+        yield return ("/seguridadSocial/gastosGenericos", c.SeguridadSocial.GastosGenericos);
 
         yield return ("/calendar/modelo130", new Length(c.Calendar.Modelo130.Count));
 

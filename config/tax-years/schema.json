@@ -693,7 +693,8 @@
       "additionalProperties": false,
       "required": [
         "tramos",
-        "tarifaPlana"
+        "tarifaPlana",
+        "gastosGenericos"
       ],
       "properties": {
         "tramos": {
@@ -730,6 +731,10 @@
               "exclusiveMinimum": 0
             }
           }
+        },
+        "gastosGenericos": {
+          "$ref": "#/$defs/rate",
+          "exclusiveMaximum": 1
         },
         "_todo": {
           "$ref": "#/$defs/todoNote"
