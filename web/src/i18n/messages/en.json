@@ -107,12 +107,48 @@
   "Transactions": {
     "title": "Transactions",
     "lead": "The money that actually moved: what came in and what went out.",
-    "points": {
-      "table": "Every movement in a table that scrolls smoothly, even with thousands of rows.",
-      "filters": "Filters by quarter and by kind of movement.",
-      "review": "The movements that still need a decision: unclear ones and those missing an invoice."
+    "profile": {
+      "loading": "Loading your profile…",
+      "missing": "No profile yet",
+      "missingLead": "Statements are imported into your taxpayer profile. Enter it in settings first.",
+      "enter": "Go to settings"
     },
-    "pending": "This needs the transaction list and the review queue from the API, which are not built yet."
+    "import": {
+      "heading": "Import a bank statement",
+      "lead": "Export the statement from your bank as CSV. Importing the same statement again, or one that overlaps it, adds only the movements not stored yet.",
+      "file": "Statement file (CSV)",
+      "bank": "Bank",
+      "submit": "Import",
+      "importing": "Importing…",
+      "done": "{lines, plural, one {# movement read} other {# movements read}}: {imported} new, {already} already imported."
+    },
+    "filters": {
+      "quarter": "Period",
+      "wholeYear": "All of {year}",
+      "kind": "Kind",
+      "kinds": {
+        "all": "All movements",
+        "in": "Money in",
+        "out": "Money out"
+      }
+    },
+    "list": {
+      "heading": "Movements in {year}",
+      "label": "Movements",
+      "loading": "Loading movements…",
+      "count": "Shown: {count}",
+      "empty": "No movements match. Import a statement or pick another period."
+    },
+    "kind": {
+      "in": "In",
+      "out": "Out"
+    },
+    "failure": {
+      "network": "The API is not answering. Is it running?",
+      "refused": "The statement was not imported, nothing was stored:",
+      "tooLarge": "The file is larger than 2 MB. Export a shorter period.",
+      "other": "The API answered with an error ({status})."
+    }
   },
   "Periods": {
     "title": "Periods",

@@ -107,12 +107,48 @@
   "Transactions": {
     "title": "Movimientos",
     "lead": "El dinero que se movió de verdad: lo que entró y lo que salió.",
-    "points": {
-      "table": "Cada movimiento en una tabla que se desplaza con fluidez, incluso con miles de filas.",
-      "filters": "Filtros por trimestre y por tipo de movimiento.",
-      "review": "Los movimientos que aún necesitan una decisión: los dudosos y los que no tienen factura."
+    "profile": {
+      "loading": "Cargando tu perfil…",
+      "missing": "Aún no hay perfil",
+      "missingLead": "Los extractos se importan en tu perfil de contribuyente. Introdúcelo primero en ajustes.",
+      "enter": "Ir a ajustes"
     },
-    "pending": "Necesita la lista de movimientos y la cola de revisión de la API, que aún no están construidas."
+    "import": {
+      "heading": "Importar un extracto bancario",
+      "lead": "Exporta el extracto desde tu banco en CSV. Importar de nuevo el mismo extracto, o uno que se solape, solo añade los movimientos que aún no están guardados.",
+      "file": "Archivo del extracto (CSV)",
+      "bank": "Banco",
+      "submit": "Importar",
+      "importing": "Importando…",
+      "done": "{lines, plural, one {# movimiento leído} other {# movimientos leídos}}: {imported, plural, one {# nuevo} other {# nuevos}}, {already, plural, one {# ya importado} other {# ya importados}}."
+    },
+    "filters": {
+      "quarter": "Periodo",
+      "wholeYear": "Todo {year}",
+      "kind": "Tipo",
+      "kinds": {
+        "all": "Todos los movimientos",
+        "in": "Entradas",
+        "out": "Salidas"
+      }
+    },
+    "list": {
+      "heading": "Movimientos de {year}",
+      "label": "Movimientos",
+      "loading": "Cargando movimientos…",
+      "count": "Mostrados: {count}",
+      "empty": "Ningún movimiento coincide. Importa un extracto o elige otro periodo."
+    },
+    "kind": {
+      "in": "Entrada",
+      "out": "Salida"
+    },
+    "failure": {
+      "network": "La API no responde. ¿Está en marcha?",
+      "refused": "El extracto no se ha importado, no se ha guardado nada:",
+      "tooLarge": "El archivo supera los 2 MB. Exporta un periodo más corto.",
+      "other": "La API ha respondido con un error ({status})."
+    }
   },
   "Periods": {
     "title": "Periodos",

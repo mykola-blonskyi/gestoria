@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using GestorIA.Api.Transactions;
 using Json.Schema;
 
 namespace GestorIA.Api.Tests;
@@ -96,6 +97,30 @@ public class OpenApiDocumentContract(ApiFactory api) : IClassFixture<ApiFactory>
         AssertValid("ProblemDetails", conflict);
         AssertValid("ProblemDetails", notFound);
         AssertValid("HttpValidationProblemDetails", invalid);
+    }
+
+    [Fact]
+    public async Task TheTransactionAnswersMatchTheirDocumentedSchemas()
+    {
+        await using var own = new ApiFactory();
+        await own.InitializeAsync();
+        var ownClient = own.CreateClient();
+        var id = await ownClient.CreateProfile();
+
+        var imported = await (await ownClient.ImportStatement(id, RepoFiles.Statement)).Json();
+        var movements = JsonNode.Parse(await ownClient.GetStringAsync($"/api/v1/profiles/{id}/transactions?year=2025&quarter=Q1"))!.AsArray();
+        var badLine = await (await ownClient.ImportStatement(id, "Fecha;Fecha Valor;Concepto;Importe;Saldo\nx"u8.ToArray())).Json();
+        var badFilter = await (await ownClient.GetAsync($"/api/v1/profiles/{id}/transactions?quarter=Q1")).Json();
+        var tooLarge = await (await ownClient.ImportStatement(id, new byte[StatementFile.MaxBytes + 1])).Json();
+        var wrongType = await (await ownClient.ImportStatement(id, RepoFiles.Statement, contentType: "application/json")).Json();
+
+        AssertValid("BankStatementImport", imported);
+        Assert.NotEmpty(movements);
+        Assert.All(movements, movement => AssertValid("TransactionView", movement!));
+        AssertValid("HttpValidationProblemDetails", badLine);
+        AssertValid("HttpValidationProblemDetails", badFilter);
+        AssertValid("ProblemDetails", tooLarge);
+        AssertValid("ProblemDetails", wrongType);
     }
 
     [Fact]

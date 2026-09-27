@@ -3,7 +3,7 @@
 **Status:** Draft · **Phase:** 1, 3 · **Theory refs:** §1.3, §3.1–3.2, §5.1, §7.1, §7.5, §15.1
 
 ## 1. Purpose
-Define the entities, value objects and invariants shared by the engine, application and persistence layers. Identifiers keep Spanish tax vocabulary (see `docs/CONVENTIONS.md`). Supersedes the prototype `Transaction`/`IrpfCalculationResult` models in `src/GestorIA.Domain/Models`.
+Define the entities, value objects and invariants shared by the engine, application and persistence layers. Identifiers keep Spanish tax vocabulary (see `docs/CONVENTIONS.md`). The prototype `Transaction` and `IrpfCalculationResult` models it replaced are deleted (§7); `src/GestorIA.Domain/Models` holds `BankTransaction`.
 
 ## 2. Value objects
 
@@ -87,7 +87,7 @@ Invariants
 - Savings: payment date per broker/bank report.
 
 ## 7. Migration from the prototype
-`IrpfTaxCalculator` and `IrpfCalculationResult` were deleted on 2026-09-18. `Transaction` survives only because `BbvaCsvStatementParser` still produces it; it is replaced by `BankTransaction` in Phase 4.
+`IrpfTaxCalculator` and `IrpfCalculationResult` were deleted on 2026-09-18. `Transaction` was replaced by `BankTransaction` on 2026-09-28 (#72), when bank statements started being stored: `BankTransaction(BookingDate, ValueDate, Description, Amount, Balance?)` in `src/GestorIA.Domain/Models` is what `BbvaCsvStatementParser` produces. `AccountId`, `Counterparty`, `BankCategory`, `Classification` and `LinkedDocumentId` arrive with the classifier (SPEC-004); until then a line is only what the bank printed.
 
 - `Transaction.Type` derived from the sign of `Amount` → replaced by explicit `Classification` (SPEC-004).
 - `Transaction.IsDeductible` → replaced by a link to a confirmed `FacturaRecibida` with `DeductibleShare`.

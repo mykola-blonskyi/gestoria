@@ -15,6 +15,8 @@ public static class Problems
     public const string ApiKeyRequired = Base + "api-key-required";
     public const string ProfileNotFound = Base + "profile-not-found";
     public const string ProfileExists = Base + "profile-exists";
+    public const string StatementTooLarge = Base + "statement-too-large";
+    public const string StatementMediaType = Base + "statement-media-type";
 
     // 400 with the ValidationProblemDetails "errors" member, keyed by the JSON path of the offending value.
     public static ValidationProblem Invalid(string path, string message) =>
@@ -38,6 +40,22 @@ public static class Problems
             statusCode: StatusCodes.Status409Conflict,
             title: "A profile already exists",
             type: ProfileExists);
+
+    // 413: a bank statement over the upload limit, refused before any of it is read as text.
+    public static ProblemHttpResult TooLarge(int maxBytes) =>
+        TypedResults.Problem(
+            $"A statement may be at most {maxBytes} bytes; export a shorter period.",
+            statusCode: StatusCodes.Status413PayloadTooLarge,
+            title: "The statement is too large",
+            type: StatementTooLarge);
+
+    // 415: a statement sent as something other than a CSV file, such as a form upload or JSON.
+    public static ProblemHttpResult UnsupportedStatementType(IEnumerable<string> accepted) =>
+        TypedResults.Problem(
+            $"Send the statement file itself as the body, with Content-Type {string.Join(", ", accepted)}.",
+            statusCode: StatusCodes.Status415UnsupportedMediaType,
+            title: "The statement is not sent as a CSV file",
+            type: StatementMediaType);
 
     // 422: a tax year, a region or a value the configuration does not carry, or declares not published yet (SPEC-007 §3).
     public static ProblemHttpResult Gap(string reason) =>

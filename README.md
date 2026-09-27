@@ -41,8 +41,8 @@ The estimate always leans towards putting aside *more* rather than less. Having 
 - **No filled-in forms.** It computes the figures behind Modelo 130, 303 and 349, and the configuration knows which box (casilla) each figure goes in, but it does not yet produce the forms themselves.
 - **No 2027 configuration.** The 2027 values are published in the BOE around December 2026 (issue #12). Until then, 2027 cannot be computed.
 - **Some 2026 values are not published yet.** The engine refuses to guess them and tells you exactly what is missing (see [Tax-year configuration](#tax-year-configuration)).
-- **A small API and no document reading (OCR).** The API answers the set-aside estimate, lists the tax years and stores your taxpayer profile in a local PostgreSQL database. There are no transactions yet, so the overview's estimate states no closed quarter: the profile's projection covers the whole year. The rest is planned (`plans/DEVELOPMENT_PLAN.md`), and `services/ocr` holds only a description.
-- **Only the overview shows figures.** The other pages of the web app say what they will show once their API resources exist.
+- **A small API and no document reading (OCR).** The API answers the set-aside estimate, lists the tax years, stores your taxpayer profile in a local PostgreSQL database and imports BBVA CSV statements into it. The imported movements are not classified or used by the estimate yet, so the overview's estimate states no closed quarter: the profile's projection covers the whole year. The rest is planned (`plans/DEVELOPMENT_PLAN.md`), and `services/ocr` holds only a description.
+- **Only the overview and transactions show figures.** The other pages of the web app say what they will show once their API resources exist.
 - **No tax credits (deducciones) and no savings income** in the estimate. Leaving them out can only make the estimate higher, never lower.
 
 ## Quick start
@@ -169,7 +169,7 @@ Estimate
 
 The web app lives in `web/`. It is a Next.js application that shows the engine's answers in the browser, in Ukrainian (the default), Spanish, English or Russian, with five colour themes. It never computes tax itself; every figure comes from the engine through the API (ADR-0017).
 
-Settings holds your taxpayer profile, entered once: tax year, region, salary, the autónomo registration (date of alta, last year's activity, new activity) and the year's projection with the base de cotización. The API stores it in the database. The overview computes the estimate from the stored profile for the quarter you pick, and shows the notices and the step-by-step calculation. A new profile starts on the newest tax year whose configuration declares no gap; a year with gaps can still be chosen, and settings lists them, but its estimate is refused until they are published (2026 today, whose renta window and tarifa plana are not published yet). The access page says the app is unlocked and locks it on request. The other pages (payments, transactions, periods, backup) say what they will show.
+Settings holds your taxpayer profile, entered once: tax year, region, salary, the autónomo registration (date of alta, last year's activity, new activity) and the year's projection with the base de cotización. The API stores it in the database. The overview computes the estimate from the stored profile for the quarter you pick, and shows the notices and the step-by-step calculation. A new profile starts on the newest tax year whose configuration declares no gap; a year with gaps can still be chosen, and settings lists them, but its estimate is refused until they are published (2026 today, whose renta window and tarifa plana are not published yet). Transactions imports a BBVA CSV statement into the stored profile and lists its movements, filtered by quarter and by money in or out; importing the same statement again adds nothing. The access page says the app is unlocked and locks it on request. The other pages (payments, periods, backup) say what they will show.
 
 The app opens locked and asks for the API key of your installation. Set the key up once, as `web/README.md` ("The API key") shows: the API keeps only its hash, in your user secrets outside the repository, and refuses to start without it. The browser keeps the key in the tab's memory only, so a reload asks for it again.
 
@@ -218,9 +218,9 @@ The language and the theme are remembered in cookies. `web/README.md` explains t
 ```
 config/tax-years/   one JSON file per tax year, plus schema.json that checks them
 src/
-  GestorIA.Domain/          basic types (Money, Rate) and the prototype bank-transaction model
+  GestorIA.Domain/          basic types (Money, Rate) and a bank statement line (BankTransaction)
   GestorIA.Engine/          every tax calculation; pure code, no files, no network, no clock
-  GestorIA.Infrastructure/  reads and checks the yearly configuration files and the estimate's input file; the database (EF Core and its migrations); prototype BBVA statement parser
+  GestorIA.Infrastructure/  reads and checks the yearly configuration files and the estimate's input file; the database (EF Core and its migrations); the BBVA statement parser
   GestorIA.Cli/             the console program
   GestorIA.Api/             the web API (/api/v1) and its OpenAPI document, openapi/v1.json
 tests/
