@@ -25,7 +25,15 @@ public sealed record ReduccionTrabajoConfig(Money Fixed, Money T1, Money T2, Mon
 
 public sealed record ActividadConfig(DificilJustificacionConfig DificilJustificacion, InicioActividadConfig InicioActividad);
 
-public sealed record DificilJustificacionConfig(Rate Pct, Money Max);
+// Business rule 7, RD 439/2007 art. 30.2ª: Pct of the positive rendimiento neto previo, at most Max, never negative.
+public sealed record DificilJustificacionConfig(Rate Pct, Money Max)
+{
+    public Money On(Money previo)
+    {
+        var pct = (previo > Money.Zero ? previo : Money.Zero) * Pct;
+        return pct < Max ? pct : Max;
+    }
+}
 
 // LIRPF art. 32.3: Pct of the positive net, on at most MaxRendimiento of it, unless more than FormerEmployerShare of the
 // period's ingresos come from a payer of the taxpayer's employment income in the year before the activity started.
@@ -39,7 +47,7 @@ public sealed record Modelo130Config(Rate Rate, IReadOnlyList<MinoracionBand> Mi
 
 public sealed record MinoracionBand(Money PrevYearNetUpTo, Money AmountPerQuarter);
 
-public sealed record SeguridadSocialConfig(TramoTable Tramos, TarifaPlana TarifaPlana);
+public sealed record SeguridadSocialConfig(TramoTable Tramos, TarifaPlana TarifaPlana, Rate GastosGenericos);
 
 // The windows as the regulations state them. FilingDeadline turns one into the DueWindow a taxpayer files within.
 public sealed record TaxCalendar(IReadOnlyList<CalendarWindow> Modelo130, CalendarWindow Renta, IReadOnlyList<CalendarDay> Holidays);

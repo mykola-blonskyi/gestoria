@@ -3,7 +3,9 @@ using static System.FormattableString;
 
 namespace GestorIA.Engine;
 
-public sealed record MonthlyCuotaInput(DateOnly Alta, decimal ExpectedAnnualNet, YearMonth Month);
+// AnnualRendimientoComputable is LGSS art. 308.1.c 1.ª's figure, the IRPF rendimiento neto plus the titular's own
+// cuotas, annualized over the months of alta.
+public sealed record MonthlyCuotaInput(DateOnly Alta, decimal AnnualRendimientoComputable, YearMonth Month);
 
 // FullMonthCuota is the month's cuota before the month of alta is prorated: what TGSS debits for a whole month.
 public sealed record MonthlyCuotaResult(decimal Cuota, decimal FullMonthCuota, CalculationTrace Trace, IReadOnlyList<Warning> Warnings);
@@ -13,7 +15,7 @@ public static class MonthlyCuotaCalculator
     // RD 2064/1995 art. 45.1, as worded since Ley 6/2017 (disposición final 2.ª.3): the monthly cuota is divided by thirty whatever the month's length.
     private const decimal DaysInMonthForProrating = 30m;
 
-    public static MonthlyCuotaResult Cuota(MonthlyCuotaInput input, TramoTable tramos, TarifaPlana tarifaPlana)
+    public static MonthlyCuotaResult Cuota(MonthlyCuotaInput input, SeguridadSocialConfig config)
     {
         var altaMonth = YearMonth.Of(input.Alta);
         var monthsSinceAlta = input.Month.MonthsSince(altaMonth);
@@ -23,17 +25,21 @@ public static class MonthlyCuotaCalculator
             throw new ArgumentOutOfRangeException(nameof(input), input.Month, Invariant($"No cuota is due for {input.Month}, before the alta on {input.Alta:yyyy-MM-dd}."));
         }
 
+        var tramos = config.Tramos;
+        var tarifaPlana = config.TarifaPlana;
+        var gastosGenericos = config.GastosGenericos;
         var steps = new List<TraceStep>();
-        var monthlyNet = input.ExpectedAnnualNet / 12m;
+        var monthlyNet = input.AnnualRendimientoComputable * (1m - gastosGenericos.Value) / 12m;
 
         steps.Add(new TraceStep(
             "ss.rendimiento-neto-mensual",
             TraceSection.SeguridadSocial,
-            "Rendimiento neto mensual esperado",
-            [new("expectedAnnualNet", Invariant($"{input.ExpectedAnnualNet}"))],
-            Invariant($"{input.ExpectedAnnualNet} / 12 = {monthlyNet}"),
+            "Rendimiento neto mensual tras gastos genéricos",
+            [new("rendimientoComputableAnual", Invariant($"{input.AnnualRendimientoComputable}")), new("gastosGenericos", gastosGenericos.ToString())],
+            Invariant($"{input.AnnualRendimientoComputable} × (1 − {gastosGenericos}) / 12 = {monthlyNet}"),
             new TraceValue.Money(new Money(monthlyNet)),
-            "LGSS art. 308.1.c: promedio mensual de los rendimientos netos anuales; the 7 % gastos genéricos deduction is not applied, which over-reserves"));
+            "LGSS art. 308.1.c 2.ª (boe.es consolidated RDL 8/2015, read 2026-09-27) deducts the gastos genéricos from the rendimiento computable "
+                + "(config seguridadSocial.gastosGenericos); 3.ª spreads the result over the months of alta, and the input is already annualized over them, so / 12"));
 
         var tramo = tramos.For(monthlyNet);
         var upTo = tramo.NetUpTo is { } u ? Invariant($"{u.Amount}") : "open";

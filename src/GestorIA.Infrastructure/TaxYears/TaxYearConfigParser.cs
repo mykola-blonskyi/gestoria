@@ -93,7 +93,8 @@ public static class TaxYearConfigParser
                     new MinoracionBand(MoneyOf(band!["prevYearNetUpTo"]), MoneyOf(band["amountPerQuarter"])))]),
             new SeguridadSocialConfig(
                 new TramoTable([.. seguridadSocial["tramos"]!.AsArray().Select(TramoOf)]),
-                new TarifaPlana(MoneyOf(tarifaPlana["amount"]), tarifaPlana["months"]!.Read<int>())),
+                new TarifaPlana(MoneyOf(tarifaPlana["amount"]), tarifaPlana["months"]!.Read<int>()),
+                RateOf(seguridadSocial["gastosGenericos"])),
             new TaxCalendar(
                 [.. calendar["modelo130"]!.AsArray().Select(window => WindowOf(window, taxYear))],
                 WindowOf(calendar["renta"], taxYear),

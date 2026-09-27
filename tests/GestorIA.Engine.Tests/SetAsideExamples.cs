@@ -13,12 +13,13 @@ public class SetAsideExamples
         Retenciones? retenciones = null,
         DateOnly? alta = null,
         Quarter asOf = Quarter.Q1,
-        EmploymentIncome? employment = null) =>
+        EmploymentIncome? employment = null,
+        NewActivity? newActivity = null) =>
         new(
             new TaxpayerProfile(
                 "VC",
                 employment ?? new EmploymentIncome(Money.Zero, Money.Zero),
-                new AutonomoRegistration(alta ?? new DateOnly(2025, 1, 15), new PreviousYear.NoActivity(), new NewActivity.Started(NewActivityPeriod.First, Money.Zero))),
+                new AutonomoRegistration(alta ?? new DateOnly(2025, 1, 15), new PreviousYear.NoActivity(), newActivity ?? new NewActivity.Started(NewActivityPeriod.First, Money.Zero))),
             new ActivityPicture(
                 actuals ?? [],
                 new ActivityProjection(ingresos ?? new Money(30000m), gastos ?? new Money(1200m)),
@@ -131,35 +132,59 @@ public class SetAsideExamples
         Assert.Equal("6000.00 real + 27000.00 projected = 33000.00", Step("set-aside.annual-ingresos").Formula);
     }
 
-    // An established activity with Q1–Q3 actuals: net to date 16,500 after nine cuotas, 12,600 projected, 29,100 before any add-back.
-    // Nine cuotas at General 7 (425.85) give 32,932.65, 2,744.39 a month, General 7; at General 8 (451.50) they give 33,163.50,
-    // 2,763.63 a month, General 8. Both are consistent, so the conservative estimate takes General 8.
+    // Alta in 2020, Q1–Q3 actuals: net to date 16,500 after nine cuotas, 16,800 projected before the three cuotas left.
+    // At General 8 (451.50): cuotas to date 9 × 451.50 = 4,063.50, projected 3 × 451.50 = 1,354.50; previo 16,500 + 16,800 − 1,354.50
+    // = 31,945.50; difícil justificación 5 % = 1,597.275; casilla 0224 30,348.225; computable 30,348.225 + 4,063.50 + 1,354.50 = 35,766.225,
+    // × 0.93 / 12 = 2,771.88 a month, General 8. At General 7 (425.85): previo 32,022.45, difícil justificación 1,601.1225, computable
+    // 35,531.5275, 2,753.69 a month, General 7. Both are consistent, so the conservative estimate takes General 8.
+    private static SetAsideInput TwoConsistentTramosInput(NewActivity? newActivity = null) => G12Input(
+        ingresos: new Money(17200.00m),
+        gastos: new Money(400.00m),
+        actuals:
+        [
+            new(Quarter.Q1, new Money(7000.00m), new Money(1500.00m)),
+            new(Quarter.Q2, new Money(14000.00m), new Money(3000.00m)),
+            new(Quarter.Q3, new Money(21000.00m), new Money(4500.00m)),
+        ],
+        alta: new DateOnly(2020, 3, 1),
+        asOf: Quarter.Q3,
+        newActivity: newActivity);
+
     [Fact]
     public void TheCuotasAddedBackSettleOnTheHighestTramoTheyAreConsistentWith()
     {
-        var input = G12Input(
-            ingresos: new Money(13000.00m),
-            gastos: new Money(400.00m),
-            actuals:
-            [
-                new(Quarter.Q1, new Money(7000.00m), new Money(1500.00m)),
-                new(Quarter.Q2, new Money(14000.00m), new Money(3000.00m)),
-                new(Quarter.Q3, new Money(21000.00m), new Money(4500.00m)),
-            ],
-            alta: new DateOnly(2020, 3, 1),
-            asOf: Quarter.Q3);
-
-        var result = SetAsideEstimator.Estimate(input);
+        var result = SetAsideEstimator.Estimate(TwoConsistentTramosInput());
 
         Assert.Equal(4063.50m, result.Trace.Steps.Single(s => s.Id == "set-aside.cuotas-ss-to-date").Euros());
-        Assert.Equal(33163.50m, result.Trace.Steps.Single(s => s.Id == "set-aside.rendimiento-computable").Euros());
+        Assert.Equal(35766.225m, result.Trace.Steps.Single(s => s.Id == "set-aside.rendimiento-computable").Euros());
         Assert.Equal(new Money(451.50m), result.MonthlyCuotaSs);
+    }
+
+    // TGSS takes casilla 0224, which comes before every LIRPF art. 32 reduction, so the art. 32.3 status cannot move the tramo.
+    [Fact]
+    public void TheNewActivityReductionDoesNotLowerTheRendimientoComputable()
+    {
+        decimal Computable(NewActivity newActivity) => SetAsideEstimator.Estimate(TwoConsistentTramosInput(newActivity))
+            .Trace.Steps.Single(s => s.Id == "set-aside.rendimiento-computable").Euros();
+
+        Assert.Equal(
+            Computable(new NewActivity.Started(NewActivityPeriod.First, Money.Zero)),
+            Computable(new NewActivity.Established()));
+    }
+
+    [Fact]
+    public void TheRendimientoComputableCitesRule1AndCasilla0224()
+    {
+        var reference = SetAsideEstimator.Estimate(G12Input()).Trace.Steps.Single(s => s.Id == "set-aside.rendimiento-computable").Reference;
+
+        Assert.Contains("308.1.c 1.ª", reference, StringComparison.Ordinal);
+        Assert.Contains("0224", reference, StringComparison.Ordinal);
+        Assert.DoesNotContain("over-reserves", reference, StringComparison.Ordinal);
     }
 
     // #2: where the estimator picks between two defensible figures it reserves the higher, and the step that picks says so.
     [Theory]
     [InlineData("set-aside.cuotas-ss-to-date", "conservative")]
-    [InlineData("set-aside.rendimiento-computable", "over-reserves")]
     [InlineData("set-aside.cuota-ss-month", "bias conservative")]
     [InlineData("set-aside.tarifa-plana-lapse", "over-reserves")]
     [InlineData("set-aside.hold-back-share", "conservative")]

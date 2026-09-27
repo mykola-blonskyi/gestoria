@@ -9,11 +9,11 @@ public class SetAsideReportTests
     {
         var report = Render("G15");
 
-        Assert.Contains("  Next Modelo 130, Q3                     1220.27 €, due 2025-10-01 to 2025-10-20", report, StringComparison.Ordinal);
-        Assert.Contains("  Cuota SS per month this quarter         425.85 €", report, StringComparison.Ordinal);
-        Assert.Contains("  Annual return (Renta) gap               4328.76 €, payable by the end of 2026-06", report, StringComparison.Ordinal);
+        Assert.Contains("  Next Modelo 130, Q3                     1234.89 €, due 2025-10-01 to 2025-10-20", report, StringComparison.Ordinal);
+        Assert.Contains("  Cuota SS per month this quarter         400.20 €", report, StringComparison.Ordinal);
+        Assert.Contains("  Annual return (Renta) gap               4359.32 €, payable by the end of 2026-06", report, StringComparison.Ordinal);
         Assert.Contains("  IVA to set aside                        0.00 €", report, StringComparison.Ordinal);
-        Assert.Contains("  Hold back from every payment received   45.59 %", report, StringComparison.Ordinal);
+        Assert.Contains("  Hold back from every payment received   44.79 %", report, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -64,10 +64,10 @@ public class SetAsideReportTests
         Assert.DoesNotContain("\"Formula\"", report, StringComparison.Ordinal);
 
         // Money: the result line rounds to the cent, the formula above it keeps the unrounded figure (#42).
-        Assert.Contains("9019.82179", result.Trace.Steps.Single(s => s.Id == "renta.liability-on-activity").Formula, StringComparison.Ordinal);
-        ResultLineIs(report, "renta.liability-on-activity", "9019.82 €");
+        Assert.Contains("9079.619635", result.Trace.Steps.Single(s => s.Id == "renta.liability-on-activity").Formula, StringComparison.Ordinal);
+        ResultLineIs(report, "renta.liability-on-activity", "9079.62 €");
 
-        ResultLineIs(report, "set-aside.hold-back-share", "45.59 %");
+        ResultLineIs(report, "set-aside.hold-back-share", "44.79 %");
         ResultLineIs(report, "renta.marginal-rate", "40.90 %");
 
         ResultLineIs(report, "set-aside.projected-months", "6");
@@ -100,9 +100,9 @@ public class SetAsideReportTests
         var warnings = report.IndexOf("\nNotices (4, 3 of them warnings): read these before relying on the figures above\n", StringComparison.Ordinal);
         Assert.True(estimate > 0 && warnings > estimate, "the warnings follow the estimate at the end of the output");
         Assert.StartsWith("GestorIA set-aside estimate, tax year 2025\n81 calculation steps first; the estimate and 4 notices (3 warnings) follow at the end.\n", report, StringComparison.Ordinal);
-        Assert.Contains("  !! WARNING REDUCCION_TRABAJO_LOST\n     Activity net income of 8358.48 € is above the 6500.00 € cap on income other than employment, so the reducción por trabajo of 1194.15 € is lost entirely.", report, StringComparison.Ordinal);
+        Assert.Contains("  !! WARNING REDUCCION_TRABAJO_LOST\n     Activity net income of 8826.45 € is above the 6500.00 € cap on income other than employment, so the reducción por trabajo of 1194.15 € is lost entirely.", report, StringComparison.Ordinal);
         Assert.Contains("  !! WARNING MARGINAL_VS_EFFECTIVE\n", report, StringComparison.Ordinal);
-        Assert.Contains("The annual return will want 1258.44 € more, payable by 2026-06-30.", report, StringComparison.Ordinal);
+        Assert.Contains("The annual return will want 1305.24 € more, payable by 2026-06-30.", report, StringComparison.Ordinal);
     }
 
     // 20 April 2025 is a Sunday and 21 April Easter Monday, a holiday in the Comunitat Valenciana.
@@ -111,7 +111,7 @@ public class SetAsideReportTests
     {
         var report = Render("G16");
 
-        Assert.Contains("  Next Modelo 130, Q1                     317.92 €, due 2025-04-01 to 2025-04-22\n", report, StringComparison.Ordinal);
+        Assert.Contains("  Next Modelo 130, Q1                     341.32 €, due 2025-04-01 to 2025-04-22\n", report, StringComparison.Ordinal);
     }
 
     [Fact]

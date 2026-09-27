@@ -48,7 +48,8 @@
                                      "baseMin": 653.59, "baseMax": 718.94,
                                      "cuotaMin": 205, "cuotaMinKind": "approximate" }, ... ],
                        "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12,
-                                        "extensionNetIncomeCap": null } },                      // SMI; UNVERIFIED, see §2.1
+                                        "extensionNetIncomeCap": null },                        // SMI; UNVERIFIED, see §2.1
+                       "gastosGenericos": 0.07 },                                              // LGSS art. 308.1.c 2.ª
   "calendar": { "modelo130": [ ["04-01","04-20"], ["07-01","07-20"], ["10-01","10-20"], ["+1-01-01","+1-01-30"] ],
                 "renta": ["+1-04-08","+1-06-30"], "holidays": [ "01-01", ..., "+1-01-01", ... ] },  // regional ones in regions.XX.holidays
   "casillas": { "0003": "trabajo.ingresos", ... },          // SPEC-008

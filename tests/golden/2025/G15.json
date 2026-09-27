@@ -4,8 +4,8 @@
   "config": "2025.example.json",
   "setAside": {
     "oracle": "theory",
-    "oracleRef": "Arithmetic under the set-aside composition rules of #10 and #15, computed by an independent Decimal script written from those rules and the sources below, not by running the engine. Actuals are the cumulative closed quarters; the projection is spread evenly over the months after the last of them. TGSS: LGSS art. 308.1.c (boe.es consolidated RDL 8/2015, read 2026-09-26): rendimiento computable = IRPF net plus the titular's cuotas, so the actual net with the cuotas charged to date added back (priced at the highest tramo consistent with the net they lead to) plus the projected net, averaged over the months of alta; tarifa plana 80 for the alta month and the twelve complete calendar months after it, Ley 20/2007 art. 38 ter.1 (boe.es consolidated text, read 2026-09-26); the month of alta prorated by days of alta / 30 as MonthlyCuotaCalculator does (#7). Modelo 130: AEAT instrucciones del modelo 130 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026, read 2026-09-26), casillas 01–19, and RD 439/2007 art. 30.2ª and 110 (difícil justificación in casilla 02; casilla 12 floors 07 at zero; casilla 14 = 12 − 13 may be negative; casilla 15 deducts earlier negative casilla 19 results, at most a positive casilla 14). Annual: SPEC-002 steps 1, 2, 4 and 6, LIRPF art. 19, 20, 30.2.4ª, 32.3, 56, 63 and 74, VC mínimo 6,105 (Ley 13/1997 art. 2 bis). Hold-back share (Σ 130 + gap + Σ cuotas SS) / annual ingresos, rounded up to 0.0001. No AEAT simulator, published example or gestor covers a set-aside estimate; this is the weakest gate. Q1 and Q2 as stated pay 1,030.27 and 1,220.26. Q3 to date: 15,000 + 16,000 × 3 / 6 = 23,000; 3,155.10 + 300 + 3 × 425.85 = 4,732.65; casilla 03 17,353.98 after 913.3675 of difícil justificación; 20 % 3,470.80 − 2,250.53 = 1,220.27, no minoración, due 1–20 October. Σ 130 4,691.06. TGSS: net to date 11,844.90 plus 15,400 projected, with the six cuotas to date added back. Priced at General 7 (6 × 425.85 = 2,555.10) the net is 29,800.00, 2,483.33 a month, General 7 again; that is the highest tramo consistent with its own add-back (General 8's 6 × 451.50 = 2,709 would give 2,496.16 a month, not General 8). So 425.85 every month, 5,110.20 for the year. Annual: 31,000 − 6,310.20 = 24,689.80, difícil justificación 1,234.49, net 23,455.31, above the cap. Salary alone 35,400, cuota 7,698.05; stacked base 58,855.31, cuota 8,211.73235 estatal + 8,506.13944 VC = 16,717.87179; the activity adds 9,019.82179, the advances cover 4,691.06, gap 4,328.76 payable by 2026-06-30 (config calendar.renta). Share (4,691.06 + 4,328.76 + 5,110.20) / 31,000 = 0.45580…, rounded up 0.4559. Due window (#40): RD 439/2007 art. 111.1 and Orden EHA/672/2007 art. 7 give 1–20 of the month, and a last day that is a Saturday, Sunday or holiday of the taxpayer's region moves to the next working day (Orden EHA/672/2007 art. 7; Ley 39/2015 art. 30.5–30.6; boe.es, read 2026-09-27); 20 October 2025 is a Monday and no holiday in the Comunitat Valenciana (BOE-A-2024-26935), so it stands.",
-    "oracleRunDate": "2026-09-26",
+    "oracleRef": "Arithmetic under the set-aside composition rules of #10 and #15, computed by an independent Decimal script written from those rules and the sources below, not by running the engine. Re-derived for #39 on 2026-09-27 by a new independent Decimal script, written without reading the engine, which first reproduced every earlier expected value of this golden under the earlier TGSS rule and then changed only that rule. Actuals are the cumulative closed quarters; the projection is spread evenly over the months after the last of them. TGSS (#39): LGSS art. 308.1.c 1.ª–3.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): rendimiento computable = IRPF rendimiento neto plus the titular's own cuotas (1.ª), less 7 % gastos genéricos (2.ª, config seguridadSocial.gastosGenericos), spread over the months of alta (3.ª). The net is Modelo 100 casilla 0224 and the cuotas casilla 0186 (AEAT, Información para determinar el rendimiento neto, sede.agenciatributaria.gob.es, page updated 18 Sep 2026, read 2026-09-27); casilla 0224 is after difícil justificación (RD 439/2007 art. 30.2ª: 5 %, at most 2,000) and before every LIRPF art. 32 reduction, which Modelo 100 2025 takes afterwards in casillas 0225–0226 and 0232–0235 (Anexo I, página 9), so the art. 32.3 reduction does not lower it. Casilla 0224 is the year's ingresos less its gastos, the actual ones with the cuotas charged and the projected ones with the projected cuotas, less difícil justificación. Every month's cuota is priced at the highest tramo consistent with the monthly figure it leads to; tarifa plana 80 for the alta month and the twelve complete calendar months after it, Ley 20/2007 art. 38 ter.1 (boe.es consolidated text, read 2026-09-26); the month of alta prorated by days of alta / 30 as MonthlyCuotaCalculator does (#7). Modelo 130: AEAT instrucciones del modelo 130 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026, read 2026-09-26), casillas 01–19, and RD 439/2007 art. 30.2ª and 110 (difícil justificación in casilla 02; casilla 12 floors 07 at zero; casilla 14 = 12 − 13 may be negative; casilla 15 deducts earlier negative casilla 19 results, at most a positive casilla 14). Annual: SPEC-002 steps 1, 2, 4 and 6, LIRPF art. 19, 20, 30.2.4ª, 32.3, 56, 63 and 74, VC mínimo 6,105 (Ley 13/1997 art. 2 bis). Hold-back share (Σ 130 + gap + Σ cuotas SS) / annual ingresos, rounded up to 0.0001. No AEAT simulator, published example or gestor covers a set-aside estimate; this is the weakest gate. Q1 and Q2 as stated pay 1,030.27 and 1,220.26. Q3 to date: 15,000 + 16,000 × 3 / 6 = 23,000; 3,155.10 + 300 + 3 × 400.20 = 4,655.70; casilla 03 17,427.08 after 917.215 of difícil justificación; 20 % 3,485.42 − 2,250.53 = 1,234.89, no minoración, due 1–20 October. Q4 1,234.88. Σ 130 4,720.30. TGSS: priced at General 6 (400.20), annual gastos 3,155.10 + 600 + 6 × 400.20 = 6,156.30, previo 24,843.70, difícil justificación 1,242.185, casilla 0224 23,601.515, plus 12 × 400.20 = 4,802.40 of cuotas = 28,403.915, × 0.93 / 12 = 2,201.30 a month, General 6 again. Priced at General 7 (425.85) the figure is 2,213.83, General 6, so General 7 is not consistent and General 6 is the highest that is. So 400.20 every month, 4,802.40 for the year, the same RETA as G11 (General 6), whose own figure under the same rule is (23,937.72 + 4,802.40) × 0.93 / 12 = 2,227.36, General 6. Annual: 31,000 − 6,156.30 = 24,843.70, difícil justificación 1,242.185, net 23,601.515, above the cap. Salary alone 35,400, cuota 7,698.05; stacked base 59,001.515, cuota 16,777.669635; the activity adds 9,079.619635, the advances cover 4,720.30, gap 4,359.32 payable by 2026-06-30 (config calendar.renta). Share (4,720.30 + 4,359.32 + 4,802.40) / 31,000 = 0.44780…, rounded up 0.4479. Due window (#40): RD 439/2007 art. 111.1 and Orden EHA/672/2007 art. 7 give 1–20 of the month, and a last day that is a Saturday, Sunday or holiday of the taxpayer's region moves to the next working day (Orden EHA/672/2007 art. 7; Ley 39/2015 art. 30.5–30.6; boe.es, read 2026-09-27); 20 October 2025 is a Monday and no holiday in the Comunitat Valenciana (BOE-A-2024-26935), so it stands.",
+    "oracleRunDate": "2026-09-27",
     "inputs": {
       "asOf": "Q3",
       "profile": {
@@ -43,29 +43,30 @@
       }
     },
     "expected": {
-      "holdBackShare": "0.4559",
+      "holdBackShare": "0.4479",
       "nextPayment": {
         "quarter": "Q3",
-        "aIngresar": "1220.27",
+        "aIngresar": "1234.89",
         "dueWindow": [
           "2025-10-01",
           "2025-10-20"
         ]
       },
-      "monthlyCuotaSs": "425.85",
-      "annualTrueUpGap": "4328.76",
+      "monthlyCuotaSs": "400.20",
+      "annualTrueUpGap": "4359.32",
       "annualTrueUpPayableIn": "2026-06",
       "ivaToSetAside": "0.00",
       "traceOutputs": {
         "set-aside.actuals": "15000.00",
         "set-aside.projected-months": "6",
-        "set-aside.cuotas-ss-to-date": "2555.10",
-        "set-aside.rendimiento-computable": "29800.00",
-        "set-aside.cuota-ss-year": "5110.20",
-        "set-aside.modelo130-year": "4691.06",
-        "set-aside.annual-gastos": "6310.20",
-        "renta.liability-on-activity": "9019.82179",
-        "renta.gap": "4328.76"
+        "set-aside.cuotas-ss-to-date": "2401.20",
+        "set-aside.rendimiento-computable": "28403.915",
+        "set-aside.cuota-ss-year": "4802.40",
+        "set-aside.modelo130-year": "4720.30",
+        "set-aside.annual-gastos": "6156.30",
+        "renta.liability-on-activity": "9079.619635",
+        "renta.gap": "4359.32",
+        "ss.rendimiento-neto-mensual": "2201.3034125"
       },
       "warnings": [
         "SET_ASIDE_ESTIMATE",
@@ -73,7 +74,7 @@
         "MARGINAL_VS_EFFECTIVE"
       ],
       "warningTexts": {
-        "MARGINAL_VS_EFFECTIVE": "want 4328.76 € more, payable by 2026-06-30"
+        "MARGINAL_VS_EFFECTIVE": "want 4359.32 € more, payable by 2026-06-30"
       }
     }
   }
