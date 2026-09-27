@@ -1,0 +1,146 @@
+[
+  {
+    "id": "00000000-0000-0000-0072-000000000001",
+    "bookingDate": "2025-01-02",
+    "valueDate": "2025-01-02",
+    "description": "TRANSFERENCIA RECIBIDA CLIENTE SINTETICO UNO",
+    "amount": "2345.67",
+    "balance": "8345.67"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000002",
+    "bookingDate": "2025-01-03",
+    "valueDate": "2025-01-03",
+    "description": "CUOTA AUTONOMOS TGSS",
+    "amount": "-87.61",
+    "balance": "8258.06"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000003",
+    "bookingDate": "2025-01-15",
+    "valueDate": "2025-01-15",
+    "description": "CAFETERIA LA PRUEBA",
+    "amount": "-1.85",
+    "balance": "8256.21"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000004",
+    "bookingDate": "2025-01-15",
+    "valueDate": "2025-01-15",
+    "description": "CAFETERIA LA PRUEBA",
+    "amount": "-1.85",
+    "balance": "8254.36"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000005",
+    "bookingDate": "2025-01-20",
+    "valueDate": "2025-01-20",
+    "description": "COMPRA SUSCRIPCION SOFTWARE EJEMPLO",
+    "amount": "-23.79",
+    "balance": "8230.57"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000006",
+    "bookingDate": "2025-02-14",
+    "valueDate": "2025-02-14",
+    "description": "RECIBO LUZ; FEBRERO",
+    "amount": "-64.32",
+    "balance": "8166.25"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000007",
+    "bookingDate": "2025-03-03",
+    "valueDate": "2025-03-03",
+    "description": "TRANSFERENCIA A ES12 9999 0000 1111 2222 3333",
+    "amount": "-150.00",
+    "balance": "8016.25"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000008",
+    "bookingDate": "2025-03-31",
+    "valueDate": "2025-04-01",
+    "description": "ABONO INTERESES CUENTA",
+    "amount": "0.43",
+    "balance": "8016.68"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000009",
+    "bookingDate": "2025-04-07",
+    "valueDate": "2025-04-07",
+    "description": "TRANSFERENCIA RECIBIDA CLIENTE SINTETICO DOS",
+    "amount": "1876.54",
+    "balance": "9893.22"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000010",
+    "bookingDate": "2025-04-20",
+    "valueDate": "2025-04-20",
+    "description": "PAGO MODELO 130 1T AEAT",
+    "amount": "-312.88",
+    "balance": "9580.34"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000011",
+    "bookingDate": "2025-05-05",
+    "valueDate": "2025-05-05",
+    "description": "SUPERMERCADO FICTICIO",
+    "amount": "-47.16",
+    "balance": "9533.18"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000012",
+    "bookingDate": "2025-06-30",
+    "valueDate": "2025-06-30",
+    "description": "COMISION MANTENIMIENTO",
+    "amount": "-3.00",
+    "balance": "9530.18"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000013",
+    "bookingDate": "2025-07-01",
+    "valueDate": "2025-07-01",
+    "description": "TRANSFERENCIA RECIBIDA CLIENTE SINTETICO UNO",
+    "amount": "2345.67",
+    "balance": "11875.85"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000014",
+    "bookingDate": "2025-08-18",
+    "valueDate": "2025-08-18",
+    "description": "LIBRERIA TECNICA INVENTADA",
+    "amount": "-39.90",
+    "balance": "11835.95"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000015",
+    "bookingDate": "2025-09-30",
+    "valueDate": "2025-09-30",
+    "description": "CUOTA AUTONOMOS TGSS",
+    "amount": "-87.61",
+    "balance": "11748.34"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000016",
+    "bookingDate": "2025-10-06",
+    "valueDate": "2025-10-06",
+    "description": "DEVOLUCION COMPRA",
+    "amount": "12.99",
+    "balance": "11761.33"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000017",
+    "bookingDate": "2025-11-22",
+    "valueDate": "2025-11-22",
+    "description": "RESTAURANTE IMAGINARIO",
+    "amount": "-58.70",
+    "balance": "11702.63"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000018",
+    "bookingDate": "2025-12-31",
+    "valueDate": "2025-12-31",
+    "description": "ABONO INTERESES CUENTA",
+    "amount": "0.51",
+    "balance": "11703.14"
+  }
+]

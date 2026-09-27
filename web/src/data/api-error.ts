@@ -14,6 +14,7 @@ export const PROBLEM_TYPES = {
   configGap: "https://gestoria.local/problems/config-gap",
   estimateRefused: "https://gestoria.local/problems/estimate-refused",
   apiKeyRequired: "https://gestoria.local/problems/api-key-required",
+  statementTooLarge: "https://gestoria.local/problems/statement-too-large",
   databaseUnavailable: "https://gestoria.local/problems/database-unavailable",
 } as const;
 

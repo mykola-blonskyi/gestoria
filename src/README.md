@@ -5,9 +5,9 @@ Solution file: `../GestorIA.slnx` (projects under `src/`, test projects under `.
 ## Current
 
 ```
-src/GestorIA.Domain/          Money, Rate (SPEC-001); prototype Transaction, IStatementParser, Result<T>   — no dependencies
+src/GestorIA.Domain/          Money, Rate, BankTransaction (SPEC-001); IStatementParser, Result<T>   — no dependencies
 src/GestorIA.Engine/          set-aside estimator, Modelo 130, annual true-up, TGSS cuota, deadlines     — → Domain
-src/GestorIA.Infrastructure/  tax-year config loader and validation; the set-aside input file parser; PostgreSQL through EF Core (Persistence/, migrations included) and the stored profile (Profiles/); prototype BbvaCsvStatementParser — → Domain, Engine
+src/GestorIA.Infrastructure/  tax-year config loader and validation; the set-aside input file parser; PostgreSQL through EF Core (Persistence/, migrations included) the stored profile (Profiles/) and statement lines (Transactions/); BbvaCsvStatementParser — → Domain, Engine
 src/GestorIA.Cli/             console that prints a set-aside estimate from a file (#11)               — → Engine, Infrastructure
 src/GestorIA.Api/             /api/v1: health, tax-year configs, set-aside estimate, profiles (#69); openapi/v1.json (#66) — → Engine, Infrastructure
 ../Directory.Build.props      nullable, warnings-as-errors, analyzers, banned double/float for money (ADR-0004)

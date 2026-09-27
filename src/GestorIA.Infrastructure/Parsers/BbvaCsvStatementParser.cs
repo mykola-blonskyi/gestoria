@@ -1,70 +1,170 @@
 using System.Globalization;
-using System.Runtime.CompilerServices;
+using System.Text;
 using GestorIA.Domain.Interfaces;
 using GestorIA.Domain.Models;
+using GestorIA.Domain.ValueObjects;
 
 namespace GestorIA.Infrastructure.Parsers;
 
-public class BbvaCsvStatementParser : IStatementParser
+// BBVA's CSV export: a header line, then one movement per line, fields separated by ";" and optionally double-quoted.
+//   Fecha;Fecha Valor;Concepto;Importe;Saldo
+//   15/01/2025;15/01/2025;PAGO EN HEROKU;-15,50;1.250,00
+// Dates are dd/MM/yyyy, amounts Spanish-style (thousands ".", decimals ","), Saldo may be empty. XLSX is not read yet.
+public sealed class BbvaCsvStatementParser : IStatementParser
 {
-    public string BankName => "BBVA";
+    private const int MaxLineErrors = 20;
 
-    public bool CanParse(string fileName) =>
-        fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase);
+    private static readonly string[] Header = ["Fecha", "Fecha Valor", "Concepto", "Importe", "Saldo"];
 
-    public async IAsyncEnumerable<Transaction> ParseAsync(Stream fileStream, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    // Spelled out rather than CultureInfo("es-ES"), so the parse does not depend on the ICU data of the machine it runs on.
+    private static readonly NumberFormatInfo Spanish = new() { NumberDecimalSeparator = ",", NumberGroupSeparator = ".", NegativeSign = "-" };
+
+    // A numeric(18,6) column holds twelve digits before the point.
+    private const decimal Limit = 1_000_000_000_000m;
+
+    public string Bank => "bbva";
+
+    public IReadOnlyList<StatementLine> Parse(string text)
     {
-        using var reader = new StreamReader(fileStream);
-        string? line;
-        bool isHeader = true;
+        var lines = text.ReplaceLineEndings("\n").Split('\n');
+        var errors = new Dictionary<string, string[]>();
+        var movements = new List<StatementLine>();
+        var headerSeen = false;
+        var failed = 0;
 
-        var esCulture = new CultureInfo("es-ES");
-
-        while ((line = await reader.ReadLineAsync(cancellationToken)) != null)
+        for (var index = 0; index < lines.Length; index++)
         {
-            if (cancellationToken.IsCancellationRequested) yield break;
-
-            if (isHeader)
+            var line = lines[index];
+            if (string.IsNullOrWhiteSpace(line))
             {
-                isHeader = false;
                 continue;
             }
 
-            if (string.IsNullOrWhiteSpace(line)) continue;
-
-            var transaction = ParseLine(line.AsSpan(), esCulture);
-            if (transaction != null)
+            if (!headerSeen)
             {
-                yield return transaction;
+                if (Fields(line) is not { } names || !names.SequenceEqual(Header, StringComparer.OrdinalIgnoreCase))
+                {
+                    throw new InvalidStatementException(new Dictionary<string, string[]>
+                    {
+                        ["file"] = [$"The first line is not the header of a BBVA CSV statement, {string.Join(';', Header)}."],
+                    });
+                }
+
+                headerSeen = true;
+                continue;
+            }
+
+            var number = index + 1;
+            var reasons = Movement(line, out var movement);
+            if (reasons.Count == 0)
+            {
+                movements.Add(new StatementLine(number, movement!));
+            }
+            else if (++failed <= MaxLineErrors)
+            {
+                errors[$"line {number}"] = [.. reasons.Select(reason => $"Line {number}: {reason}")];
             }
         }
+
+        if (!headerSeen)
+        {
+            errors["file"] = ["The file is empty; a BBVA CSV statement starts with its header line."];
+        }
+        else if (failed > MaxLineErrors)
+        {
+            errors["file"] = [$"{failed} lines cannot be read; the first {MaxLineErrors} are listed."];
+        }
+
+        return errors.Count == 0 ? movements : throw new InvalidStatementException(errors);
     }
 
-    private static Transaction? ParseLine(ReadOnlySpan<char> line, CultureInfo cultureInfo)
+    private static List<string> Movement(string line, out BankTransaction? movement)
     {
-        // Пример CSV: Date;ValueDate;Description;Amount;Balance
-        // 15/01/2025;15/01/2025;PAGO EN HEROKU;-15,50;1250,00
-
-        Span<Range> ranges = stackalloc Range[5];
-        int splitCount = line.Split(ranges, ';', StringSplitOptions.TrimEntries);
-
-        if (splitCount < 4) return null;
-
-        var dateSpan = line[ranges[0]];
-        var descSpan = line[ranges[2]];
-        var amountSpan = line[ranges[3]];
-
-        if (!DateOnly.TryParse(dateSpan, cultureInfo, DateTimeStyles.None, out var date)) return null;
-
-        if (!decimal.TryParse(amountSpan, NumberStyles.Number, cultureInfo, out var amount)) return null;
-
-        return new Transaction
+        movement = null;
+        if (Fields(line) is not { Count: 5 } fields)
         {
-            Date = date,
-            ValueDate = date,
-            Description = descSpan.ToString(),
-            Amount = amount,
-            IsDeductible = false // Базовое значение, настраивается классификатором
-        };
+            return ["it must have five fields separated by \";\": Fecha, Fecha Valor, Concepto, Importe, Saldo."];
+        }
+
+        var reasons = new List<string>();
+        var booking = Date(fields[0], "Fecha", reasons);
+        var value = Date(fields[1], "Fecha Valor", reasons);
+        var amount = Amount(fields[3], "Importe", reasons);
+        var balance = fields[4].Length == 0 ? null : Amount(fields[4], "Saldo", reasons);
+
+        if (reasons.Count == 0)
+        {
+            movement = new BankTransaction(booking, value, fields[2], amount!.Value, balance);
+        }
+
+        return reasons;
+    }
+
+    private static DateOnly Date(string text, string column, List<string> reasons)
+    {
+        if (DateOnly.TryParseExact(text, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+        {
+            return date;
+        }
+
+        reasons.Add($"{column} must be a date written dd/MM/yyyy.");
+        return default;
+    }
+
+    private static Money? Amount(string text, string column, List<string> reasons)
+    {
+        const NumberStyles style = NumberStyles.AllowLeadingSign | NumberStyles.AllowThousands | NumberStyles.AllowDecimalPoint;
+        if (decimal.TryParse(text, style, Spanish, out var amount) && amount.Scale <= 2 && Math.Abs(amount) < Limit)
+        {
+            return new Money(amount);
+        }
+
+        reasons.Add($"{column} must be an amount in euros with at most two decimals, written like -1.234,56.");
+        return null;
+    }
+
+    // Splits on ";" outside double quotes; a quoted field may hold ";" and a doubled quote. Null when a quote is left open.
+    private static List<string>? Fields(string line)
+    {
+        var fields = new List<string>();
+        var field = new StringBuilder();
+        var quoted = false;
+
+        for (var i = 0; i < line.Length; i++)
+        {
+            var c = line[i];
+            if (quoted)
+            {
+                if (c != '"')
+                {
+                    field.Append(c);
+                }
+                else if (i + 1 < line.Length && line[i + 1] == '"')
+                {
+                    field.Append('"');
+                    i++;
+                }
+                else
+                {
+                    quoted = false;
+                }
+            }
+            else if (c == '"')
+            {
+                quoted = true;
+            }
+            else if (c == ';')
+            {
+                fields.Add(field.ToString().Trim());
+                field.Clear();
+            }
+            else
+            {
+                field.Append(c);
+            }
+        }
+
+        fields.Add(field.ToString().Trim());
+        return quoted ? null : fields;
     }
 }

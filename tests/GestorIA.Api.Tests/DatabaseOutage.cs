@@ -55,6 +55,8 @@ public sealed class DatabaseOutage : IAsyncLifetime
             await client.PostProfile(RepoFiles.GoldenProfile("G12")),
             await client.PutProfile(id, RepoFiles.GoldenProfile("G16")),
             await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q1"),
+            await client.ImportStatement(id, RepoFiles.Statement),
+            await client.GetAsync($"/api/v1/profiles/{id}/transactions?year=2025"),
         };
 
         foreach (var answer in answers)

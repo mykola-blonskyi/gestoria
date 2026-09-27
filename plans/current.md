@@ -62,7 +62,6 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 
 - Estimates assume ~15–20 h/week while learning C#; re-plan after Phase 1 exit.
 - `2025.json` values must be re-verified against the AEAT Manual before goldens are trusted.
-- The existing `Transaction` model (signed amount ⇒ income/expense) conflicts with SPEC-001 ledger design; migrate rather than extend. It survives only as the parser's output type.
 - The first production config is `2026.json` (#47). Its gaps close as the norms land: the 2027 días inhábiles around December 2026, the renta window and casillas around March 2027, the tarifa plana amount whenever a norm fixes it. `2025.json` is the test corpus.
 - ~28 weeks to 20 April 2027, when Modelo 130, Modelo 303 and Renta 2026 all come due, against a 31-week plan that only Phase 4 has been cut from. Re-estimate before trusting any milestone date.
 - Whether Modelo 130 is required at all is unknown until the client mix is settled (SPEC-003 §1). If ≥ 70 % of activity income carries retención, it is not required, and one of the three April filings disappears.

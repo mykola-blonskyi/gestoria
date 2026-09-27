@@ -47,8 +47,8 @@ public partial class ProfileNotLogged
     // A DNI (eight digits and a letter), an NIE (X, Y or Z, seven digits and a letter) or a CIF (a letter, seven digits and a
     // check character); and an IBAN, two letters and two check digits before up to thirty letters and digits.
     [GeneratedRegex(@"\b([0-9]{8}[A-Z]|[XYZ][0-9]{7}[A-Z]|[ABCDEFGHJNPQRSUVW][0-9]{7}[0-9A-J])\b")]
-    private static partial Regex Nif();
+    internal static partial Regex Nif();
 
     [GeneratedRegex(@"\b[A-Z]{2}[0-9]{2} ?([A-Z0-9]{4} ?){2,7}[A-Z0-9]{1,4}\b")]
-    private static partial Regex Iban();
+    internal static partial Regex Iban();
 }

@@ -20,8 +20,25 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
         var created = await client.PostProfile(RepoFiles.GoldenProfile("G12"));
         var id = (await created.Content.ReadFromJsonAsync<JsonObject>())!["id"]!.GetValue<string>();
 
-        await AssertFixture("g12-profile.json", await client.GetAsync($"/api/v1/profiles/{id}"), id);
+        await AssertFixture("g12-profile.json", await client.GetAsync($"/api/v1/profiles/{id}"), [(id, FixtureId)]);
         await AssertFixture("g12-estimate.json", await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q1"));
+    }
+
+    // A new database per run gives each movement a new id; the fixture numbers them in order instead.
+    [Fact]
+    public async Task TheSyntheticStatementsImportAndMovementsAreTheApisAnswers()
+    {
+        await using var own = new ApiFactory();
+        await own.InitializeAsync();
+        var client = own.CreateClient();
+        var id = await client.CreateProfile();
+
+        await AssertFixture("g12-statement-import.json", await client.ImportStatement(id, RepoFiles.Statement));
+        var year = await client.GetAsync($"/api/v1/profiles/{id}/transactions?year=2025");
+        var ids = JsonNode.Parse(await year.Content.ReadAsStringAsync())!.AsArray().Select(t => t!["id"]!.GetValue<string>()).ToList();
+        var fixtureIds = ids.Select((movement, index) => (movement, $"00000000-0000-0000-0072-{index + 1:D12}")).Append((id, FixtureId)).ToList();
+        await AssertFixture("g12-transactions-2025.json", year, fixtureIds);
+        await AssertFixture("g12-transactions-2025-q1.json", await client.GetAsync($"/api/v1/profiles/{id}/transactions?year=2025&quarter=Q1"), fixtureIds);
     }
 
     [Fact]
@@ -30,10 +47,10 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
         await AssertFixture("tax-years.json", await client.GetAsync("/api/v1/config/tax-years"));
     }
 
-    private static async Task AssertFixture(string name, HttpResponseMessage response, string? id = null)
+    private static async Task AssertFixture(string name, HttpResponseMessage response, IEnumerable<(string Id, string FixtureId)>? ids = null)
     {
-        var text = await response.Content.ReadAsStringAsync();
-        AssertFixture(name, JsonNode.Parse(id is null ? text : text.Replace(id, FixtureId, StringComparison.Ordinal))!);
+        var text = (ids ?? []).Aggregate(await response.Content.ReadAsStringAsync(), (answer, id) => answer.Replace(id.Id, id.FixtureId, StringComparison.Ordinal));
+        AssertFixture(name, JsonNode.Parse(text)!);
     }
 
     internal static void AssertFixture(string name, JsonNode answer)

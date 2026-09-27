@@ -3,6 +3,7 @@ using GestorIA.Api;
 using GestorIA.Api.Profiles;
 using GestorIA.Api.SetAside;
 using GestorIA.Api.TaxYears;
+using GestorIA.Api.Transactions;
 using GestorIA.Infrastructure.Persistence;
 using GestorIA.Infrastructure.TaxYears;
 using Microsoft.EntityFrameworkCore;
@@ -98,6 +99,7 @@ var locked = api.MapGroup("").RequireApiKey();
 locked.MapTaxYears();
 locked.MapSetAside();
 locked.MapProfiles();
+locked.MapTransactions();
 
 app.Run();
 
