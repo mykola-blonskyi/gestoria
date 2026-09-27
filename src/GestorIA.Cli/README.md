@@ -29,7 +29,7 @@ The input is the `setAside.inputs` object of a set-aside golden (`tests/golden/2
 | Field | Value |
 |---|---|
 | `asOf` | The quarter the estimate is for: `"Q1"` to `"Q4"` |
-| `profile.region` | `"VC"` |
+| `profile.region` | `"VC"` or `"MD"` |
 | `profile.employment.ingresos`, `.seguridadSocial` | The year's salary and the employee's own SS, `"0.00"` without employment |
 | `profile.activity.alta` | The date of alta, `"yyyy-MM-dd"` |
 | `profile.activity.previousYear` | `"noActivity"`, or `{ "rendimientoNeto": "8000.00" }` for the previous year's activity net |

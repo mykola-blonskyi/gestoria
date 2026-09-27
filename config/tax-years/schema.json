@@ -537,7 +537,8 @@
     "regions": {
       "type": "object",
       "required": [
-        "VC"
+        "VC",
+        "MD"
       ],
       "propertyNames": {
         "pattern": "^[A-Z]{2}$"

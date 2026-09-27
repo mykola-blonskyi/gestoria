@@ -5,7 +5,7 @@
 Cut from v1.0 by ADR-0013:
 
 - [ ] OCR service and document ingestion (SPEC-005)
-- [ ] Madrid and the remaining common-regime regions (scales and credits as JSON only)
+- [ ] The remaining common-regime regions (scales and credits as JSON only). Madrid moved into v1.0 (ADR-0016)
 
 - [ ] Hosted deployment: VPS, Caddy TLS, OIDC, upload rate limiting, encrypted backups with a rehearsed restore, GDPR export and delete (deferred by ADR-0010; needs a real second user first)
 - [ ] `config/tax-years/2027.json` when BOE publishes the changes; rehearse the new-year runbook
