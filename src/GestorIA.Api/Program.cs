@@ -35,7 +35,7 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.Wi
 
 var app = builder.Build();
 
-// Development throws binding failures (a missing taxYear) as BadHttpRequestException; they stay the 400 they are.
+// A request Kestrel or binding refuses, such as a body over the size limit, throws BadHttpRequestException; it keeps its status.
 app.UseExceptionHandler(new ExceptionHandlerOptions
 {
     StatusCodeSelector = e => e is BadHttpRequestException bad ? bad.StatusCode : StatusCodes.Status500InternalServerError,
