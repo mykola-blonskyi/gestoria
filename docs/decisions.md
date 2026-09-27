@@ -12,7 +12,7 @@ An ADR is **Accepted** only when the decision has been felt: code written, a ser
 | [ADR-0004](adr/ADR-0004-decimal-money-type.md) | `decimal` for money; rounding only at the casilla boundary | Accepted | 2026-09-17 |
 | [ADR-0005](adr/ADR-0005-service-communication.md) | REST + JSON Schema between API and OCR; gRPC deferred | Proposed | 2026-09-17 |
 | [ADR-0006](adr/ADR-0006-persistence-postgresql-efcore.md) | PostgreSQL with EF Core | Accepted | 2026-09-17 |
-| [ADR-0007](adr/ADR-0007-frontend-react-typescript.md) | React + TypeScript SPA (not Blazor) | Accepted | 2026-09-17 |
+| [ADR-0007](adr/ADR-0007-frontend-react-typescript.md) | React + TypeScript SPA (not Blazor) | Accepted (framework, routing and i18n superseded by ADR-0017) | 2026-09-17 |
 | [ADR-0008](adr/ADR-0008-deployment-hosted-vps-v1.md) | Hosted single-VPS deployment for v1 | Superseded by ADR-0010 | 2026-09-17 |
 | [ADR-0009](adr/ADR-0009-ocr-job-queue-inprocess-channel.md) | In-process `Channel<T>` job queue for OCR extraction in v1 | Proposed | 2026-09-17 |
 | [ADR-0010](adr/ADR-0010-deployment-local-only-v1.md) | Local-only deployment for v1.0; hosted VPS deferred | Accepted | 2026-09-18 |
@@ -22,9 +22,11 @@ An ADR is **Accepted** only when the decision has been felt: code written, a ser
 | [ADR-0014](adr/ADR-0014-build-order-april-2027-cluster.md) | Build order follows the April 2027 deadline cluster | Accepted | 2026-09-18 |
 | [ADR-0015](adr/ADR-0015-documents-in-minio-encrypted-client-side.md) | Documents live in MinIO on the author's VPS, encrypted client-side | Accepted | 2026-09-18 |
 | [ADR-0016](adr/ADR-0016-madrid-in-v1.md) | Madrid is a v1.0 region, in every tax year | Accepted | 2026-09-27 |
+| [ADR-0017](adr/ADR-0017-web-app-nextjs-next-intl.md) | The web app is Next.js (App Router) with next-intl, in `web/` | Accepted | 2026-09-27 |
 
 ## Small decisions (no ADR)
 
+- **There is a web app, and the CLI stays** — 2026-09-27, settling the CLI-or-SPA question that was deferred to M3. The author chose a Next.js web app in `web/` (ADR-0017, #65).
 - **Regions in v1.0: Valencia (`VC`) and Madrid (`MD`)** — 2026-09-27, superseding the 2026-09-18 note that kept Valencia only. Both are complete in every tax-year file, and the schema requires both (ADR-0016).
 - **Build order follows deadlines, not scope** — 2026-09-18. Quarterly forms first, because the author registers as an autónomo in January 2027 and Modelo 130 and 303 for Q1 2027 fall due 20 April 2027, alongside Renta 2026 (ADR-0014). The autónomo annual path is not needed until April 2028.
 - **PostgreSQL, EF Core and ASP.NET stay in v1.0** — 2026-09-18, closing a challenge raised and withdrawn the same day. ADR-0006 stands unchanged. The deciding argument is not volume, it is `decimal`. SQLite has no decimal type, EF Core maps `decimal` to TEXT there, and ordering and comparison on money break. ADR-0004 makes `double`/`float` for money a build error, so a store that cannot hold an exact decimal is disqualified before convenience is discussed. PostgreSQL `numeric` holds it exactly. The ledger is also genuinely relational (transaction → linked document → invoice) with immutable versioned rows per SPEC-001 §5, and the Phase 3 learning track lists EF Core and ASP.NET as goals.
@@ -41,5 +43,4 @@ An ADR is **Accepted** only when the decision has been felt: code written, a ser
 ## Decisions still open
 
 
-- Whether the interface is a CLI or a SPA. Deferred by decision to M3, mid-March 2027, when loading a real quarter gives evidence instead of opinion.
 - Whether the 31-week plan survives its own cuts, and what the revised milestone dates are against April 2027.

@@ -13,12 +13,13 @@ This is a personal project, not a product and not tax advice. The numbers are on
 3. [Quick start](#quick-start)
 4. [Running the console](#running-the-console)
 5. [Reading the estimate](#reading-the-estimate)
-6. [How the project is organised](#how-the-project-is-organised)
-7. [Tax-year configuration](#tax-year-configuration)
-8. [Tests](#tests)
-9. [Working on the project](#working-on-the-project)
-10. [Where to find things](#where-to-find-things)
-11. [Troubleshooting](#troubleshooting)
+6. [Web app](#web-app)
+7. [How the project is organised](#how-the-project-is-organised)
+8. [Tax-year configuration](#tax-year-configuration)
+9. [Tests](#tests)
+10. [Working on the project](#working-on-the-project)
+11. [Where to find things](#where-to-find-things)
+12. [Troubleshooting](#troubleshooting)
 
 ## What it does today
 
@@ -40,7 +41,8 @@ The estimate always leans towards putting aside *more* rather than less. Having 
 - **No filled-in forms.** It computes the figures behind Modelo 130, 303 and 349, and the configuration knows which box (casilla) each figure goes in, but it does not yet produce the forms themselves.
 - **No 2027 configuration.** The 2027 values are published in the BOE around December 2026 (issue #12). Until then, 2027 cannot be computed.
 - **Some 2026 values are not published yet.** The engine refuses to guess them and tells you exactly what is missing (see [Tax-year configuration](#tax-year-configuration)).
-- **No web app, API, database or document reading (OCR).** These are planned (`plans/DEVELOPMENT_PLAN.md`). `src/GestorIA.Api` is an empty project today, and `services/ocr` holds only a description.
+- **No API, database or document reading (OCR).** These are planned (`plans/DEVELOPMENT_PLAN.md`). `src/GestorIA.Api` is an empty project today, and `services/ocr` holds only a description.
+- **The web app shows no figures yet.** It has its pages, languages and themes, and each page says what it will show. Its data comes from the API, which does not exist yet (issue #66).
 - **No tax credits (deducciones) and no savings income** in the estimate. Leaving them out can only make the estimate higher, never lower.
 
 ## Quick start
@@ -50,6 +52,7 @@ The estimate always leans towards putting aside *more* rather than less. Having 
 - **Git.**
 - **The .NET 10 SDK** (version `10.0.x`). Check with `dotnet --version`.
 - **The GitHub CLI (`gh`)**, only if you want to work with issues and pull requests from the terminal.
+- **Node 24 and pnpm**, only for the web app (see [Web app](#web-app)).
 
 ### Get the code and build it
 
@@ -161,6 +164,29 @@ Estimate
 | **IVA to set aside** | Zero when all your clients are EU businesses or outside the EU: EU business clients account for the IVA themselves, and US clients are outside Spanish IVA. |
 | **Tax year / Configuration** | Which rules produced the answer. The long code (SHA-256) changes whenever the file changes, so two answers with the same code came from exactly the same rules. |
 
+## Web app
+
+The web app lives in `web/`. It is a Next.js application that will show the engine's answers in the browser, in Ukrainian (the default), Spanish, English or Russian, with five colour themes. It never computes tax itself; every figure will come from the engine through the API (ADR-0017).
+
+Today it has every page (overview, payments, transactions, periods, settings, backup, access), the header with the theme and language choices, and the "not tax advice" notice. Each page says what it will show; the figures arrive with the API (issue #66).
+
+```bash
+cd web
+pnpm install
+pnpm dev          # open http://localhost:3000
+```
+
+| Command (in `web/`) | Why |
+|---|---|
+| `pnpm dev` | Runs the app with live reload. |
+| `pnpm lint` | Checks the code, including the rules on which folder may import which. |
+| `pnpm typecheck` | Checks the TypeScript types. |
+| `pnpm test` | Runs the web tests. |
+| `pnpm build` | Builds the production app, as CI does. |
+| `pnpm api:types` | Generates the API types from the API's OpenAPI document. Fails with an explanation until the API produces that document (#66). |
+
+The language and the theme are remembered in cookies. `web/README.md` explains the structure, the rules between folders, the themes and the languages.
+
 ## How the project is organised
 
 ```
@@ -176,6 +202,7 @@ tests/
   GestorIA.Engine.Tests/    calculator tests, configuration checks, golden tests
   GestorIA.Cli.Tests/       input reading and output formatting of the console
   golden/2025/              golden cases: full scenarios with their expected results
+web/                the web app (Next.js); see web/README.md
 docs/               specifications (specs/), decisions (adr/), conventions, architecture
 knowledge/          business rules, domain model, glossary of Spanish tax terms
 plans/              current plan, backlog, development plan
@@ -258,6 +285,7 @@ Dependencies between issues use GitHub's "blocked by" links. An issue is ready t
 1. Branch from the latest `main`, named after the issue: `ticket-<number>`.
 2. Make the change. Keep `plans/current.md`, the specs in `docs/specs/` and `knowledge/` in sync with it.
 3. Build and test. The build must show `0 Warning(s)`, and every test must pass.
+   - If you changed `web/`, also run `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` there.
 4. Commit with a conventional message that names the issue, for example `feat(engine): project the Modelo 130 payment (#8)`.
    - Only the repository owner authors commits. No `Co-authored-by` lines and no tool or AI attribution. The `commit-msg` hook enforces this; never bypass it with `--no-verify`.
 5. Push and open a pull request with `Closes #<number>` in the description. If you changed a file in `config/tax-years/`, say whether any golden test is affected.
