@@ -43,6 +43,16 @@ public class TaxYearEndpoints(ApiFactory api) : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task AYearNamesItsModelo130CasillaNumbers()
+    {
+        var year = await (await client.GetAsync("/api/v1/config/tax-years/2025")).Json();
+
+        var lines = year["modelo130Lines"]!.AsObject();
+        Assert.Equal("19", lines["resultado"]!.GetValue<string>());
+        Assert.Equal("03", lines["rendimientoNeto"]!.GetValue<string>());
+    }
+
+    [Fact]
     public async Task AYearWithNoFileIsAProblemNotFound()
     {
         var response = await client.GetAsync("/api/v1/config/tax-years/1999");

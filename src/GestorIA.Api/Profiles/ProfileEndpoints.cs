@@ -163,17 +163,9 @@ public static class ProfileEndpoints
     private static async Task<Results<Ok<SetAsideEstimate>, ValidationProblem, ProblemHttpResult>> Estimate(
         Guid id, string? asOf, GestoriaDbContext db, TaxYearConfigLoader loader, CancellationToken cancellationToken)
     {
-        Quarter? parsed = asOf switch
+        if (QuarterParameter.Parse(asOf) is not { } quarter)
         {
-            "Q1" => Quarter.Q1,
-            "Q2" => Quarter.Q2,
-            "Q3" => Quarter.Q3,
-            "Q4" => Quarter.Q4,
-            _ => null,
-        };
-        if (parsed is not { } quarter)
-        {
-            return Problems.Invalid("asOf", $"asOf is {(asOf is null ? "missing" : $"\"{asOf}\"")}; it must be the quarter of the estimate, one of Q1, Q2, Q3, Q4.");
+            return Problems.Invalid("asOf", QuarterParameter.InvalidMessage("asOf", asOf));
         }
 
         if (await db.Profiles.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken) is not { } row)

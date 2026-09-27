@@ -11,35 +11,10 @@
         "tags": [
           "health"
         ],
-        "summary": "The API process is running.",
         "operationId": "live",
         "responses": {
           "204": {
             "description": "No Content"
-          }
-        }
-      }
-    },
-    "/api/v1/health/ready": {
-      "get": {
-        "tags": [
-          "health"
-        ],
-        "summary": "The API can serve requests: its database answers. 503 database-unavailable when it does not.",
-        "operationId": "ready",
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
           }
         }
       }
@@ -235,16 +210,6 @@
               }
             }
           },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "200": {
             "description": "OK",
             "content": {
@@ -284,16 +249,6 @@
         "responses": {
           "401": {
             "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -369,16 +324,6 @@
               }
             }
           },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "200": {
             "description": "OK",
             "content": {
@@ -436,16 +381,6 @@
         "responses": {
           "401": {
             "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -654,16 +589,6 @@
               }
             }
           },
-          "503": {
-            "description": "Service Unavailable",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "200": {
             "description": "OK",
             "content": {
@@ -712,13 +637,13 @@
         ]
       }
     },
-    "/api/v1/profiles/{id}/bank-statements": {
+    "/api/v1/profiles/{id}/calculations/quarter": {
       "post": {
         "tags": [
-          "transactions"
+          "periods"
         ],
-        "summary": "Imports a bank statement, the file itself as the body. A line an earlier import stored is not stored again.",
-        "operationId": "importBankStatement",
+        "summary": "Runs the set-aside estimator on a stored profile and returns one quarter's Modelo 130, its casillas and trace.",
+        "operationId": "calculateQuarter",
         "parameters": [
           {
             "name": "id",
@@ -730,51 +655,16 @@
             }
           },
           {
-            "name": "bank",
+            "name": "quarter",
             "in": "query",
-            "required": true,
             "schema": {
-              "enum": [
-                "bbva"
-              ],
               "type": "string"
             }
           }
         ],
-        "requestBody": {
-          "description": "The statement file as exported by the bank, at most 2097152 bytes.",
-          "content": {
-            "text/csv": {
-              "schema": {
-                "type": "string"
-              }
-            },
-            "text/plain": {
-              "schema": {
-                "type": "string"
-              }
-            },
-            "application/vnd.ms-excel": {
-              "schema": {
-                "type": "string"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "401": {
             "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -788,7 +678,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BankStatementImport"
+                  "$ref": "#/components/schemas/QuarterResultView"
                 }
               }
             }
@@ -813,18 +703,8 @@
               }
             }
           },
-          "413": {
-            "description": "Payload Too Large",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "415": {
-            "description": "Unsupported Media Type",
+          "422": {
+            "description": "Unprocessable Entity",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -841,13 +721,13 @@
         ]
       }
     },
-    "/api/v1/profiles/{id}/transactions": {
-      "get": {
+    "/api/v1/profiles/{id}/calculations/annual-true-up": {
+      "post": {
         "tags": [
-          "transactions"
+          "periods"
         ],
-        "summary": "The stored movements in booking-date order: all of them, a year's, or a quarter's of that year.",
-        "operationId": "listTransactions",
+        "summary": "Runs the set-aside estimator on a stored profile and returns the annual true-up gap, due window and trace.",
+        "operationId": "calculateAnnualTrueUp",
         "parameters": [
           {
             "name": "id",
@@ -856,22 +736,6 @@
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
-          },
-          {
-            "name": "year",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "quarter",
-            "in": "query",
-            "description": "Needs year.",
-            "schema": {
-              "$ref": "#/components/schemas/Quarter"
             }
           }
         ],
@@ -886,8 +750,18 @@
               }
             }
           },
-          "503": {
-            "description": "Service Unavailable",
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnualTrueUpView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -896,31 +770,8 @@
               }
             }
           },
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TransactionView"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
+          "422": {
+            "description": "Unprocessable Entity",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -963,29 +814,78 @@
         },
         "additionalProperties": false
       },
-      "BankStatementImport": {
+      "AnnualTrueUpView": {
         "required": [
-          "bank",
-          "lines",
-          "imported",
-          "alreadyImported"
+          "taxYear",
+          "configHash",
+          "liabilityOnActivity",
+          "marginalRate",
+          "reduccionTrabajoLost",
+          "gap",
+          "dueFrom",
+          "dueBy",
+          "payableIn",
+          "trace",
+          "notices"
         ],
         "type": "object",
         "properties": {
-          "bank": {
+          "taxYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "configHash": {
             "type": "string"
           },
-          "lines": {
-            "type": "integer",
-            "format": "int32"
+          "liabilityOnActivity": {
+            "type": "string"
           },
-          "imported": {
-            "type": "integer",
-            "format": "int32"
+          "marginalRate": {
+            "type": "string"
           },
-          "alreadyImported": {
-            "type": "integer",
-            "format": "int32"
+          "reduccionTrabajoLost": {
+            "type": "string"
+          },
+          "gap": {
+            "type": "string"
+          },
+          "dueFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "dueBy": {
+            "type": "string",
+            "format": "date"
+          },
+          "payableIn": {
+            "type": "string"
+          },
+          "trace": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TraceStepView"
+            }
+          },
+          "notices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoticeView"
+            }
+          }
+        }
+      },
+      "CasillaView": {
+        "required": [
+          "key",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
           }
         }
       },
@@ -1582,6 +1482,54 @@
           "Q4"
         ]
       },
+      "QuarterResultView": {
+        "required": [
+          "taxYear",
+          "configHash",
+          "quarter",
+          "aIngresar",
+          "dueFrom",
+          "dueBy",
+          "casillas",
+          "trace"
+        ],
+        "type": "object",
+        "properties": {
+          "taxYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "configHash": {
+            "type": "string"
+          },
+          "quarter": {
+            "$ref": "#/components/schemas/Quarter"
+          },
+          "aIngresar": {
+            "type": "string"
+          },
+          "dueFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "dueBy": {
+            "type": "string",
+            "format": "date"
+          },
+          "casillas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CasillaView"
+            }
+          },
+          "trace": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TraceStepView"
+            }
+          }
+        }
+      },
       "QuarterToDateDocument": {
         "required": [
           "quarter",
@@ -1739,7 +1687,8 @@
           "taxYear",
           "configHash",
           "regions",
-          "gaps"
+          "gaps",
+          "modelo130Lines"
         ],
         "type": "object",
         "properties": {
@@ -1760,6 +1709,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DeclaredGap"
+            }
+          },
+          "modelo130Lines": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
             }
           }
         }
@@ -1855,45 +1810,6 @@
           "date"
         ]
       },
-      "TransactionView": {
-        "required": [
-          "id",
-          "bookingDate",
-          "valueDate",
-          "description",
-          "amount",
-          "balance"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "bookingDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "valueDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "description": {
-            "type": "string"
-          },
-          "amount": {
-            "pattern": "^-?\\d+\\.\\d{2}$",
-            "type": "string"
-          },
-          "balance": {
-            "pattern": "^-?\\d+\\.\\d{2}$",
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
       "WarningSeverity": {
         "enum": [
           "Info",
@@ -1925,7 +1841,7 @@
       "name": "profiles"
     },
     {
-      "name": "transactions"
+      "name": "periods"
     }
   ]
 }

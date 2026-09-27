@@ -25,6 +25,8 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
 
         await AssertFixture("g12-profile.json", await client.GetAsync($"/api/v1/profiles/{id}"), [(id, FixtureId)]);
         await AssertFixture("g12-estimate.json", await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q1"));
+        await AssertFixture("g12-quarter.json", await client.PostAsync($"/api/v1/profiles/{id}/calculations/quarter?quarter=Q1", null));
+        await AssertFixture("g12-annual-true-up.json", await client.PostAsync($"/api/v1/profiles/{id}/calculations/annual-true-up", null));
     }
 
     // A new database per run gives each movement a new id; the fixture numbers them in order instead.

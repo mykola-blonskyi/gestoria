@@ -4,13 +4,19 @@ namespace GestorIA.Api.TaxYears;
 
 // What a client needs to pick a tax year and label it (SPEC-009 §2): the hash that names the configuration behind every
 // answer, the regions it can compute, and the gaps it declares, which the engine refuses rather than fill (SPEC-007 §3).
-public sealed record TaxYearView(int TaxYear, string ConfigHash, IReadOnlyList<RegionView> Regions, IReadOnlyList<DeclaredGap> Gaps)
+public sealed record TaxYearView(
+    int TaxYear,
+    string ConfigHash,
+    IReadOnlyList<RegionView> Regions,
+    IReadOnlyList<DeclaredGap> Gaps,
+    IReadOnlyDictionary<string, string> Modelo130Lines)
 {
     public static TaxYearView From(TaxYearConfig config) => new(
         config.TaxYear,
         config.ConfigHash,
         [.. config.Regions.Usable.OrderBy(r => r.Key, StringComparer.Ordinal).Select(r => new RegionView(r.Key, r.Value.Name))],
-        [.. DeclaredGaps(config)]);
+        [.. DeclaredGaps(config)],
+        config.Modelo130.Lines);
 
     private static IEnumerable<DeclaredGap> DeclaredGaps(TaxYearConfig config)
     {
