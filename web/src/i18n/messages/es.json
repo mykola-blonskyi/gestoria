@@ -176,7 +176,7 @@
   "Auth": {
     "title": "Acceso",
     "lead": "La aplicación se desbloquea con la clave de API de tu instalación local.",
-    "unlocked": "Desbloqueada. La clave se guarda solo en la memoria de esta pestaña: al recargarla o cerrarla, la aplicación vuelve a bloquearse.",
+    "unlocked": "Desbloqueada. La clave se mantiene solo en la memoria de esta pestaña: al recargarla o cerrarla, la aplicación vuelve a bloquearse.",
     "lock": "Bloquear ahora",
     "unlock": {
       "title": "Desbloquear GestorIA",
@@ -186,6 +186,7 @@
       "checking": "Comprobando la clave…",
       "refused": "La API ya no acepta la clave que usaba esta pestaña. Introduce la clave de nuevo.",
       "wrongKey": "La API no ha aceptado esta clave. Revísala y vuelve a intentarlo.",
+      "unsendable": "Una clave se compone de letras latinas, cifras y símbolos. Revisa la distribución del teclado y vuelve a intentarlo.",
       "unreachable": "La API de GestorIA no está en marcha.",
       "unreachableNext": "Iníciala desde la carpeta del proyecto con este comando y vuelve a intentarlo:",
       "other": "La API ha respondido con un error ({status}). Vuelve a intentarlo."

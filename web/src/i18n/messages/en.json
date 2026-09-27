@@ -186,6 +186,7 @@
       "checking": "Checking the key…",
       "refused": "The API no longer accepts the key this tab was using. Enter the key again.",
       "wrongKey": "The API did not accept this key. Check it and try again.",
+      "unsendable": "A key is made of Latin letters, digits and symbols. Check the keyboard layout and try again.",
       "unreachable": "The GestorIA API is not running.",
       "unreachableNext": "Start it from the project folder with this command, then try again:",
       "other": "The API answered with an error ({status}). Try again."

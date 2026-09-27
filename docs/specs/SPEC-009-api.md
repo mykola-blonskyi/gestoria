@@ -45,7 +45,7 @@ Local mode as built (#68, `src/GestorIA.Api/ApiKey.cs`):
 - The client sends the key in `X-Api-Key`. The OpenAPI document declares it as the `apiKey` security scheme on every operation but the health checks, which stay open so a client can tell "not running" from "locked".
 - Configuration holds only the key's SHA-256 (SPEC-013 §2), as `Auth:ApiKeySha256`: user secrets on a development machine, the `Auth__ApiKeySha256` environment variable elsewhere, never a file in the repository. The API refuses to start without a usable hash, including the hash of an empty key.
 - The presented key is hashed and compared with `CryptographicOperations.FixedTimeEquals`, so the comparison takes the same time however much of it matches.
-- The check runs as middleware after routing and before parameter binding, on endpoints mapped in the locked route group; a request without the key does no other work. Nothing logs the key: `ApiKeyNotLogged` captures every log category at Trace while the key is used, mistyped and left out.
+- The check runs as middleware after routing and before parameter binding, on endpoints mapped in the locked route group; a request without the key does no other work. In Development the API also serves its OpenAPI document at `/openapi/v1.json` without the key: it is the committed `v1.json` and holds no data. Nothing logs the key: `ApiKeyNotLogged` captures every log category at Trace while the key is used, mistyped and left out.
 
 ## 4. Errors
 `400` validation (field errors), `404`, `409` (document already confirmed), `422` (calculation cannot run: missing config/region, unconfirmed required docs — body lists blockers), `503` (OCR unavailable — upload accepted and queued anyway).

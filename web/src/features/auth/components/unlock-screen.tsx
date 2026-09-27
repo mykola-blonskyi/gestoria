@@ -16,18 +16,24 @@ export function UnlockScreen({ refused }: { refused: boolean }) {
   const t = useTranslations("Auth.unlock");
   const unlock = useUnlock();
   const [key, setKey] = useState("");
+  const [unsendable, setUnsendable] = useState(false);
   const inputId = useId();
 
+  // A header carries only visible ASCII, which is what `openssl rand -hex` makes. A key typed on a Cyrillic layout
+  // could not be sent at all, and surrounding spaces would be stripped from the header but not from the stored key.
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (key !== "") unlock.mutate(key);
+    const candidate = key.trim();
+    const sendable = /^[\x21-\x7E]+$/.test(candidate);
+    setUnsendable(!sendable);
+    if (sendable) unlock.mutate(candidate);
   }
 
   return (
     <>
       <PageHeader title={t("title")} lead={t("lead")} />
       <div className="grid max-w-md gap-4">
-        {refused && !unlock.isError && <Alert title={t("refused")} />}
+        {refused && !unlock.isError && !unsendable && <Alert title={t("refused")} />}
         {/* The input has no name, so a submit before the page is interactive sends nothing in the address. */}
         <form noValidate onSubmit={submit} className="grid gap-3">
           <label htmlFor={inputId} className="text-sm font-medium">
@@ -40,13 +46,13 @@ export function UnlockScreen({ refused }: { refused: boolean }) {
             spellCheck={false}
             value={key}
             onChange={(event) => setKey(event.target.value)}
-            aria-invalid={unlock.isError}
+            aria-invalid={unlock.isError || unsendable}
           />
-          <Button type="submit" disabled={unlock.isPending || key === ""} className="justify-self-start">
+          <Button type="submit" disabled={unlock.isPending || key.trim() === ""} className="justify-self-start">
             {unlock.isPending ? t("checking") : t("submit")}
           </Button>
         </form>
-        {unlock.isError && <UnlockFailure error={unlock.error} />}
+        {unsendable ? <Alert title={t("unsendable")} /> : unlock.isError && <UnlockFailure error={unlock.error} />}
       </div>
     </>
   );

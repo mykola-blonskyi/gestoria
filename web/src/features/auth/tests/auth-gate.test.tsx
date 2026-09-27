@@ -116,6 +116,27 @@ describe("AuthGate", () => {
     expect(screen.queryByText(/tax years/)).not.toBeInTheDocument();
   });
 
+  it.each(LOCALES)("in %s refuses, without asking the API, a key a header cannot carry", async (locale) => {
+    const fetchStub = stubApi();
+    renderInApp(gated(), { locale });
+
+    await unlockWith("ключ-кирилицею", locale);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(MESSAGES[locale].Auth.unlock.unsendable);
+    expect(screen.getByLabelText(MESSAGES[locale].Auth.unlock.key)).toHaveAttribute("aria-invalid", "true");
+    expect(fetchStub).not.toHaveBeenCalled();
+  });
+
+  it("sends a pasted key without the spaces around it", async () => {
+    const fetchStub = stubApi();
+    renderInApp(gated(), { locale: "en" });
+
+    await unlockWith(`  ${KEY} `);
+
+    expect(await screen.findByText(`${taxYears.length} tax years`)).toBeInTheDocument();
+    expect(new Set(sentKeys(fetchStub))).toEqual(new Set([KEY]));
+  });
+
   it("unlocks once the API is started and the key is sent again", async () => {
     let running = false;
     stubApi((key) => (!running ? "unreachable" : key === KEY ? "ok" : "unauthorized"));
@@ -147,7 +168,7 @@ describe("AuthGate", () => {
   it("keeps the key out of storage, cookies, the address, the console and the form's data", async () => {
     const consoleSpies = (["log", "info", "warn", "error", "debug"] as const).map((method) => vi.spyOn(console, method));
     const setItem = vi.spyOn(Storage.prototype, "setItem");
-    stubApi();
+    const fetchStub = stubApi();
     renderInApp(gated(), { locale: "en" });
 
     await unlockWith("not-the-key");
@@ -162,6 +183,7 @@ describe("AuthGate", () => {
       JSON.stringify({ ...sessionStorage }),
       document.cookie,
       window.location.href,
+      JSON.stringify(fetchStub.mock.calls.map(([url]) => url)),
       JSON.stringify(consoleSpies.map((spy) => spy.mock.calls)),
     ].join("\n");
     expect(everywhere).not.toContain(KEY);
@@ -183,5 +205,19 @@ describe("AuthPage", () => {
 
     await waitFor(() => expect(screen.getByLabelText(messages.unlock.key)).toHaveValue(""));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("forgets what the API answered when the app locks, so the next unlock asks again", async () => {
+    const fetchStub = stubApi();
+    renderInApp(gated(<><AuthPage /><TaxYearCount /></>), { locale: "en" });
+    const user = await unlockWith(KEY);
+    await screen.findByText(`${taxYears.length} tax years`);
+    const before = fetchStub.mock.calls.length;
+
+    await user.click(screen.getByRole("button", { name: MESSAGES.en.Auth.lock }));
+    await unlockWith(KEY);
+    await screen.findByText(`${taxYears.length} tax years`);
+
+    expect(fetchStub.mock.calls.length).toBe(before + 2);
   });
 });
