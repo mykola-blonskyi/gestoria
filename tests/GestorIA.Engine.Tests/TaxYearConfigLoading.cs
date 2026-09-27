@@ -37,6 +37,16 @@ public sealed class TaxYearConfigLoading : IDisposable
     }
 
     [Fact]
+    public void TheYear2026FileLoadsThroughTheLoader()
+    {
+        var config = new TaxYearConfigLoader(TaxYearConfigFiles.Root()).Load(2026);
+        var bytes = File.ReadAllBytes(Path.Combine(TaxYearConfigFiles.Root(), TaxYearConfigFiles.File2026));
+
+        Assert.Equal(2026, config.TaxYear);
+        Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(bytes)), config.ConfigHash);
+    }
+
+    [Fact]
     public void TheHashNamesTheExactBytesNotJustTheValues()
     {
         var bytes = Example2025Bytes();
@@ -237,14 +247,23 @@ public sealed class TaxYearConfigLoading : IDisposable
         Assert.Null(TaxYearConfigFiles.Year2025.Provenance.For("/irpf/minimosFamiliares"));
     }
 
-    [Fact]
-    public void EveryValueTheEstimatorReadsRoundTripsWithItsType()
+    public static TheoryData<string> Files()
     {
-        var raw = Example2025Node();
-        var values = ValuesTheEstimatorReads(TaxYearConfigFiles.Year2025).ToList();
+        var data = new TheoryData<string>();
+        foreach (var path in TaxYearConfigFiles.All()) { data.Add(Path.GetFileName(path)); }
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(Files))]
+    public void EveryValueTheEstimatorReadsRoundTripsWithItsType(string fileName)
+    {
+        var bytes = File.ReadAllBytes(Path.Combine(TaxYearConfigFiles.Root(), fileName));
+        var raw = JsonNode.Parse(bytes)!;
+        var values = ValuesTheEstimatorReads(TaxYearConfigParser.Parse(bytes, fileName)).ToList();
 
         var mismatches = values
-            .Select(v => (v.Pointer, v.Value, Raw: Resolve(raw, v.Pointer)))
+            .Select(v => (v.Pointer, v.Value, Raw: Resolve(raw, v.Pointer, fileName)))
             .Where(v => !Matches(v.Raw, v.Value))
             .Select(v => Invariant($"{v.Pointer,-44} file {v.Raw?.ToJsonString() ?? "null"}, model {v.Value?.GetType().Name ?? "null"} {v.Value}"))
             .ToList();
@@ -313,6 +332,11 @@ public sealed class TaxYearConfigLoading : IDisposable
         yield return ("/seguridadSocial/tarifaPlana/months", c.SeguridadSocial.TarifaPlana.Months);
         yield return ("/seguridadSocial/gastosGenericos", c.SeguridadSocial.GastosGenericos);
 
+        if (c.SeguridadSocial.TarifaPlana.DeclaredIncomplete is { } tarifaPlanaNote)
+        {
+            yield return ("/seguridadSocial/tarifaPlana/_todo", tarifaPlanaNote);
+        }
+
         yield return ("/calendar/modelo130", new Length(c.Calendar.Modelo130.Count));
 
         foreach (var (i, window) in c.Calendar.Modelo130.Index())
@@ -321,8 +345,20 @@ public sealed class TaxYearConfigLoading : IDisposable
             yield return ($"/calendar/modelo130/{i}/1", window.End);
         }
 
-        yield return ("/calendar/renta/0", c.Calendar.Renta.Start);
-        yield return ("/calendar/renta/1", c.Calendar.Renta.End);
+        if (c.Calendar.Renta is { } renta)
+        {
+            yield return ("/calendar/renta/0", renta.Start);
+            yield return ("/calendar/renta/1", renta.End);
+        }
+        else
+        {
+            yield return ("/calendar/renta", null);
+        }
+
+        if (c.Calendar.DeclaredIncomplete is { } calendarNote)
+        {
+            yield return ("/calendar/_todo", calendarNote);
+        }
 
         yield return ("/calendar/holidays", new Length(c.Calendar.Holidays.Count));
 
@@ -353,10 +389,10 @@ public sealed class TaxYearConfigLoading : IDisposable
         }
     }
 
-    private static JsonNode? Resolve(JsonNode root, string pointer) =>
+    private static JsonNode? Resolve(JsonNode root, string pointer, string fileName) =>
         JsonPointer.Parse(pointer).TryEvaluate(root, out var node)
             ? node
-            : throw new InvalidOperationException($"{pointer} does not exist in {TaxYearConfigFiles.Example2025}.");
+            : throw new InvalidOperationException($"{pointer} does not exist in {fileName}.");
 
     // A bare decimal matches nothing, so an amount that is not Money or a fraction that is not a Rate fails here.
     private static bool Matches(JsonNode? raw, object? value) => value switch

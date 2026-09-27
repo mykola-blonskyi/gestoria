@@ -127,7 +127,7 @@ That line is not stylistic. JSON Schema can express some ordering constraints th
 | Every `provenance` pointer dereferences to a real node | pointer resolution; a dangling pointer is silent rot |
 | `taxYear` equals the filename stem | the filename is outside the document |
 | Calendar windows chronological, `start <= end` | pairwise |
-| `calendar.holidays` and each complete region's `holidays` name at least one day in every year a window ends in | cross-node; a list never filled for the next year would leave the Q4 and renta deadlines unmoved |
+| `calendar.holidays` and each complete region's `holidays` name at least one day in every year a window ends in, except the year after the tax year when `calendar` carries `_todo` | cross-node; a list never filled for the next year would leave the Q4 and renta deadlines unmoved |
 
 **Casilla namespaces are not one namespace.** SPEC-008 §2's `casillas` keys are four-digit Modelo 100 fields. SPEC-006 §2's regional credits carry annex identifiers such as `B.VC.12`. So "every `deducciones[].casilla` exists in `casillas`", as earlier drafts of this section said, is false: it would reject the first regional credit anyone adds. The check splits by `scope` — `estatal` resolves against `casillas`, `autonomica` matches the annex pattern.
 
@@ -138,6 +138,10 @@ A block that does **not** carry a `_todo` note must be complete: its arrays carr
 `_todo` is declared as an explicit property wherever it is permitted, not matched by a `^_` pattern. A pattern would let `_tood` through silently, and catching typo'd keys is the main thing this schema is for.
 
 `deducciones: []` is exempt. A year with no configured credits is a legitimate state (SPEC-006 is Phase 2); an empty regional scale never is.
+
+**A year's file is written before the next year's calendar exists** (#47). The renta window for tax year N is set by the Orden HAC approving Modelo 100, published around March of N+1, and the días inhábiles of N+1 come from the AGE resolución of November or December of year N. A `_todo` on `calendar` declares that calendar unpublished: `renta` may be `null`, the holiday lists need not name a day of N+1, and every deadline whose window ends in N+1 is refused (§3). The holidays of N itself are still required, so the Modelo 130 deadlines of the first three quarters compute as usual. `casillas` may carry a `_todo` for the same reason: the Modelo 100 casilla numbers of year N are fixed by that same Orden.
+
+`seguridadSocial.tarifaPlana` may carry a `_todo` when no norm fixes the amount for the year (#47): Ley 20/2007 art. 38 ter.1 leaves it to each Ley de Presupuestos, and a year can start without one. `amount` is then `null`, and a `_todo` beside a number is rejected, so the file cannot call a figure unpublished and hand it to the engine anyway.
 
 ### Out of scope here
 
@@ -153,6 +157,10 @@ Writing an unverified number into a file the engine treats as authoritative conv
 `TaxYearConfigLoader.Load(year)` → immutable `TaxYearConfig` record; SHA-256 of the file stored as `ConfigHash` on every result. Unknown region or year → `ConfigNotFoundException` (never default).
 
 A region block carrying `_todo` has declared itself unusable, so asking for it raises `ConfigNotFoundException` quoting the note, exactly as an absent region does. Computing with its empty scale would be the silent default this section forbids.
+
+A `calendar` carrying `_todo` refuses the same way, per deadline: `FilingDeadline` raises `ConfigNotFoundException` quoting the note for a `null` renta window and for any window ending after the tax year. Borrowing the previous year's renta dates, or moving a January deadline without knowing January's holidays, would be a silent default too.
+
+A pending tarifa plana amount refuses per month: `MonthlyCuotaCalculator` raises `ConfigNotFoundException` quoting the note for a month inside a tarifa plana period, and prices every other month from the tramos as usual.
 
 **The loader does not live in `GestorIA.Engine`.** The engine is pure by definition, no I/O and no file system (`docs/architecture.md`), so reading a file and evaluating a schema at startup belongs in Infrastructure or Application. The instinct is to put the loader next to the engine that consumes its output; resist it, or the engine's purity becomes a comment rather than a property.
 

@@ -11,7 +11,7 @@ public class FilingDeadlineExamples
     // The renta window with its last day replaced by the one under test.
     private static DateOnly LastDay(int yearOffset, int month, int day)
     {
-        var renta = Config.Calendar.Renta with { End = new CalendarDay(yearOffset, month, day) };
+        var renta = Config.Calendar.Renta! with { End = new CalendarDay(yearOffset, month, day) };
 
         return FilingDeadline.Renta("VC", Config with { Calendar = Config.Calendar with { Renta = renta } }).Window.End;
     }

@@ -25,7 +25,8 @@ public static class FilingDeadline
             "m130.due-date",
             TraceSection.Modelo130,
             Invariant($"Último día para presentar el Modelo 130 del {quarter}"),
-            "calendar.modelo130");
+            "calendar.modelo130",
+            Invariant($"calendar.modelo130 {quarter}"));
 
     public static (DueWindow Window, TraceStep Step) Renta(string region, TaxYearConfig config) =>
         Resolve(
@@ -35,11 +36,28 @@ public static class FilingDeadline
             "renta.due-date",
             TraceSection.Resultado,
             "Último día para presentar la declaración anual",
+            "calendar.renta",
             "calendar.renta");
 
     private static (DueWindow Window, TraceStep Step) Resolve(
-        CalendarWindow window, string region, TaxYearConfig config, string id, TraceSection section, string title, string calendarName)
+        CalendarWindow? window, string region, TaxYearConfig config, string id, TraceSection section, string title, string calendarName, string entryLabel)
     {
+        // SPEC-007 §3: calendar._todo means the year after TaxYear is unpublished. A null window (calendar.renta only) or
+        // one that ends in that year cannot be computed without borrowing a date nobody has confirmed yet.
+        var note = config.Calendar.DeclaredIncomplete;
+
+        if (window is null)
+        {
+            throw new ConfigNotFoundException(Invariant(
+                $"{entryLabel} of tax year {config.TaxYear} is not in this configuration, which declares the calendar after {config.TaxYear} incomplete: {note}"));
+        }
+
+        if (window.End.YearOffset > 0 && note is not null)
+        {
+            throw new ConfigNotFoundException(Invariant(
+                $"{entryLabel} of tax year {config.TaxYear} ends on {Iso(window.End.In(config.TaxYear))}, and this configuration declares the calendar after {config.TaxYear} incomplete: {note}"));
+        }
+
         var holidays = config.Calendar.Holidays
             .Concat(config.Regions.For(region).Holidays)
             .Select(day => day.In(config.TaxYear))

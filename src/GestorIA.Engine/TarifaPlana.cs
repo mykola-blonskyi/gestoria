@@ -2,7 +2,9 @@ using GestorIA.Domain.ValueObjects;
 
 namespace GestorIA.Engine;
 
-public sealed record TarifaPlana(Money Amount, int Months)
+// Amount is null exactly when the file's tarifaPlana._todo, carried as DeclaredIncomplete, says no norm fixes it for the
+// year yet (SPEC-007 §3): MonthlyCuotaCalculator then refuses the months that would be charged at it.
+public sealed record TarifaPlana(Money? Amount, int Months, string? DeclaredIncomplete)
 {
     // Ley 20/2007 art. 38 ter.1 grants the reduced cuota "durante los doce meses naturales completos
     // siguientes" to the alta, ambiguous when the alta falls on the 1st: the alta month is then itself
