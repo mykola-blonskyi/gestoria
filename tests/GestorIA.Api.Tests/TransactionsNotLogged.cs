@@ -1,0 +1,40 @@
+using System.Globalization;
+using System.Text;
+
+namespace GestorIA.Api.Tests;
+
+// SPEC-013 §2 for bank statements: no description, amount or IBAN of a statement reaches a log. Every category is captured at
+// Trace, EF Core's SQL included, while a statement is imported, imported again, refused for a bad line, and listed by filter.
+public class TransactionsNotLogged
+{
+    [Fact]
+    public async Task NoLogLineHoldsAMovementsDescriptionAmountOrIban()
+    {
+        await using var api = new LoggedApi();
+        await api.InitializeAsync();
+        var client = api.CreateClient();
+        var id = await client.CreateProfile();
+        var text = Encoding.UTF8.GetString(RepoFiles.Statement);
+
+        await client.ImportStatement(id, RepoFiles.Statement);
+        await client.ImportStatement(id, RepoFiles.Statement);
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes(text.Replace("-47,16", "-47,1x", StringComparison.Ordinal)));
+        await client.GetAsync($"/api/v1/profiles/{id}/transactions");
+        await client.GetAsync($"/api/v1/profiles/{id}/transactions?year=2025&quarter=Q1");
+
+        var movements = text.ReplaceLineEndings("\n").Split('\n', StringSplitOptions.RemoveEmptyEntries).Skip(1).Select(line => line.Split(';')).ToList();
+        var descriptions = movements.Select(fields => fields[2].Trim('"').Split(';')[0]);
+        // Amounts of two digits or more before the decimal point, as printed and as the API writes them; "3.00" could be a timing.
+        var amounts = movements.Select(fields => fields[^2])
+            .Where(amount => amount.TrimStart('-').IndexOf(',', StringComparison.Ordinal) >= 2)
+            .SelectMany(amount => new[] { amount, decimal.Parse(amount, NumberStyles.Number, new CultureInfo("es-ES")).ToString("0.00", CultureInfo.InvariantCulture) });
+
+        Assert.Contains(api.Lines, line => line.Contains("BankTransactions", StringComparison.Ordinal));
+        foreach (var secret in descriptions.Concat(amounts).Append("ES91"))
+        {
+            Assert.DoesNotContain(api.Lines, line => line.Contains(secret, StringComparison.Ordinal));
+        }
+        Assert.DoesNotContain(api.Lines, line => ProfileNotLogged.Nif().IsMatch(line));
+        Assert.DoesNotContain(api.Lines, line => ProfileNotLogged.Iban().IsMatch(line));
+    }
+}

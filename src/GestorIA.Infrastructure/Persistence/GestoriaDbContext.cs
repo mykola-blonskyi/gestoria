@@ -1,4 +1,5 @@
 using GestorIA.Infrastructure.Profiles;
+using GestorIA.Infrastructure.Transactions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GestorIA.Infrastructure.Persistence;
@@ -8,6 +9,8 @@ namespace GestorIA.Infrastructure.Persistence;
 public sealed class GestoriaDbContext(DbContextOptions<GestoriaDbContext> options) : DbContext(options)
 {
     public DbSet<ProfileRow> Profiles => Set<ProfileRow>();
+
+    public DbSet<BankTransactionRow> BankTransactions => Set<BankTransactionRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,6 +24,16 @@ public sealed class GestoriaDbContext(DbContextOptions<GestoriaDbContext> option
             profile.HasIndex(p => p.Singleton).IsUnique();
             profile.Property(p => p.Region).HasMaxLength(2);
             profile.Property(p => p.NewActivityPeriod).HasConversion<string>().HasMaxLength(9);
+        });
+
+        modelBuilder.Entity<BankTransactionRow>(line =>
+        {
+            line.ToTable("BankTransactions");
+            // The database, not only the import, refuses a statement line stored twice (LineKeys).
+            line.HasIndex(t => new { t.ProfileId, t.LineKey }).IsUnique();
+            line.HasIndex(t => new { t.ProfileId, t.BookingDate });
+            line.Property(t => t.LineKey).HasMaxLength(64).IsFixedLength();
+            line.HasOne<ProfileRow>().WithMany().HasForeignKey(t => t.ProfileId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 

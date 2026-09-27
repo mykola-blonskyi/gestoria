@@ -19,6 +19,9 @@ internal static class RepoFiles
     // The web app's feature tests stub the API with these answers; WebFixtures proves they are the API's own.
     internal static string WebFixture(string name) => Path.Combine(Root(), "web", "tests", "fixtures", name);
 
+    // A synthetic BBVA statement for 2025: made-up names and amounts, and the published example IBAN (SPEC-013).
+    internal static byte[] Statement => File.ReadAllBytes(Path.Combine(Root(), "tests", "fixtures", "bank-statements", "bbva-2025-synthetic.csv"));
+
     internal static JsonObject Golden(string golden) =>
         JsonNode.Parse(File.ReadAllText(Path.Combine(Root(), "tests", "golden", "2025", $"{golden}.json")))!["setAside"]!.AsObject();
 
