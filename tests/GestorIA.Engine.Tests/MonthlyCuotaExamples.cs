@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using GestorIA.Domain.ValueObjects;
 
@@ -11,9 +12,9 @@ public class MonthlyCuotaExamples
 
     private static readonly DateOnly Alta = new(2027, 1, 15);
 
-    // 32,000 × (1 − 0.07) / 12 = 2,480 a month, General 7.
-    private static MonthlyCuotaResult Run(YearMonth month, decimal annualComputable = 32000m, DateOnly? alta = null) =>
-        MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta ?? Alta, annualComputable, month), SeguridadSocial2025);
+    // 32,000 × (1 − 0.07) / 12 = 2,480 a month, General 7; 1,356.21 is General 7's base mínima, 1,356.21 × 0.314 = 425.84994 → 425.85.
+    private static MonthlyCuotaResult Run(YearMonth month, decimal annualComputable = 32000m, DateOnly? alta = null, decimal baseCotizacion = 1356.21m) =>
+        MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta ?? Alta, annualComputable, month, new Money(baseCotizacion)), SeguridadSocial2025);
 
     [Fact]
     public void MonthOfAlta_IsProratedByDaysOverThirty()
@@ -47,11 +48,87 @@ public class MonthlyCuotaExamples
     }
 
     [Fact]
-    public void MonthAfterTarifaPlanaLapses_IsTheTramoCuota()
+    public void MonthAfterTarifaPlanaLapses_IsTheCuotaAtTheChosenBase()
     {
         var result = Run(new YearMonth(2028, 2));
 
         Assert.Equal(425.85m, result.Cuota);
+        Assert.Equal("months since alta 13 > 12 → cuota at the chosen base 425.85", result.Trace.Steps.Single(s => s.Id == "ss.tarifa-plana").Formula);
+    }
+
+    // 1,600.00 × 0.314 = 502.40, whatever tramo the computable falls in.
+    [Fact]
+    public void TheDebitIsTheChosenBaseTimesTheTipo()
+    {
+        var result = Run(new YearMonth(2028, 2), baseCotizacion: 1600.00m);
+        var step = result.Trace.Steps.Single(s => s.Id == "ss.base-cotizacion");
+
+        Assert.Equal(502.40m, result.Cuota);
+        Assert.Equal(502.40m, result.FullMonthCuota);
+        Assert.Equal("1600.00 × 0.314 = 502.40", step.Formula);
+        Assert.Equal([new TraceInput("baseCotizacion", "1600.00"), new TraceInput("tipoCotizacion", "0.314")], step.Inputs);
+        Assert.Equal(502.40m, step.Euros());
+        Assert.Contains("308.1.b", step.Reference, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DebitAgreesWithTheCuota()
+    {
+        foreach (var (month, alta) in new[] { (new YearMonth(2027, 1), Alta), (new YearMonth(2027, 6), Alta), (new YearMonth(2028, 2), Alta), (new YearMonth(2027, 1), new DateOnly(2027, 1, 1)) })
+        {
+            Assert.Equal(Run(month, alta: alta).Cuota, MonthlyCuotaCalculator.Debit(alta, month, new Money(1356.21m), SeguridadSocial2025));
+        }
+    }
+
+    // 30,000 × (1 − 0.07) / 12 = 2,325 a month, General 6: base mínima 1,274.51 → 400.20, base máxima 2,330.00 × 0.314 = 731.62.
+    [Theory]
+    [InlineData("1356.21", "425.85", "400.20 <= 425.85 <= 731.62 → 425.85, neither topped up nor refunded")]
+    [InlineData("1200.00", "400.20", "376.80 < 400.20 → topped up to 400.20")]
+    [InlineData("2500.00", "731.62", "785.00 > 731.62 → refunded down to 731.62")]
+    public void TgssKeepsTheChosenCuotaClampedBetweenTheTramosBases(string baseCotizacion, string kept, string outcome)
+    {
+        var result = Run(new YearMonth(2028, 2), annualComputable: 30000m, baseCotizacion: decimal.Parse(baseCotizacion, CultureInfo.InvariantCulture));
+        var step = result.Trace.Steps.Single(s => s.Id == "ss.regularizacion");
+
+        Assert.Equal(400.20m, result.Floor);
+        Assert.Equal(731.62m, result.Ceiling);
+        Assert.Equal(decimal.Parse(kept, CultureInfo.InvariantCulture), result.Kept);
+        Assert.Equal(result.Kept, step.Euros());
+        Assert.Equal("base mínima 1274.51 → 400.20, base máxima 2330.00 × 0.314 = 731.62; " + outcome, step.Formula);
+        Assert.Contains("308.1.c 3.ª–4.ª", step.Reference, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheStepsRunFromTheTramoThroughTheChosenBaseToTheRegularizacion()
+    {
+        var ids = Run(new YearMonth(2027, 1)).Trace.Steps.Select(s => s.Id);
+
+        Assert.Equal(["ss.rendimiento-neto-mensual", "ss.tramo", "ss.base-cotizacion", "ss.regularizacion", "ss.tarifa-plana", "ss.prorrateo-mes-alta"], ids);
+    }
+
+    // Ley 20/2007 art. 38 ter.6: the cuota reducida is not regularised, so TGSS keeps exactly what it debits, whatever the tramo.
+    [Fact]
+    public void UnderTarifaPlanaTgssKeepsWhatItDebits()
+    {
+        var result = Run(new YearMonth(2027, 2), baseCotizacion: 2500.00m);
+
+        Assert.Equal(80m, result.Cuota);
+        Assert.Equal(80m, result.Floor);
+        Assert.Equal(80m, result.Ceiling);
+        Assert.Equal(80m, result.Kept);
+        Assert.Equal("months since alta 1 <= 12 → 80, not regularised", result.Trace.Steps.Single(s => s.Id == "ss.tarifa-plana").Formula);
+        Assert.Contains("38 ter.6", result.Trace.Steps.Single(s => s.Id == "ss.tarifa-plana").Reference, StringComparison.Ordinal);
+    }
+
+    // Alta 15 January: 80 × 17 / 30 = 45.33 debited, and the bounds are prorated with it.
+    [Fact]
+    public void TheBoundsOfTheMonthOfAltaAreProratedAsTheDebitIs()
+    {
+        var result = Run(new YearMonth(2027, 1));
+
+        Assert.Equal(45.33m, result.Floor);
+        Assert.Equal(45.33m, result.Ceiling);
+        Assert.Equal(45.33m, result.Kept);
     }
 
     [Fact]
@@ -95,7 +172,7 @@ public class MonthlyCuotaExamples
         var result = Run(new YearMonth(2028, 2), annualComputable: 30000m);
 
         Assert.Contains(new TraceInput("tramo", "General 6"), result.Trace.Steps.Single(s => s.Id == "ss.tramo").Inputs);
-        Assert.Equal(400.20m, result.Cuota);
+        Assert.Equal(400.20m, result.Floor);
     }
 
     [Fact]
@@ -172,5 +249,5 @@ public class MonthlyCuotaExamples
     }
 
     private static Tramo TramoOf(string name, decimal netFrom, decimal? netUpTo, decimal cuotaMin) =>
-        new(name, new Money(netFrom), netUpTo is { } upTo ? new Money(upTo) : null, new Money(cuotaMin));
+        new(name, new Money(netFrom), netUpTo is { } upTo ? new Money(upTo) : null, Money.Zero, Money.Zero, new Money(cuotaMin));
 }

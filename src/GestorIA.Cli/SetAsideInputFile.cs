@@ -31,7 +31,7 @@ public static class SetAsideInputFile
         var employment = Object(Field(profile, "employment"), "ingresos", "seguridadSocial");
         var registration = Object(Field(profile, "activity"), "alta", "previousYear", "newActivity");
         var picture = Object(Field(root, "activity"), "retenciones", "actuals", "projection");
-        var projection = Object(Field(picture, "projection"), "ingresos", "gastos");
+        var projection = Object(Field(picture, "projection"), "ingresos", "gastos", "baseCotizacion");
 
         // "is not JsonArray actuals" names the node as an array for the code after the if, reached only when it is one.
         if (Field(picture, "actuals") is not JsonArray actuals)
@@ -61,7 +61,7 @@ public static class SetAsideInputFile
                 new AutonomoRegistration(Date(registration, "alta"), PreviousYearOf(registration), NewActivityOf(registration))),
             new ActivityPicture(
                 closed,
-                new ActivityProjection(Amount(projection, "ingresos"), Amount(projection, "gastos")),
+                new ActivityProjection(Amount(projection, "ingresos"), Amount(projection, "gastos"), Amount(projection, "baseCotizacion")),
                 new Retenciones.ForeignPayersOnly()),
             config,
             QuarterOf(root, "asOf"));

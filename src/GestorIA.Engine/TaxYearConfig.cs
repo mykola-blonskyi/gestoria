@@ -47,7 +47,12 @@ public sealed record Modelo130Config(Rate Rate, IReadOnlyList<MinoracionBand> Mi
 
 public sealed record MinoracionBand(Money PrevYearNetUpTo, Money AmountPerQuarter);
 
-public sealed record SeguridadSocialConfig(TramoTable Tramos, TarifaPlana TarifaPlana, Rate GastosGenericos);
+public sealed record SeguridadSocialConfig(TramoTable Tramos, TarifaPlana TarifaPlana, Rate GastosGenericos, Rate TipoCotizacion)
+{
+    // LGSS art. 308.1.b: the monthly cuota is the base de cotización times the tipo, rounded half up to the cent, the rounding
+    // that reproduces every cuotaMin of the tramos table.
+    public decimal CuotaAt(Money baseCotizacion) => (baseCotizacion * TipoCotizacion).Round2().Amount;
+}
 
 // The windows as the regulations state them. FilingDeadline turns one into the DueWindow a taxpayer files within.
 // DeclaredIncomplete is the calendar's own _todo note (SPEC-007 §2): the year after TaxYear is not published yet, so Renta

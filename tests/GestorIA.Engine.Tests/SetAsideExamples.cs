@@ -5,7 +5,8 @@ namespace GestorIA.Engine.Tests;
 
 public class SetAsideExamples
 {
-    // G12's input: alta 15 January 2025, no employment, a new activity, 30,000 ingresos and 1,200 gastos projected, as of Q1.
+    // G12's input: alta 15 January 2025, no employment, a new activity, 30,000 ingresos and 1,200 gastos projected at a base of
+    // 1,274.51, as of Q1.
     private static SetAsideInput G12Input(
         Money? ingresos = null,
         Money? gastos = null,
@@ -14,7 +15,8 @@ public class SetAsideExamples
         DateOnly? alta = null,
         Quarter asOf = Quarter.Q1,
         EmploymentIncome? employment = null,
-        NewActivity? newActivity = null) =>
+        NewActivity? newActivity = null,
+        Money? baseCotizacion = null) =>
         new(
             new TaxpayerProfile(
                 "VC",
@@ -22,7 +24,7 @@ public class SetAsideExamples
                 new AutonomoRegistration(alta ?? new DateOnly(2025, 1, 15), new PreviousYear.NoActivity(), newActivity ?? new NewActivity.Started(NewActivityPeriod.First, Money.Zero))),
             new ActivityPicture(
                 actuals ?? [],
-                new ActivityProjection(ingresos ?? new Money(30000m), gastos ?? new Money(1200m)),
+                new ActivityProjection(ingresos ?? new Money(30000m), gastos ?? new Money(1200m), baseCotizacion ?? new Money(1274.51m)),
                 retenciones ?? new Retenciones.ForeignPayersOnly()),
             TaxYearConfigFiles.Year2025,
             asOf);
@@ -132,62 +134,126 @@ public class SetAsideExamples
         Assert.Equal("6000.00 real + 27000.00 projected = 33000.00", Step("set-aside.annual-ingresos").Formula);
     }
 
-    // Alta in 2020, Q1–Q3 actuals: net to date 16,500 after nine cuotas, 16,800 projected before the three cuotas left. The nine
-    // cuotas paid are 434.67 each by default, on a base between General 7's minimum and General 8's: 3,912.03 to September.
-    // At General 8 (451.50): projected 3 × 451.50 = 1,354.50; previo 16,500 + 16,800 − 1,354.50 = 31,945.50; difícil justificación
-    // 5 % = 1,597.275; casilla 0224 30,348.225; computable 30,348.225 + 3,912.03 + 1,354.50 = 35,614.755, × 0.93 / 12 = 2,760.14 a
-    // month, General 8. At General 7 (425.85): projected 1,277.55, previo 32,022.45, difícil justificación 1,601.1225, computable
-    // 35,610.9075, 2,759.85 a month, General 7. Both are consistent, so the conservative estimate takes General 8.
-    private static SetAsideInput TwoConsistentTramosInput(NewActivity? newActivity = null, decimal cuotaPaid = 434.67m) => G12Input(
-        ingresos: new Money(17200.00m),
-        gastos: new Money(400.00m),
+    // Alta in 2020, Q1 and Q2 closed: 14,000 invoiced and 1,000 spent to June besides the six cuotas paid, which the gastos
+    // also hold; 20,000 and 800 projected for July to December besides the six cuotas debited at the chosen base. Previo
+    // 32,200 − 6 × paid − 6 × debit, less 5 % difícil justificación, plus the twelve cuotas back: a computable of
+    // 30,590 + 0.3 × (paid + debit), each a month's, over twelve months of alta; × 0.93 / 12 a month, General 7 (2,330 to
+    // 2,760) in every example below. General 7 keeps 425.85 a month at least, at its base mínima of 1,356.21, and 2,760.00 × 0.314 =
+    // 866.64 at most, at its base máxima: 2,555.10 to 5,199.84 for the six closed months.
+    private static SetAsideInput EstablishedInput(decimal cuotaPaid, decimal baseCotizacion, NewActivity? newActivity = null) => G12Input(
+        ingresos: new Money(20000.00m),
+        gastos: new Money(800.00m),
         actuals:
         [
-            new(Quarter.Q1, new Money(7000.00m), new Money(1500.00m), new Money(3 * cuotaPaid)),
-            new(Quarter.Q2, new Money(14000.00m), new Money(3000.00m), new Money(6 * cuotaPaid)),
-            new(Quarter.Q3, new Money(21000.00m), new Money(4500.00m), new Money(9 * cuotaPaid)),
+            new(Quarter.Q1, new Money(7000.00m), new Money(500m + (3 * cuotaPaid)), new Money(3 * cuotaPaid)),
+            new(Quarter.Q2, new Money(14000.00m), new Money(1000m + (6 * cuotaPaid)), new Money(6 * cuotaPaid)),
         ],
         alta: new DateOnly(2020, 3, 1),
         asOf: Quarter.Q3,
-        newActivity: newActivity);
+        newActivity: newActivity,
+        baseCotizacion: new Money(baseCotizacion));
 
+    private static TraceStep Step(SetAsideResult result, string id) => result.Trace.Steps.Single(s => s.Id == id);
+
+    // Paid at General 7's base mínima, 425.85, and debited at a base of 1,600.00: 1,600.00 × 0.314 = 502.40 a month, 3,014.40
+    // for the six. Previo 32,200 − 2,555.10 − 3,014.40 = 26,630.50; difícil justificación 1,331.525; casilla 0224 25,298.975;
+    // computable 25,298.975 + 2,555.10 + 3,014.40 = 30,868.475, × 0.93 / 12 = 2,392.31 a month, General 7, whose base mínima
+    // prices 425.85. TGSS debits and keeps 502.40, between 425.85 and 866.64; the closed 2,555.10 stand: 5,569.50 for the year.
     [Fact]
-    public void TheProjectedCuotasSettleOnTheHighestTramoTheyAreConsistentWith()
+    public void TheProjectedMonthsAreDebitedAtTheChosenBaseWhateverTheTramo()
     {
-        var result = SetAsideEstimator.Estimate(TwoConsistentTramosInput());
+        var result = SetAsideEstimator.Estimate(EstablishedInput(425.85m, 1600.00m));
 
-        Assert.Equal(1354.50m, result.Trace.Steps.Single(s => s.Id == "set-aside.cuotas-ss-projected").Euros());
-        Assert.Equal(35614.755m, result.Trace.Steps.Single(s => s.Id == "set-aside.rendimiento-computable").Euros());
-        Assert.Equal(new Money(451.50m), result.MonthlyCuotaSs);
+        Assert.Contains(new TraceInput("tramo", "General 7"), Step(result, "ss.tramo").Inputs);
+        Assert.Equal(3014.40m, Step(result, "set-aside.cuotas-ss-projected").Euros());
+        Assert.Equal(30868.475m, Step(result, "set-aside.rendimiento-computable").Euros());
+        Assert.Equal(new Money(502.40m), result.MonthlyCuotaSs);
+        Assert.Equal(5569.50m, Step(result, "set-aside.cuota-ss-year").Euros());
     }
 
-    // #52: the year settles on General 8 either way, where nine months cost 9 × 451.50 = 4,063.50. With the gastos unchanged casilla
-    // 0224 does not move, so paying 434.67 a month instead adds back exactly 4,063.50 − 3,912.03 = 151.47 less; twelve months of
-    // alta, so × 12 / 12 leaves the difference as it is. For the year's cuotas TGSS tops the 3,912.03 up to the 4,063.50 at
-    // General 8's base mínima (LGSS art. 308.1.c 4.ª): 4,063.50 + 1,354.50 = 5,418.00.
+    // #52: paid 450.00 a month to June, 2,700.00, above General 7's 425.85 and below its 866.64. Previo 32,200 − 2,700.00 −
+    // 2,555.10 = 26,944.90; difícil justificación 1,347.245; casilla 0224 25,597.655; computable 25,597.655 + 2,700.00 paid +
+    // 2,555.10 debited = 30,852.755, General 7. TGSS keeps the 2,700.00 paid, not the 2,555.10 at the base mínima:
+    // 2,700.00 + 2,555.10 = 5,255.10 (LGSS art. 308.1.c 3.ª).
     [Fact]
-    public void TheClosedMonthsAddBackTheCuotasPaidNotThePricedOnes()
+    public void TheClosedMonthsAddBackTheCuotasPaidAndTgssKeepsThemBetweenTheBases()
     {
-        var paidAtTheTramo = SetAsideEstimator.Estimate(TwoConsistentTramosInput(cuotaPaid: 451.50m));
-        var paidBelowIt = SetAsideEstimator.Estimate(TwoConsistentTramosInput());
-        TraceStep Step(SetAsideResult result, string id) => result.Trace.Steps.Single(s => s.Id == id);
+        var result = SetAsideEstimator.Estimate(EstablishedInput(450.00m, 1356.21m));
 
-        Assert.Equal(new Money(451.50m), paidAtTheTramo.MonthlyCuotaSs);
-        Assert.Equal(new Money(451.50m), paidBelowIt.MonthlyCuotaSs);
-        Assert.Equal(3912.03m, Step(paidBelowIt, "set-aside.cuotas-ss-to-date").Euros());
-        Assert.EndsWith("= 4063.50", Step(paidBelowIt, "set-aside.cuotas-ss-to-date").Formula, StringComparison.Ordinal);
-        Assert.Equal(
-            4063.50m - 3912.03m,
-            Step(paidAtTheTramo, "set-aside.rendimiento-computable").Euros() - Step(paidBelowIt, "set-aside.rendimiento-computable").Euros());
-        Assert.Equal(5418.00m, Step(paidBelowIt, "set-aside.cuota-ss-year").Euros());
+        Assert.Equal(2700.00m, Step(result, "set-aside.cuotas-ss-to-date").Euros());
+        Assert.Equal("paid to the end of Q2, as stated: 2700.00", Step(result, "set-aside.cuotas-ss-to-date").Formula);
+        Assert.Equal(30852.755m, Step(result, "set-aside.rendimiento-computable").Euros());
+        Assert.StartsWith("paid 2700.00 between 2555.10 at the base mínima and 5199.84 at the base máxima → 2700.00 stands; ", Step(result, "set-aside.cuota-ss-year").Formula, StringComparison.Ordinal);
+        Assert.Equal(5255.10m, Step(result, "set-aside.cuota-ss-year").Euros());
+    }
+
+    // Paid 1,000.00 a month to June, 6,000.00, above what General 7's base máxima prices, 5,199.84 for six months. Previo
+    // 32,200 − 6,000.00 − 2,555.10 = 23,644.90; difícil justificación 1,182.245; casilla 0224 22,462.655; computable
+    // 22,462.655 + 6,000.00 + 2,555.10 = 31,017.755, × 0.93 / 12 = 2,403.88 a month, General 7. TGSS refunds the closed months
+    // down to 5,199.84 in a later year and keeps it: 5,199.84 + 2,555.10 = 7,754.94 (LGSS art. 308.1.c 4.ª).
+    [Fact]
+    public void ClosedMonthsPaidAboveTheBaseMaximaCountOnlyTheCeiling()
+    {
+        var result = SetAsideEstimator.Estimate(EstablishedInput(1000.00m, 1356.21m));
+
+        Assert.Equal(6000.00m, Step(result, "set-aside.cuotas-ss-to-date").Euros());
+        Assert.Equal(31017.755m, Step(result, "set-aside.rendimiento-computable").Euros());
+        Assert.StartsWith("paid 6000.00 between 2555.10 at the base mínima and 5199.84 at the base máxima → refunded down to 5199.84; ", Step(result, "set-aside.cuota-ss-year").Formula, StringComparison.Ordinal);
+        Assert.Equal(7754.94m, Step(result, "set-aside.cuota-ss-year").Euros());
+    }
+
+    // Paid 400.00 a month to June, 2,400.00, below General 7's base mínima. Previo 32,200 − 2,400.00 − 2,555.10 = 27,244.90;
+    // difícil justificación 1,362.245; casilla 0224 25,882.655; computable 25,882.655 + 2,400.00 + 2,555.10 = 30,837.755,
+    // 2,389.93 a month, General 7. TGSS tops the closed months up to 2,555.10: 2,555.10 + 2,555.10 = 5,110.20 (LGSS art. 308.1.c 3.ª).
+    [Fact]
+    public void ClosedMonthsPaidBelowTheBaseMinimaAreToppedUpToTheFloor()
+    {
+        var result = SetAsideEstimator.Estimate(EstablishedInput(400.00m, 1356.21m));
+
+        Assert.Equal(2400.00m, Step(result, "set-aside.cuotas-ss-to-date").Euros());
+        Assert.Equal(30837.755m, Step(result, "set-aside.rendimiento-computable").Euros());
+        Assert.StartsWith("paid 2400.00 between 2555.10 at the base mínima and 5199.84 at the base máxima → topped up to 2555.10; ", Step(result, "set-aside.cuota-ss-year").Formula, StringComparison.Ordinal);
+        Assert.Equal(5110.20m, Step(result, "set-aside.cuota-ss-year").Euros());
+    }
+
+    // A base of 1,274.51, General 6's base mínima: 1,274.51 × 0.314 = 400.20 debited a month, 2,401.20 for six. Previo 32,200 −
+    // 2,555.10 − 2,401.20 = 27,243.70; difícil justificación 1,362.185; casilla 0224 25,881.515; computable 25,881.515 + 2,555.10
+    // + 2,401.20 = 30,837.815, 2,389.93 a month, still General 7. The gastos hold what is debited, 3,555.10 real + 800.00 +
+    // 2,401.20 = 6,756.30, and TGSS debits 400.20 a month, but it keeps 425.85 a month for them: 2,555.10 + 6 × 425.85 = 5,110.20.
+    [Fact]
+    public void AProjectedBaseBelowTheTramosBaseMinimaIsDebitedButToppedUpToTheFloor()
+    {
+        var result = SetAsideEstimator.Estimate(EstablishedInput(425.85m, 1274.51m));
+
+        Assert.Equal(2401.20m, Step(result, "set-aside.cuotas-ss-projected").Euros());
+        Assert.Equal(30837.815m, Step(result, "set-aside.rendimiento-computable").Euros());
+        Assert.Equal(6756.30m, Step(result, "set-aside.annual-gastos").Euros());
+        Assert.Equal(new Money(400.20m), result.MonthlyCuotaSs);
+        Assert.Equal(5110.20m, Step(result, "set-aside.cuota-ss-year").Euros());
+    }
+
+    // A base of 3,000.00: 3,000.00 × 0.314 = 942.00 debited a month, 5,652.00 for six. Previo 32,200 − 2,555.10 − 5,652.00 =
+    // 23,992.90; difícil justificación 1,199.645; casilla 0224 22,793.255; computable 22,793.255 + 2,555.10 + 5,652.00 =
+    // 31,000.355, 2,402.53 a month, General 7. The gastos hold 3,555.10 + 800.00 + 5,652.00 = 10,007.10 and TGSS debits 942.00
+    // a month, but it refunds each down to 866.64: 2,555.10 + 6 × 866.64 = 7,754.94.
+    [Fact]
+    public void AProjectedBaseAboveTheTramosBaseMaximaIsDebitedButRefundedDownToTheCeiling()
+    {
+        var result = SetAsideEstimator.Estimate(EstablishedInput(425.85m, 3000.00m));
+
+        Assert.Equal(5652.00m, Step(result, "set-aside.cuotas-ss-projected").Euros());
+        Assert.Equal(31000.355m, Step(result, "set-aside.rendimiento-computable").Euros());
+        Assert.Equal(10007.10m, Step(result, "set-aside.annual-gastos").Euros());
+        Assert.Equal(new Money(942.00m), result.MonthlyCuotaSs);
+        Assert.Equal(7754.94m, Step(result, "set-aside.cuota-ss-year").Euros());
     }
 
     // TGSS takes casilla 0224, which comes before every LIRPF art. 32 reduction, so the art. 32.3 status cannot move the tramo.
     [Fact]
     public void TheNewActivityReductionDoesNotLowerTheRendimientoComputable()
     {
-        decimal Computable(NewActivity newActivity) => SetAsideEstimator.Estimate(TwoConsistentTramosInput(newActivity))
-            .Trace.Steps.Single(s => s.Id == "set-aside.rendimiento-computable").Euros();
+        decimal Computable(NewActivity newActivity) =>
+            Step(SetAsideEstimator.Estimate(EstablishedInput(425.85m, 1356.21m, newActivity)), "set-aside.rendimiento-computable").Euros();
 
         Assert.Equal(
             Computable(new NewActivity.Started(NewActivityPeriod.First, Money.Zero)),
@@ -206,8 +272,6 @@ public class SetAsideExamples
 
     // #2: where the estimator picks between two defensible figures it reserves the higher, and the step that picks says so.
     [Theory]
-    [InlineData("set-aside.cuotas-ss-projected", "conservative")]
-    [InlineData("set-aside.cuota-ss-year", "conservative")]
     [InlineData("set-aside.cuota-ss-month", "bias conservative")]
     [InlineData("set-aside.tarifa-plana-lapse", "over-reserves")]
     [InlineData("set-aside.hold-back-share", "conservative")]

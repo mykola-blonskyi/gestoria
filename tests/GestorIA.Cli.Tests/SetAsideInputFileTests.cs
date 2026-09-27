@@ -21,7 +21,7 @@ public class SetAsideInputFileTests
         Assert.Equal(NewActivityPeriod.First, started.Period);
         Assert.Equal(Money.Zero, started.IngresosFromFormerEmployer);
         Assert.Equal([new QuarterToDate(Quarter.Q1, new Money(6000.00m), new Money(345.33m), new Money(205.33m))], input.Activity.Actuals);
-        Assert.Equal(new ActivityProjection(new Money(27000.00m), new Money(900.00m)), input.Activity.Projection);
+        Assert.Equal(new ActivityProjection(new Money(27000.00m), new Money(900.00m), new Money(1356.21m)), input.Activity.Projection);
         Assert.IsType<Retenciones.ForeignPayersOnly>(input.Activity.Retenciones);
         Assert.Same(RepoFiles.Config, input.Config);
     }
@@ -43,6 +43,7 @@ public class SetAsideInputFileTests
     [InlineData("asOf", "$.asOf is missing.")]
     [InlineData("profile.activity.newActivity", "$.profile.activity.newActivity is missing.")]
     [InlineData("activity.actuals.0.cuotasSsYtd", "$.activity.actuals[0].cuotasSsYtd is missing.")]
+    [InlineData("activity.projection.baseCotizacion", "$.activity.projection.baseCotizacion is missing.")]
     public void AMissingFieldIsRejectedByItsPath(string path, string message)
     {
         var json = Edit(root => ParentOf(root, path).AsObject().Remove(path.Split('.')[^1]));
@@ -54,6 +55,7 @@ public class SetAsideInputFileTests
     [Theory]
     [InlineData("profile.region", "$.profile.region is null.")]
     [InlineData("activity.actuals.0", "$.activity.actuals[0] is null.")]
+    [InlineData("activity.projection.baseCotizacion", "$.activity.projection.baseCotizacion is null.")]
     public void ANullIsRejectedAtItsOwnPath(string path, string message)
     {
         var json = Edit(root => Set(root, path, null));
@@ -71,6 +73,7 @@ public class SetAsideInputFileTests
     [InlineData("activity.actuals.0.cuotasSsYtd", "$.activity.actuals[0].cuotasSsYtd")]
     [InlineData("activity.projection.ingresos", "$.activity.projection.ingresos")]
     [InlineData("activity.projection.gastos", "$.activity.projection.gastos")]
+    [InlineData("activity.projection.baseCotizacion", "$.activity.projection.baseCotizacion")]
     public void ANegativeAmountIsRejected(string path, string jsonPath)
     {
         var json = Edit(root => Set(root, path, "-5"));
@@ -94,7 +97,8 @@ public class SetAsideInputFileTests
     [InlineData("profile.activity.tarifaPlana", "$.profile.activity.tarifaPlana is not a field the estimator reads; the fields of $.profile.activity are alta, previousYear, newActivity.")]
     [InlineData("profile.activity.newActivity.startedOn", "$.profile.activity.newActivity.startedOn is not a field the estimator reads; the fields of $.profile.activity.newActivity are period, ingresosFromFormerEmployer.")]
     [InlineData("activity.actuals.0.note", "$.activity.actuals[0].note is not a field the estimator reads; the fields of $.activity.actuals[0] are quarter, ingresosYtd, gastosYtd, cuotasSsYtd.")]
-    [InlineData("activity.projection.iva", "$.activity.projection.iva is not a field the estimator reads; the fields of $.activity.projection are ingresos, gastos.")]
+    [InlineData("activity.projection.iva", "$.activity.projection.iva is not a field the estimator reads; the fields of $.activity.projection are ingresos, gastos, baseCotizacion.")]
+    [InlineData("activity.projection.cuotaSs", "$.activity.projection.cuotaSs is not a field the estimator reads; the fields of $.activity.projection are ingresos, gastos, baseCotizacion.")]
     public void AnUnknownFieldIsRejected(string path, string message)
     {
         var json = Edit(root => Set(root, path, false));
