@@ -87,7 +87,7 @@ Messages live in `src/i18n/messages/<locale>.json`. Every visible string goes th
 
 The colours are CSS variables, one block per theme, in `src/app/globals.css`, with shadcn/ui's token names (`--background`, `--foreground`, `--primary`, ...). Tailwind v4 reads them through `@theme inline`, so `bg-background` or `text-muted-foreground` follow the theme. `dark:` utilities apply in `dark` and `ocean`.
 
-`tests/theme-contrast.test.ts` reads that file and computes WCAG contrast for every text and surface pair: 4.5:1 (AA) in every theme, 7:1 (AAA) in `contrast`, and 3:1 for focus rings and input borders. It also fails if a component draws the ring translucent (`ring-ring/50`), which would show a weaker colour than the one tested. To add a theme, add it to `src/shared/theme/themes.ts`, add its block to `globals.css` with hex colours, and add its name to the four message files.
+`tests/theme-contrast.test.ts` reads that file and computes WCAG contrast for the text and surface pairs the components render: 4.5:1 (AA) in every theme, 7:1 (AAA) in `contrast`, and 3:1 for focus rings and input borders. It also fails if a component draws the ring translucent (`ring-ring/50`), which would show a weaker colour than the one tested. A first visit, with no `theme` cookie yet, gets `light`: the theme is rendered on the server from the cookie, so it cannot follow the system's dark setting before the user picks one (ADR-0017). To add a theme, add it to `src/shared/theme/themes.ts`, add its block to `globals.css` with hex colours, and add its name to the four message files.
 
 ## Data layer
 

@@ -68,7 +68,7 @@
     "title": "Periods",
     "lead": "Quarters and tax years, each with its results.",
     "points": {
-      "quarters": "Each quarter's Modelo 130 and 303 results with their line numbers.",
+      "quarters": "Each quarter's Modelo 130 and 303 results with their casilla numbers.",
       "years": "Each tax year's annual result (Renta) and how it was reached.",
       "trace": "The step-by-step calculation, grouped by section."
     },
@@ -100,7 +100,7 @@
       "export": "Exporting all your data in one file, labelled as personal financial data.",
       "restore": "Restoring your data from that file, so a lost laptop does not lose your tax history."
     },
-    "pending": "Export needs the API, which is not built yet. Restore also needs an API design that does not exist yet."
+    "pending": "Export needs the API, which is not built yet. Restore also needs a separate API resource that does not exist yet."
   },
   "NotFound": {
     "title": "Page not found",

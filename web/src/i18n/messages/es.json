@@ -100,7 +100,7 @@
       "export": "Exportar todos tus datos en un solo archivo, marcado como datos financieros personales.",
       "restore": "Restaurar tus datos desde ese archivo, para que perder el portátil no suponga perder tu historial fiscal."
     },
-    "pending": "La exportación necesita la API, que aún no está construida. La restauración necesita además un diseño de API que todavía no existe."
+    "pending": "La exportación necesita la API, que aún no está construida. La restauración necesita además un recurso de API propio que todavía no existe."
   },
   "NotFound": {
     "title": "Página no encontrada",
