@@ -32,7 +32,7 @@ public class TaxYearValidationRejectsBadFiles
             (r => r["regions"]!["MD"]!.AsObject().Remove("_todo"), "/regions/MD"),
 
         ["_todo misspelled, which re-arms the gate"] =
-            (r => Rename(r["modelo303"]!.AsObject(), "_todo", "_tood"), "/modelo303"),
+            (r => Rename(r["regions"]!["MD"]!.AsObject(), "_todo", "_tood"), "/regions/MD"),
 
         ["tranches out of order"] =
             (r => Swap(r["irpf"]!["escalaEstatal"]!.AsArray(), 1, 2), "/irpf/escalaEstatal/2/upTo"),
@@ -146,6 +146,55 @@ public class TaxYearValidationRejectsBadFiles
 
         ["tarifa plana _todo beside an amount"] =
             (r => r["seguridadSocial"]!["tarifaPlana"]!["_todo"] = "amount not yet published", "/seguridadSocial/tarifaPlana/amount"),
+
+        ["Modelo 130 line key misspelled"] =
+            (r => Rename(r["modelo130"]!["lines"]!.AsObject(), "resultado", "resultados"), "/modelo130/lines"),
+
+        ["Modelo 303 nested line missing"] =
+            (r => r["modelo303"]!["lines"]!["deducible"]!.AsObject().Remove("total"), "/modelo303/lines/deducible"),
+
+        ["casilla that is not two or three digits"] =
+            (r => r["modelo303"]!["lines"]!["aDevolver"] = "7", "/modelo303/lines/aDevolver"),
+
+        ["_todo beside filled lines"] =
+            (r => r["modelo130"]!["lines"]!["_todo"] = "line numbers not needed anymore", "/modelo130/lines"),
+
+        ["the same casilla twice in one form"] =
+            (r => r["modelo303"]!["lines"]!["resultado"] = "69", "/modelo303/lines/resultado"),
+
+        ["a 349 clave that is not one capital letter"] =
+            (r => r["modelo349"]!["claves"]!["prestacionesServicios"] = "SS", "/modelo349/claves/prestacionesServicios"),
+
+        ["the same 349 clave twice"] =
+            (r => r["modelo349"]!["claves"]!["adquisicionesServicios"] = "S", "/modelo349/claves/adquisicionesServicios"),
+
+        ["a 349 field that ends before it starts"] =
+            (r => r["modelo349"]!["lines"]!["nombreOperador"]!["to"] = 90, "/modelo349/lines/nombreOperador"),
+
+        ["two 349 fields that overlap"] =
+            (r =>
+            {
+                r["modelo349"]!["lines"]!["clave"]!["from"] = 132;
+                r["modelo349"]!["lines"]!["clave"]!["to"] = 132;
+            }, "/modelo349/lines/clave"),
+
+        // The dangling-pointer rule would otherwise catch the provenance entries under /modelo349 first.
+        ["modelo349 missing"] =
+            (r =>
+            {
+                r.AsObject().Remove("modelo349");
+
+                foreach (var key in r["provenance"]!.AsObject()
+                    .Where(e => e.Key.StartsWith("/modelo349", StringComparison.Ordinal))
+                    .Select(e => e.Key)
+                    .ToList())
+                {
+                    r["provenance"]!.AsObject().Remove(key);
+                }
+            }, "modelo349"),
+
+        ["a filled form map with no provenance entry"] =
+            (r => r["provenance"]!.AsObject().Remove("/modelo303/lines"), "/modelo303/lines"),
     };
 
     public static TheoryData<string> Names()
@@ -183,6 +232,19 @@ public class TaxYearValidationRejectsBadFiles
     {
         var path = ExamplePath();
         var root = JsonNode.Parse(File.ReadAllText(path))!;
+
+        Assert.Empty(TaxYearConfigValidator.Validate(root, Path.GetFileName(path)));
+    }
+
+    // A block-level _todo used to declare modelo303 unmapped; now the gap is declared inside "lines" instead,
+    // the same shape "casillas" already uses, and it must still be a legal way to say "not designed yet".
+    [Fact]
+    public void ADeclaredGapInsideModelo303LinesIsAccepted()
+    {
+        var path = ExamplePath();
+        var root = JsonNode.Parse(File.ReadAllText(path))!;
+
+        root["modelo303"]!["lines"] = new JsonObject { ["_todo"] = "the 2027 design is unpublished" };
 
         Assert.Empty(TaxYearConfigValidator.Validate(root, Path.GetFileName(path)));
     }

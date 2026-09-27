@@ -14,22 +14,10 @@ public class TaxYearGapsAreRegistered
         {
             ["/regions/MD"] =
                 "Madrid is out of v1.0 scope (ADR-0013). Closes by deleting the block, not by filling it.",
-
-            ["/modelo130"] =
-                "line numbers. Due before the Q1 2027 forms (plans/current.md, Phase 0). minoracion bands filled (#5).",
-
-            ["/modelo303"] =
-                "line numbers. Due before the Q1 2027 forms (plans/current.md, Phase 0).",
         },
 
         [TaxYearConfigFiles.File2026] = new()
         {
-            ["/modelo130"] =
-                "line numbers. Due before the Modelo 130 mapper reads them (plans/current.md, Phase 0).",
-
-            ["/modelo303"] =
-                "line numbers. Due before the Modelo 303 mapper reads them (plans/current.md, Phase 0).",
-
             ["/seguridadSocial/tarifaPlana"] =
                 "amount unpublished: no LPGE 2026, and RDL 13/2022 D.T. 5.ª stops at 2025 (#47). Closes when a norm fixes it.",
 
