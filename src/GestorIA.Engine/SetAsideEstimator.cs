@@ -253,7 +253,7 @@ public static class SetAsideEstimator
             "set-aside.tarifa-plana-lapse",
             TraceSection.SeguridadSocial,
             "Fin de la tarifa plana",
-            [new("alta", Invariant($"{alta:yyyy-MM-dd}")), new("tarifaPlanaMonths", Invariant($"{monthsInForce}")), new("tarifaPlana", tarifaPlana.Amount is { } amount ? Show(amount) : "pending")],
+            [new("alta", Invariant($"{alta:yyyy-MM-dd}")), new("tarifaPlanaMonths", Invariant($"{monthsInForce}")), new("tarifaPlana", tarifaPlana.Amount is { } amount ? Show(amount) : "not in this configuration")],
             Invariant($"{altaMonth} + {monthsInForce} complete months → tarifa plana through {lastTarifaPlanaMonth}; from {lapse}, {lapseWhen}, the tramo cuota {cuotaAfterLapse}"),
             new TraceValue.Money(new Money(cuotaAfterLapse)),
             "Ley 20/2007 art. 38 ter.1 (boe.es consolidated text, read 2026-09-27): from the alta through the complete calendar months after it, eleven when the alta is on the 1st (itself a complete calendar month) and twelve otherwise, per Seguridad Social's own reading of the benefit as the first 12 months of alta (portal.seg-social.gob.es); config seguridadSocial.tarifaPlana. "
