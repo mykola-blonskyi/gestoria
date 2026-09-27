@@ -73,7 +73,7 @@ Exit criteria
 | 2 Credits and explanations | In, and it is the point (SPEC-006, SPEC-010) |
 | 3 Application, persistence, API | Open. See `docs/decisions.md` |
 | 4 OCR and ingestion | Out. v1.x (SPEC-005) |
-| 5 Web application | In. Next.js in `web/`, decided 2026-09-27 (ADR-0017); scaffold in #65, features as their API resources land |
+| 5 Web application | In. Next.js in `web/`, decided 2026-09-27 (ADR-0017); scaffold in #65, the overview on the first API (health, tax years, set-aside estimate, generated OpenAPI) in #66, the other features as their API resources land |
 | 6 Hardening and release | In, and smaller, because ADR-0010 removed the server |
 
 ### Phase 1 — Core tax engine (≈ 4–6 weeks) · SPEC-001, SPEC-002, SPEC-007, SPEC-011
