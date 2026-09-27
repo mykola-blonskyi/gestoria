@@ -1,0 +1,167 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, [data-theme="ocean"], [data-theme="ocean"] *));
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * One block per theme in shared/theme/themes.ts. Colours are hex so that
+ * tests/theme-contrast.test.ts can compute WCAG contrast ratios from this file.
+ */
+:root {
+  --radius: 0.625rem;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #1a1d23;
+  --card: #ffffff;
+  --card-foreground: #1a1d23;
+  --popover: #ffffff;
+  --popover-foreground: #1a1d23;
+  --primary: #1d4ed8;
+  --primary-foreground: #ffffff;
+  --secondary: #eef2f7;
+  --secondary-foreground: #1e293b;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --accent: #e0e7ff;
+  --accent-foreground: #1e1b4b;
+  --destructive: #b91c1c;
+  --border: #e2e8f0;
+  --input: #64748b;
+  --ring: #1d4ed8;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0f1115;
+  --foreground: #e7e9ee;
+  --card: #171a21;
+  --card-foreground: #e7e9ee;
+  --popover: #171a21;
+  --popover-foreground: #e7e9ee;
+  --primary: #93b4ff;
+  --primary-foreground: #0f1115;
+  --secondary: #262c38;
+  --secondary-foreground: #e7e9ee;
+  --muted: #1f2430;
+  --muted-foreground: #a8b0c2;
+  --accent: #2a3142;
+  --accent-foreground: #e7e9ee;
+  --destructive: #f87171;
+  --border: #2c3240;
+  --input: #6b7385;
+  --ring: #93b4ff;
+}
+
+[data-theme="sepia"] {
+  color-scheme: light;
+  --background: #f4ecd8;
+  --foreground: #3b2f1e;
+  --card: #f9f3e3;
+  --card-foreground: #3b2f1e;
+  --popover: #f9f3e3;
+  --popover-foreground: #3b2f1e;
+  --primary: #7a4a12;
+  --primary-foreground: #fbf6ea;
+  --secondary: #eadfc4;
+  --secondary-foreground: #3b2f1e;
+  --muted: #ece2c9;
+  --muted-foreground: #5e4b33;
+  --accent: #e3d3ad;
+  --accent-foreground: #3b2f1e;
+  --destructive: #9b2c1c;
+  --border: #d8c8a4;
+  --input: #8a7350;
+  --ring: #7a4a12;
+}
+
+[data-theme="contrast"] {
+  color-scheme: dark;
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #000000;
+  --card-foreground: #ffffff;
+  --popover: #000000;
+  --popover-foreground: #ffffff;
+  --primary: #ffd60a;
+  --primary-foreground: #000000;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #ffffff;
+  --muted: #141414;
+  --muted-foreground: #e6e6e6;
+  --accent: #1a1a1a;
+  --accent-foreground: #ffd60a;
+  --destructive: #ff8f8f;
+  --border: #ffffff;
+  --input: #ffffff;
+  --ring: #ffd60a;
+}
+
+[data-theme="ocean"] {
+  color-scheme: dark;
+  --background: #0b1e33;
+  --foreground: #e3eef9;
+  --card: #10283f;
+  --card-foreground: #e3eef9;
+  --popover: #10283f;
+  --popover-foreground: #e3eef9;
+  --primary: #5cc8e0;
+  --primary-foreground: #06243a;
+  --secondary: #163452;
+  --secondary-foreground: #e3eef9;
+  --muted: #132f4a;
+  --muted-foreground: #a9c1d9;
+  --accent: #1b3d5e;
+  --accent-foreground: #e3eef9;
+  --destructive: #ff8a80;
+  --border: #21476b;
+  --input: #6f93b5;
+  --ring: #5cc8e0;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
