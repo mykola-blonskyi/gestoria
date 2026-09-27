@@ -64,9 +64,9 @@ means today is listed once, in `graph/architecture.md` → Gap vs target.
 
 ```mermaid
 flowchart TB
-  subgraph client["Client — <i>form undecided until M3</i>"]
-    SPA["<b>web/</b> — React 19 + TS + Vite<br/>onboarding · upload · review queue ·<br/>results · trace · casilla export<br/><i>contains no tax math</i><br/>SPEC-012 · ADR-0007"]
-    CLI["<b>CLI</b><br/><i>the live alternative</i>"]
+  subgraph client["Client"]
+    SPA["<b>web/</b> — Next.js App Router + React 19 + TS<br/>dashboard · payments · transactions ·<br/>periods · settings · auth · backup<br/><i>contains no tax math</i><br/>SPEC-012 · ADR-0017"]
+    CLI["<b>CLI</b><br/><i>stays next to the web app</i>"]
   end
 
   subgraph api["<b>GestorIA.Api</b> — .NET 10 / ASP.NET Core · container 'api'"]
@@ -107,11 +107,11 @@ Containers actually deployed in v1.0: `api` and `postgres`, plus the MinIO alrea
 running on the author's VPS. `ocr` and `caddy` are v1.x.
 
 
-### Frontend — `web/` (React 19 + TypeScript, Vite)
+### Frontend — `web/` (Next.js App Router, React 19, TypeScript)
 
-Responsibilities: onboarding wizard, document upload, review queue (confirm/correct extracted fields and unclear transactions), quarterly and annual results, explanations, casilla sheet export. Contains **no tax math** — displays engine output only. SPEC-012.
+Responsibilities: the set-aside dashboard, payments (obligations and their due dates), transactions and their review, periods (quarterly and annual results with traces), settings, local-key access and backup. Contains **no tax math** — displays engine output only. SPEC-012, ADR-0017, `web/README.md`.
 
-Dependencies: generated OpenAPI client, TanStack Query, i18next (ES/EN/RU).
+Dependencies: types generated from the API's OpenAPI document, TanStack Query, next-intl (uk default, es, en, ru), Tailwind v4 + shadcn/ui.
 
 ### Backend — `GestorIA.Api` (.NET 10, ASP.NET Core)
 

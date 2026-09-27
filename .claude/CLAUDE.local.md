@@ -52,7 +52,7 @@ Tax theory (the *why* behind the rules) lives **outside** the repo in the Obsidi
 
 ## Architecture Notes
 
-- Stack: C# / .NET 10 (`Domain → Engine → Application → Infrastructure → Api`), PostgreSQL 16 + EF Core, Python 3.12 / FastAPI + PaddleOCR in `services/ocr`, React 19 + TypeScript SPA in `web/` (Phase 5).
+- Stack: C# / .NET 10 (`Domain → Engine → Application → Infrastructure → Api`), PostgreSQL 16 + EF Core, Python 3.12 / FastAPI + PaddleOCR in `services/ocr`, Next.js 16 (App Router) + React 19 + TypeScript in `web/` with next-intl (uk default, es, en, ru), Tailwind v4 + shadcn/ui and TanStack Query, built with pnpm on Node 24 (ADR-0017, `web/README.md`).
 - API ↔ OCR: REST with a shared JSON Schema (`services/ocr/schema/extraction-result.schema.json`); DTOs on both sides are generated from it (ADR-0005).
 - Test projects live in `tests/` (as in `GestorIA.slnx`), not in `src/`.
 - The prototype `IrpfTaxCalculator` and `IrpfCalculationResult` are deleted (2026-09-18). `Transaction` stays only as `BbvaCsvStatementParser`'s output type until `BankTransaction` lands in Phase 4 (SPEC-001 §7, SPEC-004 §5).

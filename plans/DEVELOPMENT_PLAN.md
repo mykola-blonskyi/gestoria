@@ -73,7 +73,7 @@ Exit criteria
 | 2 Credits and explanations | In, and it is the point (SPEC-006, SPEC-010) |
 | 3 Application, persistence, API | Open. See `docs/decisions.md` |
 | 4 OCR and ingestion | Out. v1.x (SPEC-005) |
-| 5 Web application | Open. See `docs/decisions.md` |
+| 5 Web application | In. Next.js in `web/`, decided 2026-09-27 (ADR-0017); scaffold in #65, features as their API resources land |
 | 6 Hardening and release | In, and smaller, because ADR-0010 removed the server |
 
 ### Phase 1 — Core tax engine (≈ 4–6 weeks) · SPEC-001, SPEC-002, SPEC-007, SPEC-011
@@ -148,7 +148,7 @@ Exit criteria
 ### Phase 5 — Web application (≈ 4–5 weeks) · SPEC-012
 
 Deliverables
-- React + TypeScript + Vite SPA: onboarding wizard, document upload, review queue, quarterly dashboard, annual result with trace, credits panel, casilla sheet export (PDF/CSV), calendar, i18n (ES/EN/RU).
+- Next.js web app (ADR-0017): dashboard, payments, transactions, periods, settings, auth and backup (SPEC-012 §1 maps the earlier screen list onto them), i18n (uk default, es, en, ru).
 
 Exit criteria
 - A new user can go from zero to an annual result in one session without reading docs (2 external testers).
@@ -187,7 +187,7 @@ gantt
   Autonomo registration - Modelo 036, ROI and VIES :milestone, 2027-01-15, 0d
   section Quarterly
   M2 Modelo 130, 303 and 349 engine :m2, 2026-12-15, 2027-01-31
-  M3 Persistence and the entry path - CLI vs SPA decided here :m3, 2027-01-31, 2027-03-15
+  M3 Persistence and the entry path :m3, 2027-01-31, 2027-03-15
   M4 Q1 2027 produced and diffed against the gestor :milestone, 2027-04-15, 0d
   section Annual
   M5 Renta 2026 employee path and the credits engine :m5, 2027-03-15, 2027-06-15

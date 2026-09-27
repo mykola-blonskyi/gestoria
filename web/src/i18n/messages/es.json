@@ -1,0 +1,115 @@
+{
+  "Metadata": {
+    "description": "Cuánto de cada cobro no es tuyo, qué debes y hasta cuándo. Cifras del motor de GestorIA."
+  },
+  "Shell": {
+    "skipToContent": "Saltar al contenido principal",
+    "disclaimer": "GestorIA es una herramienta personal, no asesoramiento fiscal. Comprueba lo importante con un gestor o con la AEAT.",
+    "nav": {
+      "label": "Navegación principal",
+      "dashboard": "Resumen",
+      "payments": "Pagos",
+      "transactions": "Movimientos",
+      "periods": "Periodos",
+      "settings": "Ajustes",
+      "backup": "Copia de seguridad",
+      "auth": "Acceso"
+    },
+    "theme": {
+      "label": "Tema",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "sepia": "Sepia",
+      "contrast": "Alto contraste",
+      "ocean": "Océano"
+    },
+    "language": {
+      "label": "Idioma"
+    }
+  },
+  "EmptyState": {
+    "heading": "Qué mostrará esta página",
+    "status": "Todavía no hay nada que mostrar"
+  },
+  "Dashboard": {
+    "title": "Resumen",
+    "lead": "Qué parte de cada cobro no es tuya y qué vence a continuación.",
+    "points": {
+      "holdBack": "La parte de cada cobro que conviene apartar, explicada en una frase y en el cálculo completo paso a paso.",
+      "nextPayment": "El próximo pago del Modelo 130 y los días en que puedes pagarlo.",
+      "cuota": "La cuota mensual de la TGSS de este trimestre y cuándo termina la tarifa plana.",
+      "renta": "Lo que pedirá la Renta además de los pagos fraccionados del Modelo 130, y el mes en que vence.",
+      "warnings": "Cada aviso del cálculo junto a la cifra a la que se refiere, y la configuración del ejercicio que produjo la respuesta."
+    },
+    "pending": "La estimación viene de la API de GestorIA, que aún no está construida."
+  },
+  "Payments": {
+    "title": "Pagos",
+    "lead": "Todo lo que pagas a Hacienda y a la Seguridad Social, por orden de fecha.",
+    "points": {
+      "obligations": "Cada obligación: Modelo 130, 303 y 349, la cuota mensual de la TGSS y el ajuste de la Renta.",
+      "amounts": "El importe cuando se conoce, y un claro «todavía no se conoce» cuando no.",
+      "windows": "El plazo de cada pago tras aplicar los fines de semana y los festivos autonómicos. Los festivos locales no se aplican.",
+      "history": "Las obligaciones pasadas con lo que correspondía pagar, y la exportación de las fechas a tu calendario."
+    },
+    "pending": "Necesita el calendario de pagos y los cálculos trimestrales y anuales de la API, que aún no están construidos."
+  },
+  "Transactions": {
+    "title": "Movimientos",
+    "lead": "El dinero que se movió de verdad: lo que entró y lo que salió.",
+    "points": {
+      "table": "Cada movimiento en una tabla que se desplaza con fluidez, incluso con miles de filas.",
+      "filters": "Filtros por trimestre y por tipo de movimiento.",
+      "review": "Los movimientos que aún necesitan una decisión: los dudosos y los que no tienen factura."
+    },
+    "pending": "Necesita la lista de movimientos y la cola de revisión de la API, que aún no están construidas."
+  },
+  "Periods": {
+    "title": "Periodos",
+    "lead": "Trimestres y ejercicios fiscales, cada uno con sus resultados.",
+    "points": {
+      "quarters": "Los resultados del Modelo 130 y del 303 de cada trimestre, con sus números de casilla.",
+      "years": "El resultado anual (Renta) de cada ejercicio y cómo se ha llegado a él.",
+      "trace": "El cálculo paso a paso, agrupado por secciones."
+    },
+    "pending": "Necesita los cálculos trimestrales y anuales de la API, que aún no están construidos."
+  },
+  "Settings": {
+    "title": "Ajustes",
+    "lead": "Idioma, tema, tu perfil y tus datos, en un solo lugar.",
+    "preferences": "Apariencia e idioma",
+    "points": {
+      "profile": "Tu perfil de contribuyente para cada año: comunidad autónoma, situación familiar, salario y alta como autónomo.",
+      "data": "Exportar o borrar todos tus datos, con una confirmación que indica qué se va a borrar."
+    },
+    "pending": "El perfil y tus datos están en la API, que aún no está construida."
+  },
+  "Auth": {
+    "title": "Acceso",
+    "lead": "Desbloquear la aplicación con la clave de tu instalación local.",
+    "points": {
+      "key": "Introducir la clave local de la API, para que nada en este equipo hable con la API sin ella.",
+      "status": "Un mensaje claro cuando la API no está en marcha, para que sepas que tienes que arrancarla."
+    },
+    "pending": "Necesita la API y su comprobación de la clave, que aún no están construidas."
+  },
+  "Backup": {
+    "title": "Copia de seguridad",
+    "lead": "Una copia de tus datos que se guarda fuera de este equipo.",
+    "points": {
+      "export": "Exportar todos tus datos en un solo archivo, marcado como datos financieros personales.",
+      "restore": "Restaurar tus datos desde ese archivo, para que perder el portátil no suponga perder tu historial fiscal."
+    },
+    "pending": "La exportación necesita la API, que aún no está construida. La restauración necesita además un recurso de API propio que todavía no existe."
+  },
+  "NotFound": {
+    "title": "Página no encontrada",
+    "lead": "No hay nada en esta dirección.",
+    "home": "Ir al resumen"
+  },
+  "Error": {
+    "title": "Algo ha fallado",
+    "lead": "No se ha podido mostrar esta página. Vuelve a intentarlo; si no funciona, reinicia la aplicación.",
+    "retry": "Volver a intentarlo"
+  }
+}
