@@ -30,10 +30,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto max-w-5xl px-4 pb-2">
           <MainNav />
         </div>
+        <p role="note" className="border-t border-border bg-muted px-4 py-2 text-center text-sm text-muted-foreground">
+          {t("disclaimer")}
+        </p>
       </header>
-      <p role="note" className="border-b border-border bg-muted px-4 py-2 text-center text-sm text-muted-foreground">
-        {t("disclaimer")}
-      </p>
       <main id="main" tabIndex={-1} className="mx-auto max-w-5xl px-4 py-8">
         {children}
       </main>

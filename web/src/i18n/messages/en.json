@@ -106,5 +106,10 @@
     "title": "Page not found",
     "lead": "There is nothing at this address.",
     "home": "Go to the overview"
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "lead": "This page could not be shown. Try again; if that does not help, restart the app.",
+    "retry": "Try again"
   }
 }

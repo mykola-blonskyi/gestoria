@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -81,6 +81,17 @@ describe("theme tokens", () => {
     it.each(UI_PAIRS)("%s on %s reaches 3:1", (ui, surface) => {
       expect(ratio(ui, surface)).toBeGreaterThanOrEqual(3);
     });
+  });
+});
+
+// The pairs above test the tokens at full strength. A translucent ring or outline
+// (ring-ring/50) would draw a weaker colour than the one tested.
+describe("focus indicators", () => {
+  it("use the ring colour at full strength everywhere in src", () => {
+    const files = readdirSync(path.resolve(import.meta.dirname, "../src"), { recursive: true, encoding: "utf8" })
+      .filter((file) => /\.(tsx?|css)$/.test(file))
+      .filter((file) => /(ring|outline)-ring\/\d+/.test(readFileSync(path.resolve(import.meta.dirname, "../src", file), "utf8")));
+    expect(files).toEqual([]);
   });
 });
 

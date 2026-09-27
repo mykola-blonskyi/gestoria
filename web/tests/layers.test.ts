@@ -90,6 +90,18 @@ describe("layer rules", () => {
   });
 });
 
+describe("JavaScript files under src", () => {
+  it.each(["fixture.js", "fixture.jsx", "fixture.mjs", "fixture.mts"])("are held to the same rules (%s)", async (name) => {
+    const [result] = await eslint.lintText('import { apiFetch } from "@/data/client";\nconsole.log(apiFetch);\n', {
+      filePath: path.join(root, "src/shared/lib", name),
+    });
+    expect(result?.messages.map((message) => message.ruleId).sort()).toEqual([
+      "import/no-restricted-paths",
+      "no-console",
+    ]);
+  });
+});
+
 describe("console", () => {
   it("rejects console calls in the app, so no financial value reaches the browser console (SPEC-013)", async () => {
     const [result] = await eslint.lintText('console.log("1234.56");\n', {

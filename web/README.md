@@ -73,7 +73,7 @@ Enforced by ESLint's `import/no-restricted-paths` in `eslint.config.mjs`. `tests
 
 The zones for "features do not import each other" are generated from the folders in `src/features`, so a new feature is covered without editing the config.
 
-`no-console` is an error in `src`: nothing about the user's finances may reach the browser console (SPEC-013). For the same reason `ApiError` messages carry only the status and the problem title, never `detail`.
+`no-console` is an error in `src`, for every file type there: nothing about the user's finances may reach the browser console (SPEC-013). For the same reason `ApiError` messages carry only the status and the problem title, never `detail`. The error object itself still holds `detail` in its `failure`, so a feature shows an API error on the page and never rethrows it: an uncaught error is printed to the console whole. `app/error.tsx` shows a translated message and does not print the error.
 
 ## Languages
 
@@ -87,7 +87,7 @@ Messages live in `src/i18n/messages/<locale>.json`. Every visible string goes th
 
 The colours are CSS variables, one block per theme, in `src/app/globals.css`, with shadcn/ui's token names (`--background`, `--foreground`, `--primary`, ...). Tailwind v4 reads them through `@theme inline`, so `bg-background` or `text-muted-foreground` follow the theme. `dark:` utilities apply in `dark` and `ocean`.
 
-`tests/theme-contrast.test.ts` reads that file and computes WCAG contrast for every text and surface pair: 4.5:1 (AA) in every theme, 7:1 (AAA) in `contrast`, and 3:1 for focus rings and input borders. To add a theme, add it to `src/shared/theme/themes.ts`, add its block to `globals.css` with hex colours, and add its name to the four message files.
+`tests/theme-contrast.test.ts` reads that file and computes WCAG contrast for every text and surface pair: 4.5:1 (AA) in every theme, 7:1 (AAA) in `contrast`, and 3:1 for focus rings and input borders. It also fails if a component draws the ring translucent (`ring-ring/50`), which would show a weaker colour than the one tested. To add a theme, add it to `src/shared/theme/themes.ts`, add its block to `globals.css` with hex colours, and add its name to the four message files.
 
 ## Data layer
 
@@ -104,6 +104,7 @@ The colours are CSS variables, one block per theme, in `src/app/globals.css`, wi
 
 - `shared/lib` formatting across the four locales, including negatives, zero, values beyond float precision and bad input.
 - The theme and language toggles, the shell (navigation to every route, skip link, disclaimer in every language), and each feature's page through its `index.ts`.
+- The root layout: `<html lang>` and `data-theme` come from the cookies, so the first paint is right (`tests/root-layout.test.tsx`).
 - The virtualised list with ten thousand synthetic rows.
 - The data client against stubbed `fetch` responses: JSON, 204, problem+json, a non-problem error and a network failure.
 - The structural checks in `tests/`.

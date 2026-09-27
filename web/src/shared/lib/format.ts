@@ -18,6 +18,7 @@ export function formatMoney(amount: string, locale: Locale): string {
     style: "currency",
     currency: "EUR",
     currencyDisplay: "narrowSymbol",
+    signDisplay: "negative",
   }).format(amount);
 }
 

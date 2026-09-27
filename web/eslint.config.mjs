@@ -50,7 +50,7 @@ export default defineConfig([
   ...nextVitals,
   ...nextTs,
   {
-    files: ["src/**/*.{ts,tsx}"],
+    files: ["src/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"],
     rules: {
       "import/no-restricted-paths": ["error", { basePath: root, zones: layerZones }],
       // SPEC-013: nothing about the user's finances may reach the browser console.

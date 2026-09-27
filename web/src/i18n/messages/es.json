@@ -106,5 +106,10 @@
     "title": "Página no encontrada",
     "lead": "No hay nada en esta dirección.",
     "home": "Ir al resumen"
+  },
+  "Error": {
+    "title": "Algo ha fallado",
+    "lead": "No se ha podido mostrar esta página. Vuelve a intentarlo; si no funciona, reinicia la aplicación.",
+    "retry": "Volver a intentarlo"
   }
 }

@@ -35,6 +35,10 @@ describe("formatMoney", () => {
     expect(formatMoney("12345678901234567.89", locale)).toBe(expected);
   });
 
+  it("shows a negative zero without its sign", () => {
+    expect(formatMoney("-0.00", "uk")).toBe(`0,00${NBSP}€`);
+  });
+
   it("shows the cents it was given without rounding", () => {
     expect(formatMoney("0.10", "en")).toBe("€0.10");
     expect(formatMoney("0.01", "en")).toBe("€0.01");
