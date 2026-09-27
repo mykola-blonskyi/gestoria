@@ -11,25 +11,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** The API process is running. */
         get: operations["live"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/health/ready": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** The API can serve requests: its database answers. 503 database-unavailable when it does not. */
-        get: operations["ready"];
         put?: never;
         post?: never;
         delete?: never;
@@ -160,7 +142,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/profiles/{id}/bank-statements": {
+    "/api/v1/profiles/{id}/calculations/quarter": {
         parameters: {
             query?: never;
             header?: never;
@@ -169,25 +151,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Imports a bank statement, the file itself as the body. A line an earlier import stored is not stored again. */
-        post: operations["importBankStatement"];
+        /** Runs the set-aside estimator on a stored profile and returns one quarter's Modelo 130, its casillas and trace. */
+        post: operations["calculateQuarter"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/profiles/{id}/transactions": {
+    "/api/v1/profiles/{id}/calculations/annual-true-up": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** The stored movements in booking-date order: all of them, a year's, or a quarter's of that year. */
-        get: operations["listTransactions"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Runs the set-aside estimator on a stored profile and returns the annual true-up gap, due window and trace. */
+        post: operations["calculateAnnualTrueUp"];
         delete?: never;
         options?: never;
         head?: never;
@@ -203,14 +185,25 @@ export interface components {
             actuals: components["schemas"]["QuarterToDateDocument"][];
             projection: components["schemas"]["ProjectionDocument"];
         };
-        BankStatementImport: {
-            bank: string;
+        AnnualTrueUpView: {
             /** Format: int32 */
-            lines: number;
-            /** Format: int32 */
-            imported: number;
-            /** Format: int32 */
-            alreadyImported: number;
+            taxYear: number;
+            configHash: string;
+            liabilityOnActivity: string;
+            marginalRate: string;
+            reduccionTrabajoLost: string;
+            gap: string;
+            /** Format: date */
+            dueFrom: string;
+            /** Format: date */
+            dueBy: string;
+            payableIn: string;
+            trace: components["schemas"]["TraceStepView"][];
+            notices: components["schemas"]["NoticeView"][];
+        };
+        CasillaView: {
+            key: string;
+            amount: string;
         };
         DeclaredGap: {
             entry: string;
@@ -355,6 +348,19 @@ export interface components {
         };
         /** @enum {unknown} */
         Quarter: "Q1" | "Q2" | "Q3" | "Q4";
+        QuarterResultView: {
+            /** Format: int32 */
+            taxYear: number;
+            configHash: string;
+            quarter: components["schemas"]["Quarter"];
+            aIngresar: string;
+            /** Format: date */
+            dueFrom: string;
+            /** Format: date */
+            dueBy: string;
+            casillas: components["schemas"]["CasillaView"][];
+            trace: components["schemas"]["TraceStepView"][];
+        };
         QuarterToDateDocument: {
             quarter: components["schemas"]["Quarter"];
             ingresosYtd: string;
@@ -400,6 +406,9 @@ export interface components {
             configHash: string;
             regions: components["schemas"]["RegionView"][];
             gaps: components["schemas"]["DeclaredGap"][];
+            modelo130Lines: {
+                [key: string]: string;
+            };
         };
         TraceInputView: {
             name: string;
@@ -422,17 +431,6 @@ export interface components {
         };
         /** @enum {unknown} */
         TraceValueKind: "money" | "rate" | "count" | "date";
-        TransactionView: {
-            /** Format: uuid */
-            id: string;
-            /** Format: date */
-            bookingDate: string;
-            /** Format: date */
-            valueDate: string;
-            description: string;
-            amount: string;
-            balance: null | string;
-        };
         /** @enum {unknown} */
         WarningSeverity: "Info" | "Warning" | "Error";
     };
@@ -459,33 +457,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    ready: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No Content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Service Unavailable */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
             };
         };
     };
@@ -638,15 +609,6 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
-            /** @description Service Unavailable */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
         };
     };
     createProfile: {
@@ -698,15 +660,6 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
-            /** @description Service Unavailable */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
         };
     };
     getProfile: {
@@ -740,15 +693,6 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Service Unavailable */
-            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -802,15 +746,6 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Service Unavailable */
-            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -974,108 +909,12 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
-            /** @description Service Unavailable */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
         };
     };
-    importBankStatement: {
-        parameters: {
-            query: {
-                bank: "bbva";
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        /** @description The statement file as exported by the bank, at most 2097152 bytes. */
-        requestBody: {
-            content: {
-                "text/csv": string;
-                "text/plain": string;
-                "application/vnd.ms-excel": string;
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BankStatementImport"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Payload Too Large */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Unsupported Media Type */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Service Unavailable */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
-    };
-    listTransactions: {
+    calculateQuarter: {
         parameters: {
             query?: {
-                year?: number;
-                /** @description Needs year. */
-                quarter?: components["schemas"]["Quarter"];
+                quarter?: string;
             };
             header?: never;
             path: {
@@ -1091,7 +930,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TransactionView"][];
+                    "application/json": components["schemas"]["QuarterResultView"];
                 };
             };
             /** @description Bad Request */
@@ -1121,8 +960,57 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
-            /** @description Service Unavailable */
-            503: {
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    calculateAnnualTrueUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnualTrueUpView"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
