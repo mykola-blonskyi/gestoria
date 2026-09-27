@@ -3,9 +3,9 @@ import { useTranslations } from "next-intl";
 import { LanguageToggle } from "@/shared/shell/language-toggle";
 import { ThemeToggle } from "@/shared/theme/theme-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { EmptyState } from "@/shared/ui/empty-state";
 import { PageHeader } from "@/shared/ui/page-header";
 
+import { DataSection } from "./data-section";
 import { ProfileSection } from "./profile-section";
 
 export function SettingsPage() {
@@ -28,7 +28,7 @@ export function SettingsPage() {
       <div className="mb-6">
         <ProfileSection />
       </div>
-      <EmptyState points={[t("points.data")]} pending={t("pending")} />
+      <DataSection />
     </>
   );
 }

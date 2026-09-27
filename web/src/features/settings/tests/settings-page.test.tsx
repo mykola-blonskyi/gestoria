@@ -22,11 +22,23 @@ type Answer = { status: number; body: unknown } | "unreachable";
 function stubApi({
   profiles = { status: 200, body: [] },
   save = { status: 201, body: g12Profile },
-}: { profiles?: Answer; save?: Answer } = {}) {
+  remove = { status: 204, body: null },
+}: { profiles?: Answer; save?: Answer; remove?: Answer } = {}) {
+  let deleted = false;
   const fetchStub = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async (url, init) => {
-    const answer =
-      url.endsWith("/config/tax-years") ? { status: 200, body: taxYears } : (init?.method ?? "GET") === "GET" ? profiles : save;
+    const method = init?.method ?? "GET";
+    const answer = url.endsWith("/config/tax-years")
+      ? { status: 200, body: taxYears }
+      : method === "DELETE"
+        ? remove
+        : method === "GET"
+          ? deleted
+            ? { status: 200, body: [] }
+            : profiles
+          : save;
     if (answer === "unreachable") throw new TypeError("fetch failed");
+    if (method === "DELETE" && answer.status === 204) deleted = true;
+    if (answer.status === 204) return new Response(null, { status: 204 });
     const contentType = answer.status >= 400 ? "application/problem+json" : "application/json";
     return new Response(JSON.stringify(answer.body), { status: answer.status, headers: { "Content-Type": contentType } });
   });
@@ -73,7 +85,7 @@ afterEach(() => {
 });
 
 describe("SettingsPage", () => {
-  it.each(LOCALES)("shows the preferences, the profile and what is still to come in %s", async (locale) => {
+  it.each(LOCALES)("shows the preferences, the profile and the data section in %s", async (locale) => {
     stubApi();
     const messages = MESSAGES[locale].Settings;
     await renderSettings(locale);
@@ -82,8 +94,8 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("heading", { name: messages.profile.heading })).toBeInTheDocument();
     expect(screen.getByLabelText(messages.profile.taxYear)).toBeInTheDocument();
     expect(screen.getByLabelText(messages.profile.baseCotizacion)).toBeInTheDocument();
-    expect(screen.getByText(messages.points.data)).toBeInTheDocument();
-    expect(screen.getByText(messages.pending)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: messages.data.heading })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: messages.data.backup })).toHaveAttribute("href", "/backup");
   });
 
   it("lets the user change the theme and the language here as well as in the header", async () => {
@@ -229,5 +241,72 @@ describe("SettingsPage", () => {
     const alert = await screen.findByRole("alert", {}, { timeout: 8_000 });
     expect(alert).toHaveTextContent(form.failure.database);
     expect(alert).not.toHaveTextContent(databaseUnavailable.detail);
+  });
+
+  describe("deleting all data", () => {
+    const data = MESSAGES.en.Settings.data;
+
+    it.each(LOCALES)("lists in %s what will be deleted and deletes only once the word is typed", async (locale) => {
+      const fetchStub = stubApi({ profiles: { status: 200, body: [g12Profile] } });
+      const messages = MESSAGES[locale].Settings.data;
+      const user = await renderSettings(locale);
+      const form = screen.getByRole("form", { name: messages.delete.heading });
+      const submit = within(form).getByRole("button", { name: messages.delete.submit });
+      const confirm = within(form).getByLabelText(messages.delete.confirm.replace("{word}", messages.delete.word));
+
+      expect(within(form).getByRole("listitem")).toHaveTextContent(
+        messages.delete.profile.replace("{year}", "2025").replace("{region}", "VC"),
+      );
+      expect(confirm).toHaveAccessibleDescription(messages.delete.what);
+      expect(within(form).getByText(messages.delete.retention)).toBeInTheDocument();
+      expect(submit).toBeDisabled();
+
+      await user.type(confirm, messages.delete.word.toLowerCase());
+      expect(submit).toBeDisabled();
+      await user.keyboard("{Enter}");
+
+      await user.clear(confirm);
+      await user.type(confirm, messages.delete.word);
+      expect(submit).toBeEnabled();
+      expect(fetchStub.mock.calls.filter(([, init]) => init?.method === "DELETE")).toEqual([]);
+
+      await user.click(submit);
+
+      expect(await screen.findByText(messages.deleted)).toBeInTheDocument();
+      expect(fetchStub.mock.calls.filter(([, init]) => init?.method === "DELETE").map(([url]) => url)).toEqual([`${API}/profiles/${G12_ID}`]);
+    });
+
+    it("starts the profile form over once everything is deleted", async () => {
+      stubApi({ profiles: { status: 200, body: [g12Profile] } });
+      const user = await renderSettings();
+      expect(screen.getByLabelText(form.region)).toHaveValue("VC");
+
+      await user.type(screen.getByLabelText(data.delete.confirm.replace("{word}", data.delete.word)), data.delete.word);
+      await user.click(screen.getByRole("button", { name: data.delete.submit }));
+
+      await screen.findByText(data.deleted);
+      await waitFor(() => expect(screen.getByLabelText(form.alta)).toHaveValue(""));
+      expect(screen.getByLabelText(form.baseCotizacion)).toHaveValue("");
+    });
+
+    it("offers no delete before anything is stored", async () => {
+      stubApi();
+      await renderSettings();
+
+      expect(await screen.findByText(data.nothing)).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: data.delete.submit })).not.toBeInTheDocument();
+    });
+
+    it("says nothing was deleted when the API is not answering, and keeps the profile", async () => {
+      stubApi({ profiles: { status: 200, body: [g12Profile] }, remove: "unreachable" });
+      const user = await renderSettings();
+
+      await user.type(screen.getByLabelText(data.delete.confirm.replace("{word}", data.delete.word)), data.delete.word);
+      await user.click(screen.getByRole("button", { name: data.delete.submit }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(data.failure.network);
+      expect(screen.getByLabelText(form.region)).toHaveValue("VC");
+      expect(screen.queryByText(data.deleted)).not.toBeInTheDocument();
+    });
   });
 });

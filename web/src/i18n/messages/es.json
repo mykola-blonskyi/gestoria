@@ -210,10 +210,29 @@
         "other": "La API respondió con un error ({status}). Vuelve a intentarlo."
       }
     },
-    "points": {
-      "data": "Exportar o borrar todos tus datos, con una confirmación que indica qué se va a borrar."
-    },
-    "pending": "Exportar y borrar tus datos necesita recursos de la API que aún no están construidos."
+    "data": {
+      "heading": "Tus datos",
+      "export": "Para conservar una copia, descárgala antes en la",
+      "backup": "página de copia de seguridad",
+      "loading": "Comprobando qué hay guardado…",
+      "nothing": "No hay nada guardado en esta instalación.",
+      "deleted": "Se ha borrado todo. Ya no se guarda nada sobre ti en esta instalación.",
+      "delete": {
+        "heading": "Borrar todos mis datos",
+        "what": "Esto borra de la base de datos de GestorIA en este equipo:",
+        "profile": "tu perfil de contribuyente de {year} ({region}): salario, alta de autónomo y la previsión del año",
+        "irreversible": "No se puede deshacer. GestorIA no guarda ninguna copia.",
+        "retention": "La ley tributaria española te exige conservar los justificantes de cada declaración durante al menos cuatro años desde el fin de su plazo de presentación (Ley General Tributaria, arts. 66, 67 y 70). Si aún los necesitas, descarga antes una copia.",
+        "confirm": "Para confirmar, escribe {word}",
+        "word": "BORRAR",
+        "submit": "Borrar todo",
+        "deleting": "Borrando…"
+      },
+      "failure": {
+        "network": "La API de GestorIA no responde. No se ha borrado nada. Iníciala y vuelve a intentarlo.",
+        "other": "La API respondió con un error ({status}). Vuelve a intentarlo."
+      }
+    }
   },
   "Auth": {
     "title": "Acceso",
@@ -240,10 +259,27 @@
     "title": "Copia de seguridad",
     "lead": "Una copia de tus datos que se guarda fuera de este equipo.",
     "points": {
-      "export": "Exportar todos tus datos en un solo archivo, marcado como datos financieros personales.",
-      "restore": "Restaurar tus datos desde ese archivo, para que perder el portátil no suponga perder tu historial fiscal."
+      "restore": "Restaurar tus datos desde ese archivo, para que un portátil perdido no se lleve tu historial fiscal."
     },
-    "pending": "La exportación necesita la API, que aún no está construida. La restauración necesita además un recurso de API propio que todavía no existe."
+    "pending": "La restauración necesita su propio recurso de la API, que aún no existe.",
+    "export": {
+      "heading": "Descargar todos mis datos",
+      "lead": "Todo lo que GestorIA guarda en este equipo, en un archivo JSON que puedes guardar en otro sitio.",
+      "label": "Datos financieros personales",
+      "care": "El archivo contiene tu salario, tus ingresos y tu alta de autónomo. Guárdalo donde solo tú puedas abrirlo, como un disco cifrado o tu gestor de contraseñas, y no lo envíes por correo.",
+      "loading": "Comprobando qué hay guardado…",
+      "nothing": "Aún no hay nada guardado, así que no hay nada que descargar.",
+      "enter": "Introduce tu perfil en ajustes",
+      "download": "Descargar mis datos (datos financieros personales)",
+      "downloading": "Preparando el archivo…",
+      "format": "Un archivo JSON con la fecha de hoy en el nombre. La restauración desde él llegará con la función de restaurar.",
+      "done": "El archivo se entregó a tu navegador como descarga.",
+      "failure": {
+        "network": "La API de GestorIA no responde. Iníciala y vuelve a intentarlo.",
+        "gone": "El perfil ya no está guardado, así que no hay nada que descargar.",
+        "other": "La API respondió con un error ({status}). Vuelve a intentarlo."
+      }
+    }
   },
   "NotFound": {
     "title": "Página no encontrada",

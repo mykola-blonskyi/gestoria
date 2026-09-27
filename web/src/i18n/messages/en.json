@@ -210,10 +210,29 @@
         "other": "The API answered with an error ({status}). Try again."
       }
     },
-    "points": {
-      "data": "Exporting or deleting all your data, with a confirmation that names what will be deleted."
-    },
-    "pending": "Exporting and deleting your data need API resources that are not built yet."
+    "data": {
+      "heading": "Your data",
+      "export": "To keep a copy, download it first on the",
+      "backup": "Backup page",
+      "loading": "Checking what is stored…",
+      "nothing": "Nothing is stored on this installation.",
+      "deleted": "Everything was deleted. Nothing about you is stored on this installation any more.",
+      "delete": {
+        "heading": "Delete all my data",
+        "what": "This deletes, from the GestorIA database on this machine:",
+        "profile": "your taxpayer profile for {year} ({region}): salary, autónomo registration and the year's projection",
+        "irreversible": "It cannot be undone. GestorIA keeps no copy.",
+        "retention": "Spanish tax law expects you to keep the records behind each return for at least four years after its filing deadline (Ley General Tributaria, arts. 66, 67 and 70). If you still need them, download a copy first.",
+        "confirm": "To confirm, type {word}",
+        "word": "DELETE",
+        "submit": "Delete everything",
+        "deleting": "Deleting…"
+      },
+      "failure": {
+        "network": "The GestorIA API is not answering. Nothing was deleted. Start it and try again.",
+        "other": "The API answered with an error ({status}). Try again."
+      }
+    }
   },
   "Auth": {
     "title": "Access",
@@ -240,10 +259,27 @@
     "title": "Backup",
     "lead": "A copy of your data that lives outside this machine.",
     "points": {
-      "export": "Exporting all your data in one file, labelled as personal financial data.",
       "restore": "Restoring your data from that file, so a lost laptop does not lose your tax history."
     },
-    "pending": "Export needs the API, which is not built yet. Restore also needs a separate API resource that does not exist yet."
+    "pending": "Restore needs its own API resource, which is not built yet.",
+    "export": {
+      "heading": "Download all my data",
+      "lead": "Everything GestorIA stores on this machine, in one JSON file you can keep elsewhere.",
+      "label": "Personal financial data",
+      "care": "The file holds your salary, your income and your autónomo registration. Keep it where only you can open it, such as an encrypted drive or your password manager, and do not send it by email.",
+      "loading": "Checking what is stored…",
+      "nothing": "Nothing is stored yet, so there is nothing to download.",
+      "enter": "Enter your profile in settings",
+      "download": "Download my data (personal financial data)",
+      "downloading": "Preparing the file…",
+      "format": "A JSON file named after today's date. Restoring from it arrives with the restore feature.",
+      "done": "The file was handed to your browser as a download.",
+      "failure": {
+        "network": "The GestorIA API is not answering. Start it and try again.",
+        "gone": "The profile is no longer stored, so there is nothing to download.",
+        "other": "The API answered with an error ({status}). Try again."
+      }
+    }
   },
   "NotFound": {
     "title": "Page not found",
