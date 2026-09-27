@@ -237,9 +237,9 @@ public class TaxYearValidationRejectsBadFiles
         return data;
     }
 
-    // Pinned to Example2025: the mutations assume its shape (a renta window, an 80 € tarifa plana), and TaxYearConfigFiles.All()
+    // Pinned to File2025: the mutations assume its shape (a renta window, an 80 € tarifa plana), and TaxYearConfigFiles.All()
     // lists the files in no guaranteed order.
-    private static string ExamplePath() => Path.Combine(TaxYearConfigFiles.Root(), TaxYearConfigFiles.Example2025);
+    private static string ExamplePath() => Path.Combine(TaxYearConfigFiles.Root(), TaxYearConfigFiles.File2025);
 
     [Theory]
     [MemberData(nameof(Names))]

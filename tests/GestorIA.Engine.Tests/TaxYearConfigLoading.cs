@@ -14,23 +14,33 @@ public sealed class TaxYearConfigLoading : IDisposable
 {
     private readonly string directory = Directory.CreateTempSubdirectory("gestoria-tax-years-").FullName;
 
-    private static byte[] Example2025Bytes() =>
-        File.ReadAllBytes(Path.Combine(TaxYearConfigFiles.Root(), TaxYearConfigFiles.Example2025));
+    private static byte[] Year2025Bytes() =>
+        File.ReadAllBytes(Path.Combine(TaxYearConfigFiles.Root(), TaxYearConfigFiles.File2025));
 
-    private static JsonNode Example2025Node() => JsonNode.Parse(Example2025Bytes())!;
+    private static JsonNode Year2025Node() => JsonNode.Parse(Year2025Bytes())!;
 
     private static TaxYearConfig Parse(JsonNode root) =>
-        TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(root.ToJsonString()), TaxYearConfigFiles.Example2025);
+        TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(root.ToJsonString()), TaxYearConfigFiles.File2025);
 
     public void Dispose() => Directory.Delete(directory, recursive: true);
 
     [Fact]
     public void LoadingAYearReturnsItsConfigurationNamedByTheSha256OfTheFile()
     {
-        var bytes = Example2025Bytes();
+        var bytes = Year2025Bytes();
         File.WriteAllBytes(Path.Combine(directory, "2025.json"), bytes);
 
         var config = new TaxYearConfigLoader(directory).Load(2025);
+
+        Assert.Equal(2025, config.TaxYear);
+        Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(bytes)), config.ConfigHash);
+    }
+
+    [Fact]
+    public void TheYear2025FileLoadsThroughTheLoader()
+    {
+        var config = new TaxYearConfigLoader(TaxYearConfigFiles.Root()).Load(2025);
+        var bytes = File.ReadAllBytes(Path.Combine(TaxYearConfigFiles.Root(), TaxYearConfigFiles.File2025));
 
         Assert.Equal(2025, config.TaxYear);
         Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(bytes)), config.ConfigHash);
@@ -49,11 +59,11 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void TheHashNamesTheExactBytesNotJustTheValues()
     {
-        var bytes = Example2025Bytes();
+        var bytes = Year2025Bytes();
         byte[] reformatted = [.. bytes, (byte)'\n'];
 
-        var original = TaxYearConfigParser.Parse(bytes, TaxYearConfigFiles.Example2025);
-        var changed = TaxYearConfigParser.Parse(reformatted, TaxYearConfigFiles.Example2025);
+        var original = TaxYearConfigParser.Parse(bytes, TaxYearConfigFiles.File2025);
+        var changed = TaxYearConfigParser.Parse(reformatted, TaxYearConfigFiles.File2025);
 
         Assert.Equal(original.Modelo130.Rate, changed.Modelo130.Rate);
         Assert.NotEqual(original.ConfigHash, changed.ConfigHash);
@@ -62,7 +72,7 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void AnUnknownYearRaisesConfigNotFound()
     {
-        File.WriteAllBytes(Path.Combine(directory, "2025.json"), Example2025Bytes());
+        File.WriteAllBytes(Path.Combine(directory, "2025.json"), Year2025Bytes());
 
         var error = Assert.Throws<ConfigNotFoundException>(() => new TaxYearConfigLoader(directory).Load(2024));
 
@@ -91,7 +101,7 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void AFileThatFailsTheSchemaIsRefusedAtLoad()
     {
-        var root = Example2025Node();
+        var root = Year2025Node();
         root["irpf"]!["escalaEstatal"]![1]!["rate"] = 1.5m;
 
         var error = Assert.Throws<InvalidTaxYearConfigException>(() => Parse(root));
@@ -102,7 +112,7 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void AFileThatBreaksACrossFieldRuleIsRefusedAtLoad()
     {
-        var root = Example2025Node();
+        var root = Year2025Node();
         var scale = root["irpf"]!["escalaEstatal"]!.AsArray();
         var second = scale[1]!.DeepClone();
         scale[1] = scale[2]!.DeepClone();
@@ -116,15 +126,15 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void AFileThatIsNotJsonIsRefusedAtLoad()
     {
-        var truncated = Example2025Bytes()[..100];
+        var truncated = Year2025Bytes()[..100];
 
-        Assert.Throws<InvalidTaxYearConfigException>(() => TaxYearConfigParser.Parse(truncated, TaxYearConfigFiles.Example2025));
+        Assert.Throws<InvalidTaxYearConfigException>(() => TaxYearConfigParser.Parse(truncated, TaxYearConfigFiles.File2025));
     }
 
     [Fact]
     public void ATramoTableTheEngineCannotUseIsRefusedAtLoad()
     {
-        var root = Example2025Node();
+        var root = Year2025Node();
         root["seguridadSocial"]!["tramos"]![0]!["netFrom"] = 10m;
 
         var error = Assert.Throws<InvalidTaxYearConfigException>(() => Parse(root));
@@ -135,7 +145,7 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void AVerificationDateThatIsNotOnTheCalendarIsRefusedAtLoad()
     {
-        var root = Example2025Node();
+        var root = Year2025Node();
         root["provenance"]!["/modelo130/minoracion"]!["verified"] = "2026-02-30";
 
         var error = Assert.Throws<InvalidTaxYearConfigException>(() => Parse(root));
@@ -146,9 +156,9 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void ADuplicatedKeyIsRefusedAtLoad()
     {
-        var text = Encoding.UTF8.GetString(Example2025Bytes()).Replace("\"fixed\": 7302,", "\"fixed\": 7302, \"fixed\": 9999,", StringComparison.Ordinal);
+        var text = Encoding.UTF8.GetString(Year2025Bytes()).Replace("\"fixed\": 7302,", "\"fixed\": 7302, \"fixed\": 9999,", StringComparison.Ordinal);
 
-        var error = Assert.Throws<InvalidTaxYearConfigException>(() => TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(text), TaxYearConfigFiles.Example2025));
+        var error = Assert.Throws<InvalidTaxYearConfigException>(() => TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(text), TaxYearConfigFiles.File2025));
 
         Assert.Contains(error.Failures, f => f.Contains("fixed", StringComparison.Ordinal));
     }
@@ -156,7 +166,7 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void AWholeNumberWrittenAsAFractionIsRefusedAtLoad()
     {
-        var root = Example2025Node();
+        var root = Year2025Node();
         root["seguridadSocial"]!["tarifaPlana"]!["months"] = 12.0m;
 
         var error = Assert.Throws<InvalidTaxYearConfigException>(() => Parse(root));
@@ -167,9 +177,9 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void AnAmountBeyondDecimalRangeIsRefusedAtLoad()
     {
-        var text = Encoding.UTF8.GetString(Example2025Bytes()).Replace("\"amount\": 80,", "\"amount\": 1e40,", StringComparison.Ordinal);
+        var text = Encoding.UTF8.GetString(Year2025Bytes()).Replace("\"amount\": 80,", "\"amount\": 1e40,", StringComparison.Ordinal);
 
-        var error = Assert.Throws<InvalidTaxYearConfigException>(() => TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(text), TaxYearConfigFiles.Example2025));
+        var error = Assert.Throws<InvalidTaxYearConfigException>(() => TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(text), TaxYearConfigFiles.File2025));
 
         Assert.Contains(error.Failures, f => f.Contains("$.seguridadSocial.tarifaPlana.amount", StringComparison.Ordinal));
     }
@@ -177,7 +187,7 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void ACalendarDayThatDoesNotExistIsRefusedAtLoad()
     {
-        var root = Example2025Node();
+        var root = Year2025Node();
         root["calendar"]!["holidays"]![0] = "02-29";
 
         var error = Assert.Throws<InvalidTaxYearConfigException>(() => Parse(root));
@@ -212,7 +222,7 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void ARegionWithNoMinimosOverrideTakesTheStateMinimos()
     {
-        var root = Example2025Node();
+        var root = Year2025Node();
         root["regions"]!["VC"]!["minimosOverride"] = null;
         var provenance = root["provenance"]!.AsObject();
 
@@ -242,7 +252,7 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void AValueVerifiedAgainstTheAeatManualIsDistinguishableFromATheoryOnlyNeighbour()
     {
-        var root = Example2025Node();
+        var root = Year2025Node();
         root["provenance"]!["/irpf/trabajo/reduccion"] = new JsonObject
         {
             ["kind"] = "aeat-manual",

@@ -44,7 +44,7 @@ public class SetAsideReportTests
 
         Assert.Contains("GestorIA set-aside estimate, tax year 2025", report, StringComparison.Ordinal);
         Assert.Contains("  Tax year                                2025", report, StringComparison.Ordinal);
-        Assert.Contains($"  Configuration                           2025.example.json, sha256 {RepoFiles.Config.ConfigHash}", report, StringComparison.Ordinal);
+        Assert.Contains($"  Configuration                           2025.json, sha256 {RepoFiles.Config.ConfigHash}", report, StringComparison.Ordinal);
     }
 
     [Fact]
