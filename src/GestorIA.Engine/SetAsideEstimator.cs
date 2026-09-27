@@ -260,7 +260,9 @@ public static class SetAsideEstimator
             new TraceValue.Money(annualTgss),
             "What TGSS keeps for the year. For the closed months, LGSS art. 308.1.c 3.ª and 4.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): once the year's rendimientos are known, "
                 + "a cotización below the cuota at the base mínima of their tramo is topped up to it, one above the cuota at its base máxima is refunded down to that, and one between stands. "
-                + "The cuota at the tramo is the one at its base mínima, so the higher of it and what was paid is exact in the first two cases and over-reserves in the third: conservative (#2). "
+                + "So TGSS keeps what was paid clamped between the cuotas at the tramo's base mínima and base máxima. The cuota at the tramo is the one at its base mínima, "
+                + "so the higher of it and what was paid is exact below the base mínima and between the two bases, and over-reserves above the base máxima, whose refund is not modelled: conservative (#2). "
+                + "The higher is taken over the closed months together, not month by month, an approximation when the base changed during them. "
                 + "The projected months at the tramo the year settles on, tarifa plana while it lasts"));
 
         var lastTarifaPlanaMonth = tarifaPlana.LastMonth(alta);
