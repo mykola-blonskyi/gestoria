@@ -345,12 +345,15 @@ public sealed class TaxYearConfigLoading : IDisposable
             yield return ($"/seguridadSocial/tramos/{i}/name", tramo.Name);
             yield return ($"/seguridadSocial/tramos/{i}/netFrom", tramo.NetFrom);
             yield return ($"/seguridadSocial/tramos/{i}/netUpTo", tramo.NetUpTo);
+            yield return ($"/seguridadSocial/tramos/{i}/baseMin", tramo.BaseMin);
+            yield return ($"/seguridadSocial/tramos/{i}/baseMax", tramo.BaseMax);
             yield return ($"/seguridadSocial/tramos/{i}/cuotaMin", tramo.CuotaMin);
         }
 
         yield return ("/seguridadSocial/tarifaPlana/amount", c.SeguridadSocial.TarifaPlana.Amount);
         yield return ("/seguridadSocial/tarifaPlana/months", c.SeguridadSocial.TarifaPlana.Months);
         yield return ("/seguridadSocial/gastosGenericos", c.SeguridadSocial.GastosGenericos);
+        yield return ("/seguridadSocial/tipoCotizacion", c.SeguridadSocial.TipoCotizacion);
 
         if (c.SeguridadSocial.TarifaPlana.DeclaredIncomplete is { } tarifaPlanaNote)
         {

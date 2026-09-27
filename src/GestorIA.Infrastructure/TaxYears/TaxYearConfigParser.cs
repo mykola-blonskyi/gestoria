@@ -94,7 +94,8 @@ public static class TaxYearConfigParser
             new SeguridadSocialConfig(
                 new TramoTable([.. seguridadSocial["tramos"]!.AsArray().Select(TramoOf)]),
                 new TarifaPlana(OptionalMoneyOf(tarifaPlana["amount"]), tarifaPlana["months"]!.Read<int>(), tarifaPlana["_todo"]?.Read<string>()),
-                RateOf(seguridadSocial["gastosGenericos"])),
+                RateOf(seguridadSocial["gastosGenericos"]),
+                RateOf(seguridadSocial["tipoCotizacion"])),
             new TaxCalendar(
                 [.. calendar["modelo130"]!.AsArray().Select(window => WindowOf(window, taxYear)!)],
                 WindowOf(calendar["renta"], taxYear),
@@ -173,7 +174,13 @@ public static class TaxYearConfigParser
         new([.. scale!.AsArray().Select(tranche => new Tranche(OptionalMoneyOf(tranche!["upTo"]), RateOf(tranche["rate"])))]);
 
     private static Tramo TramoOf(JsonNode? tramo) =>
-        new(tramo!["name"]!.Read<string>(), MoneyOf(tramo["netFrom"]), OptionalMoneyOf(tramo["netUpTo"]), MoneyOf(tramo["cuotaMin"]));
+        new(
+            tramo!["name"]!.Read<string>(),
+            MoneyOf(tramo["netFrom"]),
+            OptionalMoneyOf(tramo["netUpTo"]),
+            MoneyOf(tramo["baseMin"]),
+            MoneyOf(tramo["baseMax"]),
+            MoneyOf(tramo["cuotaMin"]));
 
     private static CalendarDay[] HolidaysOf(JsonNode? holidays, int taxYear) =>
         [.. holidays!.AsArray().Select(day => DayIn(day, taxYear))];

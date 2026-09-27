@@ -125,9 +125,12 @@ public class TaxYearValidationRejectsBadFiles
         ["regional mínimos override with a key the loader does not know"] =
             (r => r["regions"]!["VC"]!["minimosOverride"]!["hijos"] = 2640m, "/regions/VC/minimosOverride"),
 
-        // 1 − gastosGenericos divides the top tramo's price in SetAsideEstimator, so 100 % would divide by zero.
+        // A deduction of 100 % would leave no rendimiento for any tramo to be chosen by.
         ["gastos genéricos of 100 %"] =
             (r => r["seguridadSocial"]!["gastosGenericos"] = 1m, "/seguridadSocial/gastosGenericos"),
+
+        ["tipo de cotización missing"] =
+            (r => r["seguridadSocial"]!.AsObject().Remove("tipoCotizacion"), "/seguridadSocial"),
 
         ["minoracion band with a misspelled property"] =
             (r => Rename(r["modelo130"]!["minoracion"]![0]!.AsObject(), "amountPerQuarter", "amountPerQuater"),
@@ -193,6 +196,46 @@ public class TaxYearValidationRejectsBadFiles
         Assert.True(failures.Any(f => f.Contains(pointer, StringComparison.Ordinal)),
             $"Mutation \"{name}\" was rejected, but no message names {pointer}:\n\n"
             + string.Join("\n", failures));
+    }
+
+    // General 6, tramo 8: baseMin 1274.51 × tipoCotizacion 0.314 = 400.19614, 400.20 rounded half up.
+    [Fact]
+    public void AnExactCuotaMinOneCentOffItsBaseMinTimesTheTipoIsRejected()
+    {
+        var failures = ValidateGeneral6("exact", 400.21m);
+
+        Assert.Equal(
+            ["/seguridadSocial/tramos/8/cuotaMin is 400.21, but baseMin × tipoCotizacion is 1274.51 × 0.314 = 400.20 rounded half up to the cent; an exact cuotaMin must equal it"],
+            failures);
+    }
+
+    [Fact]
+    public void AnApproximateCuotaMinOneCentOffItsBaseMinTimesTheTipoIsAccepted()
+    {
+        Assert.Empty(ValidateGeneral6("approximate", 400.21m));
+    }
+
+    [Fact]
+    public void AnApproximateCuotaMinTwoCentsOffItsBaseMinTimesTheTipoIsRejected()
+    {
+        var failures = ValidateGeneral6("approximate", 400.18m);
+
+        Assert.Equal(
+            ["/seguridadSocial/tramos/8/cuotaMin is 400.18, but baseMin × tipoCotizacion is 1274.51 × 0.314 = 400.20 rounded half up to the cent; an approximate cuotaMin may differ from it by one cent at most"],
+            failures);
+    }
+
+    private static IReadOnlyList<string> ValidateGeneral6(string cuotaMinKind, decimal cuotaMin)
+    {
+        var path = ExamplePath();
+        var root = JsonNode.Parse(File.ReadAllText(path))!;
+        var general6 = root["seguridadSocial"]!["tramos"]![8]!;
+        Assert.Equal("General 6", general6["name"]!.GetValue<string>());
+
+        general6["cuotaMinKind"] = cuotaMinKind;
+        general6["cuotaMin"] = cuotaMin;
+
+        return TaxYearConfigValidator.Validate(root, Path.GetFileName(path));
     }
 
     [Fact]

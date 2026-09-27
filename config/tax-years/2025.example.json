@@ -134,7 +134,8 @@
       { "name": "General 12", "netFrom": 6000, "netUpTo": null, "baseMin": 1928.10, "baseMax": 4909.50, "cuotaMin": 605.42, "cuotaMinKind": "exact" }
     ],
     "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12, "extensionNetIncomeCap": null },
-    "gastosGenericos": 0.07
+    "gastosGenericos": 0.07,
+    "tipoCotizacion": 0.314
   },
   "calendar": {
     "modelo130": [["04-01", "04-20"], ["07-01", "07-20"], ["10-01", "10-20"], ["+1-01-01", "+1-01-30"]],
@@ -202,6 +203,7 @@
     "/seguridadSocial/tramos":      { "kind": "boe", "ref": "Orden PJC/178/2025 art. 18.1 (bases); art. 18.2 y 37.5–37.6 (tipos: 28,30% + 1,30% + 0,90% + 0,10% + 0,80% MEI = 31,40%, aplicado a baseMin para cuotaMin)", "verified": "2026-09-25" },
     "/seguridadSocial/tarifaPlana": { "kind": "boe", "ref": "Ley 20/2007 art. 38 ter, D.T. 5.ª RDL 13/2022 (80€/mes vigente 2023–2025)", "verified": "2026-09-25" },
     "/seguridadSocial/gastosGenericos": { "kind": "boe", "ref": "RDL 8/2015 (LGSS) art. 308.1.c, regla 2.ª (redacción del RDL 13/2022, vigente desde 2023-01-01): deducción por gastos genéricos del 7 %; 3 % only for the art. 305.2.b and e societarios, not modelled", "verified": "2026-09-27" },
+    "/seguridadSocial/tipoCotizacion": { "kind": "boe", "ref": "Orden PJC/178/2025 (BOE-A-2025-3780) art. 18.2.a–c and 37.5–37.6: 28,30 % contingencias comunes + 1,30 % contingencias profesionales + 0,80 % MEI + 0,90 % cese de actividad + 0,10 % formación profesional = 31,40 %. LGSS art. 308.1.b applies it to the monthly base de cotización the taxpayer chose (308.1.a 1.ª and 3.ª)", "verified": "2026-09-27" },
     "/calendar":                    { "kind": "theory", "ref": "Theory §15.3, ed. 2" },
     "/calendar/modelo130":          { "kind": "boe", "ref": "RD 439/2007 (RIRPF) art. 111.1; Orden EHA/672/2007 art. 7", "verified": "2026-09-27" },
     "/calendar/renta":              { "kind": "boe", "ref": "Orden HAC/277/2026 art. 7.1 (Renta 2025: 8 de abril a 30 de junio de 2026)", "verified": "2026-09-27" },

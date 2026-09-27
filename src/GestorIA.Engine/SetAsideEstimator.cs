@@ -15,9 +15,12 @@ public sealed record AutonomoRegistration(DateOnly Alta, PreviousYear PreviousYe
 // CuotasSsYtd is the part of GastosYtd that is the RETA cuotas TGSS actually charged, whatever tramo the year settles on (#52).
 public sealed record QuarterToDate(Quarter Quarter, Money IngresosYtd, Money GastosYtd, Money CuotasSsYtd);
 
-// What the activity is expected to invoice and spend over the part of the tax year the actuals do not cover.
-// Gastos exclude the RETA cuota, which the estimator derives from the tramo tables.
-public sealed record ActivityProjection(Money Ingresos, Money Gastos);
+// What the activity is expected to invoice and spend over the part of the tax year the actuals do not cover. Gastos exclude
+// the RETA cuota, which the estimator derives from BaseCotizacion: the monthly base de cotización the taxpayer pays from the
+// end of the actuals on. It lives here, not on AutonomoRegistration, because it prices exactly the months the projection
+// covers and LGSS art. 308.1.a 3.ª lets the taxpayer change it during the year as the forecast of rendimientos changes. It is
+// a base, not a cuota: the taxpayer picks a base in Import@ss, and a cuota would carry one year's tipo into the next.
+public sealed record ActivityProjection(Money Ingresos, Money Gastos, Money BaseCotizacion);
 
 // Actuals to date and the forward projection in one type (#2). Actuals are the closed quarters in order from the first quarter
 // of activity. Retenciones states who pays: business rule 3b, never defaulted from the profile.
@@ -143,71 +146,45 @@ public static class SetAsideEstimator
         var netToDate = actualIngresos - actualGastos;
         var projectedNet = projection.Ingresos - projection.Gastos;
         var seguridadSocial = config.SeguridadSocial;
-        var tramos = seguridadSocial.Tramos;
         var tarifaPlana = seguridadSocial.TarifaPlana;
+        var baseCotizacion = projection.BaseCotizacion;
+        var cuotaAtBase = seguridadSocial.CuotaAt(baseCotizacion);
 
-        List<(YearMonth Month, MonthlyCuotaResult Result)> CuotasAt(decimal annualComputable) => activeMonths
-            .Select(month => (month, MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, annualComputable, month), seguridadSocial)))
+        // Sum adds up what the lambda selects from every element, like reduce((total, month) => total + debit(month), 0).
+        var projectedDebits = new Money(projectedMonths.Sum(month => MonthlyCuotaCalculator.Debit(alta, month, baseCotizacion, seguridadSocial)));
+        var previo = netToDate + projectedNet - projectedDebits;
+        var dificilJustificacion = config.Irpf.Actividad.DificilJustificacion.On(previo);
+        var rendimientoNeto = previo - dificilJustificacion;
+        var computable = (rendimientoNeto + paidToDate + projectedDebits).Amount * 12m / n;
+
+        var cuotas = activeMonths
+            .Select(month => (Month: month, Result: MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, computable, month, baseCotizacion), seguridadSocial)))
             .ToList();
+        var projectedCuotas = cuotas.Where(c => c.Month.Month > actualThrough).ToList();
 
-        (Money PricedToDate, Money Projected, Money Previo, Money DificilJustificacion, Money RendimientoNeto, decimal Annualized) ComputableFrom(
-            List<(YearMonth Month, MonthlyCuotaResult Result)> priced)
-        {
-            // Sum adds up what the lambda selects from every element, like reduce((total, c) => total + c.Result.Cuota, 0).
-            var pricedToDate = new Money(priced.Where(c => c.Month.Month <= actualThrough).Sum(c => c.Result.Cuota));
-            var projected = new Money(priced.Where(c => c.Month.Month > actualThrough).Sum(c => c.Result.Cuota));
-            var previo = netToDate + projectedNet - projected;
-            var dj = config.Irpf.Actividad.DificilJustificacion.On(previo);
-            var rendimientoNeto = previo - dj;
-            return (pricedToDate, projected, previo, dj, rendimientoNeto, (rendimientoNeto + paidToDate + projected).Amount * 12m / n);
-        }
-
-        // The projected cuotas choose the tramo and the tramo prices them, so more than one tramo can be consistent; the closed
-        // months add back what was paid, whatever the tramo. Pricing starts one euro a month into the top tramo, after the gastos
-        // genéricos, and comes down until the computable stops moving: the highest consistent tramo. Higher cuotas never lower the
-        // computable, since casilla 0224 falls by at most what casilla 0186 gains, so each pass either settles or drops a tramo and
-        // the passes are bounded.
-        var pricedAt = (tramos.Tramos.Last().NetFrom.Amount + 1m) * 12m / (1m - seguridadSocial.GastosGenericos.Value);
-        var cuotas = CuotasAt(pricedAt);
-        var computable = ComputableFrom(cuotas);
-        for (var pass = 0; pass <= tramos.Tramos.Count; pass++)
-        {
-            if (computable.Annualized == pricedAt)
-            {
-                break;
-            }
-
-            pricedAt = computable.Annualized;
-            cuotas = CuotasAt(pricedAt);
-            computable = ComputableFrom(cuotas);
-        }
-
-        var cuotasToDate = cuotas.Where(c => c.Month.Month <= actualThrough).ToList();
         steps.Add(new TraceStep(
             "set-aside.cuotas-ss-to-date",
             TraceSection.SeguridadSocial,
             "Cuotas SS pagadas, ya deducidas en los gastos reales",
             [.. actuals.Select(a => new TraceInput(Invariant($"{a.Quarter}.cuotasSsYtd"), Show(a.CuotasSsYtd)))],
-            last is null
-                ? "no closed quarter stated → 0"
-                : Invariant($"paid to the end of {last.Quarter}, as stated: {Show(paidToDate)}; at the tramo the year settles on they would be ")
-                    + Invariant($"{string.Join(" + ", cuotasToDate.Select(c => Invariant($"{c.Month} {c.Result.Cuota}")))} = {Show(computable.PricedToDate)}"),
+            last is null ? "no closed quarter stated → 0" : Invariant($"paid to the end of {last.Quarter}, as stated: {Show(paidToDate)}"),
             new TraceValue.Money(paidToDate),
             "LGSS art. 308.1.c 1.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): the rendimiento computable is the IRPF rendimiento neto increased by the importe of the "
-                + "titular's own cuotas, the ones the gastos to date deduct. For the closed months those are the cuotas TGSS charged, stated with the actuals (#52), "
-                + "not what the tramo the year settles on would charge; that priced figure is shown beside them and enters only set-aside.cuota-ss-year"));
+                + "titular's own cuotas, the ones the gastos to date deduct. For the closed months those are the cuotas TGSS charged, stated with the actuals (#52); "
+                + "what TGSS keeps of them once the year's tramo is known enters set-aside.cuota-ss-year"));
 
         steps.Add(new TraceStep(
             "set-aside.cuotas-ss-projected",
             TraceSection.SeguridadSocial,
             "Cuotas SS proyectadas",
-            [new("netoHastaHoy", Show(netToDate)), new("netoProyectado", Show(projectedNet)), new("cuotasSsPagadas", Show(paidToDate)), new("meses", Invariant($"{n}"))],
+            [new("baseCotizacion", Show(baseCotizacion)), new("cuotaBaseCotizacion", Invariant($"{cuotaAtBase}")), new("meses", Invariant($"{projectedCount}"))],
             projectedCount == 0
                 ? "none: the actuals cover the year → 0"
-                : Invariant($"priced at the computable they lead to, {pricedAt}: {string.Join(" + ", cuotas.Where(c => c.Month.Month > actualThrough).Select(c => Invariant($"{c.Month} {c.Result.Cuota}")))} = {Show(computable.Projected)}"),
-            new TraceValue.Money(computable.Projected),
-            "#15: the months after the last closed quarter, priced with MonthlyCuotaCalculator. These cuotas and the tramo depend on each other and more than one tramo can be "
-                + "consistent; pricing comes down from the top tramo, so they settle on the highest consistent one: conservative (#2). Exact while tarifa plana applies, whatever the tramo"));
+                : Invariant($"at the chosen base {Show(baseCotizacion)}: {string.Join(" + ", projectedCuotas.Select(c => Invariant($"{c.Month} {c.Result.Cuota}")))} = {Show(projectedDebits)}"),
+            new TraceValue.Money(projectedDebits),
+            "#15, LGSS art. 308.1.a 1.ª and 3.ª and 308.1.b (boe.es consolidated RDL 8/2015, read 2026-09-27): the months after the last closed quarter at the monthly base "
+                + "the taxpayer chose, tarifa plana while it lasts, whatever the tramo. These are what TGSS will debit and what IRPF deducts; a top-up or refund under "
+                + "308.1.c 3.ª–4.ª lands in a later year's return (casillas 0196 and 0197, not modelled)"));
 
         steps.Add(new TraceStep(
             "set-aside.rendimiento-computable",
@@ -217,20 +194,21 @@ public static class SetAsideEstimator
                 new("netoHastaHoy", Show(netToDate)),
                 new("netoProyectado", Show(projectedNet)),
                 new("cuotasSsPagadas", Show(paidToDate)),
-                new("cuotasSsProyectadas", Show(computable.Projected)),
-                new("dificilJustificacion", Show(computable.DificilJustificacion)),
+                new("cuotasSsProyectadas", Show(projectedDebits)),
+                new("dificilJustificacion", Show(dificilJustificacion)),
                 new("meses", Invariant($"{n}")),
             ],
-            Invariant($"previo {Show(netToDate)} + {Show(projectedNet)} − {Show(computable.Projected)} = {Show(computable.Previo)}; ")
-                + Invariant($"casilla 0224 {Show(computable.Previo)} − {Show(computable.DificilJustificacion)} = {Show(computable.RendimientoNeto)}; ")
-                + Invariant($"({Show(computable.RendimientoNeto)} + {Show(paidToDate)} paid + {Show(computable.Projected)} projected) × 12 / {n} = {computable.Annualized}"),
-            new TraceValue.Money(new Money(computable.Annualized)),
+            Invariant($"previo {Show(netToDate)} + {Show(projectedNet)} − {Show(projectedDebits)} = {Show(previo)}; ")
+                + Invariant($"casilla 0224 {Show(previo)} − {Show(dificilJustificacion)} = {Show(rendimientoNeto)}; ")
+                + Invariant($"({Show(rendimientoNeto)} + {Show(paidToDate)} paid + {Show(projectedDebits)} projected) × 12 / {n} = {computable}"),
+            new TraceValue.Money(new Money(computable)),
             "LGSS art. 308.1.c 1.ª and 3.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): the IRPF rendimiento neto increased by the titular's own cuotas, "
                 + "spread over the months of alta. AEAT, Información para determinar el rendimiento neto (sede.agenciatributaria.gob.es, updated 18 Sep 2026, read 2026-09-27): "
                 + "TGSS takes Modelo 100 casilla 0224 plus casilla 0186, the cuotas. Casilla 0224 is after the difícil justificación (RD 439/2007 art. 30.2ª, "
                 + "config irpf.actividad.dificilJustificacion) and before every LIRPF art. 32 reduction and the other reductions Modelo 100 2025 takes after it (casillas 0225, 0232–0234 and 0236–0237), "
                 + "so the art. 32.3 reduction does not lower it. Previo is the year's ingresos less its gastos, the actual ones with the cuotas charged "
-                + "and the projected ones with the projected cuotas, and casilla 0186 is the same cuotas: paid for the closed months, projected for the rest. The regularisation of earlier years' RETA cuotas (casillas 0196 and 0197) is not modelled. "
+                + "and the projected ones with the cuotas debited at the chosen base, and casilla 0186 is the same cuotas: paid for the closed months, debited at the chosen base for the rest. "
+                + "None of them depends on the tramo, so neither does the computable. The regularisation of earlier years' RETA cuotas (casillas 0196 and 0197) is not modelled. "
                 + "The 2.ª gastos genéricos are deducted in ss.rendimiento-neto-mensual"));
 
         var quarterCuotas = cuotas.Where(c => (c.Month.Month + 2) / 3 == (int)input.AsOf).ToList();
@@ -243,42 +221,54 @@ public static class SetAsideEstimator
             [new("quarter", input.AsOf.ToString())],
             Invariant($"max({string.Join(", ", quarterCuotas.Select(c => Invariant($"{c.Month} {c.Result.FullMonthCuota}")))}) = {chosen.Result.FullMonthCuota} ({chosen.Month})"),
             new TraceValue.Money(new Money(chosen.Result.FullMonthCuota)),
-            "#2, bias conservative: the whole-month cuota, before the one-off proration of the month of alta, in the quarter's highest month. "
-                + "So an alta late in the quarter shows what TGSS debits every month from the next one, not the prorated first charge, "
+            "#2, bias conservative: what TGSS debits for a whole month, tarifa plana while it lasts and the cuota at the chosen base after it, before the one-off proration "
+                + "of the month of alta, in the quarter's highest month. So an alta late in the quarter shows what TGSS debits every month from the next one, not the prorated first charge, "
                 + "and a quarter in which tarifa plana lapses shows the cuota after it"));
 
-        var closedMonthsTgss = paidToDate > computable.PricedToDate ? paidToDate : computable.PricedToDate;
-        var annualTgss = closedMonthsTgss + computable.Projected;
+        var debitedYear = paidToDate + projectedDebits;
+        var floorYear = cuotas.Sum(c => c.Result.Floor);
+        var ceilingYear = cuotas.Sum(c => c.Result.Ceiling);
+
+        // Math.Clamp(value, min, max) is Math.min(Math.max(value, min), max) in TypeScript.
+        var annualTgss = new Money(Math.Clamp(debitedYear.Amount, floorYear, ceilingYear));
         steps.Add(new TraceStep(
             "set-aside.cuota-ss-year",
             TraceSection.SeguridadSocial,
             "Cuotas SS del ejercicio",
-            [new("cuotasSsPagadas", Show(paidToDate)), new("cuotasSsHastaHoyAlTramo", Show(computable.PricedToDate)), new("cuotasSsProyectadas", Show(computable.Projected)), new("meses", Invariant($"{n}"))],
-            last is null
-                ? Invariant($"{string.Join(" + ", cuotas.Select(c => Invariant($"{c.Month} {c.Result.Cuota}")))} = {Show(annualTgss)}")
-                : Invariant($"max(paid {Show(paidToDate)}, at the tramo {Show(computable.PricedToDate)}) + projected {Show(computable.Projected)} = {Show(annualTgss)}"),
+            [
+                new("cuotasSsPagadas", Show(paidToDate)),
+                new("cuotasSsProyectadas", Show(projectedDebits)),
+                new("cuotasSsBaseMinima", Invariant($"{floorYear}")),
+                new("cuotasSsBaseMaxima", Invariant($"{ceilingYear}")),
+                new("meses", Invariant($"{n}")),
+            ],
+            Invariant($"debited {Show(paidToDate)} paid + {Show(projectedDebits)} projected = {Show(debitedYear)}, between {floorYear} at the base mínima and {ceilingYear} at the base máxima → ")
+                + (debitedYear.Amount < floorYear ? Invariant($"topped up to {floorYear}")
+                    : debitedYear.Amount > ceilingYear ? Invariant($"refunded down to {ceilingYear}")
+                    : Invariant($"{Show(debitedYear)} stands")),
             new TraceValue.Money(annualTgss),
-            "What TGSS keeps for the year. For the closed months, LGSS art. 308.1.c 3.ª and 4.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): once the year's rendimientos are known, "
-                + "a cotización below the cuota at the base mínima of their tramo is topped up to it, one above the cuota at its base máxima is refunded down to that, and one between stands. "
-                + "So TGSS keeps what was paid clamped between the cuotas at the tramo's base mínima and base máxima. The cuota at the tramo is the one at its base mínima, "
-                + "so the higher of it and what was paid is exact below the base mínima and between the two bases, and over-reserves above the base máxima, whose refund is not modelled: conservative (#2). "
-                + "The higher is taken over the closed months together, not month by month, an approximation when the base changed during them. "
-                + "The projected months at the tramo the year settles on, tarifa plana while it lasts"));
+            "What TGSS keeps for the year. LGSS art. 308.1.c 3.ª–4.ª (boe.es consolidated RDL 8/2015, read 2026-09-27) and RD 2064/1995 art. 46.2 (boe.es "
+                + "BOE-A-1996-1579, version in force from 2024-08-01, read 2026-09-27): regla 3.ª sums the provisional bases of all the year's months less the "
+                + "tarifa plana days (1.ª), divides by those days and multiplies by 30; regla 5.ª compares that one average with the tramo's base mínima and base "
+                + "máxima. Between them nothing moves; below or above, TGSS reclaims or refunds the total of the differences between each month's base and the base "
+                + "mínima or máxima, at the period's tipo (7.ª). A whole month counts 30 days, as art. 45.1 prorates the cuota, so the average lies below the base "
+                + "mínima exactly when the year's debits total less than the cuotas at it: TGSS keeps the debits of the closed and projected months together, "
+                + "clamped between the cuotas at the two bases summed over the months. Tarifa plana months enter all three sums at their debit, so they stay as "
+                + "debited (Ley 20/2007 art. 38 ter.6). Clamping cuotas rather than bases can differ from TGSS by the rounding of each month's cuota, a few cents over the year"));
 
         var lastTarifaPlanaMonth = tarifaPlana.LastMonth(alta);
         var monthsInForce = lastTarifaPlanaMonth.MonthsSince(altaMonth);
         var lapse = lastTarifaPlanaMonth.AddMonths(1);
-        var cuotaAfterLapse = MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, computable.Annualized, lapse), seguridadSocial).FullMonthCuota;
         var lapseWhen = lapse.MonthsSince(new YearMonth(taxYear, 1)) < 0 ? "before this tax year"
-            : lapse.Year > taxYear ? Invariant($"after this tax year, at the {taxYear} tramos and projected net")
+            : lapse.Year > taxYear ? Invariant($"after this tax year, at the {taxYear} tipo de cotización")
             : "in this tax year";
         steps.Add(new TraceStep(
             "set-aside.tarifa-plana-lapse",
             TraceSection.SeguridadSocial,
             "Fin de la tarifa plana",
             [new("alta", Invariant($"{alta:yyyy-MM-dd}")), new("tarifaPlanaMonths", Invariant($"{monthsInForce}")), new("tarifaPlana", tarifaPlana.Amount is { } amount ? Show(amount) : "not in this configuration")],
-            Invariant($"{altaMonth} + {monthsInForce} complete months → tarifa plana through {lastTarifaPlanaMonth}; from {lapse}, {lapseWhen}, the tramo cuota {cuotaAfterLapse}"),
-            new TraceValue.Money(new Money(cuotaAfterLapse)),
+            Invariant($"{altaMonth} + {monthsInForce} complete months → tarifa plana through {lastTarifaPlanaMonth}; from {lapse}, {lapseWhen}, the cuota at the chosen base {cuotaAtBase}"),
+            new TraceValue.Money(new Money(cuotaAtBase)),
             "Ley 20/2007 art. 38 ter.1 (boe.es consolidated text, read 2026-09-27): from the alta through the complete calendar months after it, eleven when the alta is on the 1st (itself a complete calendar month) and twelve otherwise, per Seguridad Social's own reading of the benefit as the first 12 months of alta (portal.seg-social.gob.es); config seguridadSocial.tarifaPlana. "
                 + "The art. 38 ter.2 extension for a net below the SMI must be requested and is not assumed, which over-reserves"));
 
@@ -345,7 +335,7 @@ public static class SetAsideEstimator
                 + "so a loss to date lowers the cumulative net of the quarters after it and a minoración left over carries as a negative result. "
                 + "A quarter that ends before the alta has no activity and so no pago fraccionado (RD 439/2007 art. 109.1), and no minoración to carry"));
 
-        var annualGastos = actualGastos + projection.Gastos + computable.Projected;
+        var annualGastos = actualGastos + projection.Gastos + projectedDebits;
         steps.Add(new TraceStep(
             "set-aside.annual-ingresos",
             TraceSection.Actividad,
@@ -358,8 +348,8 @@ public static class SetAsideEstimator
             "set-aside.annual-gastos",
             TraceSection.Actividad,
             "Gastos del ejercicio, reales y proyectados, con las cuotas SS",
-            [new("reales", Show(actualGastos)), new("proyectados", Show(projection.Gastos)), new("cuotasSsProyectadas", Show(computable.Projected))],
-            Invariant($"{Show(actualGastos)} real + {Show(projection.Gastos)} projected + {Show(computable.Projected)} projected cuotas SS = {Show(annualGastos)}"),
+            [new("reales", Show(actualGastos)), new("proyectados", Show(projection.Gastos)), new("cuotasSsProyectadas", Show(projectedDebits))],
+            Invariant($"{Show(actualGastos)} real + {Show(projection.Gastos)} projected + {Show(projectedDebits)} projected cuotas SS = {Show(annualGastos)}"),
             new TraceValue.Money(annualGastos),
             "#15: the actual gastos already hold the cuotas charged to date; the RETA cuota is a deductible expense of the titular (AEAT Manual práctico Renta 2025, cap. 7)"));
 
@@ -398,8 +388,8 @@ public static class SetAsideEstimator
             warnings.Add(new Warning(
                 WarningCodes.SetAsideEstimate,
                 WarningSeverity.Warning,
-                Invariant($"Tarifa plana ends with {lastTarifaPlanaMonth}: from {lapse} TGSS charges {Euros(new Money(cuotaAfterLapse))} a month instead of {Euros(tarifaPlana.Amount!.Value)}")
-                    + (lapse.Year > taxYear ? Invariant($", at the {taxYear} tramos and this year's projected net.") : ".")));
+                Invariant($"Tarifa plana ends with {lastTarifaPlanaMonth}: from {lapse} TGSS charges {Euros(new Money(cuotaAtBase))} a month instead of {Euros(tarifaPlana.Amount!.Value)}")
+                    + (lapse.Year > taxYear ? Invariant($", at the {taxYear} tipo de cotización.") : ".")));
         }
 
         warnings.AddRange(chosen.Result.Warnings);

@@ -24,7 +24,7 @@ The console takes the tax-year file by path and never looks one up by year. `con
 
 ## Input format
 
-The input is the `setAside.inputs` object of a set-aside golden (`tests/golden/2025/G12.json` and `G14.json` to `G19.json`; G13 has no set-aside part), so any golden's inputs can be pasted in as they are. `set-aside-input.example.json` holds G14's figures. Every field is required and no other field is allowed. Amounts are strings with a decimal point and no thousands separator, such as `"27000.00"`, and are zero or more, except the previous year's `rendimientoNeto`, which is negative after a loss.
+The input is the `setAside.inputs` object of a set-aside golden (`tests/golden/2025/G12.json` and `G14.json` to `G20.json`; G13 has no set-aside part), so any golden's inputs can be pasted in as they are. `set-aside-input.example.json` holds G14's figures. Every field is required and no other field is allowed. Amounts are strings with a decimal point and no thousands separator, such as `"27000.00"`, and are zero or more, except the previous year's `rendimientoNeto`, which is negative after a loss.
 
 | Field | Value |
 |---|---|
@@ -37,6 +37,7 @@ The input is the `setAside.inputs` object of a set-aside golden (`tests/golden/2
 | `activity.retenciones` | `"foreignPayersOnly"`, the only case the estimator covers (SPEC-003 §0) |
 | `activity.actuals` | The closed quarters in order, each `{ "quarter", "ingresosYtd", "gastosYtd", "cuotasSsYtd" }` cumulative from 1 January; `[]` when none is closed |
 | `activity.actuals[].cuotasSsYtd` | The RETA cuotas TGSS actually charged from 1 January to the end of the quarter, as the bank statement shows them, also counted in `gastosYtd`. The TGSS rendimiento computable adds these back, not the cuota of the tramo the year settles on (#52) |
-| `activity.projection.ingresos`, `.gastos` | What the rest of the year is expected to invoice and spend, the RETA cuota excluded |
+| `activity.projection.ingresos`, `.gastos` | What the months after the last closed quarter are expected to invoice and spend, the RETA cuota excluded: the estimator adds the cuota from `baseCotizacion` |
+| `activity.projection.baseCotizacion` | The monthly base de cotización the taxpayer pays in Import@ss from the end of the actuals on, in euros of base, not the cuota. It must be a base of the year's tables, from the lowest base mínima to the highest base máxima (LGSS art. 308.1.a 3.ª), and is ignored while tarifa plana lasts. The estimator turns it into the cuota with `seguridadSocial.tipoCotizacion` |
 
 A missing, null or unknown field, a negative amount, or a value of the wrong shape is rejected with its JSON path and what it must be. What only the engine can judge, such as actuals out of order, the engine rejects with its own reason.
