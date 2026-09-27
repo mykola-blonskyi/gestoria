@@ -15,6 +15,7 @@ public static class Problems
     public const string ApiKeyRequired = Base + "api-key-required";
     public const string ProfileNotFound = Base + "profile-not-found";
     public const string ProfileExists = Base + "profile-exists";
+    public const string DatabaseUnavailable = Base + "database-unavailable";
 
     // 400 with the ValidationProblemDetails "errors" member, keyed by the JSON path of the offending value.
     public static ValidationProblem Invalid(string path, string message) =>
@@ -50,4 +51,13 @@ public static class Problems
     // 401: no key, more than one, or not the configured one. The answer does not say which.
     public static ProblemHttpResult Unauthorized() =>
         TypedResults.Problem($"Send the local API key in the {ApiKey.Header} header.", statusCode: StatusCodes.Status401Unauthorized, title: "The request needs the local API key", type: ApiKeyRequired);
+
+    // 503: PostgreSQL cannot be reached (DatabaseUnavailable, /health/ready). The same fixed words every time: what Npgsql
+    // says names the host, the port and the database, and none of it belongs in an answer (SPEC-013 §2).
+    public static ProblemHttpResult NoDatabase() =>
+        TypedResults.Problem(
+            "The API is running but cannot reach its database. Start PostgreSQL (docker compose up -d postgres) and try again.",
+            statusCode: StatusCodes.Status503ServiceUnavailable,
+            title: "The database is not reachable",
+            type: DatabaseUnavailable);
 }

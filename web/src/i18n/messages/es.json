@@ -46,6 +46,7 @@
     "calculating": "Calculando…",
     "failure": {
       "network": "La API de GestorIA no responde. Iníciala y vuelve a intentarlo.",
+      "database": "La base de datos de GestorIA no responde. Iníciala con docker compose up -d postgres y vuelve a intentarlo.",
       "gap": "Aún no publicado",
       "gapLead": "A la configuración del ejercicio le falta un valor que esta estimación necesita, así que el motor se niega en lugar de suponerlo. El motor dice:",
       "refused": "El motor no puede estimar estas cifras",
@@ -167,6 +168,7 @@
       },
       "failure": {
         "network": "La API de GestorIA no responde. Iníciala y vuelve a intentarlo.",
+        "database": "La base de datos de GestorIA no responde. Iníciala con docker compose up -d postgres y vuelve a intentarlo.",
         "invalid": "La API rechazó el perfil. Los campos rechazados están marcados.",
         "other": "La API respondió con un error ({status}). Vuelve a intentarlo."
       }
@@ -192,6 +194,8 @@
       "unsendable": "Una clave se compone de letras latinas, cifras y símbolos. Revisa la distribución del teclado y vuelve a intentarlo.",
       "unreachable": "La API de GestorIA no está en marcha.",
       "unreachableNext": "Iníciala desde la carpeta del proyecto con este comando y vuelve a intentarlo:",
+      "database": "La API de GestorIA está en marcha, pero su base de datos no.",
+      "databaseNext": "Inicia la base de datos desde la carpeta del proyecto con este comando y vuelve a intentarlo:",
       "other": "La API ha respondido con un error ({status}). Vuelve a intentarlo."
     }
   },

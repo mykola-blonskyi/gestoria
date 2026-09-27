@@ -14,7 +14,13 @@ export const PROBLEM_TYPES = {
   configGap: "https://gestoria.local/problems/config-gap",
   estimateRefused: "https://gestoria.local/problems/estimate-refused",
   apiKeyRequired: "https://gestoria.local/problems/api-key-required",
+  databaseUnavailable: "https://gestoria.local/problems/database-unavailable",
 } as const;
+
+// The API runs but PostgreSQL does not answer it: a 503 from /health/ready or from any endpoint that reads the database.
+export function isDatabaseUnavailable(error: unknown): boolean {
+  return error instanceof ApiError && error.failure.kind === "problem" && error.failure.problem.type === PROBLEM_TYPES.databaseUnavailable;
+}
 
 export type ApiFailure =
   | { kind: "problem"; problem: ProblemDetails }

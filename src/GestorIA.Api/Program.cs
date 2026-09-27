@@ -6,6 +6,7 @@ using GestorIA.Api.TaxYears;
 using GestorIA.Infrastructure.Persistence;
 using GestorIA.Infrastructure.TaxYears;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<DatabaseUnavailable>();
 builder.Services.AddApiKey();
 builder.Services.AddOpenApi("v1", options =>
 {
@@ -39,9 +41,14 @@ builder.Services.AddSingleton(new TaxYearConfigLoader(taxYears));
 
 // PostgreSQL (ADR-0006), started locally by compose.yaml (ADR-0010). The connection string holds a password, so it comes from
 // user secrets or the ConnectionStrings__Gestoria environment variable, never a file in the repository (README.md, "Database").
-builder.Services.AddDbContext<GestoriaDbContext>((services, options) => options.UseNpgsql(
-    services.GetRequiredService<IConfiguration>().GetConnectionString("Gestoria")
-        ?? throw new InvalidOperationException("ConnectionStrings:Gestoria is not set; README.md, \"Database\", shows how to set it.")));
+// EF Core's three failure events log the exception, whose message names the database's host and port (SPEC-013 §2). The
+// exception reaches UseExceptionHandler anyway: DatabaseUnavailable answers 503 without logging it, and anything else is
+// logged there as a 500, so ignoring the events loses nothing.
+builder.Services.AddDbContext<GestoriaDbContext>((services, options) => options
+    .UseNpgsql(
+        services.GetRequiredService<IConfiguration>().GetConnectionString("Gestoria")
+            ?? throw new InvalidOperationException("ConnectionStrings:Gestoria is not set; README.md, \"Database\", shows how to set it."))
+    .ConfigureWarnings(events => events.Ignore(RelationalEventId.ConnectionError, CoreEventId.QueryIterationFailed, CoreEventId.SaveChangesFailed)));
 
 // The web app runs on its own origin next to the API (ADR-0010, web/README.md).
 var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
@@ -72,7 +79,7 @@ if (app.Environment.IsDevelopment())
 }
 
 var api = app.MapGroup("/api/v1");
-api.MapGet("/health/live", () => TypedResults.NoContent()).WithName("live").WithTags("health");
+api.MapHealth();
 
 var locked = api.MapGroup("").RequireApiKey();
 locked.MapTaxYears();

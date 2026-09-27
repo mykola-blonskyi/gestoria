@@ -1,0 +1,6 @@
+{
+  "type": "https://gestoria.local/problems/database-unavailable",
+  "title": "The database is not reachable",
+  "status": 503,
+  "detail": "The API is running but cannot reach its database. Start PostgreSQL (docker compose up -d postgres) and try again."
+}

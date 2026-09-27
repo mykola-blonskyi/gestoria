@@ -4,10 +4,19 @@ using Microsoft.Extensions.Logging;
 
 namespace GestorIA.Api.Tests;
 
-// The API with every log category captured at Trace, the most verbose level, for the tests that hold logs to SPEC-013.
+// The API with every log category captured at Trace, the most verbose level, for the tests that hold logs to SPEC-013. Each
+// line starts with its level and category.
 internal sealed class LoggedApi : ApiFactory
 {
     private readonly Capture capture = new();
+
+    internal LoggedApi()
+    {
+    }
+
+    internal LoggedApi(string connectionString) : base(connectionString)
+    {
+    }
 
     internal IReadOnlyCollection<string> Lines => capture.Lines;
 
@@ -37,7 +46,7 @@ internal sealed class LoggedApi : ApiFactory
             public bool IsEnabled(LogLevel logLevel) => true;
 
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
-                lines.Enqueue($"{category} {formatter(state, exception)} {exception} {state}");
+                lines.Enqueue($"{logLevel} {category} {formatter(state, exception)} {exception} {state}");
         }
     }
 }

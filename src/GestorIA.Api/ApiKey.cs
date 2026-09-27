@@ -59,7 +59,8 @@ public static class ApiKey
             await Problems.Unauthorized().ExecuteAsync(context);
         });
 
-    // The health checks stay open so that a client can tell "not running" from "locked" (SPEC-009 §3).
+    // The health checks, live and ready, stay open so that a client can tell "not running" from "running without its
+    // database" from "locked" (SPEC-009 §3).
     private static bool NeedsKey(PathString path) =>
         path.StartsWithSegments("/api/v1", StringComparison.OrdinalIgnoreCase) && !path.StartsWithSegments("/api/v1/health", StringComparison.OrdinalIgnoreCase);
 

@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 
-import { ApiError } from "@/data/api-error";
+import { ApiError, isDatabaseUnavailable } from "@/data/api-error";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { PageHeader } from "@/shared/ui/page-header";
@@ -11,6 +11,7 @@ import { PageHeader } from "@/shared/ui/page-header";
 import { useUnlock } from "../hooks/use-api-key";
 
 const START_API_COMMAND = "dotnet run --project src/GestorIA.Api";
+const START_DATABASE_COMMAND = "docker compose up -d postgres";
 
 export function UnlockScreen({ refused }: { refused: boolean }) {
   const t = useTranslations("Auth.unlock");
@@ -64,17 +65,20 @@ function UnlockFailure({ error }: { error: Error }) {
   const failure = error instanceof ApiError ? error.failure : null;
   const status = failure?.kind === "problem" ? failure.problem.status : failure?.kind === "http" ? failure.status : 0;
 
-  if (failure?.kind === "network") {
-    return (
-      <Alert title={t("unreachable")}>
-        <p className="mt-1 text-sm">{t("unreachableNext")}</p>
-        <pre className="mt-2 overflow-x-auto rounded-md bg-muted p-2 text-sm">
-          <code>{START_API_COMMAND}</code>
-        </pre>
-      </Alert>
-    );
-  }
+  if (failure?.kind === "network") return <StartIt title={t("unreachable")} next={t("unreachableNext")} command={START_API_COMMAND} />;
+  if (isDatabaseUnavailable(error)) return <StartIt title={t("database")} next={t("databaseNext")} command={START_DATABASE_COMMAND} />;
   return <Alert title={status === 401 ? t("wrongKey") : t("other", { status })} />;
+}
+
+function StartIt({ title, next, command }: { title: string; next: string; command: string }) {
+  return (
+    <Alert title={title}>
+      <p className="mt-1 text-sm">{next}</p>
+      <pre className="mt-2 overflow-x-auto rounded-md bg-muted p-2 text-sm">
+        <code>{command}</code>
+      </pre>
+    </Alert>
+  );
 }
 
 function Alert({ title, children }: { title: string; children?: ReactNode }) {

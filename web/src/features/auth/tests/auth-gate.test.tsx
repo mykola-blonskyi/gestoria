@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { useQuery } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import databaseUnavailable from "@tests/fixtures/database-unavailable.json";
 import { MESSAGES, renderInApp } from "@tests/render";
 
 import { apiKeyStore } from "@/data/api-key-store";
@@ -16,14 +17,18 @@ const taxYears = [
 ] satisfies TaxYear[];
 const HEADER = "X-Api-Key";
 
-type Answer = "ok" | "unauthorized" | "unreachable";
+type Answer = "ok" | "unauthorized" | "unreachable" | "noDatabase";
 
-// The API: the list of tax years for the right key, the api-key-required problem otherwise, or no API at all.
-function stubApi(answer: (key: string | null) => Answer = (key) => (key === KEY ? "ok" : "unauthorized")) {
-  const fetchStub = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async (_url, init) => {
-    const outcome = answer(new Headers(init?.headers).get(HEADER));
+// The API: the list of tax years for the right key, the api-key-required problem otherwise, or no API at all. Readiness
+// answers 204, or the API's own database-unavailable problem when the database is down.
+function stubApi(answer: (key: string | null, url: string) => Answer = (key) => (key === KEY ? "ok" : "unauthorized")) {
+  const fetchStub = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async (url, init) => {
+    const outcome = answer(new Headers(init?.headers).get(HEADER), url);
     if (outcome === "unreachable") throw new TypeError("fetch failed");
-    if (outcome === "ok") return Response.json(taxYears);
+    if (outcome === "noDatabase") {
+      return new Response(JSON.stringify(databaseUnavailable), { status: 503, headers: { "Content-Type": "application/problem+json" } });
+    }
+    if (outcome === "ok") return url.endsWith("/health/ready") ? new Response(null, { status: 204 }) : Response.json(taxYears);
     const problem = { type: "https://gestoria.local/problems/api-key-required", title: "The request needs the local API key", status: 401 };
     return new Response(JSON.stringify(problem), { status: 401, headers: { "Content-Type": "application/problem+json" } });
   });
@@ -114,6 +119,35 @@ describe("AuthGate", () => {
     expect(alert).toHaveTextContent("dotnet run --project src/GestorIA.Api");
     expect(alert).not.toHaveTextContent(MESSAGES[locale].Auth.unlock.wrongKey);
     expect(screen.queryByText(/tax years/)).not.toBeInTheDocument();
+  });
+
+  it.each(LOCALES)("in %s says the database is not running, and how to start it, when the API cannot reach it", async (locale) => {
+    stubApi((key, url) => (key !== KEY ? "unauthorized" : url.endsWith("/health/ready") ? "noDatabase" : "ok"));
+    renderInApp(gated(), { locale });
+
+    await unlockWith(KEY, locale);
+
+    const alert = await screen.findByRole("alert");
+    const messages = MESSAGES[locale].Auth.unlock;
+    expect(alert).toHaveTextContent(messages.database);
+    expect(alert).toHaveTextContent(messages.databaseNext);
+    expect(alert).toHaveTextContent("docker compose up -d postgres");
+    expect(alert).not.toHaveTextContent(messages.unreachable);
+    expect(alert).not.toHaveTextContent(messages.wrongKey);
+    expect(screen.queryByText(/tax years/)).not.toBeInTheDocument();
+  });
+
+  it("unlocks once the database is started and the key is sent again", async () => {
+    let databaseUp = false;
+    stubApi((key, url) => (key !== KEY ? "unauthorized" : url.endsWith("/health/ready") && !databaseUp ? "noDatabase" : "ok"));
+    renderInApp(gated(), { locale: "en" });
+
+    const user = await unlockWith(KEY);
+    await screen.findByRole("alert");
+    databaseUp = true;
+    await user.click(screen.getByRole("button", { name: MESSAGES.en.Auth.unlock.submit }));
+
+    expect(await screen.findByText(`${taxYears.length} tax years`)).toBeInTheDocument();
   });
 
   it.each(LOCALES)("in %s refuses, without asking the API, a key a header cannot carry", async (locale) => {
@@ -218,6 +252,7 @@ describe("AuthPage", () => {
     await unlockWith(KEY);
     await screen.findByText(`${taxYears.length} tax years`);
 
-    expect(fetchStub.mock.calls.length).toBe(before + 2);
+    // The key check, readiness and the tax years asked again.
+    expect(fetchStub.mock.calls.length).toBe(before + 3);
   });
 });

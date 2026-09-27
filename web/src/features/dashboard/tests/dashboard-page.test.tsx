@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import databaseUnavailable from "@tests/fixtures/database-unavailable.json";
 import g12Estimate from "@tests/fixtures/g12-estimate.json";
 import g12Profile from "@tests/fixtures/g12-profile.json";
 import { MESSAGES, renderInApp } from "@tests/render";
@@ -198,6 +199,16 @@ describe("DashboardPage", () => {
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent(MESSAGES.en.Dashboard.failure.refused);
     expect(alert).toHaveTextContent(detail);
+  });
+
+  // A 503 is retried like an unreachable API before the page says so.
+  it("says the database is not answering when the API cannot reach it", { timeout: 10_000 }, async () => {
+    stubApi({ profiles: { status: 503, body: databaseUnavailable } });
+    renderDashboard();
+
+    const alert = await screen.findByRole("alert", {}, { timeout: 8_000 });
+    expect(alert).toHaveTextContent(MESSAGES.en.Dashboard.failure.database);
+    expect(alert).not.toHaveTextContent(MESSAGES.en.Dashboard.failure.network);
   });
 
   // An unreachable API is retried twice, a second and then two apart (data/query-provider.tsx), before the page says so.

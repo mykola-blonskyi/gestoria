@@ -46,6 +46,7 @@
     "calculating": "Calculating…",
     "failure": {
       "network": "The GestorIA API is not answering. Start it and try again.",
+      "database": "The GestorIA database is not answering. Start it with docker compose up -d postgres and try again.",
       "gap": "Not published yet",
       "gapLead": "The tax-year configuration lacks a value this estimate needs, so the engine refuses rather than guess. The engine says:",
       "refused": "The engine cannot estimate these figures",
@@ -167,6 +168,7 @@
       },
       "failure": {
         "network": "The GestorIA API is not answering. Start it and try again.",
+        "database": "The GestorIA database is not answering. Start it with docker compose up -d postgres and try again.",
         "invalid": "The API refused the profile. The fields it refused are marked.",
         "other": "The API answered with an error ({status}). Try again."
       }
@@ -192,6 +194,8 @@
       "unsendable": "A key is made of Latin letters, digits and symbols. Check the keyboard layout and try again.",
       "unreachable": "The GestorIA API is not running.",
       "unreachableNext": "Start it from the project folder with this command, then try again:",
+      "database": "The GestorIA API is running, but its database is not.",
+      "databaseNext": "Start the database from the project folder with this command, then try again:",
       "other": "The API answered with an error ({status}). Try again."
     }
   },
