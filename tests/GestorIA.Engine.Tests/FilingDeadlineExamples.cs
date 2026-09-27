@@ -3,7 +3,7 @@ using System.Globalization;
 namespace GestorIA.Engine.Tests;
 
 // Tax year 2025, a taxpayer resident in the Comunitat Valenciana unless a test names Madrid. Holidays are the national,
-// VC and MD días inhábiles of config/tax-years/2025.example.json.
+// VC and MD días inhábiles of config/tax-years/2025.json.
 public class FilingDeadlineExamples
 {
     private static readonly TaxYearConfig Config = TaxYearConfigFiles.Year2025;

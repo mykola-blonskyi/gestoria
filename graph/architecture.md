@@ -163,7 +163,7 @@ Everything above is the target. What exists on `ticket-4` today:
 | PostgreSQL, EF Core, MinIO client | No packages referenced; `Directory.Packages.props` has 5 entries, none of them persistence |
 | Docker Compose, Dockerfiles | Documented, not written |
 | Golden tests G1–G10 | `tests/golden/` does not exist; no calculator, no fixture |
-| `config/tax-years/2025.json` | Still `2025.example.json` with 4 `_todo` blocks; `deducciones`, `modelo349` and `provenance` are bare placeholders in `schema.json` |
+| `config/tax-years/2025.json` | Exists with no `_todo` gaps (#59); `deducciones` is still a bare `array` in `schema.json` |
 | ADR status | **0002, 0005 and 0009 are `Proposed`** — the OCR service, the REST/JSON-Schema contract and the `Channel<T>` queue are decisions not yet felt |
 
 Dashed boxes on the diagrams in `docs/architecture.md` mean a row in this table.

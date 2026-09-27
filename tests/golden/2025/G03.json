@@ -1,7 +1,7 @@
 {
   "golden": "G03",
   "scenario": "Autónomo, income 50,000, expenses 4,000, SS 3,600, VC, foreign clients only. The activity is stipulated to be established, past the new-activity periods, so the LIRPF art. 32.3 reduction does not apply. Each calculation below carries its own oracle, because the annual cuota íntegra and the quarterly advances are checked against different sources.",
-  "config": "2025.example.json",
+  "config": "2025.json",
   "modelo130": {
     "oracle": "theory",
     "oracleRef": "Arithmetic under SPEC-003 §1, RD 439/2007 (RIRPF) art. 30.2ª and 110.1.a (boe.es consolidated text of BOE-A-2007-6820, read 2026-09-26) and AEAT, instrucciones del modelo 130 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026, read 2026-09-26), casillas 02–19: under estimación directa simplificada casilla 02 includes difícil justificación of 5 % of the net to date, at most 2,000 a year. The inputs are Theory §7.3, ed. 2, Example B quarter by quarter, whose nets to date before difícil justificación are 8,100, 21,200, 27,300 and 42,400. With it they are 7,695, 20,140, 25,935 and 40,400 (the cap binds in Q4, where 5 % would be 2,120), so Σ 130 is 0.20 × 40,400 = 8,080. Example B leaves difícil justificación out of the 130 and gets 8,480, which is not the legal figure (#33). The theory table applies no minoración, so previousYear is set above the last band.",

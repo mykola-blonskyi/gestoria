@@ -58,7 +58,7 @@ A fixture has one object per calculation it checks, and each object carries its 
 ```json
 { "golden": "G03",
   "scenario": "Autónomo, income 50,000, expenses 4,000, SS 3,600, VC, foreign clients only. ...",
-  "config": "2025.example.json",
+  "config": "2025.json",
   "modelo130": {
     "oracle": "theory",
     "oracleRef": "Arithmetic under SPEC-003 §1, RD 439/2007 art. 30.2ª and 110.1.a and the AEAT instructions ...",

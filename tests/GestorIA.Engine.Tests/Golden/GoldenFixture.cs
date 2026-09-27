@@ -15,7 +15,7 @@ internal static class GoldenFixture
         var fixture = JsonNode.Parse(File.ReadAllText(Path.Combine(Root(), $"{golden}.json")))!;
 
         Assert.Equal(golden, fixture["golden"]!.GetValue<string>());
-        Assert.Equal(TaxYearConfigFiles.Example2025, fixture["config"]!.GetValue<string>());
+        Assert.Equal(TaxYearConfigFiles.File2025, fixture["config"]!.GetValue<string>());
 
         return fixture;
     }

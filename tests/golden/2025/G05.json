@@ -1,7 +1,7 @@
 {
   "golden": "G05",
   "scenario": "Modelo 130 with a loss-making Q3: Example B, except that the net income to date before difícil justificación falls to 20,000 at the end of Q3. Q3 pays nothing, and Q4 catches up through the cumulative base: 20 % of the annual net less what Q1 and Q2 paid.",
-  "config": "2025.example.json",
+  "config": "2025.json",
   "modelo130": {
     "oracle": "theory",
     "oracleRef": "Arithmetic under SPEC-003 §1, RD 439/2007 (RIRPF) art. 30.2ª and 110.1.a (boe.es consolidated text of BOE-A-2007-6820, read 2026-09-26) and AEAT, instrucciones del modelo 130 (sede.agenciatributaria.gob.es, page updated 11 Sep 2026, read 2026-09-26), casillas 02, 05, 07, 12, 15 and 19: casilla 02 includes difícil justificación of 5 % of the net to date, at most 2,000 a year. The inputs are Theory §7.3, ed. 2, loss-making quarter example: Q3 net to date 20,000 before difícil justificación; Q1, Q2 and Q4 are Example B's and Q3 expenses keep Example B's 5,700. The theory's figures (4,240 paid by Q2, 240 credited against Q4) leave difícil justificación out (#33). With it Q1 and Q2 pay 4,028 on nets of 7,695 and 20,140. Q3's 0.20 × 19,000 = 3,800 is below that, so casilla 07 is −228, casilla 12 floors it at zero and nothing carries into casilla 15. Q4 pays 0.20 × 40,400 − 4,028 = 4,052, and Σ 130 is 8,080.",

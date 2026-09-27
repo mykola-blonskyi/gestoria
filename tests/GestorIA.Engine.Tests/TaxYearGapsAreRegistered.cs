@@ -10,7 +10,7 @@ public class TaxYearGapsAreRegistered
     // Keyed by file name: each tax-year file declares its own gaps and is graded against its own registry.
     private static readonly Dictionary<string, Dictionary<string, string>> Registered = new()
     {
-        [TaxYearConfigFiles.Example2025] = new(),
+        [TaxYearConfigFiles.File2025] = new(),
 
         [TaxYearConfigFiles.File2026] = new()
         {

@@ -1,7 +1,7 @@
 {
   "golden": "G08",
   "scenario": "Salary 20,000 (employee SS 1,300) plus autónomo income of 8,000 with no expenses, VC. The activity's rendimiento neto of 7,600 is above the 6,500 cap on income other than employment, so the reducción por trabajo the salary alone would get is lost entirely. The activity is stipulated to be established, past the new-activity periods, so the LIRPF art. 32.3 reduction does not apply.",
-  "config": "2025.example.json",
+  "config": "2025.json",
   "rentaTrueUp": {
     "oracle": "theory",
     "oracleRef": "Theory §15.6, ed. 2, case 8 and SPEC-011 §1 G8: reducción por trabajo = 0 once other income passes 6,500 (SS 1,300 is the theory's, implied by its rendimiento neto of 16,700). The amount lost is re-derived here from LIRPF art. 20 as in force for 2025 (boe.es consolidated text of Ley 35/2006, read 2026-09-26): the reducción is measured on íntegro less the art. 19.2.a–e expenses, 18,700, before the 2,000 of art. 19.2.f, so the third band gives 2,364.34 − 1.14 × (18,700 − 17,673.52) = 1,194.15. The theory measures it after the 2,000 and gets 4,068. modelo130Advances is 0.20 × 8,000 with no minoración. The other figures are arithmetic under SPEC-002 steps 1, 2, 4 and 6 and LIRPF art. 56, 63 and 74.",

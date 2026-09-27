@@ -5,7 +5,7 @@ using GestorIA.Infrastructure.TaxYears;
 
 namespace GestorIA.Engine.Tests;
 
-// SPEC-007 §2, §3 (#47): a calendar._todo declares the year after the tax year unpublished. Built from 2025.example.json
+// SPEC-007 §2, §3 (#47): a calendar._todo declares the year after the tax year unpublished. Built from 2025.json
 // with that year's calendar removed, this is the shape a real file carries before the AGE resolución and the Orden HAC land.
 public class PendingCalendarIsRefused
 {
@@ -13,7 +13,7 @@ public class PendingCalendarIsRefused
 
     private static TaxYearConfig Build()
     {
-        var root = JsonNode.Parse(File.ReadAllBytes(Path.Combine(TaxYearConfigFiles.Root(), TaxYearConfigFiles.Example2025)))!;
+        var root = JsonNode.Parse(File.ReadAllBytes(Path.Combine(TaxYearConfigFiles.Root(), TaxYearConfigFiles.File2025)))!;
 
         root["calendar"]!["_todo"] = Note;
         root["calendar"]!["renta"] = null;
@@ -24,7 +24,7 @@ public class PendingCalendarIsRefused
             RemoveNextYear(region!["holidays"]!.AsArray());
         }
 
-        return TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(root.ToJsonString()), TaxYearConfigFiles.Example2025);
+        return TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(root.ToJsonString()), TaxYearConfigFiles.File2025);
     }
 
     private static void RemoveNextYear(JsonArray days)

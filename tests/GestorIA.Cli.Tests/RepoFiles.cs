@@ -7,7 +7,7 @@ namespace GestorIA.Cli.Tests;
 
 internal static class RepoFiles
 {
-    internal const string ConfigFileName = "2025.example.json";
+    internal const string ConfigFileName = "2025.json";
 
     private static readonly Lazy<TaxYearConfig> LazyConfig =
         new(() => TaxYearConfigParser.Parse(File.ReadAllBytes(Path.Combine(Root(), "config", "tax-years", ConfigFileName)), ConfigFileName));

@@ -18,7 +18,7 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - [ ] Verify the values the first goldens touch against the AEAT Manual, not the vault: `escalaEstatal`, `regions.VC.escalaAutonomica` (done: Ley 13/1997 art. 2.1, #48), `minimos.contribuyente`, `minimos.descendientes`, `minimos.menor3`, `trabajo.otrosGastos`, and the seven values in `trabajo.reduccion`
 - [x] Record where each value came from. Landed as the `provenance` block keyed by JSON Pointer at the granularity of the verifiable unit (SPEC-007 §1.1), not as a per-value `{value, source, verified}` wrapper — that form roughly triples the file and buries changed numbers among changed dates. Every entry reads `kind: "theory"` today; sorting by `verified` ascending is the January queue
 - [x] Fill the Madrid block in `2025.example.json` and add it to `2026.json`, with `boe` provenance (ADR-0016, #60). Madrid replaces the Madrid cut of ADR-0013
-- [ ] Rename `2025.example.json` to `2025.json` (#59)
+- [x] Rename `2025.example.json` to `2025.json` (#59)
 - [x] Fill `seguridadSocial.tramos` before January: the registration decision on contribution base and tarifa plana depends on it (ADR-0014). Filled with real 2025 BOE data (Orden PJC/178/2025), `tarifaPlana` confirmed against Ley 20/2007 art. 38 ter (#5)
 - [x] Fill `modelo130.minoracion` (RD 439/2007 art. 110.3.c) (#5). First-activity-year case settled by the AEAT instructions for casilla 13: no activity last year counts as a net of zero (#8)
 - [x] Fill `modelo130.lines`, `modelo303.lines` and `modelo349` before the Q1 2027 forms (#58): mapped from the approving Órdenes for what SPEC-003 computes, 2025 and 2026

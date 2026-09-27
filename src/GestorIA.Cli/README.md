@@ -9,7 +9,7 @@ dotnet run --project src/GestorIA.Cli -- <input.json> <tax-year-config.json>
 For example, with the fictitious input in this folder:
 
 ```
-dotnet run --project src/GestorIA.Cli -- src/GestorIA.Cli/set-aside-input.example.json config/tax-years/2025.example.json
+dotnet run --project src/GestorIA.Cli -- src/GestorIA.Cli/set-aside-input.example.json config/tax-years/2025.json
 ```
 
 The output is the calculation trace step by step, then the estimate, then the engine's notices, warnings first. The tax year and the configuration's file name and SHA-256 hash are printed with the estimate, so an answer can be traced back to the configuration that produced it. Exit code 0 is an estimate, 1 an input, configuration or engine rejection with its reason on stderr, 2 a usage error.
@@ -20,7 +20,7 @@ The input file holds personal financial data, so a real one never lives in this 
 
 ## The configuration is named explicitly
 
-The console takes the tax-year file by path and never looks one up by year. `config/tax-years/2025.json` does not exist yet: the 2025 values live in `2025.example.json`, which still has `_todo` blocks and is renamed once they are filled in. Falling back from `2025.json` to the example would hide which file produced the numbers, and SPEC-007 §3 makes a missing tax year an error, never a default.
+The console takes the tax-year file by path and never looks one up by year. The file name and its SHA-256 print with every estimate, so an answer always names the configuration behind it, and SPEC-007 §3 makes a missing tax year an error, never a default.
 
 ## Input format
 

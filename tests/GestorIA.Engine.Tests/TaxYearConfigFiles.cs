@@ -7,11 +7,11 @@ namespace GestorIA.Engine.Tests;
 
 internal static class TaxYearConfigFiles
 {
-    internal const string Example2025 = "2025.example.json";
+    internal const string File2025 = "2025.json";
 
     // Lazy<T> builds the value on first use, so a broken file fails the tests that read it rather than every test in the assembly.
     private static readonly Lazy<TaxYearConfig> LazyYear2025 =
-        new(() => TaxYearConfigParser.Parse(File.ReadAllBytes(Path.Combine(Root(), Example2025)), Example2025));
+        new(() => TaxYearConfigParser.Parse(File.ReadAllBytes(Path.Combine(Root(), File2025)), File2025));
 
     internal static TaxYearConfig Year2025 => LazyYear2025.Value;
 
@@ -22,7 +22,7 @@ internal static class TaxYearConfigFiles
     internal static TaxYearConfig Year2026 => LazyYear2026.Value;
 
     // A region the file names but declares incomplete, as MD was until #60. No real file carries one any more, so the tests
-    // that cover the refusal add this block to a copy of 2025.example.json.
+    // that cover the refusal add this block to a copy of 2025.json.
     internal const string DeclaredIncompleteRegion = "GA";
 
     internal const string DeclaredIncompleteRegionNote = "scale, mínimos and holidays not researched";
@@ -38,10 +38,10 @@ internal static class TaxYearConfigFiles
 
     private static readonly Lazy<TaxYearConfig> LazyYear2025WithDeclaredIncompleteRegion = new(() =>
     {
-        var root = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Root(), Example2025)))!;
+        var root = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Root(), File2025)))!;
         root["regions"]![DeclaredIncompleteRegion] = DeclaredIncompleteRegionBlock();
 
-        return TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(root.ToJsonString()), Example2025);
+        return TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(root.ToJsonString()), File2025);
     });
 
     internal static TaxYearConfig Year2025WithDeclaredIncompleteRegion => LazyYear2025WithDeclaredIncompleteRegion.Value;
