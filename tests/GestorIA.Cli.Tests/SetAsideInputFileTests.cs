@@ -20,7 +20,7 @@ public class SetAsideInputFileTests
         var started = Assert.IsType<NewActivity.Started>(input.Profile.Activity.NewActivity);
         Assert.Equal(NewActivityPeriod.First, started.Period);
         Assert.Equal(Money.Zero, started.IngresosFromFormerEmployer);
-        Assert.Equal([new QuarterToDate(Quarter.Q1, new Money(6000.00m), new Money(345.33m))], input.Activity.Actuals);
+        Assert.Equal([new QuarterToDate(Quarter.Q1, new Money(6000.00m), new Money(345.33m), new Money(205.33m))], input.Activity.Actuals);
         Assert.Equal(new ActivityProjection(new Money(27000.00m), new Money(900.00m)), input.Activity.Projection);
         Assert.IsType<Retenciones.ForeignPayersOnly>(input.Activity.Retenciones);
         Assert.Same(RepoFiles.Config, input.Config);
@@ -42,6 +42,7 @@ public class SetAsideInputFileTests
     [InlineData("activity.projection", "$.activity.projection is missing.")]
     [InlineData("asOf", "$.asOf is missing.")]
     [InlineData("profile.activity.newActivity", "$.profile.activity.newActivity is missing.")]
+    [InlineData("activity.actuals.0.cuotasSsYtd", "$.activity.actuals[0].cuotasSsYtd is missing.")]
     public void AMissingFieldIsRejectedByItsPath(string path, string message)
     {
         var json = Edit(root => ParentOf(root, path).AsObject().Remove(path.Split('.')[^1]));
@@ -67,6 +68,7 @@ public class SetAsideInputFileTests
     [InlineData("profile.activity.newActivity.ingresosFromFormerEmployer", "$.profile.activity.newActivity.ingresosFromFormerEmployer")]
     [InlineData("activity.actuals.0.ingresosYtd", "$.activity.actuals[0].ingresosYtd")]
     [InlineData("activity.actuals.0.gastosYtd", "$.activity.actuals[0].gastosYtd")]
+    [InlineData("activity.actuals.0.cuotasSsYtd", "$.activity.actuals[0].cuotasSsYtd")]
     [InlineData("activity.projection.ingresos", "$.activity.projection.ingresos")]
     [InlineData("activity.projection.gastos", "$.activity.projection.gastos")]
     public void ANegativeAmountIsRejected(string path, string jsonPath)
@@ -91,7 +93,7 @@ public class SetAsideInputFileTests
     [InlineData("taxYear", "$.taxYear is not a field the estimator reads; the fields of $ are asOf, profile, activity.")]
     [InlineData("profile.activity.tarifaPlana", "$.profile.activity.tarifaPlana is not a field the estimator reads; the fields of $.profile.activity are alta, previousYear, newActivity.")]
     [InlineData("profile.activity.newActivity.startedOn", "$.profile.activity.newActivity.startedOn is not a field the estimator reads; the fields of $.profile.activity.newActivity are period, ingresosFromFormerEmployer.")]
-    [InlineData("activity.actuals.0.note", "$.activity.actuals[0].note is not a field the estimator reads; the fields of $.activity.actuals[0] are quarter, ingresosYtd, gastosYtd.")]
+    [InlineData("activity.actuals.0.note", "$.activity.actuals[0].note is not a field the estimator reads; the fields of $.activity.actuals[0] are quarter, ingresosYtd, gastosYtd, cuotasSsYtd.")]
     [InlineData("activity.projection.iva", "$.activity.projection.iva is not a field the estimator reads; the fields of $.activity.projection are ingresos, gastos.")]
     public void AnUnknownFieldIsRejected(string path, string message)
     {

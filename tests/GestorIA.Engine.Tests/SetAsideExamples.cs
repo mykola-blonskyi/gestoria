@@ -59,7 +59,7 @@ public class SetAsideExamples
     [Fact]
     public void ActualsMustBeTheClosedQuartersInOrderFromTheFirstQuarterOfActivity()
     {
-        var skipsQ2 = new List<QuarterToDate> { new(Quarter.Q1, new Money(6000m), new Money(345.33m)), new(Quarter.Q3, new Money(18000m), new Money(900m)) };
+        var skipsQ2 = new List<QuarterToDate> { new(Quarter.Q1, new Money(6000m), new Money(345.33m), new Money(205.33m)), new(Quarter.Q3, new Money(18000m), new Money(900m), new Money(685.33m)) };
 
         var error = Assert.Throws<ArgumentException>(() => SetAsideEstimator.Estimate(G12Input(ingresos: new Money(9000m), gastos: new Money(300m), actuals: skipsQ2, asOf: Quarter.Q4)));
         Assert.Contains("in order from Q1", error.Message);
@@ -68,7 +68,7 @@ public class SetAsideExamples
     [Fact]
     public void ActualsForAQuarterBeforeTheAltaAreRejected()
     {
-        var beforeAlta = new List<QuarterToDate> { new(Quarter.Q1, Money.Zero, Money.Zero), new(Quarter.Q2, new Money(3000m), new Money(160m)) };
+        var beforeAlta = new List<QuarterToDate> { new(Quarter.Q1, Money.Zero, Money.Zero, Money.Zero), new(Quarter.Q2, new Money(3000m), new Money(160m), new Money(160m)) };
 
         var error = Assert.Throws<ArgumentException>(() => SetAsideEstimator.Estimate(G12Input(alta: new DateOnly(2025, 5, 1), actuals: beforeAlta, asOf: Quarter.Q2)));
         Assert.Contains("in order from Q2", error.Message);
@@ -77,7 +77,7 @@ public class SetAsideExamples
     [Fact]
     public void ActualsPastTheAsOfQuarterAreRejected()
     {
-        var toQ2 = new List<QuarterToDate> { new(Quarter.Q1, new Money(6000m), new Money(345.33m)), new(Quarter.Q2, new Money(13000m), new Money(700m)) };
+        var toQ2 = new List<QuarterToDate> { new(Quarter.Q1, new Money(6000m), new Money(345.33m), new Money(205.33m)), new(Quarter.Q2, new Money(13000m), new Money(700m), new Money(445.33m)) };
 
         var error = Assert.Throws<ArgumentException>(() => SetAsideEstimator.Estimate(G12Input(actuals: toQ2, asOf: Quarter.Q1)));
         Assert.Contains("past the as-of quarter Q1", error.Message);
@@ -88,10 +88,10 @@ public class SetAsideExamples
     {
         var wholeYear = new List<QuarterToDate>
         {
-            new(Quarter.Q1, new Money(6000m), new Money(345.33m)),
-            new(Quarter.Q2, new Money(13000m), new Money(700m)),
-            new(Quarter.Q3, new Money(20000m), new Money(1100m)),
-            new(Quarter.Q4, new Money(28000m), new Money(1500m)),
+            new(Quarter.Q1, new Money(6000m), new Money(345.33m), new Money(205.33m)),
+            new(Quarter.Q2, new Money(13000m), new Money(700m), new Money(445.33m)),
+            new(Quarter.Q3, new Money(20000m), new Money(1100m), new Money(685.33m)),
+            new(Quarter.Q4, new Money(28000m), new Money(1500m), new Money(925.33m)),
         };
 
         var error = Assert.Throws<ArgumentException>(() => SetAsideEstimator.Estimate(G12Input(ingresos: new Money(1000m), actuals: wholeYear, asOf: Quarter.Q4)));
@@ -103,10 +103,10 @@ public class SetAsideExamples
     {
         var wholeYear = new List<QuarterToDate>
         {
-            new(Quarter.Q1, new Money(6000m), new Money(345.33m)),
-            new(Quarter.Q2, new Money(13000m), new Money(700m)),
-            new(Quarter.Q3, new Money(20000m), new Money(1100m)),
-            new(Quarter.Q4, new Money(28000m), new Money(1500m)),
+            new(Quarter.Q1, new Money(6000m), new Money(345.33m), new Money(205.33m)),
+            new(Quarter.Q2, new Money(13000m), new Money(700m), new Money(445.33m)),
+            new(Quarter.Q3, new Money(20000m), new Money(1100m), new Money(685.33m)),
+            new(Quarter.Q4, new Money(28000m), new Money(1500m), new Money(925.33m)),
         };
 
         var result = SetAsideEstimator.Estimate(G12Input(ingresos: Money.Zero, gastos: Money.Zero, actuals: wholeYear, asOf: Quarter.Q4));
@@ -120,7 +120,7 @@ public class SetAsideExamples
     [Fact]
     public void TheTraceShowsWhatTheActualsAndTheProjectionEachContribute()
     {
-        var actuals = new List<QuarterToDate> { new(Quarter.Q1, new Money(6000.00m), new Money(345.33m)) };
+        var actuals = new List<QuarterToDate> { new(Quarter.Q1, new Money(6000.00m), new Money(345.33m), new Money(205.33m)) };
 
         var result = SetAsideEstimator.Estimate(G12Input(ingresos: new Money(27000.00m), gastos: new Money(900.00m), actuals: actuals, asOf: Quarter.Q2));
         TraceStep Step(string id) => result.Trace.Steps.Single(s => s.Id == id);
@@ -132,32 +132,54 @@ public class SetAsideExamples
         Assert.Equal("6000.00 real + 27000.00 projected = 33000.00", Step("set-aside.annual-ingresos").Formula);
     }
 
-    // Alta in 2020, Q1–Q3 actuals: net to date 16,500 after nine cuotas, 16,800 projected before the three cuotas left.
-    // At General 8 (451.50): cuotas to date 9 × 451.50 = 4,063.50, projected 3 × 451.50 = 1,354.50; previo 16,500 + 16,800 − 1,354.50
-    // = 31,945.50; difícil justificación 5 % = 1,597.275; casilla 0224 30,348.225; computable 30,348.225 + 4,063.50 + 1,354.50 = 35,766.225,
-    // × 0.93 / 12 = 2,771.88 a month, General 8. At General 7 (425.85): previo 32,022.45, difícil justificación 1,601.1225, computable
-    // 35,531.5275, 2,753.69 a month, General 7. Both are consistent, so the conservative estimate takes General 8.
-    private static SetAsideInput TwoConsistentTramosInput(NewActivity? newActivity = null) => G12Input(
+    // Alta in 2020, Q1–Q3 actuals: net to date 16,500 after nine cuotas, 16,800 projected before the three cuotas left. The nine
+    // cuotas paid are 434.67 each by default, on a base between General 7's minimum and General 8's: 3,912.03 to September.
+    // At General 8 (451.50): projected 3 × 451.50 = 1,354.50; previo 16,500 + 16,800 − 1,354.50 = 31,945.50; difícil justificación
+    // 5 % = 1,597.275; casilla 0224 30,348.225; computable 30,348.225 + 3,912.03 + 1,354.50 = 35,614.755, × 0.93 / 12 = 2,760.14 a
+    // month, General 8. At General 7 (425.85): projected 1,277.55, previo 32,022.45, difícil justificación 1,601.1225, computable
+    // 35,610.9075, 2,759.85 a month, General 7. Both are consistent, so the conservative estimate takes General 8.
+    private static SetAsideInput TwoConsistentTramosInput(NewActivity? newActivity = null, decimal cuotaPaid = 434.67m) => G12Input(
         ingresos: new Money(17200.00m),
         gastos: new Money(400.00m),
         actuals:
         [
-            new(Quarter.Q1, new Money(7000.00m), new Money(1500.00m)),
-            new(Quarter.Q2, new Money(14000.00m), new Money(3000.00m)),
-            new(Quarter.Q3, new Money(21000.00m), new Money(4500.00m)),
+            new(Quarter.Q1, new Money(7000.00m), new Money(1500.00m), new Money(3 * cuotaPaid)),
+            new(Quarter.Q2, new Money(14000.00m), new Money(3000.00m), new Money(6 * cuotaPaid)),
+            new(Quarter.Q3, new Money(21000.00m), new Money(4500.00m), new Money(9 * cuotaPaid)),
         ],
         alta: new DateOnly(2020, 3, 1),
         asOf: Quarter.Q3,
         newActivity: newActivity);
 
     [Fact]
-    public void TheCuotasAddedBackSettleOnTheHighestTramoTheyAreConsistentWith()
+    public void TheProjectedCuotasSettleOnTheHighestTramoTheyAreConsistentWith()
     {
         var result = SetAsideEstimator.Estimate(TwoConsistentTramosInput());
 
-        Assert.Equal(4063.50m, result.Trace.Steps.Single(s => s.Id == "set-aside.cuotas-ss-to-date").Euros());
-        Assert.Equal(35766.225m, result.Trace.Steps.Single(s => s.Id == "set-aside.rendimiento-computable").Euros());
+        Assert.Equal(1354.50m, result.Trace.Steps.Single(s => s.Id == "set-aside.cuotas-ss-projected").Euros());
+        Assert.Equal(35614.755m, result.Trace.Steps.Single(s => s.Id == "set-aside.rendimiento-computable").Euros());
         Assert.Equal(new Money(451.50m), result.MonthlyCuotaSs);
+    }
+
+    // #52: the year settles on General 8 either way, where nine months cost 9 × 451.50 = 4,063.50. With the gastos unchanged casilla
+    // 0224 does not move, so paying 434.67 a month instead adds back exactly 4,063.50 − 3,912.03 = 151.47 less; twelve months of
+    // alta, so × 12 / 12 leaves the difference as it is. For the year's cuotas TGSS tops the 3,912.03 up to the 4,063.50 at
+    // General 8's base mínima (LGSS art. 308.1.c 4.ª): 4,063.50 + 1,354.50 = 5,418.00.
+    [Fact]
+    public void TheClosedMonthsAddBackTheCuotasPaidNotThePricedOnes()
+    {
+        var paidAtTheTramo = SetAsideEstimator.Estimate(TwoConsistentTramosInput(cuotaPaid: 451.50m));
+        var paidBelowIt = SetAsideEstimator.Estimate(TwoConsistentTramosInput());
+        TraceStep Step(SetAsideResult result, string id) => result.Trace.Steps.Single(s => s.Id == id);
+
+        Assert.Equal(new Money(451.50m), paidAtTheTramo.MonthlyCuotaSs);
+        Assert.Equal(new Money(451.50m), paidBelowIt.MonthlyCuotaSs);
+        Assert.Equal(3912.03m, Step(paidBelowIt, "set-aside.cuotas-ss-to-date").Euros());
+        Assert.EndsWith("= 4063.50", Step(paidBelowIt, "set-aside.cuotas-ss-to-date").Formula, StringComparison.Ordinal);
+        Assert.Equal(
+            4063.50m - 3912.03m,
+            Step(paidAtTheTramo, "set-aside.rendimiento-computable").Euros() - Step(paidBelowIt, "set-aside.rendimiento-computable").Euros());
+        Assert.Equal(5418.00m, Step(paidBelowIt, "set-aside.cuota-ss-year").Euros());
     }
 
     // TGSS takes casilla 0224, which comes before every LIRPF art. 32 reduction, so the art. 32.3 status cannot move the tramo.
@@ -184,7 +206,8 @@ public class SetAsideExamples
 
     // #2: where the estimator picks between two defensible figures it reserves the higher, and the step that picks says so.
     [Theory]
-    [InlineData("set-aside.cuotas-ss-to-date", "conservative")]
+    [InlineData("set-aside.cuotas-ss-projected", "conservative")]
+    [InlineData("set-aside.cuota-ss-year", "conservative")]
     [InlineData("set-aside.cuota-ss-month", "bias conservative")]
     [InlineData("set-aside.tarifa-plana-lapse", "over-reserves")]
     [InlineData("set-aside.hold-back-share", "conservative")]
@@ -203,7 +226,7 @@ public class SetAsideExamples
         SetAsideInput Input() => G12Input(
             ingresos: new Money(18000m),
             gastos: new Money(400m),
-            actuals: [new(Quarter.Q1, new Money(8000m), new Money(440m)), new(Quarter.Q2, new Money(17000m), new Money(880m))],
+            actuals: [new(Quarter.Q1, new Money(8000m), new Money(440m), new Money(240m)), new(Quarter.Q2, new Money(17000m), new Money(880m), new Money(480m))],
             alta: new DateOnly(2024, 6, 10),
             asOf: Quarter.Q3,
             employment: new EmploymentIncome(new Money(40000m), new Money(2600m)));

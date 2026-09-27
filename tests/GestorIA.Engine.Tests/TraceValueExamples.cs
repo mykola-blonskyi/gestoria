@@ -81,9 +81,9 @@ public class TraceValueExamples
             new AutonomoRegistration(new DateOnly(2020, 3, 1), new PreviousYear.NoActivity(), new NewActivity.Established())),
         new ActivityPicture(
             [
-                new(Quarter.Q1, new Money(7000.00m), new Money(1500.00m)),
-                new(Quarter.Q2, new Money(14000.00m), new Money(3000.00m)),
-                new(Quarter.Q3, new Money(21000.00m), new Money(4500.00m)),
+                new(Quarter.Q1, new Money(7000.00m), new Money(1500.00m), new Money(1354.50m)),
+                new(Quarter.Q2, new Money(14000.00m), new Money(3000.00m), new Money(2709.00m)),
+                new(Quarter.Q3, new Money(21000.00m), new Money(4500.00m), new Money(4063.50m)),
             ],
             new ActivityProjection(new Money(13000.00m), new Money(400.00m)),
             new Retenciones.ForeignPayersOnly()),
