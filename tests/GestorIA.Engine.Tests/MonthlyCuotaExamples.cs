@@ -81,21 +81,25 @@ public class MonthlyCuotaExamples
     }
 
     // 30,000 × (1 − 0.07) / 12 = 2,325 a month, General 6: base mínima 1,274.51 → 400.20, base máxima 2,330.00 × 0.314 = 731.62.
+    // RGC art. 46.2 3.ª and 5.ª regularise the year's average base, so no month is topped up or refunded on its own debit.
     [Theory]
-    [InlineData("1356.21", "425.85", "400.20 <= 425.85 <= 731.62 → 425.85, neither topped up nor refunded")]
-    [InlineData("1200.00", "400.20", "376.80 < 400.20 → topped up to 400.20")]
-    [InlineData("2500.00", "731.62", "785.00 > 731.62 → refunded down to 731.62")]
-    public void TgssKeepsTheChosenCuotaClampedBetweenTheTramosBases(string baseCotizacion, string kept, string outcome)
+    [InlineData("1356.21", "425.85")]
+    [InlineData("1200.00", "376.80")]
+    [InlineData("2500.00", "785.00")]
+    public void TheMonthCarriesTheTramosBoundsAndIsNotRegularisedAlone(string baseCotizacion, string debit)
     {
         var result = Run(new YearMonth(2028, 2), annualComputable: 30000m, baseCotizacion: decimal.Parse(baseCotizacion, CultureInfo.InvariantCulture));
         var step = result.Trace.Steps.Single(s => s.Id == "ss.regularizacion");
 
+        Assert.Equal(decimal.Parse(debit, CultureInfo.InvariantCulture), result.Cuota);
         Assert.Equal(400.20m, result.Floor);
         Assert.Equal(731.62m, result.Ceiling);
-        Assert.Equal(decimal.Parse(kept, CultureInfo.InvariantCulture), result.Kept);
-        Assert.Equal(result.Kept, step.Euros());
-        Assert.Equal("base mínima 1274.51 → 400.20, base máxima 2330.00 × 0.314 = 731.62; " + outcome, step.Formula);
+        Assert.Equal(731.62m, step.Euros());
+        Assert.Equal(
+            "base mínima 1274.51 → 400.20, base máxima 2330.00 × 0.314 = 731.62; the " + debit + " debited is regularised with the year's other months, on their average base",
+            step.Formula);
         Assert.Contains("308.1.c 3.ª–4.ª", step.Reference, StringComparison.Ordinal);
+        Assert.Contains("RD 2064/1995 art. 46.2", step.Reference, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -115,7 +119,8 @@ public class MonthlyCuotaExamples
         Assert.Equal(80m, result.Cuota);
         Assert.Equal(80m, result.Floor);
         Assert.Equal(80m, result.Ceiling);
-        Assert.Equal(80m, result.Kept);
+        Assert.Equal("tarifa plana → not regularised: TGSS keeps the 80 debited, at least and at most", result.Trace.Steps.Single(s => s.Id == "ss.regularizacion").Formula);
+        Assert.Equal(80m, result.Trace.Steps.Single(s => s.Id == "ss.regularizacion").Euros());
         Assert.Equal("months since alta 1 <= 12 → 80, not regularised", result.Trace.Steps.Single(s => s.Id == "ss.tarifa-plana").Formula);
         Assert.Contains("38 ter.6", result.Trace.Steps.Single(s => s.Id == "ss.tarifa-plana").Reference, StringComparison.Ordinal);
     }
@@ -128,7 +133,6 @@ public class MonthlyCuotaExamples
 
         Assert.Equal(45.33m, result.Floor);
         Assert.Equal(45.33m, result.Ceiling);
-        Assert.Equal(45.33m, result.Kept);
     }
 
     [Fact]

@@ -138,8 +138,8 @@ public class SetAsideExamples
     // also hold; 20,000 and 800 projected for July to December besides the six cuotas debited at the chosen base. Previo
     // 32,200 − 6 × paid − 6 × debit, less 5 % difícil justificación, plus the twelve cuotas back: a computable of
     // 30,590 + 0.3 × (paid + debit), each a month's, over twelve months of alta; × 0.93 / 12 a month, General 7 (2,330 to
-    // 2,760) in every example below. General 7 keeps 425.85 a month at least, at its base mínima of 1,356.21, and 2,760.00 × 0.314 =
-    // 866.64 at most, at its base máxima: 2,555.10 to 5,199.84 for the six closed months.
+    // 2,760) in every example below. General 7 prices 425.85 a month at its base mínima of 1,356.21 and 2,760.00 × 0.314 = 866.64
+    // at its base máxima: TGSS keeps the year's debits between 12 × 425.85 = 5,110.20 and 12 × 866.64 = 10,399.68.
     private static SetAsideInput EstablishedInput(decimal cuotaPaid, decimal baseCotizacion, NewActivity? newActivity = null) => G12Input(
         ingresos: new Money(20000.00m),
         gastos: new Money(800.00m),
@@ -171,10 +171,9 @@ public class SetAsideExamples
         Assert.Equal(5569.50m, Step(result, "set-aside.cuota-ss-year").Euros());
     }
 
-    // #52: paid 450.00 a month to June, 2,700.00, above General 7's 425.85 and below its 866.64. Previo 32,200 − 2,700.00 −
-    // 2,555.10 = 26,944.90; difícil justificación 1,347.245; casilla 0224 25,597.655; computable 25,597.655 + 2,700.00 paid +
-    // 2,555.10 debited = 30,852.755, General 7. TGSS keeps the 2,700.00 paid, not the 2,555.10 at the base mínima:
-    // 2,700.00 + 2,555.10 = 5,255.10 (LGSS art. 308.1.c 3.ª).
+    // #52: paid 450.00 a month to June, 2,700.00. Previo 32,200 − 2,700.00 − 2,555.10 = 26,944.90; difícil justificación
+    // 1,347.245; casilla 0224 25,597.655; computable 25,597.655 + 2,700.00 paid + 2,555.10 debited = 30,852.755, General 7. The
+    // year's 5,255.10 debited lies between 5,110.20 and 10,399.68, so TGSS keeps it (RD 2064/1995 art. 46.2 5.ª a).
     [Fact]
     public void TheClosedMonthsAddBackTheCuotasPaidAndTgssKeepsThemBetweenTheBases()
     {
@@ -183,45 +182,70 @@ public class SetAsideExamples
         Assert.Equal(2700.00m, Step(result, "set-aside.cuotas-ss-to-date").Euros());
         Assert.Equal("paid to the end of Q2, as stated: 2700.00", Step(result, "set-aside.cuotas-ss-to-date").Formula);
         Assert.Equal(30852.755m, Step(result, "set-aside.rendimiento-computable").Euros());
-        Assert.StartsWith("paid 2700.00 between 2555.10 at the base mínima and 5199.84 at the base máxima → 2700.00 stands; ", Step(result, "set-aside.cuota-ss-year").Formula, StringComparison.Ordinal);
+        Assert.Equal(
+            "debited 2700.00 paid + 2555.10 projected = 5255.10, between 5110.20 at the base mínima and 10399.68 at the base máxima → 5255.10 stands",
+            Step(result, "set-aside.cuota-ss-year").Formula);
         Assert.Equal(5255.10m, Step(result, "set-aside.cuota-ss-year").Euros());
     }
 
-    // Paid 1,000.00 a month to June, 6,000.00, above what General 7's base máxima prices, 5,199.84 for six months. Previo
+    // Paid 1,000.00 a month to June, 6,000.00, above the 5,199.84 General 7's base máxima prices for six months. Previo
     // 32,200 − 6,000.00 − 2,555.10 = 23,644.90; difícil justificación 1,182.245; casilla 0224 22,462.655; computable
-    // 22,462.655 + 6,000.00 + 2,555.10 = 31,017.755, × 0.93 / 12 = 2,403.88 a month, General 7. TGSS refunds the closed months
-    // down to 5,199.84 in a later year and keeps it: 5,199.84 + 2,555.10 = 7,754.94 (LGSS art. 308.1.c 4.ª).
+    // 22,462.655 + 6,000.00 + 2,555.10 = 31,017.755, × 0.93 / 12 = 2,403.88 a month, General 7. RD 2064/1995 art. 46.2 3.ª
+    // averages the year's bases, (6 × 1,000.00 / 0.314 + 6 × 1,356.21) / 12 ≈ 2,270.46, inside General 7's 1,356.21 to
+    // 2,760.00, so 5.ª a regularises nothing: the year's 8,555.10 debited stands, where a clamp of the closed months alone
+    // would have refunded them down to 5,199.84.
     [Fact]
-    public void ClosedMonthsPaidAboveTheBaseMaximaCountOnlyTheCeiling()
+    public void ClosedMonthsPaidAboveTheBaseMaximaStandWhenTheYearsAverageBaseIsWithinTheTramo()
     {
         var result = SetAsideEstimator.Estimate(EstablishedInput(1000.00m, 1356.21m));
 
         Assert.Equal(6000.00m, Step(result, "set-aside.cuotas-ss-to-date").Euros());
         Assert.Equal(31017.755m, Step(result, "set-aside.rendimiento-computable").Euros());
-        Assert.StartsWith("paid 6000.00 between 2555.10 at the base mínima and 5199.84 at the base máxima → refunded down to 5199.84; ", Step(result, "set-aside.cuota-ss-year").Formula, StringComparison.Ordinal);
-        Assert.Equal(7754.94m, Step(result, "set-aside.cuota-ss-year").Euros());
+        Assert.Equal(
+            "debited 6000.00 paid + 2555.10 projected = 8555.10, between 5110.20 at the base mínima and 10399.68 at the base máxima → 8555.10 stands",
+            Step(result, "set-aside.cuota-ss-year").Formula);
+        Assert.Equal(8555.10m, Step(result, "set-aside.cuota-ss-year").Euros());
     }
 
-    // Paid 400.00 a month to June, 2,400.00, below General 7's base mínima. Previo 32,200 − 2,400.00 − 2,555.10 = 27,244.90;
-    // difícil justificación 1,362.245; casilla 0224 25,882.655; computable 25,882.655 + 2,400.00 + 2,555.10 = 30,837.755,
-    // 2,389.93 a month, General 7. TGSS tops the closed months up to 2,555.10: 2,555.10 + 2,555.10 = 5,110.20 (LGSS art. 308.1.c 3.ª).
+    // Paid 400.00 a month to June, 2,400.00. Previo 32,200 − 2,400.00 − 2,555.10 = 27,244.90; difícil justificación 1,362.245;
+    // casilla 0224 25,882.655; computable 25,882.655 + 2,400.00 + 2,555.10 = 30,837.755, 2,389.93 a month, General 7. The
+    // year's 4,955.10 debited is below the 5,110.20 at General 7's base mínima, so TGSS tops it up (RD 2064/1995 art. 46.2 5.ª b).
     [Fact]
-    public void ClosedMonthsPaidBelowTheBaseMinimaAreToppedUpToTheFloor()
+    public void AYearDebitedBelowTheBaseMinimaIsToppedUpToIt()
     {
         var result = SetAsideEstimator.Estimate(EstablishedInput(400.00m, 1356.21m));
 
         Assert.Equal(2400.00m, Step(result, "set-aside.cuotas-ss-to-date").Euros());
         Assert.Equal(30837.755m, Step(result, "set-aside.rendimiento-computable").Euros());
-        Assert.StartsWith("paid 2400.00 between 2555.10 at the base mínima and 5199.84 at the base máxima → topped up to 2555.10; ", Step(result, "set-aside.cuota-ss-year").Formula, StringComparison.Ordinal);
+        Assert.Equal(
+            "debited 2400.00 paid + 2555.10 projected = 4955.10, between 5110.20 at the base mínima and 10399.68 at the base máxima → topped up to 5110.20",
+            Step(result, "set-aside.cuota-ss-year").Formula);
         Assert.Equal(5110.20m, Step(result, "set-aside.cuota-ss-year").Euros());
+    }
+
+    // Paid 1,000.00 a month to June and a base of 3,000.00 after: 3,000.00 × 0.314 = 942.00 debited a month, 5,652.00 for six.
+    // Previo 32,200 − 6,000.00 − 5,652.00 = 20,548.00; difícil justificación 1,027.40; casilla 0224 19,520.60; computable
+    // 19,520.60 + 6,000.00 + 5,652.00 = 31,172.60, 2,415.88 a month, General 7. The year's 11,652.00 debited is above the
+    // 12 × 866.64 = 10,399.68 at its base máxima, so TGSS refunds it down to that (RD 2064/1995 art. 46.2 5.ª c).
+    [Fact]
+    public void AYearDebitedAboveTheBaseMaximaIsRefundedDownToIt()
+    {
+        var result = SetAsideEstimator.Estimate(EstablishedInput(1000.00m, 3000.00m));
+
+        Assert.Equal(31172.60m, Step(result, "set-aside.rendimiento-computable").Euros());
+        Assert.Equal(
+            "debited 6000.00 paid + 5652.00 projected = 11652.00, between 5110.20 at the base mínima and 10399.68 at the base máxima → refunded down to 10399.68",
+            Step(result, "set-aside.cuota-ss-year").Formula);
+        Assert.Equal(10399.68m, Step(result, "set-aside.cuota-ss-year").Euros());
     }
 
     // A base of 1,274.51, General 6's base mínima: 1,274.51 × 0.314 = 400.20 debited a month, 2,401.20 for six. Previo 32,200 −
     // 2,555.10 − 2,401.20 = 27,243.70; difícil justificación 1,362.185; casilla 0224 25,881.515; computable 25,881.515 + 2,555.10
     // + 2,401.20 = 30,837.815, 2,389.93 a month, still General 7. The gastos hold what is debited, 3,555.10 real + 800.00 +
-    // 2,401.20 = 6,756.30, and TGSS debits 400.20 a month, but it keeps 425.85 a month for them: 2,555.10 + 6 × 425.85 = 5,110.20.
+    // 2,401.20 = 6,756.30, and TGSS debits 400.20 a month, but the year's 4,956.30 is below the 5,110.20 at the base mínima,
+    // so TGSS tops the year up to it.
     [Fact]
-    public void AProjectedBaseBelowTheTramosBaseMinimaIsDebitedButToppedUpToTheFloor()
+    public void AProjectedBaseBelowTheTramosBaseMinimaIsDebitedButTheYearIsToppedUpToTheFloor()
     {
         var result = SetAsideEstimator.Estimate(EstablishedInput(425.85m, 1274.51m));
 
@@ -232,12 +256,13 @@ public class SetAsideExamples
         Assert.Equal(5110.20m, Step(result, "set-aside.cuota-ss-year").Euros());
     }
 
-    // A base of 3,000.00: 3,000.00 × 0.314 = 942.00 debited a month, 5,652.00 for six. Previo 32,200 − 2,555.10 − 5,652.00 =
-    // 23,992.90; difícil justificación 1,199.645; casilla 0224 22,793.255; computable 22,793.255 + 2,555.10 + 5,652.00 =
-    // 31,000.355, 2,402.53 a month, General 7. The gastos hold 3,555.10 + 800.00 + 5,652.00 = 10,007.10 and TGSS debits 942.00
-    // a month, but it refunds each down to 866.64: 2,555.10 + 6 × 866.64 = 7,754.94.
+    // A base of 3,000.00: 942.00 debited a month, 5,652.00 for six. Previo 32,200 − 2,555.10 − 5,652.00 = 23,992.90; difícil
+    // justificación 1,199.645; casilla 0224 22,793.255; computable 22,793.255 + 2,555.10 + 5,652.00 = 31,000.355, 2,402.53 a
+    // month, General 7. The gastos hold 3,555.10 + 800.00 + 5,652.00 = 10,007.10. Each projected month is above General 7's
+    // base máxima, but the year's average base, (6 × 1,356.21 + 6 × 3,000.00) / 12 = 2,178.11, is inside the tramo, so TGSS
+    // keeps all 8,207.10 debited (RD 2064/1995 art. 46.2 5.ª a).
     [Fact]
-    public void AProjectedBaseAboveTheTramosBaseMaximaIsDebitedButRefundedDownToTheCeiling()
+    public void AProjectedBaseAboveTheTramosBaseMaximaStandsWhenTheYearsAverageBaseIsWithinTheTramo()
     {
         var result = SetAsideEstimator.Estimate(EstablishedInput(425.85m, 3000.00m));
 
@@ -245,7 +270,7 @@ public class SetAsideExamples
         Assert.Equal(31000.355m, Step(result, "set-aside.rendimiento-computable").Euros());
         Assert.Equal(10007.10m, Step(result, "set-aside.annual-gastos").Euros());
         Assert.Equal(new Money(942.00m), result.MonthlyCuotaSs);
-        Assert.Equal(7754.94m, Step(result, "set-aside.cuota-ss-year").Euros());
+        Assert.Equal(8207.10m, Step(result, "set-aside.cuota-ss-year").Euros());
     }
 
     // TGSS takes casilla 0224, which comes before every LIRPF art. 32 reduction, so the art. 32.3 status cannot move the tramo.
