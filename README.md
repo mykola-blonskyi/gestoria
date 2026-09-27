@@ -168,7 +168,9 @@ Estimate
 
 The web app lives in `web/`. It is a Next.js application that shows the engine's answers in the browser, in Ukrainian (the default), Spanish, English or Russian, with five colour themes. It never computes tax itself; every figure comes from the engine through the API (ADR-0017).
 
-The overview takes the same figures as the console's input file, typed in or loaded from that file, and shows the estimate, the notices and the step-by-step calculation. What you enter lives only in the browser tab: reloading or closing it empties the form. The other pages (payments, transactions, periods, settings, backup, access) say what they will show.
+The overview takes the same figures as the console's input file, typed in or loaded from that file, and shows the estimate, the notices and the step-by-step calculation. What you enter lives only in the browser tab: reloading or closing it empties the form. The access page says the app is unlocked and locks it on request. The other pages (payments, transactions, periods, settings, backup) say what they will show.
+
+The app opens locked and asks for the API key of your installation. Set the key up once, as `web/README.md` ("The API key") shows: the API keeps only its hash, in your user secrets outside the repository, and refuses to start without it. The browser keeps the key in the tab's memory only, so a reload asks for it again.
 
 Start the API, then the web app, in two terminals:
 

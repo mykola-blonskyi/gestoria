@@ -175,12 +175,21 @@
   },
   "Auth": {
     "title": "Acceso",
-    "lead": "Desbloquear la aplicación con la clave de tu instalación local.",
-    "points": {
-      "key": "Introducir la clave local de la API, para que nada en este equipo hable con la API sin ella.",
-      "status": "Un mensaje claro cuando la API no está en marcha, para que sepas que tienes que arrancarla."
-    },
-    "pending": "Necesita la API y su comprobación de la clave, que aún no están construidas."
+    "lead": "La aplicación se desbloquea con la clave de API de tu instalación local.",
+    "unlocked": "Desbloqueada. La clave se guarda solo en la memoria de esta pestaña: al recargarla o cerrarla, la aplicación vuelve a bloquearse.",
+    "lock": "Bloquear ahora",
+    "unlock": {
+      "title": "Desbloquear GestorIA",
+      "lead": "Introduce la clave de API de tu instalación local. Se queda solo en la memoria de esta pestaña y nunca se guarda.",
+      "key": "Clave de API",
+      "submit": "Desbloquear",
+      "checking": "Comprobando la clave…",
+      "refused": "La API ya no acepta la clave que usaba esta pestaña. Introduce la clave de nuevo.",
+      "wrongKey": "La API no ha aceptado esta clave. Revísala y vuelve a intentarlo.",
+      "unreachable": "La API de GestorIA no está en marcha.",
+      "unreachableNext": "Iníciala desde la carpeta del proyecto con este comando y vuelve a intentarlo:",
+      "other": "La API ha respondido con un error ({status}). Vuelve a intentarlo."
+    }
   },
   "Backup": {
     "title": "Copia de seguridad",

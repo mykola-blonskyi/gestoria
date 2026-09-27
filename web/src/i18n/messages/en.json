@@ -175,12 +175,21 @@
   },
   "Auth": {
     "title": "Access",
-    "lead": "Unlocking the app with the key of your local installation.",
-    "points": {
-      "key": "Entering the local API key, so that nothing on this machine talks to the API without it.",
-      "status": "A clear message when the API is not running, so you know to start it."
-    },
-    "pending": "This needs the API and its key check, which are not built yet."
+    "lead": "The app is unlocked with the API key of your local installation.",
+    "unlocked": "Unlocked. The key is kept in this tab's memory only: reloading or closing the tab locks the app again.",
+    "lock": "Lock now",
+    "unlock": {
+      "title": "Unlock GestorIA",
+      "lead": "Enter the API key of your local installation. It stays in this tab's memory only and is never saved.",
+      "key": "API key",
+      "submit": "Unlock",
+      "checking": "Checking the key…",
+      "refused": "The API no longer accepts the key this tab was using. Enter the key again.",
+      "wrongKey": "The API did not accept this key. Check it and try again.",
+      "unreachable": "The GestorIA API is not running.",
+      "unreachableNext": "Start it from the project folder with this command, then try again:",
+      "other": "The API answered with an error ({status}). Try again."
+    }
   },
   "Backup": {
     "title": "Backup",

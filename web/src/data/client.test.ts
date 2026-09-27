@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/data/api-error";
+import { apiKeyStore } from "@/data/api-key-store";
 import { apiFetch } from "@/data/client";
 import { shouldRetry } from "@/data/query-provider";
 
@@ -23,6 +24,7 @@ async function failureOf(promise: Promise<unknown>): Promise<ApiError> {
 }
 
 afterEach(() => {
+  apiKeyStore.forget();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
@@ -140,5 +142,34 @@ describe("shouldRetry", () => {
     ["an error that did not come from the API", new Error("bug")],
   ])("does not retry %s", (_, error) => {
     expect(shouldRetry(0, error)).toBe(false);
+  });
+});
+
+describe("apiFetch and the API key", () => {
+  const unauthorized = () =>
+    new Response(JSON.stringify({ type: "https://gestoria.local/problems/api-key-required", title: "Key", status: 401 }), {
+      status: 401,
+      headers: { "Content-Type": "application/problem+json" },
+    });
+
+  it("locks the app when the API refuses the key in use", async () => {
+    apiKeyStore.remember("the-key");
+    stubFetch(unauthorized());
+
+    await failureOf(apiFetch("/config/tax-years"));
+
+    expect(apiKeyStore.state()).toBe("refused");
+    expect(apiKeyStore.current()).toBeNull();
+  });
+
+  // A request sent with an earlier key can answer after the app was unlocked with the new one.
+  it("leaves the app unlocked when the refused key is not the one in use", async () => {
+    apiKeyStore.remember("the-new-key");
+    stubFetch(unauthorized());
+
+    await failureOf(apiFetch("/config/tax-years", { headers: { "X-Api-Key": "an-earlier-key" } }));
+
+    expect(apiKeyStore.state()).toBe("unlocked");
+    expect(apiKeyStore.current()).toBe("the-new-key");
   });
 });

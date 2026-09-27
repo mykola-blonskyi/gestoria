@@ -2,7 +2,7 @@
 
 The browser side of GestorIA: a Next.js App Router application that shows the engine's answers in Ukrainian, Spanish, English or Russian. It runs on your machine next to the API (ADR-0010). It never computes tax; every figure comes from the engine through the API (ADR-0017, SPEC-012).
 
-The overview shows the set-aside estimate from the API (#66). Every other page is an honest empty state that says what it will show.
+The overview shows the set-aside estimate from the API (#66). The app opens locked and unlocks with the API key of your installation (#68). Every other page is an honest empty state that says what it will show.
 
 ## Run it
 
@@ -14,7 +14,23 @@ pnpm install
 pnpm dev          # http://localhost:3000
 ```
 
-The overview needs the API: `dotnet run --project src/GestorIA.Api` from the repository root. It listens on `http://localhost:5080` and allows calls from `http://localhost:3000` (`Cors:Origins` in its `appsettings.json`; set `Cors__Origins__0` when `pnpm dev` takes another port).
+The app needs the API: `dotnet run --project src/GestorIA.Api` from the repository root, once its key is set up (below). It listens on `http://localhost:5080` and allows calls from `http://localhost:3000` (`Cors:Origins` in its `appsettings.json`; set `Cors__Origins__0` when `pnpm dev` takes another port).
+
+### The API key
+
+Every API endpoint but the health checks refuses a request without the local API key (SPEC-009 §3). The API is configured with the key's SHA-256, never the key itself (SPEC-013), and refuses to start without it. Set it up once per machine, from the repository root:
+
+```bash
+KEY=$(openssl rand -hex 32)
+echo "$KEY"    # keep this in your password manager; the app asks for it
+dotnet user-secrets set Auth:ApiKeySha256 "$(printf %s "$KEY" | shasum -a 256 | cut -d' ' -f1)" --project src/GestorIA.Api
+```
+
+User secrets live in your home directory (`~/.microsoft/usersecrets/`), outside the repository, and the API reads them when it runs as Development, which `dotnet run` does. Anywhere else, set the `Auth__ApiKeySha256` environment variable instead. To change the key, run the three lines again and restart the API; an open tab then returns to the unlock screen at its next request.
+
+The app shows an unlock screen until the API accepts the key: it sends the key to `GET /config/tax-years` and unlocks on a 200. A wrong key, and an API that is not running, each get their own message; the second says how to start it. Once unlocked, `apiFetch` sends the key in the `X-Api-Key` header on every request, and a 401 to the key in use locks the app again with a message saying why.
+
+**Where the key lives, and why.** Only in the memory of the browser tab (`src/data/api-key-store.ts`), for as long as the tab is open. A reload, a new tab or closing the browser forgets it, and the app asks again. It is never written to localStorage, sessionStorage, a cookie or the address, and never logged (SPEC-013); `features/auth/tests/auth-gate.test.tsx` checks all of these, and the input has no `name`, so a submit before the page is interactive sends nothing. The alternative the ticket offered, an httpOnly cookie set by a Next.js route handler, was rejected: the browser calls the API directly on another origin (CORS, #66), so a cookie would need `credentials: "include"` on every call plus a defence against cross-site request forgery, or a proxy in Next.js in front of the whole API. For one user on one machine, typing the key after a reload costs less than either. sessionStorage would survive a reload, but it is storage that any script on the page can read and the browser can write to disk.
 
 | Command | What it does |
 |---|---|
@@ -93,11 +109,11 @@ The colours are CSS variables, one block per theme, in `src/app/globals.css`, wi
 
 ## Data layer
 
-- `src/data/client.ts`: `apiFetch<T>(path)` calls `<NEXT_PUBLIC_API_BASE_URL>/api/v1<path>`. A problem+json answer (RFC 9457) becomes an `ApiError` whose `failure` is `{ kind: "problem", problem }`; another error status is `{ kind: "http", status }`; an unreachable API is `{ kind: "network" }`.
+- `src/data/client.ts`: `apiFetch<T>(path)` calls `<NEXT_PUBLIC_API_BASE_URL>/api/v1<path>` with the API key from `api-key-store.ts` in `X-Api-Key`, and locks the app on a 401 to that key (see "The API key"). A problem+json answer (RFC 9457) becomes an `ApiError` whose `failure` is `{ kind: "problem", problem }`; another error status is `{ kind: "http", status }`; an unreachable API is `{ kind: "network" }`.
 - `src/data/query-provider.tsx`: the TanStack Query provider. Queries retry only an unreachable API or a 5xx; a 4xx, such as a 422 for a declared configuration gap, answers the same every time.
 - **Query keys.** One file per API resource in `src/data/`, exporting a key factory and the query or mutation options together, with keys that start with the resource path: `["tax-years"]` (`tax-years.ts`), `["set-aside", "estimate"]` (`set-aside.ts`). Features call those options from their `hooks/`; they never build keys or call `apiFetch` themselves.
 - **Calculations are mutations.** `POST /set-aside/estimate` is a TanStack Query mutation, not a query: its input is what the user typed, personal financial data, and it stays in the tab's memory, never under a cache key or in browser storage (SPEC-013).
-- **Problem types.** `PROBLEM_TYPES` in `api-error.ts` names the API's problem `type` URIs: `invalid-input` (400, with `errors` keyed by the JSON path of each refused value, or `taxYear` for the query parameter), `config-gap` (422, the configuration lacks or declares unpublished a value the calculation needs) and `estimate-refused` (422, the engine cannot estimate the input).
+- **Problem types.** `PROBLEM_TYPES` in `api-error.ts` names the API's problem `type` URIs: `invalid-input` (400, with `errors` keyed by the JSON path of each refused value, or `taxYear` for the query parameter), `config-gap` (422, the configuration lacks or declares unpublished a value the calculation needs) and `estimate-refused` (422, the engine cannot estimate the input) and `api-key-required` (401).
 - **Money and dates.** Amounts arrive as strings with two decimals (SPEC-009) and are shown with `formatMoney(amount, locale)` from `shared/lib/format.ts`, which never turns them into a float. Dates arrive as ISO `yyyy-MM-dd` and are shown with `formatDate`.
 
 ### API types
@@ -113,4 +129,5 @@ The colours are CSS variables, one block per theme, in `src/app/globals.css`, wi
 - The data client against stubbed `fetch` responses: JSON, 204, problem+json, a non-problem error and a network failure.
 - The overview through its `index.ts`, with `fetch` stubbed by the API's own answers in `features/dashboard/tests/fixtures/` (`tests/GestorIA.Api.Tests/WebFixtures.cs` fails when they drift from the API; rerun it with `GESTORIA_WRITE_WEB_FIXTURES=1` to rewrite them). Typing G14's figures and loading G14's input file both post exactly G14's input file; nothing lands in storage, cookies or the address; errors show next to their field.
 - Each test renders with a fresh QueryClient (`tests/render.tsx`), so no cached answer leaks from one test to the next.
+- The auth feature through its `index.ts`: the unlock screen in every language, the right key (then sent on every request), a wrong key, an API that is not running and then is, a 401 later on, the lock button, and the key kept out of storage, cookies, the address, the console and the form's data.
 - The structural checks in `tests/`.
