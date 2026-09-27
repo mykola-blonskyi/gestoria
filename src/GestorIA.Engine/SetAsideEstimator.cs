@@ -92,7 +92,6 @@ public static class SetAsideEstimator
         var actualThrough = last is null ? 0 : (int)last.Quarter * 3;
         var actualIngresos = last?.IngresosYtd ?? Money.Zero;
         var actualGastos = last?.GastosYtd ?? Money.Zero;
-        var actualMonths = activeMonths.Where(m => m.Month <= actualThrough).ToList();
         var projectedMonths = activeMonths.Where(m => m.Month > actualThrough).ToList();
         var projectedCount = projectedMonths.Count;
 
@@ -213,9 +212,10 @@ public static class SetAsideEstimator
             "LGSS art. 308.1.c 1.ª and 3.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): the IRPF rendimiento neto increased by the titular's own cuotas, "
                 + "spread over the months of alta. AEAT, Información para determinar el rendimiento neto (sede.agenciatributaria.gob.es, updated 18 Sep 2026, read 2026-09-27): "
                 + "TGSS takes Modelo 100 casilla 0224 plus casilla 0186, the cuotas. Casilla 0224 is after the difícil justificación (RD 439/2007 art. 30.2ª, "
-                + "config irpf.actividad.dificilJustificacion) and before every LIRPF art. 32 reduction (Modelo 100 2025, casillas 0225–0226 and 0232–0235), "
+                + "config irpf.actividad.dificilJustificacion) and before every LIRPF art. 32 reduction and the other reductions Modelo 100 2025 takes after it (casillas 0225, 0232–0234 and 0236–0237), "
                 + "so the art. 32.3 reduction does not lower it. Previo is the year's ingresos less its gastos, the actual ones with the cuotas charged "
-                + "and the projected ones with the projected cuotas. The 2.ª gastos genéricos are deducted in ss.rendimiento-neto-mensual"));
+                + "and the projected ones with the projected cuotas. The regularisation of earlier years' RETA cuotas (casillas 0196 and 0197) is not modelled. "
+                + "The 2.ª gastos genéricos are deducted in ss.rendimiento-neto-mensual"));
 
         var quarterCuotas = cuotas.Where(c => (c.Month.Month + 2) / 3 == (int)input.AsOf).ToList();
         var chosen = quarterCuotas.MaxBy(c => c.Result.FullMonthCuota);

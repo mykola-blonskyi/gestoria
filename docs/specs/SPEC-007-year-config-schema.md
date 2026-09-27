@@ -74,7 +74,8 @@ Every 📅 value records what it was verified against, so that next January it c
   "/irpf/escalaEstatal":          { "kind": "boe",    "ref": "Ley 35/2006 art. 63.1, redacción Ley 31/2022", "verified": "2026-09-25" },
   "/irpf/trabajo/reduccion":      { "kind": "aeat-manual", "ref": "Manual Renta 2025, cap. 3", "verified": "2026-09-25" },
   "/regions/VC/escalaAutonomica": { "kind": "theory", "ref": "Theory §4.2, ed. 2" },
-  "/seguridadSocial/tramos":      { "kind": "theory", "ref": "Theory §6.2, ed. 2" }
+  "/seguridadSocial/tramos":      { "kind": "theory", "ref": "Theory §6.2, ed. 2" },
+  "/seguridadSocial/gastosGenericos": { "kind": "boe", "ref": "RDL 8/2015 (LGSS) art. 308.1.c, regla 2.ª", "verified": "2026-09-27" }
 }
 ```
 

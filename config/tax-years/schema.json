@@ -733,7 +733,8 @@
           }
         },
         "gastosGenericos": {
-          "$ref": "#/$defs/rate"
+          "$ref": "#/$defs/rate",
+          "exclusiveMaximum": 1
         },
         "_todo": {
           "$ref": "#/$defs/todoNote"
