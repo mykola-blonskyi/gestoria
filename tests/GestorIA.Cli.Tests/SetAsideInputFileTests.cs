@@ -82,6 +82,32 @@ public class SetAsideInputFileTests
         Assert.Equal($"{jsonPath} is \"-5\"; it must be zero or more.", e.Message);
     }
 
+    // LGSS art. 308.1.a 3.ª: the taxpayer picks any base of the year's tables, from the reduced table's lowest base mínima to
+    // the general table's highest base máxima; TGSS accepts no other.
+    [Theory]
+    [InlineData("0.00")]
+    [InlineData("653.58")]
+    [InlineData("4909.51")]
+    public void ABaseOutsideTheYearsTablesIsRejected(string baseCotizacion)
+    {
+        var json = Edit(root => Set(root, "activity.projection.baseCotizacion", baseCotizacion));
+
+        var e = Assert.Throws<InvalidInputFileException>(() => SetAsideInputFile.Parse(json, RepoFiles.Config));
+        Assert.Equal(
+            $"$.activity.projection.baseCotizacion is \"{baseCotizacion}\"; it must be a base of the 2025 tables, from 653.59 to 4909.50 (LGSS art. 308.1.a 3.ª).",
+            e.Message);
+    }
+
+    [Theory]
+    [InlineData("653.59")]
+    [InlineData("4909.50")]
+    public void TheTablesOwnLowestAndHighestBasesAreAccepted(string baseCotizacion)
+    {
+        var json = Edit(root => Set(root, "activity.projection.baseCotizacion", baseCotizacion));
+
+        Assert.Equal(new Money(decimal.Parse(baseCotizacion, CultureInfo.InvariantCulture)), SetAsideInputFile.Parse(json, RepoFiles.Config).Activity.Projection.BaseCotizacion);
+    }
+
     [Fact]
     public void APreviousYearLossIsANegativeNet()
     {

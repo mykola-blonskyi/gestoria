@@ -61,10 +61,24 @@ public static class SetAsideInputFile
                 new AutonomoRegistration(Date(registration, "alta"), PreviousYearOf(registration), NewActivityOf(registration))),
             new ActivityPicture(
                 closed,
-                new ActivityProjection(Amount(projection, "ingresos"), Amount(projection, "gastos"), Amount(projection, "baseCotizacion")),
+                new ActivityProjection(Amount(projection, "ingresos"), Amount(projection, "gastos"), BaseCotizacionOf(projection, config)),
                 new Retenciones.ForeignPayersOnly()),
             config,
             QuarterOf(root, "asOf"));
+    }
+
+    // LGSS art. 308.1.a 3.ª: any base of the year's tables, from the lowest base mínima (the reduced table's first tramo) to
+    // the highest base máxima (the general table's last); TGSS accepts no other.
+    private static Money BaseCotizacionOf(JsonObject projection, TaxYearConfig config)
+    {
+        var chosen = Amount(projection, "baseCotizacion");
+        var tramos = config.SeguridadSocial.Tramos.Tramos;
+        var lowest = tramos.Min(t => t.BaseMin.Amount);
+        var highest = tramos.Max(t => t.BaseMax.Amount);
+
+        return chosen.Amount >= lowest && chosen.Amount <= highest
+            ? chosen
+            : throw Invalid(projection["baseCotizacion"]!, Invariant($"a base of the {config.TaxYear} tables, from {lowest} to {highest} (LGSS art. 308.1.a 3.ª)"));
     }
 
     // The previous year's net is the one amount that may be negative: a loss that year.
