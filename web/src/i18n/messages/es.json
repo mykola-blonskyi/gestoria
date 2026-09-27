@@ -34,14 +34,103 @@
   "Dashboard": {
     "title": "Resumen",
     "lead": "Qué parte de cada cobro no es tuya y qué vence a continuación.",
-    "points": {
-      "holdBack": "La parte de cada cobro que conviene apartar, explicada en una frase y en el cálculo completo paso a paso.",
-      "nextPayment": "El próximo pago del Modelo 130 y los días en que puedes pagarlo.",
-      "cuota": "La cuota mensual de la TGSS de este trimestre y cuándo termina la tarifa plana.",
-      "renta": "Lo que pedirá la Renta además de los pagos fraccionados del Modelo 130, y el mes en que vence.",
-      "warnings": "Cada aviso del cálculo junto a la cifra a la que se refiere, y la configuración del ejercicio que produjo la respuesta."
+    "form": {
+      "heading": "Tus cifras",
+      "privacy": "Lo que introduces se queda solo en esta pestaña. No se guarda nada: al recargar o cerrar la pestaña el formulario se vacía.",
+      "loadFile": "Cargar desde archivo",
+      "loadFileHint": "El archivo de entrada de la consola (JSON), guardado en una carpeta fuera del repositorio.",
+      "fileUnreadable": "Este archivo no es un archivo de entrada de la consola: no es un objeto JSON.",
+      "taxYear": "Ejercicio",
+      "asOf": "Trimestre de la estimación",
+      "region": "Comunidad autónoma",
+      "employment": "Salario de este año",
+      "employmentIngresos": "Salario bruto (0.00 sin empleo)",
+      "employmentSeguridadSocial": "Tu Seguridad Social sobre el salario",
+      "registration": "Alta como autónomo",
+      "alta": "Fecha de alta",
+      "previousYear": "Actividad del año anterior",
+      "previousYearNone": "Sin actividad el año anterior",
+      "previousYearNet": "Actividad con rendimiento conocido",
+      "previousYearNetAmount": "Rendimiento neto del año anterior (negativo si hubo pérdidas)",
+      "newActivity": "Inicio de actividad (LIRPF art. 32.3)",
+      "established": "No es una actividad nueva",
+      "first": "Primer periodo con rendimiento positivo",
+      "following": "El periodo siguiente",
+      "ingresosFromFormerEmployer": "Ingresos del empleador del año anterior",
+      "retenciones": "Clientes: solo empresas de la UE y clientes de EE. UU., que no practican retención ni pagan IVA.",
+      "actuals": "Trimestres cerrados",
+      "actualsHint": "Acumulado desde el 1 de enero, en orden. Los gastos incluyen las cuotas RETA que cobró la TGSS.",
+      "quarter": "Trimestre",
+      "ingresosYtd": "Ingresos acumulados",
+      "gastosYtd": "Gastos acumulados",
+      "cuotasSsYtd": "Cuotas RETA cobradas hasta la fecha",
+      "addQuarter": "Añadir un trimestre cerrado",
+      "removeQuarter": "Quitar {quarter}",
+      "projection": "Resto del año",
+      "projectionIngresos": "Ingresos previstos",
+      "projectionGastos": "Gastos previstos, sin la cuota RETA",
+      "baseCotizacion": "Base de cotización mensual que pagas",
+      "submit": "Calcular",
+      "calculating": "Calculando…"
     },
-    "pending": "La estimación viene de la API de GestorIA, que aún no está construida."
+    "errors": {
+      "required": "Obligatorio.",
+      "amount": "Un importe en euros como 1234.56: cifras y punto decimal, cero o más.",
+      "signedAmount": "Un importe en euros como 1234.56, o -1234.56 si hubo pérdidas.",
+      "date": "Una fecha del calendario.",
+      "fromApi": "La API rechazó este valor: {reason}"
+    },
+    "failure": {
+      "network": "La API de GestorIA no responde. Iníciala y vuelve a intentarlo.",
+      "gap": "Aún no publicado",
+      "gapLead": "A la configuración del ejercicio le falta un valor que esta estimación necesita, así que el motor se niega en lugar de suponerlo. El motor dice:",
+      "refused": "El motor no puede estimar estas cifras",
+      "invalid": "La API rechazó los datos",
+      "other": "La API respondió con un error ({status}). Vuelve a intentarlo."
+    },
+    "taxYears": {
+      "loading": "Cargando los ejercicios…"
+    },
+    "estimate": {
+      "heading": "Estimación",
+      "holdBack": "Aparta el {share} de cada cobro que recibas.",
+      "nextPayment": "Próximo Modelo 130, {quarter}",
+      "due": "Se paga del {from} al {by}.",
+      "localHolidays": "No se aplican los festivos locales, así que la fecha puede ser anterior, nunca posterior.",
+      "cuota": "Cuota mensual de la TGSS este trimestre",
+      "renta": "Renta además de los pagos del Modelo 130",
+      "payableIn": "A pagar antes de que termine {month}.",
+      "iva": "IVA a reservar",
+      "config": "Ejercicio {year}, configuración sha256 {hash}"
+    },
+    "notices": {
+      "heading": "Léelos antes de fiarte de las cifras",
+      "Info": "Nota",
+      "Warning": "Aviso",
+      "Error": "Error"
+    },
+    "trace": {
+      "heading": "Cómo se ha calculado",
+      "lead": "{count} pasos en el orden del motor, agrupados por sección. Los títulos, las fórmulas y las fuentes son los del motor.",
+      "section": "{name} ({count})",
+      "inputs": "Datos",
+      "formula": "Fórmula",
+      "result": "Resultado",
+      "source": "Fuente",
+      "sections": {
+        "Trabajo": "Rendimientos del trabajo",
+        "Actividad": "Actividad económica",
+        "Ahorro": "Ahorro",
+        "Inmuebles": "Inmuebles",
+        "Bases": "Bases imponibles",
+        "Minimo": "Mínimo personal y familiar",
+        "Cuota": "Cuota",
+        "Deducciones": "Deducciones",
+        "Resultado": "Resultado",
+        "SeguridadSocial": "Seguridad Social (TGSS)",
+        "Modelo130": "Modelo 130"
+      }
+    }
   },
   "Payments": {
     "title": "Pagos",

@@ -7,6 +7,7 @@
     <Project Path="src/GestorIA.Engine/GestorIA.Engine.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/GestorIA.Api.Tests/GestorIA.Api.Tests.csproj" />
     <Project Path="tests/GestorIA.Cli.Tests/GestorIA.Cli.Tests.csproj" />
     <Project Path="tests/GestorIA.Domain.Tests/GestorIA.Domain.Tests.csproj" />
     <Project Path="tests/GestorIA.Engine.Tests/GestorIA.Engine.Tests.csproj" />

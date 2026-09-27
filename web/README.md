@@ -2,7 +2,7 @@
 
 The browser side of GestorIA: a Next.js App Router application that shows the engine's answers in Ukrainian, Spanish, English or Russian. It runs on your machine next to the API (ADR-0010). It never computes tax; every figure comes from the engine through the API (ADR-0017, SPEC-012).
 
-Today every page is an honest empty state that says what it will show. The first real data arrives with the API in #66.
+The overview shows the set-aside estimate from the API (#66). Every other page is an honest empty state that says what it will show.
 
 ## Run it
 
@@ -14,6 +14,8 @@ pnpm install
 pnpm dev          # http://localhost:3000
 ```
 
+The overview needs the API: `dotnet run --project src/GestorIA.Api` from the repository root. It listens on `http://localhost:5080` and allows calls from `http://localhost:3000` (`Cors:Origins` in its `appsettings.json`; set `Cors__Origins__0` when `pnpm dev` takes another port).
+
 | Command | What it does |
 |---|---|
 | `pnpm dev` | Development server with hot reload. |
@@ -23,7 +25,7 @@ pnpm dev          # http://localhost:3000
 | `pnpm test` | Vitest with Testing Library and jsdom. |
 | `pnpm api:types` | Generates `src/data/api-types.ts` from the API's OpenAPI document (see below). |
 
-CI runs install (from the lockfile), lint, typecheck, test and build in the `web` job of `.github/workflows/ci.yml`.
+CI runs install (from the lockfile), a check that `src/data/api-types.ts` is what `pnpm api:types` generates, lint, typecheck, test and build in the `web` job of `.github/workflows/ci.yml`.
 
 ### Configuration
 
@@ -93,12 +95,14 @@ The colours are CSS variables, one block per theme, in `src/app/globals.css`, wi
 
 - `src/data/client.ts`: `apiFetch<T>(path)` calls `<NEXT_PUBLIC_API_BASE_URL>/api/v1<path>`. A problem+json answer (RFC 9457) becomes an `ApiError` whose `failure` is `{ kind: "problem", problem }`; another error status is `{ kind: "http", status }`; an unreachable API is `{ kind: "network" }`.
 - `src/data/query-provider.tsx`: the TanStack Query provider. Queries retry only an unreachable API or a 5xx; a 4xx, such as a 422 for a declared configuration gap, answers the same every time.
-- **Query keys.** One file per API resource in `src/data/`, exporting a key factory and the query options together, with keys that start with the resource path: `["tax-years"]`, `["tax-years", 2025]`. Features call those options from their `hooks/`; they never build keys or call `apiFetch` themselves.
+- **Query keys.** One file per API resource in `src/data/`, exporting a key factory and the query or mutation options together, with keys that start with the resource path: `["tax-years"]` (`tax-years.ts`), `["set-aside", "estimate"]` (`set-aside.ts`). Features call those options from their `hooks/`; they never build keys or call `apiFetch` themselves.
+- **Calculations are mutations.** `POST /set-aside/estimate` is a TanStack Query mutation, not a query: its input is what the user typed, personal financial data, and it stays in the tab's memory, never under a cache key or in browser storage (SPEC-013).
+- **Problem types.** `PROBLEM_TYPES` in `api-error.ts` names the API's problem `type` URIs: `invalid-input` (400, with `errors` keyed by the JSON path of each refused value), `config-gap` (422, the configuration lacks or declares unpublished a value the calculation needs) and `estimate-refused` (422, the engine cannot estimate the input).
 - **Money and dates.** Amounts arrive as strings with two decimals (SPEC-009) and are shown with `formatMoney(amount, locale)` from `shared/lib/format.ts`, which never turns them into a float. Dates arrive as ISO `yyyy-MM-dd` and are shown with `formatDate`.
 
 ### API types
 
-`pnpm api:types` runs `openapi-typescript` on `../src/GestorIA.Api/openapi/v1.json` and writes `src/data/api-types.ts`. The .NET API does not emit that document yet, so the script stops with a message saying so and generates nothing. #66 makes the API emit it at build time (`Microsoft.Extensions.ApiDescription.Server` with `OpenApiDocumentsDirectory` set to `openapi` and `--file-name v1`) and decides whether the generated types are committed or produced in CI. Nothing in the web app invents an API type.
+`pnpm api:types` runs `openapi-typescript` on `../src/GestorIA.Api/openapi/v1.json` and writes `src/data/api-types.ts`. `dotnet build` writes that document from the API's code (`Microsoft.Extensions.ApiDescription.Server`, OpenAPI 3.1), and both files are committed, so the web job needs no .NET. CI fails if either is stale, and fails a pull request whose document breaks the one on `main` (oasdiff). After an API change: `dotnet build GestorIA.slnx`, then `pnpm api:types`, and commit both. Nothing in the web app invents an API type.
 
 ## Tests
 
@@ -107,4 +111,6 @@ The colours are CSS variables, one block per theme, in `src/app/globals.css`, wi
 - The root layout: `<html lang>` and `data-theme` come from the cookies, so the first paint is right (`tests/root-layout.test.tsx`).
 - The virtualised list with ten thousand synthetic rows.
 - The data client against stubbed `fetch` responses: JSON, 204, problem+json, a non-problem error and a network failure.
+- The overview through its `index.ts`, with `fetch` stubbed by the API's own answers in `features/dashboard/tests/fixtures/` (`tests/GestorIA.Api.Tests/WebFixtures.cs` fails when they drift from the API; rerun it with `GESTORIA_WRITE_WEB_FIXTURES=1` to rewrite them). Typing G14's figures and loading G14's input file both post exactly G14's input file; nothing lands in storage, cookies or the address; errors show next to their field.
+- Each test renders with a fresh QueryClient (`tests/render.tsx`), so no cached answer leaks from one test to the next.
 - The structural checks in `tests/`.

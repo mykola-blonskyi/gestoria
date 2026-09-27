@@ -42,6 +42,7 @@ const TEXT_PAIRS = [
   ["accent-foreground", "accent"],
   ["primary", "background"],
   ["destructive", "background"],
+  ["destructive", "card"],
 ] as const;
 
 // Focus rings and form-control borders are non-text UI (WCAG 1.4.11): 3:1.

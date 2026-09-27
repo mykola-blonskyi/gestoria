@@ -15,6 +15,10 @@ public sealed class RegionTable
         this.declaredIncomplete = declaredIncomplete.ToFrozenDictionary();
     }
 
+    public IReadOnlyDictionary<string, RegionConfig> Usable => complete;
+
+    public IReadOnlyDictionary<string, string> DeclaredIncomplete => declaredIncomplete;
+
     // SPEC-007 §3, SPEC-002 §7: an unusable region fails; it never falls back to another region or to the estatal scale alone.
     public RegionConfig For(string code)
     {

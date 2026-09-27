@@ -1,6 +1,7 @@
 using System.Text;
 using GestorIA.Cli;
 using GestorIA.Engine;
+using GestorIA.Infrastructure.SetAside;
 using GestorIA.Infrastructure.TaxYears;
 
 // Top-level statements: the compiler wraps this file in a Main(string[] args) method, so it runs like a script from the first line.
@@ -24,28 +25,11 @@ try
     result = SetAsideEstimator.Estimate(input);
 }
 catch (Exception e) when (e is InvalidInputFileException or InvalidTaxYearConfigException or ConfigNotFoundException
-    or ArgumentException or NotSupportedException or IOException or UnauthorizedAccessException)
+    or IOException or UnauthorizedAccessException || EngineRefusal.Is(e))
 {
-    // The engine rejects inputs it cannot estimate with ArgumentException or NotSupportedException, and says why.
-    Console.Error.WriteLine("No estimate: " + Reason(e));
+    Console.Error.WriteLine("No estimate: " + EngineRefusal.Reason(e));
     return 1;
 }
 
 Console.Write(SetAsideReport.Render(result, config.TaxYear, configFileName));
 return 0;
-
-// ArgumentException's Message appends " (Parameter 'input')", and ArgumentOutOfRangeException's a line with the actual
-// value. Neither means anything to whoever wrote the input file, so only the reason before them is printed.
-static string Reason(Exception e)
-{
-    if (e is not ArgumentException argument || argument.ParamName is null)
-    {
-        return e.Message;
-    }
-
-    var firstLine = argument.Message.Split(Environment.NewLine)[0];
-    var suffix = $" (Parameter '{argument.ParamName}')";
-
-    // [..^n] is a range: the string without its last n characters, like slice(0, -n).
-    return firstLine.EndsWith(suffix, StringComparison.Ordinal) ? firstLine[..^suffix.Length] : firstLine;
-}

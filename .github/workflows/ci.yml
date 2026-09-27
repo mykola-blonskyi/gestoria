@@ -15,7 +15,36 @@ jobs:
           dotnet-version: "10.0.x"
       - run: dotnet restore GestorIA.slnx
       - run: dotnet build GestorIA.slnx --no-restore
+      - name: The committed OpenAPI document is the one the build generates
+        run: git diff --exit-code -- src/GestorIA.Api/openapi/v1.json
       - run: dotnet test GestorIA.slnx --no-build --verbosity normal
+
+  # SPEC-009 §5. The document is committed and kept fresh by the job above, so the base branch's copy is the published contract.
+  openapi-breaking:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Look for the base branch's document
+        id: base
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if git cat-file -e "origin/$BASE_REF:src/GestorIA.Api/openapi/v1.json" 2>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "origin/$BASE_REF has no OpenAPI document yet, so nothing can break."
+          fi
+      - if: steps.base.outputs.exists == 'true'
+        uses: oasdiff/oasdiff-action/breaking@5e81b5c380accc6b523f9d32a637ca630e33620b # v0.1.17
+        with:
+          base: "origin/${{ github.base_ref }}:src/GestorIA.Api/openapi/v1.json"
+          revision: "HEAD:src/GestorIA.Api/openapi/v1.json"
+          fail-on: ERR
+          review: false
+          github-token: ""
 
   web:
     runs-on: ubuntu-latest
@@ -33,6 +62,8 @@ jobs:
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      - name: The committed API types are the ones the OpenAPI document generates
+        run: pnpm api:types && git diff --exit-code -- src/data/api-types.ts
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test

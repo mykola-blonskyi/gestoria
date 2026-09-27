@@ -1,0 +1,1910 @@
+{
+  "taxYear": 2025,
+  "configHash": "4046cf06162bb6073a73449142e7e3a5278e523b284fa31aab99a6cc17b15e63",
+  "holdBackShare": "0.1947",
+  "nextPayment": {
+    "quarter": "Q2",
+    "aIngresar": "1507.40",
+    "dueFrom": "2025-07-01",
+    "dueBy": "2025-07-21"
+  },
+  "monthlyCuotaSs": "80.00",
+  "annualTrueUpGap": "0.00",
+  "annualTrueUpPayableIn": "2026-06",
+  "ivaToSetAside": "0.00",
+  "trace": [
+    {
+      "id": "set-aside.months-of-activity",
+      "section": "Actividad",
+      "title": "Meses de alta en el ejercicio",
+      "inputs": [
+        {
+          "name": "alta",
+          "value": "2025-01-15"
+        },
+        {
+          "name": "taxYear",
+          "value": "2025"
+        }
+      ],
+      "formula": "2025-01 … 2025-12 = 12 meses",
+      "output": {
+        "kind": "count",
+        "value": "12"
+      },
+      "reference": "The months of alta in the tax year: TGSS averages the rendimiento over them"
+    },
+    {
+      "id": "set-aside.actuals",
+      "section": "Actividad",
+      "title": "Ingresos y gastos reales desde el 1 de enero",
+      "inputs": [
+        {
+          "name": "Q1.ingresosYtd",
+          "value": "6000.00"
+        },
+        {
+          "name": "Q1.gastosYtd",
+          "value": "345.33"
+        }
+      ],
+      "formula": "to the end of Q1 (2025-03): ingresos 6000.00, gastos 345.33",
+      "output": {
+        "kind": "money",
+        "value": "6000.00"
+      },
+      "reference": "#2, #15: what the taxpayer invoiced and spent, cumulative from 1 January as Modelo 130 casillas 01 and 02 take them, the RETA cuotas charged included in gastos. For the quarters they cover they replace the projection, and earlier Modelo 130s are recomputed from them"
+    },
+    {
+      "id": "set-aside.projected-months",
+      "section": "Actividad",
+      "title": "Meses que cubre la proyección",
+      "inputs": [
+        {
+          "name": "ingresos",
+          "value": "27000.00"
+        },
+        {
+          "name": "gastos",
+          "value": "900.00"
+        }
+      ],
+      "formula": "2025-04 … 2025-12 = 9 meses",
+      "output": {
+        "kind": "count",
+        "value": "9"
+      },
+      "reference": "#15: the projection covers the months of alta after the last closed quarter, spread evenly over them. An assumption of the estimate, not a rule"
+    },
+    {
+      "id": "set-aside.cuotas-ss-to-date",
+      "section": "SeguridadSocial",
+      "title": "Cuotas SS pagadas, ya deducidas en los gastos reales",
+      "inputs": [
+        {
+          "name": "Q1.cuotasSsYtd",
+          "value": "205.33"
+        }
+      ],
+      "formula": "paid to the end of Q1, as stated: 205.33",
+      "output": {
+        "kind": "money",
+        "value": "205.33"
+      },
+      "reference": "LGSS art. 308.1.c 1.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): the rendimiento computable is the IRPF rendimiento neto increased by the importe of the titular's own cuotas, the ones the gastos to date deduct. For the closed months those are the cuotas TGSS charged, stated with the actuals (#52); what TGSS keeps of them once the year's tramo is known enters set-aside.cuota-ss-year"
+    },
+    {
+      "id": "set-aside.cuotas-ss-projected",
+      "section": "SeguridadSocial",
+      "title": "Cuotas SS proyectadas",
+      "inputs": [
+        {
+          "name": "baseCotizacion",
+          "value": "1356.21"
+        },
+        {
+          "name": "cuotaBaseCotizacion",
+          "value": "425.85"
+        },
+        {
+          "name": "meses",
+          "value": "9"
+        }
+      ],
+      "formula": "at the chosen base 1356.21: 2025-04 80 + 2025-05 80 + 2025-06 80 + 2025-07 80 + 2025-08 80 + 2025-09 80 + 2025-10 80 + 2025-11 80 + 2025-12 80 = 720",
+      "output": {
+        "kind": "money",
+        "value": "720.00"
+      },
+      "reference": "#15, LGSS art. 308.1.a 1.ª and 3.ª and 308.1.b (boe.es consolidated RDL 8/2015, read 2026-09-27): the months after the last closed quarter at the monthly base the taxpayer chose, tarifa plana while it lasts, whatever the tramo. These are what TGSS will debit and what IRPF deducts; a top-up or refund under 308.1.c 3.ª–4.ª lands in a later year's return (casillas 0196 and 0197, not modelled)"
+    },
+    {
+      "id": "set-aside.rendimiento-computable",
+      "section": "SeguridadSocial",
+      "title": "Rendimiento computable para la cuota SS, anualizado",
+      "inputs": [
+        {
+          "name": "netoHastaHoy",
+          "value": "5654.67"
+        },
+        {
+          "name": "netoProyectado",
+          "value": "26100.00"
+        },
+        {
+          "name": "cuotasSsPagadas",
+          "value": "205.33"
+        },
+        {
+          "name": "cuotasSsProyectadas",
+          "value": "720"
+        },
+        {
+          "name": "dificilJustificacion",
+          "value": "1551.7335"
+        },
+        {
+          "name": "meses",
+          "value": "12"
+        }
+      ],
+      "formula": "previo 5654.67 + 26100.00 − 720 = 31034.67; casilla 0224 31034.67 − 1551.7335 = 29482.9365; (29482.9365 + 205.33 paid + 720 projected) × 12 / 12 = 30408.2665",
+      "output": {
+        "kind": "money",
+        "value": "30408.27"
+      },
+      "reference": "LGSS art. 308.1.c 1.ª and 3.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): the IRPF rendimiento neto increased by the titular's own cuotas, spread over the months of alta. AEAT, Información para determinar el rendimiento neto (sede.agenciatributaria.gob.es, updated 18 Sep 2026, read 2026-09-27): TGSS takes Modelo 100 casilla 0224 plus casilla 0186, the cuotas. Casilla 0224 is after the difícil justificación (RD 439/2007 art. 30.2ª, config irpf.actividad.dificilJustificacion) and before every LIRPF art. 32 reduction and the other reductions Modelo 100 2025 takes after it (casillas 0225, 0232–0234 and 0236–0237), so the art. 32.3 reduction does not lower it. Previo is the year's ingresos less its gastos, the actual ones with the cuotas charged and the projected ones with the cuotas debited at the chosen base, and casilla 0186 is the same cuotas: paid for the closed months, debited at the chosen base for the rest. None of them depends on the tramo, so neither does the computable. The regularisation of earlier years' RETA cuotas (casillas 0196 and 0197) is not modelled. The 2.ª gastos genéricos are deducted in ss.rendimiento-neto-mensual"
+    },
+    {
+      "id": "ss.rendimiento-neto-mensual",
+      "section": "SeguridadSocial",
+      "title": "Rendimiento neto mensual tras gastos genéricos",
+      "inputs": [
+        {
+          "name": "rendimientoComputableAnual",
+          "value": "30408.2665"
+        },
+        {
+          "name": "gastosGenericos",
+          "value": "0.07"
+        }
+      ],
+      "formula": "30408.2665 × (1 − 0.07) / 12 = 2356.64065375",
+      "output": {
+        "kind": "money",
+        "value": "2356.64"
+      },
+      "reference": "LGSS art. 308.1.c 2.ª (boe.es consolidated RDL 8/2015, read 2026-09-27) deducts the gastos genéricos from the rendimiento computable (config seguridadSocial.gastosGenericos); 3.ª spreads the result over the months of alta, and the input is already annualized over them, so / 12"
+    },
+    {
+      "id": "ss.tramo",
+      "section": "SeguridadSocial",
+      "title": "Tramo de cotización",
+      "inputs": [
+        {
+          "name": "rendimientoNetoMensual",
+          "value": "2356.64065375"
+        },
+        {
+          "name": "tramo",
+          "value": "General 7"
+        }
+      ],
+      "formula": "2330 < 2356.64065375 <= 2760 → General 7, cuota at base mínima = 425.85",
+      "output": {
+        "kind": "money",
+        "value": "425.85"
+      },
+      "reference": "config seguridadSocial.tramos; cuotaMin is the cuota at the tramo's base mínima"
+    },
+    {
+      "id": "ss.base-cotizacion",
+      "section": "SeguridadSocial",
+      "title": "Cuota por la base de cotización elegida",
+      "inputs": [
+        {
+          "name": "baseCotizacion",
+          "value": "1356.21"
+        },
+        {
+          "name": "tipoCotizacion",
+          "value": "0.314"
+        }
+      ],
+      "formula": "1356.21 × 0.314 = 425.85",
+      "output": {
+        "kind": "money",
+        "value": "425.85"
+      },
+      "reference": "LGSS art. 308.1.a 1.ª and 3.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): the taxpayer chooses the monthly base de cotización and changes it as the forecast of rendimientos changes; 308.1.b: the cuota is that base times the tipo of the year (config seguridadSocial.tipoCotizacion), rounded half up to the cent, the rounding that reproduces every cuotaMin of the tramos table"
+    },
+    {
+      "id": "ss.regularizacion",
+      "section": "SeguridadSocial",
+      "title": "Cuota máxima que TGSS mantiene del mes al regularizar el año",
+      "inputs": [
+        {
+          "name": "cuotaBaseCotizacion",
+          "value": "425.85"
+        },
+        {
+          "name": "baseMinima",
+          "value": "1356.21"
+        },
+        {
+          "name": "baseMaxima",
+          "value": "2760.00"
+        }
+      ],
+      "formula": "tarifa plana → not regularised: TGSS keeps the 80 debited, at least and at most",
+      "output": {
+        "kind": "money",
+        "value": "80.00"
+      },
+      "reference": "LGSS art. 308.1.c 3.ª–4.ª (boe.es consolidated RDL 8/2015, read 2026-09-27) and RD 2064/1995 art. 46.2 (boe.es BOE-A-1996-1579, version in force from 2024-08-01, read 2026-09-27): regla 3.ª averages the provisional bases of the year's months and regla 5.ª compares that one average with the tramo's base mínima and base máxima. Only if it falls outside them does TGSS reclaim or refund, the total of the differences between each month's base and the base mínima or máxima, so no month is topped up or refunded on its own. Here the month's cuotas at those two bases, which the year's regularisation sums; 5.ª d prorates them in a month of partial alta. Tarifa plana days are left out of the regularisation (art. 46.1 and 46.2 1.ª, Ley 20/2007 art. 38 ter.6), so such a month counts at its debit. The top-up is paid, and the refund made, in a later year. Config seguridadSocial.tramos, cuotaMin being the cuota at the base mínima"
+    },
+    {
+      "id": "ss.tarifa-plana",
+      "section": "SeguridadSocial",
+      "title": "Tarifa plana en vigor",
+      "inputs": [
+        {
+          "name": "alta",
+          "value": "2025-01-15"
+        },
+        {
+          "name": "month",
+          "value": "2025-04"
+        },
+        {
+          "name": "tarifaPlanaMonths",
+          "value": "12"
+        }
+      ],
+      "formula": "months since alta 3 <= 12 → 80, not regularised",
+      "output": {
+        "kind": "money",
+        "value": "80.00"
+      },
+      "reference": "Ley 20/2007 art. 38 ter.1: the alta month plus the complete calendar months after it, eleven when the alta is on the 1st (itself a complete calendar month) and twelve otherwise, per Seguridad Social's own reading of the benefit as the first 12 months of alta (portal.seg-social.gob.es). Art. 38 ter.6 (boe.es BOE-A-2007-13409, read 2026-09-27): the cuota reducida is not regularised"
+    },
+    {
+      "id": "set-aside.cuota-ss-month",
+      "section": "SeguridadSocial",
+      "title": "Cuota SS mensual a reservar este trimestre",
+      "inputs": [
+        {
+          "name": "quarter",
+          "value": "Q2"
+        }
+      ],
+      "formula": "max(2025-04 80, 2025-05 80, 2025-06 80) = 80 (2025-04)",
+      "output": {
+        "kind": "money",
+        "value": "80.00"
+      },
+      "reference": "#2, bias conservative: what TGSS debits for a whole month, tarifa plana while it lasts and the cuota at the chosen base after it, before the one-off proration of the month of alta, in the quarter's highest month. So an alta late in the quarter shows what TGSS debits every month from the next one, not the prorated first charge, and a quarter in which tarifa plana lapses shows the cuota after it"
+    },
+    {
+      "id": "set-aside.cuota-ss-year",
+      "section": "SeguridadSocial",
+      "title": "Cuotas SS del ejercicio",
+      "inputs": [
+        {
+          "name": "cuotasSsPagadas",
+          "value": "205.33"
+        },
+        {
+          "name": "cuotasSsProyectadas",
+          "value": "720"
+        },
+        {
+          "name": "cuotasSsBaseMinima",
+          "value": "925.33"
+        },
+        {
+          "name": "cuotasSsBaseMaxima",
+          "value": "925.33"
+        },
+        {
+          "name": "meses",
+          "value": "12"
+        }
+      ],
+      "formula": "debited 205.33 paid + 720 projected = 925.33, between 925.33 at the base mínima and 925.33 at the base máxima → 925.33 stands",
+      "output": {
+        "kind": "money",
+        "value": "925.33"
+      },
+      "reference": "What TGSS keeps for the year. LGSS art. 308.1.c 3.ª–4.ª (boe.es consolidated RDL 8/2015, read 2026-09-27) and RD 2064/1995 art. 46.2 (boe.es BOE-A-1996-1579, version in force from 2024-08-01, read 2026-09-27): regla 3.ª sums the provisional bases of all the year's months less the tarifa plana days (1.ª), divides by those days and multiplies by 30; regla 5.ª compares that one average with the tramo's base mínima and base máxima. Between them nothing moves; below or above, TGSS reclaims or refunds the total of the differences between each month's base and the base mínima or máxima, at the period's tipo (7.ª). A whole month counts 30 days, as art. 45.1 prorates the cuota, so the average lies below the base mínima exactly when the year's debits total less than the cuotas at it: TGSS keeps the debits of the closed and projected months together, clamped between the cuotas at the two bases summed over the months. Tarifa plana months enter all three sums at their debit, so they stay as debited (Ley 20/2007 art. 38 ter.6). Clamping cuotas rather than bases can differ from TGSS by the rounding of each month's cuota, a few cents over the year"
+    },
+    {
+      "id": "set-aside.tarifa-plana-lapse",
+      "section": "SeguridadSocial",
+      "title": "Fin de la tarifa plana",
+      "inputs": [
+        {
+          "name": "alta",
+          "value": "2025-01-15"
+        },
+        {
+          "name": "tarifaPlanaMonths",
+          "value": "12"
+        },
+        {
+          "name": "tarifaPlana",
+          "value": "80"
+        }
+      ],
+      "formula": "2025-01 + 12 complete months → tarifa plana through 2026-01; from 2026-02, after this tax year, at the 2025 tipo de cotización, the cuota at the chosen base 425.85",
+      "output": {
+        "kind": "money",
+        "value": "425.85"
+      },
+      "reference": "Ley 20/2007 art. 38 ter.1 (boe.es consolidated text, read 2026-09-27): from the alta through the complete calendar months after it, eleven when the alta is on the 1st (itself a complete calendar month) and twelve otherwise, per Seguridad Social's own reading of the benefit as the first 12 months of alta (portal.seg-social.gob.es); config seguridadSocial.tarifaPlana. The art. 38 ter.2 extension for a net below the SMI must be requested and is not assumed, which over-reserves"
+    },
+    {
+      "id": "set-aside.Q1.to-date",
+      "section": "Actividad",
+      "title": "Ingresos y gastos reales desde el 1 de enero, Q1",
+      "inputs": [
+        {
+          "name": "ingresosYtd",
+          "value": "6000.00"
+        },
+        {
+          "name": "gastosYtd",
+          "value": "345.33"
+        }
+      ],
+      "formula": "actuals as stated: ingresos 6000.00, gastos 345.33",
+      "output": {
+        "kind": "money",
+        "value": "6000.00"
+      },
+      "reference": "The taxpayer's own figures for a closed quarter, RETA cuotas included in gastos as Modelo 130 casilla 02 takes them"
+    },
+    {
+      "id": "Q1.m130.dificil-justificacion",
+      "section": "Modelo130",
+      "title": "Gastos de difícil justificación desde el 1 de enero (en casilla 02)",
+      "inputs": [
+        {
+          "name": "rendimientoNetoPrevio",
+          "value": "5654.67"
+        },
+        {
+          "name": "pct",
+          "value": "0.05"
+        },
+        {
+          "name": "max",
+          "value": "2000"
+        }
+      ],
+      "formula": "min(0.05 × max(0, 5654.67), 2000) = 282.7335",
+      "output": {
+        "kind": "money",
+        "value": "282.73"
+      },
+      "reference": "RD 439/2007 art. 30.2ª: a percentage of the positive net before it, at most an annual amount; art. 110.1.a: the pago fraccionado is a percentage of that rendimiento neto under estimación directa in any modality; AEAT, instrucciones del modelo 130, casilla 02: under estimación directa simplificada it includes the difícil justificación of the period from 1 January; config irpf.actividad.dificilJustificacion; business rule 7"
+    },
+    {
+      "id": "Q1.m130.rendimiento-neto",
+      "section": "Modelo130",
+      "title": "Rendimiento neto desde el 1 de enero (casilla 03)",
+      "inputs": [
+        {
+          "name": "ingresosYtd",
+          "value": "6000.00"
+        },
+        {
+          "name": "gastosYtd",
+          "value": "345.33"
+        },
+        {
+          "name": "dificilJustificacion",
+          "value": "282.7335"
+        }
+      ],
+      "formula": "6000.00 − (345.33 + 282.7335) = 5371.94",
+      "output": {
+        "kind": "money",
+        "value": "5371.94"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 01–03"
+    },
+    {
+      "id": "Q1.m130.pago-bruto",
+      "section": "Modelo130",
+      "title": "Porcentaje sobre el rendimiento neto positivo (casilla 04)",
+      "inputs": [
+        {
+          "name": "rendimientoNeto",
+          "value": "5371.94"
+        },
+        {
+          "name": "rate",
+          "value": "0.20"
+        }
+      ],
+      "formula": "0.20 × max(0, 5371.94) = 1074.39",
+      "output": {
+        "kind": "money",
+        "value": "1074.39"
+      },
+      "reference": "config modelo130.rate; AEAT, instrucciones del modelo 130, casilla 04: a negative casilla 03 counts as zero"
+    },
+    {
+      "id": "Q1.m130.pagos-anteriores",
+      "section": "Modelo130",
+      "title": "Pagos fraccionados de trimestres anteriores (casilla 05)",
+      "inputs": [
+        {
+          "name": "quarter",
+          "value": "Q1"
+        }
+      ],
+      "formula": "Σ positive casilla 07 of earlier quarters this year = 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 05: negative casilla 07 amounts are not summed"
+    },
+    {
+      "id": "Q1.m130.retenciones",
+      "section": "Modelo130",
+      "title": "Retenciones soportadas: cero, los pagadores son extranjeros",
+      "inputs": [
+        {
+          "name": "payers",
+          "value": "EU and US only"
+        }
+      ],
+      "formula": "no payer is Spanish, so none withholds → 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "SPEC-003 §0, business rule 3b: EU and US payers have no Spanish withholding obligation; RetencionRate is never defaulted from the profile"
+    },
+    {
+      "id": "Q1.m130.casilla-07",
+      "section": "Modelo130",
+      "title": "Pago fraccionado previo (casilla 07)",
+      "inputs": [
+        {
+          "name": "casilla04",
+          "value": "1074.39"
+        },
+        {
+          "name": "casilla05",
+          "value": "0"
+        },
+        {
+          "name": "casilla06",
+          "value": "0"
+        }
+      ],
+      "formula": "1074.39 − 0 − 0 = 1074.39",
+      "output": {
+        "kind": "money",
+        "value": "1074.39"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 07"
+    },
+    {
+      "id": "Q1.m130.casilla-12",
+      "section": "Modelo130",
+      "title": "Suma de pagos fraccionados previos (casilla 12)",
+      "inputs": [
+        {
+          "name": "casilla07",
+          "value": "1074.39"
+        }
+      ],
+      "formula": "max(0, 1074.39) = 1074.39",
+      "output": {
+        "kind": "money",
+        "value": "1074.39"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 12: 07 + 11, a negative sum is entered as zero; casilla 11 (agricultural activities in estimación objetiva) does not apply"
+    },
+    {
+      "id": "Q1.m130.minoracion",
+      "section": "Modelo130",
+      "title": "Minoración por rendimientos bajos del ejercicio anterior (casilla 13)",
+      "inputs": [
+        {
+          "name": "previousYearNet",
+          "value": "0"
+        }
+      ],
+      "formula": "0 <= 9000 → 100 this quarter",
+      "output": {
+        "kind": "money",
+        "value": "100.00"
+      },
+      "reference": "config modelo130.minoracion; RD 439/2007 art. 110.3.c; AEAT, instrucciones del modelo 130, casilla 13; no activity in the previous year, which the AEAT instructions count as a rendimiento neto of zero"
+    },
+    {
+      "id": "Q1.m130.negativos-anteriores",
+      "section": "Modelo130",
+      "title": "Resultados negativos de trimestres anteriores (casilla 15)",
+      "inputs": [
+        {
+          "name": "casilla14",
+          "value": "974.39"
+        },
+        {
+          "name": "negativosPendientes",
+          "value": "0"
+        }
+      ],
+      "formula": "casilla 14 = 1074.39 − 100 = 974.39; deducted = 0, at most a positive casilla 14",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 14–15; business rule 14"
+    },
+    {
+      "id": "Q1.m130.resultado",
+      "section": "Modelo130",
+      "title": "Resultado a ingresar (casilla 19)",
+      "inputs": [
+        {
+          "name": "casilla14",
+          "value": "974.39"
+        },
+        {
+          "name": "casilla15",
+          "value": "0"
+        }
+      ],
+      "formula": "974.39 − 0 = 974.39; negatives still pending for later quarters = 0",
+      "output": {
+        "kind": "money",
+        "value": "974.39"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 17 and 19; RD 439/2007 art. 110.3.c: only a minoración above casilla 12 leaves a negative result, which pays zero and is deducted in later quarters of the same year"
+    },
+    {
+      "id": "Q1.m130.due-date",
+      "section": "Modelo130",
+      "title": "Último día para presentar el Modelo 130 del Q1",
+      "inputs": [
+        {
+          "name": "start",
+          "value": "2025-04-01"
+        },
+        {
+          "name": "configuredEnd",
+          "value": "2025-04-20"
+        },
+        {
+          "name": "region",
+          "value": "VC"
+        }
+      ],
+      "formula": "2025-04-20 Sunday; 2025-04-21 Monday, holiday → 2025-04-22",
+      "output": {
+        "kind": "date",
+        "value": "2025-04-22"
+      },
+      "reference": "config calendar.modelo130, calendar.holidays, regions.VC.holidays; a last day that is a Saturday, a Sunday or a national or regional holiday moves to the next working day (Orden EHA/672/2007 art. 7 for Modelo 130; Ley 39/2015 art. 30.2, 30.5 and 30.6, supletoria under its DA 1ª.2.a and LGT art. 97.b); municipal holidays where the taxpayer lives are not applied, so the date shown can be early but never late"
+    },
+    {
+      "id": "set-aside.Q2.to-date",
+      "section": "Actividad",
+      "title": "Ingresos y gastos desde el 1 de enero, reales y proyectados, Q2",
+      "inputs": [
+        {
+          "name": "realesHasta",
+          "value": "Q1"
+        },
+        {
+          "name": "mesesProyectadosHastaFinTrimestre",
+          "value": "3"
+        },
+        {
+          "name": "mesesProyectados",
+          "value": "9"
+        },
+        {
+          "name": "cuotasSsProyectadas",
+          "value": "240"
+        }
+      ],
+      "formula": "ingresos 6000.00 real + 27000.00 × 3 / 9 = 15000.00; gastos 345.33 real + 900.00 × 3 / 9 + 240 = 885.33",
+      "output": {
+        "kind": "money",
+        "value": "15000.00"
+      },
+      "reference": "#15: the actuals to the last closed quarter plus the projection spread evenly over the months after it, an assumption of the estimate, not a rule. Gastos add the projected RETA cuotas of those months, as Modelo 130 casilla 02 does. Rounded to cents because both enter casillas"
+    },
+    {
+      "id": "Q2.m130.dificil-justificacion",
+      "section": "Modelo130",
+      "title": "Gastos de difícil justificación desde el 1 de enero (en casilla 02)",
+      "inputs": [
+        {
+          "name": "rendimientoNetoPrevio",
+          "value": "14114.67"
+        },
+        {
+          "name": "pct",
+          "value": "0.05"
+        },
+        {
+          "name": "max",
+          "value": "2000"
+        }
+      ],
+      "formula": "min(0.05 × max(0, 14114.67), 2000) = 705.7335",
+      "output": {
+        "kind": "money",
+        "value": "705.73"
+      },
+      "reference": "RD 439/2007 art. 30.2ª: a percentage of the positive net before it, at most an annual amount; art. 110.1.a: the pago fraccionado is a percentage of that rendimiento neto under estimación directa in any modality; AEAT, instrucciones del modelo 130, casilla 02: under estimación directa simplificada it includes the difícil justificación of the period from 1 January; config irpf.actividad.dificilJustificacion; business rule 7"
+    },
+    {
+      "id": "Q2.m130.rendimiento-neto",
+      "section": "Modelo130",
+      "title": "Rendimiento neto desde el 1 de enero (casilla 03)",
+      "inputs": [
+        {
+          "name": "ingresosYtd",
+          "value": "15000.00"
+        },
+        {
+          "name": "gastosYtd",
+          "value": "885.33"
+        },
+        {
+          "name": "dificilJustificacion",
+          "value": "705.7335"
+        }
+      ],
+      "formula": "15000.00 − (885.33 + 705.7335) = 13408.94",
+      "output": {
+        "kind": "money",
+        "value": "13408.94"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 01–03"
+    },
+    {
+      "id": "Q2.m130.pago-bruto",
+      "section": "Modelo130",
+      "title": "Porcentaje sobre el rendimiento neto positivo (casilla 04)",
+      "inputs": [
+        {
+          "name": "rendimientoNeto",
+          "value": "13408.94"
+        },
+        {
+          "name": "rate",
+          "value": "0.20"
+        }
+      ],
+      "formula": "0.20 × max(0, 13408.94) = 2681.79",
+      "output": {
+        "kind": "money",
+        "value": "2681.79"
+      },
+      "reference": "config modelo130.rate; AEAT, instrucciones del modelo 130, casilla 04: a negative casilla 03 counts as zero"
+    },
+    {
+      "id": "Q2.m130.pagos-anteriores",
+      "section": "Modelo130",
+      "title": "Pagos fraccionados de trimestres anteriores (casilla 05)",
+      "inputs": [
+        {
+          "name": "quarter",
+          "value": "Q2"
+        }
+      ],
+      "formula": "Σ positive casilla 07 of earlier quarters this year = 1074.39",
+      "output": {
+        "kind": "money",
+        "value": "1074.39"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 05: negative casilla 07 amounts are not summed"
+    },
+    {
+      "id": "Q2.m130.retenciones",
+      "section": "Modelo130",
+      "title": "Retenciones soportadas: cero, los pagadores son extranjeros",
+      "inputs": [
+        {
+          "name": "payers",
+          "value": "EU and US only"
+        }
+      ],
+      "formula": "no payer is Spanish, so none withholds → 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "SPEC-003 §0, business rule 3b: EU and US payers have no Spanish withholding obligation; RetencionRate is never defaulted from the profile"
+    },
+    {
+      "id": "Q2.m130.casilla-07",
+      "section": "Modelo130",
+      "title": "Pago fraccionado previo (casilla 07)",
+      "inputs": [
+        {
+          "name": "casilla04",
+          "value": "2681.79"
+        },
+        {
+          "name": "casilla05",
+          "value": "1074.39"
+        },
+        {
+          "name": "casilla06",
+          "value": "0"
+        }
+      ],
+      "formula": "2681.79 − 1074.39 − 0 = 1607.40",
+      "output": {
+        "kind": "money",
+        "value": "1607.40"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 07"
+    },
+    {
+      "id": "Q2.m130.casilla-12",
+      "section": "Modelo130",
+      "title": "Suma de pagos fraccionados previos (casilla 12)",
+      "inputs": [
+        {
+          "name": "casilla07",
+          "value": "1607.40"
+        }
+      ],
+      "formula": "max(0, 1607.40) = 1607.40",
+      "output": {
+        "kind": "money",
+        "value": "1607.40"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 12: 07 + 11, a negative sum is entered as zero; casilla 11 (agricultural activities in estimación objetiva) does not apply"
+    },
+    {
+      "id": "Q2.m130.minoracion",
+      "section": "Modelo130",
+      "title": "Minoración por rendimientos bajos del ejercicio anterior (casilla 13)",
+      "inputs": [
+        {
+          "name": "previousYearNet",
+          "value": "0"
+        }
+      ],
+      "formula": "0 <= 9000 → 100 this quarter",
+      "output": {
+        "kind": "money",
+        "value": "100.00"
+      },
+      "reference": "config modelo130.minoracion; RD 439/2007 art. 110.3.c; AEAT, instrucciones del modelo 130, casilla 13; no activity in the previous year, which the AEAT instructions count as a rendimiento neto of zero"
+    },
+    {
+      "id": "Q2.m130.negativos-anteriores",
+      "section": "Modelo130",
+      "title": "Resultados negativos de trimestres anteriores (casilla 15)",
+      "inputs": [
+        {
+          "name": "casilla14",
+          "value": "1507.40"
+        },
+        {
+          "name": "negativosPendientes",
+          "value": "0"
+        }
+      ],
+      "formula": "casilla 14 = 1607.40 − 100 = 1507.40; deducted = 0, at most a positive casilla 14",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 14–15; business rule 14"
+    },
+    {
+      "id": "Q2.m130.resultado",
+      "section": "Modelo130",
+      "title": "Resultado a ingresar (casilla 19)",
+      "inputs": [
+        {
+          "name": "casilla14",
+          "value": "1507.40"
+        },
+        {
+          "name": "casilla15",
+          "value": "0"
+        }
+      ],
+      "formula": "1507.40 − 0 = 1507.40; negatives still pending for later quarters = 0",
+      "output": {
+        "kind": "money",
+        "value": "1507.40"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 17 and 19; RD 439/2007 art. 110.3.c: only a minoración above casilla 12 leaves a negative result, which pays zero and is deducted in later quarters of the same year"
+    },
+    {
+      "id": "Q2.m130.due-date",
+      "section": "Modelo130",
+      "title": "Último día para presentar el Modelo 130 del Q2",
+      "inputs": [
+        {
+          "name": "start",
+          "value": "2025-07-01"
+        },
+        {
+          "name": "configuredEnd",
+          "value": "2025-07-20"
+        },
+        {
+          "name": "region",
+          "value": "VC"
+        }
+      ],
+      "formula": "2025-07-20 Sunday → 2025-07-21",
+      "output": {
+        "kind": "date",
+        "value": "2025-07-21"
+      },
+      "reference": "config calendar.modelo130, calendar.holidays, regions.VC.holidays; a last day that is a Saturday, a Sunday or a national or regional holiday moves to the next working day (Orden EHA/672/2007 art. 7 for Modelo 130; Ley 39/2015 art. 30.2, 30.5 and 30.6, supletoria under its DA 1ª.2.a and LGT art. 97.b); municipal holidays where the taxpayer lives are not applied, so the date shown can be early but never late"
+    },
+    {
+      "id": "set-aside.Q3.to-date",
+      "section": "Actividad",
+      "title": "Ingresos y gastos desde el 1 de enero, reales y proyectados, Q3",
+      "inputs": [
+        {
+          "name": "realesHasta",
+          "value": "Q1"
+        },
+        {
+          "name": "mesesProyectadosHastaFinTrimestre",
+          "value": "6"
+        },
+        {
+          "name": "mesesProyectados",
+          "value": "9"
+        },
+        {
+          "name": "cuotasSsProyectadas",
+          "value": "480"
+        }
+      ],
+      "formula": "ingresos 6000.00 real + 27000.00 × 6 / 9 = 24000.00; gastos 345.33 real + 900.00 × 6 / 9 + 480 = 1425.33",
+      "output": {
+        "kind": "money",
+        "value": "24000.00"
+      },
+      "reference": "#15: the actuals to the last closed quarter plus the projection spread evenly over the months after it, an assumption of the estimate, not a rule. Gastos add the projected RETA cuotas of those months, as Modelo 130 casilla 02 does. Rounded to cents because both enter casillas"
+    },
+    {
+      "id": "Q3.m130.dificil-justificacion",
+      "section": "Modelo130",
+      "title": "Gastos de difícil justificación desde el 1 de enero (en casilla 02)",
+      "inputs": [
+        {
+          "name": "rendimientoNetoPrevio",
+          "value": "22574.67"
+        },
+        {
+          "name": "pct",
+          "value": "0.05"
+        },
+        {
+          "name": "max",
+          "value": "2000"
+        }
+      ],
+      "formula": "min(0.05 × max(0, 22574.67), 2000) = 1128.7335",
+      "output": {
+        "kind": "money",
+        "value": "1128.73"
+      },
+      "reference": "RD 439/2007 art. 30.2ª: a percentage of the positive net before it, at most an annual amount; art. 110.1.a: the pago fraccionado is a percentage of that rendimiento neto under estimación directa in any modality; AEAT, instrucciones del modelo 130, casilla 02: under estimación directa simplificada it includes the difícil justificación of the period from 1 January; config irpf.actividad.dificilJustificacion; business rule 7"
+    },
+    {
+      "id": "Q3.m130.rendimiento-neto",
+      "section": "Modelo130",
+      "title": "Rendimiento neto desde el 1 de enero (casilla 03)",
+      "inputs": [
+        {
+          "name": "ingresosYtd",
+          "value": "24000.00"
+        },
+        {
+          "name": "gastosYtd",
+          "value": "1425.33"
+        },
+        {
+          "name": "dificilJustificacion",
+          "value": "1128.7335"
+        }
+      ],
+      "formula": "24000.00 − (1425.33 + 1128.7335) = 21445.94",
+      "output": {
+        "kind": "money",
+        "value": "21445.94"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 01–03"
+    },
+    {
+      "id": "Q3.m130.pago-bruto",
+      "section": "Modelo130",
+      "title": "Porcentaje sobre el rendimiento neto positivo (casilla 04)",
+      "inputs": [
+        {
+          "name": "rendimientoNeto",
+          "value": "21445.94"
+        },
+        {
+          "name": "rate",
+          "value": "0.20"
+        }
+      ],
+      "formula": "0.20 × max(0, 21445.94) = 4289.19",
+      "output": {
+        "kind": "money",
+        "value": "4289.19"
+      },
+      "reference": "config modelo130.rate; AEAT, instrucciones del modelo 130, casilla 04: a negative casilla 03 counts as zero"
+    },
+    {
+      "id": "Q3.m130.pagos-anteriores",
+      "section": "Modelo130",
+      "title": "Pagos fraccionados de trimestres anteriores (casilla 05)",
+      "inputs": [
+        {
+          "name": "quarter",
+          "value": "Q3"
+        }
+      ],
+      "formula": "Σ positive casilla 07 of earlier quarters this year = 2681.79",
+      "output": {
+        "kind": "money",
+        "value": "2681.79"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 05: negative casilla 07 amounts are not summed"
+    },
+    {
+      "id": "Q3.m130.retenciones",
+      "section": "Modelo130",
+      "title": "Retenciones soportadas: cero, los pagadores son extranjeros",
+      "inputs": [
+        {
+          "name": "payers",
+          "value": "EU and US only"
+        }
+      ],
+      "formula": "no payer is Spanish, so none withholds → 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "SPEC-003 §0, business rule 3b: EU and US payers have no Spanish withholding obligation; RetencionRate is never defaulted from the profile"
+    },
+    {
+      "id": "Q3.m130.casilla-07",
+      "section": "Modelo130",
+      "title": "Pago fraccionado previo (casilla 07)",
+      "inputs": [
+        {
+          "name": "casilla04",
+          "value": "4289.19"
+        },
+        {
+          "name": "casilla05",
+          "value": "2681.79"
+        },
+        {
+          "name": "casilla06",
+          "value": "0"
+        }
+      ],
+      "formula": "4289.19 − 2681.79 − 0 = 1607.40",
+      "output": {
+        "kind": "money",
+        "value": "1607.40"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 07"
+    },
+    {
+      "id": "Q3.m130.casilla-12",
+      "section": "Modelo130",
+      "title": "Suma de pagos fraccionados previos (casilla 12)",
+      "inputs": [
+        {
+          "name": "casilla07",
+          "value": "1607.40"
+        }
+      ],
+      "formula": "max(0, 1607.40) = 1607.40",
+      "output": {
+        "kind": "money",
+        "value": "1607.40"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 12: 07 + 11, a negative sum is entered as zero; casilla 11 (agricultural activities in estimación objetiva) does not apply"
+    },
+    {
+      "id": "Q3.m130.minoracion",
+      "section": "Modelo130",
+      "title": "Minoración por rendimientos bajos del ejercicio anterior (casilla 13)",
+      "inputs": [
+        {
+          "name": "previousYearNet",
+          "value": "0"
+        }
+      ],
+      "formula": "0 <= 9000 → 100 this quarter",
+      "output": {
+        "kind": "money",
+        "value": "100.00"
+      },
+      "reference": "config modelo130.minoracion; RD 439/2007 art. 110.3.c; AEAT, instrucciones del modelo 130, casilla 13; no activity in the previous year, which the AEAT instructions count as a rendimiento neto of zero"
+    },
+    {
+      "id": "Q3.m130.negativos-anteriores",
+      "section": "Modelo130",
+      "title": "Resultados negativos de trimestres anteriores (casilla 15)",
+      "inputs": [
+        {
+          "name": "casilla14",
+          "value": "1507.40"
+        },
+        {
+          "name": "negativosPendientes",
+          "value": "0"
+        }
+      ],
+      "formula": "casilla 14 = 1607.40 − 100 = 1507.40; deducted = 0, at most a positive casilla 14",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 14–15; business rule 14"
+    },
+    {
+      "id": "Q3.m130.resultado",
+      "section": "Modelo130",
+      "title": "Resultado a ingresar (casilla 19)",
+      "inputs": [
+        {
+          "name": "casilla14",
+          "value": "1507.40"
+        },
+        {
+          "name": "casilla15",
+          "value": "0"
+        }
+      ],
+      "formula": "1507.40 − 0 = 1507.40; negatives still pending for later quarters = 0",
+      "output": {
+        "kind": "money",
+        "value": "1507.40"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 17 and 19; RD 439/2007 art. 110.3.c: only a minoración above casilla 12 leaves a negative result, which pays zero and is deducted in later quarters of the same year"
+    },
+    {
+      "id": "Q3.m130.due-date",
+      "section": "Modelo130",
+      "title": "Último día para presentar el Modelo 130 del Q3",
+      "inputs": [
+        {
+          "name": "start",
+          "value": "2025-10-01"
+        },
+        {
+          "name": "configuredEnd",
+          "value": "2025-10-20"
+        },
+        {
+          "name": "region",
+          "value": "VC"
+        }
+      ],
+      "formula": "2025-10-20 Monday, a working day → 2025-10-20",
+      "output": {
+        "kind": "date",
+        "value": "2025-10-20"
+      },
+      "reference": "config calendar.modelo130, calendar.holidays, regions.VC.holidays; a last day that is a Saturday, a Sunday or a national or regional holiday moves to the next working day (Orden EHA/672/2007 art. 7 for Modelo 130; Ley 39/2015 art. 30.2, 30.5 and 30.6, supletoria under its DA 1ª.2.a and LGT art. 97.b); municipal holidays where the taxpayer lives are not applied, so the date shown can be early but never late"
+    },
+    {
+      "id": "set-aside.Q4.to-date",
+      "section": "Actividad",
+      "title": "Ingresos y gastos desde el 1 de enero, reales y proyectados, Q4",
+      "inputs": [
+        {
+          "name": "realesHasta",
+          "value": "Q1"
+        },
+        {
+          "name": "mesesProyectadosHastaFinTrimestre",
+          "value": "9"
+        },
+        {
+          "name": "mesesProyectados",
+          "value": "9"
+        },
+        {
+          "name": "cuotasSsProyectadas",
+          "value": "720"
+        }
+      ],
+      "formula": "ingresos 6000.00 real + 27000.00 × 9 / 9 = 33000.00; gastos 345.33 real + 900.00 × 9 / 9 + 720 = 1965.33",
+      "output": {
+        "kind": "money",
+        "value": "33000.00"
+      },
+      "reference": "#15: the actuals to the last closed quarter plus the projection spread evenly over the months after it, an assumption of the estimate, not a rule. Gastos add the projected RETA cuotas of those months, as Modelo 130 casilla 02 does. Rounded to cents because both enter casillas"
+    },
+    {
+      "id": "Q4.m130.dificil-justificacion",
+      "section": "Modelo130",
+      "title": "Gastos de difícil justificación desde el 1 de enero (en casilla 02)",
+      "inputs": [
+        {
+          "name": "rendimientoNetoPrevio",
+          "value": "31034.67"
+        },
+        {
+          "name": "pct",
+          "value": "0.05"
+        },
+        {
+          "name": "max",
+          "value": "2000"
+        }
+      ],
+      "formula": "min(0.05 × max(0, 31034.67), 2000) = 1551.7335",
+      "output": {
+        "kind": "money",
+        "value": "1551.73"
+      },
+      "reference": "RD 439/2007 art. 30.2ª: a percentage of the positive net before it, at most an annual amount; art. 110.1.a: the pago fraccionado is a percentage of that rendimiento neto under estimación directa in any modality; AEAT, instrucciones del modelo 130, casilla 02: under estimación directa simplificada it includes the difícil justificación of the period from 1 January; config irpf.actividad.dificilJustificacion; business rule 7"
+    },
+    {
+      "id": "Q4.m130.rendimiento-neto",
+      "section": "Modelo130",
+      "title": "Rendimiento neto desde el 1 de enero (casilla 03)",
+      "inputs": [
+        {
+          "name": "ingresosYtd",
+          "value": "33000.00"
+        },
+        {
+          "name": "gastosYtd",
+          "value": "1965.33"
+        },
+        {
+          "name": "dificilJustificacion",
+          "value": "1551.7335"
+        }
+      ],
+      "formula": "33000.00 − (1965.33 + 1551.7335) = 29482.94",
+      "output": {
+        "kind": "money",
+        "value": "29482.94"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 01–03"
+    },
+    {
+      "id": "Q4.m130.pago-bruto",
+      "section": "Modelo130",
+      "title": "Porcentaje sobre el rendimiento neto positivo (casilla 04)",
+      "inputs": [
+        {
+          "name": "rendimientoNeto",
+          "value": "29482.94"
+        },
+        {
+          "name": "rate",
+          "value": "0.20"
+        }
+      ],
+      "formula": "0.20 × max(0, 29482.94) = 5896.59",
+      "output": {
+        "kind": "money",
+        "value": "5896.59"
+      },
+      "reference": "config modelo130.rate; AEAT, instrucciones del modelo 130, casilla 04: a negative casilla 03 counts as zero"
+    },
+    {
+      "id": "Q4.m130.pagos-anteriores",
+      "section": "Modelo130",
+      "title": "Pagos fraccionados de trimestres anteriores (casilla 05)",
+      "inputs": [
+        {
+          "name": "quarter",
+          "value": "Q4"
+        }
+      ],
+      "formula": "Σ positive casilla 07 of earlier quarters this year = 4289.19",
+      "output": {
+        "kind": "money",
+        "value": "4289.19"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 05: negative casilla 07 amounts are not summed"
+    },
+    {
+      "id": "Q4.m130.retenciones",
+      "section": "Modelo130",
+      "title": "Retenciones soportadas: cero, los pagadores son extranjeros",
+      "inputs": [
+        {
+          "name": "payers",
+          "value": "EU and US only"
+        }
+      ],
+      "formula": "no payer is Spanish, so none withholds → 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "SPEC-003 §0, business rule 3b: EU and US payers have no Spanish withholding obligation; RetencionRate is never defaulted from the profile"
+    },
+    {
+      "id": "Q4.m130.casilla-07",
+      "section": "Modelo130",
+      "title": "Pago fraccionado previo (casilla 07)",
+      "inputs": [
+        {
+          "name": "casilla04",
+          "value": "5896.59"
+        },
+        {
+          "name": "casilla05",
+          "value": "4289.19"
+        },
+        {
+          "name": "casilla06",
+          "value": "0"
+        }
+      ],
+      "formula": "5896.59 − 4289.19 − 0 = 1607.40",
+      "output": {
+        "kind": "money",
+        "value": "1607.40"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 07"
+    },
+    {
+      "id": "Q4.m130.casilla-12",
+      "section": "Modelo130",
+      "title": "Suma de pagos fraccionados previos (casilla 12)",
+      "inputs": [
+        {
+          "name": "casilla07",
+          "value": "1607.40"
+        }
+      ],
+      "formula": "max(0, 1607.40) = 1607.40",
+      "output": {
+        "kind": "money",
+        "value": "1607.40"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 12: 07 + 11, a negative sum is entered as zero; casilla 11 (agricultural activities in estimación objetiva) does not apply"
+    },
+    {
+      "id": "Q4.m130.minoracion",
+      "section": "Modelo130",
+      "title": "Minoración por rendimientos bajos del ejercicio anterior (casilla 13)",
+      "inputs": [
+        {
+          "name": "previousYearNet",
+          "value": "0"
+        }
+      ],
+      "formula": "0 <= 9000 → 100 this quarter",
+      "output": {
+        "kind": "money",
+        "value": "100.00"
+      },
+      "reference": "config modelo130.minoracion; RD 439/2007 art. 110.3.c; AEAT, instrucciones del modelo 130, casilla 13; no activity in the previous year, which the AEAT instructions count as a rendimiento neto of zero"
+    },
+    {
+      "id": "Q4.m130.negativos-anteriores",
+      "section": "Modelo130",
+      "title": "Resultados negativos de trimestres anteriores (casilla 15)",
+      "inputs": [
+        {
+          "name": "casilla14",
+          "value": "1507.40"
+        },
+        {
+          "name": "negativosPendientes",
+          "value": "0"
+        }
+      ],
+      "formula": "casilla 14 = 1607.40 − 100 = 1507.40; deducted = 0, at most a positive casilla 14",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 14–15; business rule 14"
+    },
+    {
+      "id": "Q4.m130.resultado",
+      "section": "Modelo130",
+      "title": "Resultado a ingresar (casilla 19)",
+      "inputs": [
+        {
+          "name": "casilla14",
+          "value": "1507.40"
+        },
+        {
+          "name": "casilla15",
+          "value": "0"
+        }
+      ],
+      "formula": "1507.40 − 0 = 1507.40; negatives still pending for later quarters = 0",
+      "output": {
+        "kind": "money",
+        "value": "1507.40"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 17 and 19; RD 439/2007 art. 110.3.c: only a minoración above casilla 12 leaves a negative result, which pays zero and is deducted in later quarters of the same year"
+    },
+    {
+      "id": "Q4.m130.due-date",
+      "section": "Modelo130",
+      "title": "Último día para presentar el Modelo 130 del Q4",
+      "inputs": [
+        {
+          "name": "start",
+          "value": "2026-01-01"
+        },
+        {
+          "name": "configuredEnd",
+          "value": "2026-01-30"
+        },
+        {
+          "name": "region",
+          "value": "VC"
+        }
+      ],
+      "formula": "2026-01-30 Friday, a working day → 2026-01-30",
+      "output": {
+        "kind": "date",
+        "value": "2026-01-30"
+      },
+      "reference": "config calendar.modelo130, calendar.holidays, regions.VC.holidays; a last day that is a Saturday, a Sunday or a national or regional holiday moves to the next working day (Orden EHA/672/2007 art. 7 for Modelo 130; Ley 39/2015 art. 30.2, 30.5 and 30.6, supletoria under its DA 1ª.2.a and LGT art. 97.b); municipal holidays where the taxpayer lives are not applied, so the date shown can be early but never late"
+    },
+    {
+      "id": "set-aside.modelo130-year",
+      "section": "Modelo130",
+      "title": "Modelo 130 del ejercicio",
+      "inputs": [
+        {
+          "name": "Q1",
+          "value": "974.39"
+        },
+        {
+          "name": "Q2",
+          "value": "1507.40"
+        },
+        {
+          "name": "Q3",
+          "value": "1507.40"
+        },
+        {
+          "name": "Q4",
+          "value": "1507.40"
+        }
+      ],
+      "formula": "974.39 + 1507.40 + 1507.40 + 1507.40 = 5496.59",
+      "output": {
+        "kind": "money",
+        "value": "5496.59"
+      },
+      "reference": "Σ a ingresar (casilla 19, never below zero) over the quarters from the alta's on, each chained to the next through casillas 05 and 15, so a loss to date lowers the cumulative net of the quarters after it and a minoración left over carries as a negative result. A quarter that ends before the alta has no activity and so no pago fraccionado (RD 439/2007 art. 109.1), and no minoración to carry"
+    },
+    {
+      "id": "set-aside.annual-ingresos",
+      "section": "Actividad",
+      "title": "Ingresos del ejercicio, reales y proyectados",
+      "inputs": [
+        {
+          "name": "reales",
+          "value": "6000.00"
+        },
+        {
+          "name": "proyectados",
+          "value": "27000.00"
+        }
+      ],
+      "formula": "6000.00 real + 27000.00 projected = 33000.00",
+      "output": {
+        "kind": "money",
+        "value": "33000.00"
+      },
+      "reference": "#15: the actuals to the last closed quarter and the projection for the months after it"
+    },
+    {
+      "id": "set-aside.annual-gastos",
+      "section": "Actividad",
+      "title": "Gastos del ejercicio, reales y proyectados, con las cuotas SS",
+      "inputs": [
+        {
+          "name": "reales",
+          "value": "345.33"
+        },
+        {
+          "name": "proyectados",
+          "value": "900.00"
+        },
+        {
+          "name": "cuotasSsProyectadas",
+          "value": "720"
+        }
+      ],
+      "formula": "345.33 real + 900.00 projected + 720 projected cuotas SS = 1965.33",
+      "output": {
+        "kind": "money",
+        "value": "1965.33"
+      },
+      "reference": "#15: the actual gastos already hold the cuotas charged to date; the RETA cuota is a deductible expense of the titular (AEAT Manual práctico Renta 2025, cap. 7)"
+    },
+    {
+      "id": "renta.trabajo.rendimiento-neto-previo",
+      "section": "Trabajo",
+      "title": "Rendimiento neto del trabajo antes de otros gastos",
+      "inputs": [
+        {
+          "name": "ingresos",
+          "value": "0.00"
+        },
+        {
+          "name": "seguridadSocial",
+          "value": "0.00"
+        }
+      ],
+      "formula": "0.00 − 0.00 = 0.00",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 19.2.a. Art. 20 measures the reducción on this figure, before the art. 19.2.f otros gastos"
+    },
+    {
+      "id": "renta.trabajo.rendimiento-neto",
+      "section": "Trabajo",
+      "title": "Rendimiento neto del trabajo",
+      "inputs": [
+        {
+          "name": "rendimientoNetoPrevio",
+          "value": "0.00"
+        },
+        {
+          "name": "otrosGastos",
+          "value": "2000"
+        }
+      ],
+      "formula": "0.00 − min(2000, max(0, 0.00)) = 0.00",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "config irpf.trabajo.otrosGastos; Ley 35/2006 (LIRPF) art. 19.2.f, limited to the rendimiento íntegro less the other deductible expenses"
+    },
+    {
+      "id": "renta.actividad.rendimiento-neto",
+      "section": "Actividad",
+      "title": "Rendimiento neto de la actividad",
+      "inputs": [
+        {
+          "name": "ingresos",
+          "value": "33000.00"
+        },
+        {
+          "name": "gastos",
+          "value": "1965.33"
+        },
+        {
+          "name": "pct",
+          "value": "0.05"
+        },
+        {
+          "name": "max",
+          "value": "2000"
+        }
+      ],
+      "formula": "previo = 33000.00 − 1965.33 = 31034.67; 31034.67 − min(0.05 × max(0, 31034.67), 2000) = 29482.9365",
+      "output": {
+        "kind": "money",
+        "value": "29482.94"
+      },
+      "reference": "SPEC-002 step 2, business rule 7; config irpf.actividad.dificilJustificacion. Gastos include the RETA cuota, a deductible expense of the titular (AEAT Manual práctico Renta 2025, cap. 7)"
+    },
+    {
+      "id": "renta.actividad.reduccion-inicio",
+      "section": "Actividad",
+      "title": "Reducción por inicio de una actividad económica",
+      "inputs": [
+        {
+          "name": "rendimientoNeto",
+          "value": "29482.9365"
+        },
+        {
+          "name": "ingresos",
+          "value": "33000.00"
+        },
+        {
+          "name": "ingresosFromFormerEmployer",
+          "value": "0.00"
+        },
+        {
+          "name": "pct",
+          "value": "0.20"
+        },
+        {
+          "name": "maxRendimiento",
+          "value": "100000"
+        },
+        {
+          "name": "formerEmployerShare",
+          "value": "0.50"
+        }
+      ],
+      "formula": "0.20 × min(max(0, 29482.9365), 100000) = 5896.587300; rendimiento neto reducido = 29482.9365 − 5896.587300 = 23586.349200",
+      "output": {
+        "kind": "money",
+        "value": "5896.59"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 32.3, first period with a positive net (primer período impositivo en que sea positivo); config irpf.actividad.inicioActividad; AEAT Manual práctico Renta 2025, cap. 7, fase 3. Art. 32.2.1º is ruled out for this profile (SPEC-003 §0): it requires every sale to go to one client or the taxpayer to be a TRADE (2.º b), at least 70 % of ingresos under retención, which foreign payers never withhold (2.º f), and no employment income (2.º e). Art. 32.2.3º, for rentas no exentas below 12,000 including the activity's, is not applied, and art. 32.1 (irregular income) has no input here; leaving either out can only overstate the net"
+    },
+    {
+      "id": "renta.trabajo.reduccion.solo",
+      "section": "Trabajo",
+      "title": "Reducción por trabajo, trabajo solo",
+      "inputs": [
+        {
+          "name": "rendimientoNetoArt20",
+          "value": "0.00"
+        },
+        {
+          "name": "otrasRentas",
+          "value": "0"
+        },
+        {
+          "name": "otherIncomeCap",
+          "value": "6500"
+        }
+      ],
+      "formula": "0.00 <= 14852 → 7302; limited to max(0, 0.00) = 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "config irpf.trabajo.reduccion; Ley 35/2006 (LIRPF) art. 20, where the third band starts from the second band's value at t2; business rule 6. Otras rentas are the activity's rendimiento neto before its art. 32.3 reduction (AEAT Manual práctico Renta 2025, cap. 3, fase 3), the only income other than employment this calculation is given"
+    },
+    {
+      "id": "renta.trabajo.reduccion.stacked",
+      "section": "Trabajo",
+      "title": "Reducción por trabajo, con la actividad",
+      "inputs": [
+        {
+          "name": "rendimientoNetoArt20",
+          "value": "0.00"
+        },
+        {
+          "name": "otrasRentas",
+          "value": "29482.9365"
+        },
+        {
+          "name": "otherIncomeCap",
+          "value": "6500"
+        }
+      ],
+      "formula": "otras rentas 29482.9365 > 6500 → 0; limited to max(0, 0.00) = 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "config irpf.trabajo.reduccion; Ley 35/2006 (LIRPF) art. 20, where the third band starts from the second band's value at t2; business rule 6. Otras rentas are the activity's rendimiento neto before its art. 32.3 reduction (AEAT Manual práctico Renta 2025, cap. 3, fase 3), the only income other than employment this calculation is given"
+    },
+    {
+      "id": "renta.solo.base-liquidable",
+      "section": "Bases",
+      "title": "Base liquidable general, trabajo solo",
+      "inputs": [
+        {
+          "name": "rendimientoTrabajoReducido",
+          "value": "0.00"
+        },
+        {
+          "name": "rendimientoActividad",
+          "value": "0"
+        }
+      ],
+      "formula": "max(0, 0.00 + 0) = 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 48 and 50: a negative balance is not taxed"
+    },
+    {
+      "id": "renta.solo.cuota-estatal",
+      "section": "Cuota",
+      "title": "Cuota íntegra estatal, trabajo solo",
+      "inputs": [
+        {
+          "name": "baseLiquidable",
+          "value": "0"
+        },
+        {
+          "name": "minimo",
+          "value": "0"
+        }
+      ],
+      "formula": "scale(0) − scale(0) = 0 − 0 = 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 56.2 and 63.1; config irpf.escalaEstatal, irpf.minimos.contribuyente"
+    },
+    {
+      "id": "renta.solo.cuota-autonomica",
+      "section": "Cuota",
+      "title": "Cuota íntegra autonómica (VC), trabajo solo",
+      "inputs": [
+        {
+          "name": "baseLiquidable",
+          "value": "0"
+        },
+        {
+          "name": "minimo",
+          "value": "0"
+        }
+      ],
+      "formula": "scale(0) − scale(0) = 0 − 0 = 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 56.3 and 74.1, business rule 9; config regions.VC. The mínimo is the region's own (minimosOverride), or the state's where the region approved none"
+    },
+    {
+      "id": "renta.stacked.base-liquidable",
+      "section": "Bases",
+      "title": "Base liquidable general, trabajo más actividad",
+      "inputs": [
+        {
+          "name": "rendimientoTrabajoReducido",
+          "value": "0.00"
+        },
+        {
+          "name": "rendimientoActividad",
+          "value": "23586.349200"
+        }
+      ],
+      "formula": "max(0, 0.00 + 23586.349200) = 23586.349200",
+      "output": {
+        "kind": "money",
+        "value": "23586.35"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 48 and 50: a negative balance is not taxed"
+    },
+    {
+      "id": "renta.stacked.cuota-estatal",
+      "section": "Cuota",
+      "title": "Cuota íntegra estatal, trabajo más actividad",
+      "inputs": [
+        {
+          "name": "baseLiquidable",
+          "value": "23586.349200"
+        },
+        {
+          "name": "minimo",
+          "value": "5550"
+        }
+      ],
+      "formula": "scale(23586.349200) − scale(5550) = 2620.70238000 − 527.250 = 2093.45238000",
+      "output": {
+        "kind": "money",
+        "value": "2093.45"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 56.2 and 63.1; config irpf.escalaEstatal, irpf.minimos.contribuyente"
+    },
+    {
+      "id": "renta.stacked.cuota-autonomica",
+      "section": "Cuota",
+      "title": "Cuota íntegra autonómica (VC), trabajo más actividad",
+      "inputs": [
+        {
+          "name": "baseLiquidable",
+          "value": "23586.349200"
+        },
+        {
+          "name": "minimo",
+          "value": "6105"
+        }
+      ],
+      "formula": "scale(23586.349200) − scale(6105) = 2517.95238000 − 549.45 = 1968.50238000",
+      "output": {
+        "kind": "money",
+        "value": "1968.50"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 56.3 and 74.1, business rule 9; config regions.VC. The mínimo is the region's own (minimosOverride), or the state's where the region approved none"
+    },
+    {
+      "id": "renta.liability-on-activity",
+      "section": "Resultado",
+      "title": "Cuota íntegra que añade la actividad",
+      "inputs": [
+        {
+          "name": "cuotaStacked",
+          "value": "4061.95476000"
+        },
+        {
+          "name": "cuotaSolo",
+          "value": "0"
+        }
+      ],
+      "formula": "4061.95476000 − 0 = 4061.95476000",
+      "output": {
+        "kind": "money",
+        "value": "4061.95"
+      },
+      "reference": "Set-aside estimator spec (#2), marginal rate: the activity income is taxed at the rates it reaches on top of the employment income, including any reducción por trabajo it destroys"
+    },
+    {
+      "id": "renta.marginal-rate",
+      "section": "Cuota",
+      "title": "Tipo marginal en la base con la actividad",
+      "inputs": [
+        {
+          "name": "baseLiquidable",
+          "value": "23586.349200"
+        },
+        {
+          "name": "region",
+          "value": "VC"
+        }
+      ],
+      "formula": "0.15 estatal + 0.15 autonómico = 0.30",
+      "output": {
+        "kind": "rate",
+        "value": "0.30"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 63.1 and 74.1: the rate of the tranche of each scale that the next euro of base falls in"
+    },
+    {
+      "id": "renta.modelo130-advances",
+      "section": "Resultado",
+      "title": "Pagos fraccionados del Modelo 130 del ejercicio",
+      "inputs": [
+        {
+          "name": "modelo130Advances",
+          "value": "5496.59"
+        }
+      ],
+      "formula": "Σ Modelo 130 a ingresar over the year = 5496.59",
+      "output": {
+        "kind": "money",
+        "value": "5496.59"
+      },
+      "reference": "Modelo130Calculator at config modelo130.rate. Retenciones on activity invoices are not credited here; they are zero for foreign payers (SPEC-003 §0)"
+    },
+    {
+      "id": "renta.due-date",
+      "section": "Resultado",
+      "title": "Último día para presentar la declaración anual",
+      "inputs": [
+        {
+          "name": "start",
+          "value": "2026-04-08"
+        },
+        {
+          "name": "configuredEnd",
+          "value": "2026-06-30"
+        },
+        {
+          "name": "region",
+          "value": "VC"
+        }
+      ],
+      "formula": "2026-06-30 Tuesday, a working day → 2026-06-30",
+      "output": {
+        "kind": "date",
+        "value": "2026-06-30"
+      },
+      "reference": "config calendar.renta, calendar.holidays, regions.VC.holidays; a last day that is a Saturday, a Sunday or a national or regional holiday moves to the next working day (Orden EHA/672/2007 art. 7 for Modelo 130; Ley 39/2015 art. 30.2, 30.5 and 30.6, supletoria under its DA 1ª.2.a and LGT art. 97.b); municipal holidays where the taxpayer lives are not applied, so the date shown can be early but never late"
+    },
+    {
+      "id": "renta.gap",
+      "section": "Resultado",
+      "title": "Lo que la declaración anual pedirá además del Modelo 130",
+      "inputs": [
+        {
+          "name": "liabilityOnActivity",
+          "value": "4061.95476000"
+        },
+        {
+          "name": "modelo130Advances",
+          "value": "5496.59"
+        },
+        {
+          "name": "renta",
+          "value": "2026-04-08 … 2026-06-30"
+        }
+      ],
+      "formula": "max(0, 4061.95476000 − 5496.59) = 0, due 2026-04-08 … 2026-06-30, so by the end of 2026-06",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "Assumes the employer's retenciones settle the tax on the employment income alone, so only the activity's share is left. Conservative (#2): a refund is not counted on, no deducciones (SPEC-006) are applied, and the LIRPF art. 32.2.3º reduction of the activity net is not applied"
+    },
+    {
+      "id": "set-aside.iva",
+      "section": "Resultado",
+      "title": "IVA a reservar",
+      "inputs": [
+        {
+          "name": "payers",
+          "value": "EU businesses and US clients"
+        }
+      ],
+      "formula": "EU B2B is reverse charge and US services are outside Spanish IVA territory, so no invoice carries IVA repercutido → 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "SPEC-003 §0. IVA soportado on Spanish purchases makes Modelo 303 a refund, which is not counted on"
+    },
+    {
+      "id": "set-aside.hold-back-share",
+      "section": "Resultado",
+      "title": "Parte de cada cobro que no es tuya",
+      "inputs": [
+        {
+          "name": "modelo130Year",
+          "value": "5496.59"
+        },
+        {
+          "name": "gap",
+          "value": "0"
+        },
+        {
+          "name": "cuotasSs",
+          "value": "925.33"
+        },
+        {
+          "name": "ingresos",
+          "value": "33000.00"
+        }
+      ],
+      "formula": "min(1, ⌈(5496.59 + 0 + 925.33) / 33000.00⌉) = min(1, ⌈0.1946036363636363636363636364⌉) = 0.1947",
+      "output": {
+        "kind": "rate",
+        "value": "0.1947"
+      },
+      "reference": "#2: of the year's gross receipts, actual and projected (invoice bases; these clients pay no IVA), what belongs to AEAT and TGSS: the year's Modelo 130 advances, what the annual return wants beyond them (never below zero, so a refund is not counted on) and the year's TGSS cuotas. One share for the whole year, so what was already paid is not netted against what was set aside, which the estimator cannot see. Rounded up to a hundredth of a percent and capped at the whole payment: conservative"
+    }
+  ],
+  "notices": [
+    {
+      "code": "SET_ASIDE_ESTIMATE",
+      "severity": "Info",
+      "text": "No IVA to set aside: invoices to EU businesses are reverse charge, so the client accounts for the IVA, and services to US clients fall outside Spanish IVA territory; Modelo 303 will usually be a refund rather than a payment. This assumes the SPEC-003 §0 client mix (EU business and US clients only)."
+    },
+    {
+      "code": "SET_ASIDE_ESTIMATE",
+      "severity": "Warning",
+      "text": "Tarifa plana ends with 2026-01: from 2026-02 TGSS charges 425.85 € a month instead of 80.00 €, at the 2025 tipo de cotización."
+    },
+    {
+      "code": "SS_REGULARIZACION_AHEAD",
+      "severity": "Warning",
+      "text": "TGSS trues the cuota up annually against real net income; this monthly figure is provisional."
+    }
+  ]
+}

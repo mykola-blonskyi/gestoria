@@ -41,8 +41,8 @@ The estimate always leans towards putting aside *more* rather than less. Having 
 - **No filled-in forms.** It computes the figures behind Modelo 130, 303 and 349, and the configuration knows which box (casilla) each figure goes in, but it does not yet produce the forms themselves.
 - **No 2027 configuration.** The 2027 values are published in the BOE around December 2026 (issue #12). Until then, 2027 cannot be computed.
 - **Some 2026 values are not published yet.** The engine refuses to guess them and tells you exactly what is missing (see [Tax-year configuration](#tax-year-configuration)).
-- **No API, database or document reading (OCR).** These are planned (`plans/DEVELOPMENT_PLAN.md`). `src/GestorIA.Api` is an empty project today, and `services/ocr` holds only a description.
-- **The web app shows no figures yet.** It has its pages, languages and themes, and each page says what it will show. Its data comes from the API, which does not exist yet (issue #66).
+- **A small API, no database and no document reading (OCR).** The API answers the set-aside estimate and lists the tax years; nothing is stored, so the web app's form starts empty every time. The rest is planned (`plans/DEVELOPMENT_PLAN.md`), and `services/ocr` holds only a description.
+- **Only the overview shows figures.** The other pages of the web app say what they will show once their API resources exist.
 - **No tax credits (deducciones) and no savings income** in the estimate. Leaving them out can only make the estimate higher, never lower.
 
 ## Quick start
@@ -71,7 +71,7 @@ What each step does:
 |---|---|
 | `git config core.hooksPath .githooks` | Turns on the repository's git hooks. The `commit-msg` hook rejects commits that are not authored by the configured `user.email` or that carry attribution lines. Run it once per clone. |
 | `dotnet restore` | Downloads the NuGet packages. |
-| `dotnet build` | Compiles everything. Warnings are treated as errors, so a clean build prints `0 Warning(s)` and `0 Error(s)`. |
+| `dotnet build` | Compiles everything and rewrites the API's OpenAPI document, `src/GestorIA.Api/openapi/v1.json`, which is committed: CI fails when it differs from what the build produced, or when it breaks the one on `main`. Warnings are treated as errors, so a clean build prints `0 Warning(s)` and `0 Error(s)`. |
 | `dotnet test` | Runs every test. All of them must pass. |
 
 ### See an estimate
@@ -166,15 +166,18 @@ Estimate
 
 ## Web app
 
-The web app lives in `web/`. It is a Next.js application that will show the engine's answers in the browser, in Ukrainian (the default), Spanish, English or Russian, with five colour themes. It never computes tax itself; every figure will come from the engine through the API (ADR-0017).
+The web app lives in `web/`. It is a Next.js application that shows the engine's answers in the browser, in Ukrainian (the default), Spanish, English or Russian, with five colour themes. It never computes tax itself; every figure comes from the engine through the API (ADR-0017).
 
-Today it has every page (overview, payments, transactions, periods, settings, backup, access), the header with the theme and language choices, and the "not tax advice" notice. Each page says what it will show; the figures arrive with the API (issue #66).
+The overview takes the same figures as the console's input file, typed in or loaded from that file, and shows the estimate, the notices and the step-by-step calculation. What you enter lives only in the browser tab: reloading or closing it empties the form. The other pages (payments, transactions, periods, settings, backup, access) say what they will show.
+
+Start the API, then the web app, in two terminals:
 
 ```bash
-cd web
-pnpm install
-pnpm dev          # open http://localhost:3000
+dotnet run --project src/GestorIA.Api      # http://localhost:5080
+cd web && pnpm install && pnpm dev          # open http://localhost:3000
 ```
+
+The API allows calls from `http://localhost:3000` only (`Cors:Origins` in `src/GestorIA.Api/appsettings.json`). If `pnpm dev` picks another port because 3000 is taken, start the API with that origin, for example `Cors__Origins__0=http://localhost:3001 dotnet run --project src/GestorIA.Api`.
 
 | Command (in `web/`) | Why |
 |---|---|
@@ -183,7 +186,7 @@ pnpm dev          # open http://localhost:3000
 | `pnpm typecheck` | Checks the TypeScript types. |
 | `pnpm test` | Runs the web tests. |
 | `pnpm build` | Builds the production app, as CI does. |
-| `pnpm api:types` | Generates the API types from the API's OpenAPI document. Fails with an explanation until the API produces that document (#66). |
+| `pnpm api:types` | Regenerates `src/data/api-types.ts` from the API's OpenAPI document, after `dotnet build` has refreshed it. |
 
 The language and the theme are remembered in cookies. `web/README.md` explains the structure, the rules between folders, the themes and the languages.
 
@@ -194,10 +197,11 @@ config/tax-years/   one JSON file per tax year, plus schema.json that checks the
 src/
   GestorIA.Domain/          basic types (Money, Rate) and the prototype bank-transaction model
   GestorIA.Engine/          every tax calculation; pure code, no files, no network, no clock
-  GestorIA.Infrastructure/  reads and checks the yearly configuration files; prototype BBVA statement parser
+  GestorIA.Infrastructure/  reads and checks the yearly configuration files and the estimate's input file; prototype BBVA statement parser
   GestorIA.Cli/             the console program
-  GestorIA.Api/             empty for now (planned web API)
+  GestorIA.Api/             the web API (/api/v1) and its OpenAPI document, openapi/v1.json
 tests/
+  GestorIA.Api.Tests/       the API over HTTP, and its OpenAPI document against what it accepts and answers
   GestorIA.Domain.Tests/    tests for Money, Rate and the BBVA statement parser
   GestorIA.Engine.Tests/    calculator tests, configuration checks, golden tests
   GestorIA.Cli.Tests/       input reading and output formatting of the console

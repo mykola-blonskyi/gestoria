@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDate, formatMoney } from "@/shared/lib/format";
+import { formatDate, formatMoney, formatMonth, formatShare } from "@/shared/lib/format";
 
 const NBSP = " ";
 
@@ -70,5 +70,41 @@ describe("formatDate", () => {
 
   it.each(["2027-02-30", "2027-4-20", "20-04-2027", "2027-04-20T10:00:00Z", ""])("rejects %j", (isoDate) => {
     expect(() => formatDate(isoDate, "uk")).toThrowError(new RangeError("Not an ISO-8601 calendar date"));
+  });
+});
+
+describe("formatShare", () => {
+  it.each([
+    ["uk", "19,47%"],
+    ["es", `19,47${NBSP}%`],
+    ["en", "19.47%"],
+    ["ru", `19,47${NBSP}%`],
+  ] as const)("formats a fraction as a percentage with two decimals in %s", (locale, expected) => {
+    expect(formatShare("0.1947", locale)).toBe(expected);
+  });
+
+  // 0.1 + 0.2 in binary floating point is 0.30000000000000004.
+  it("scales the decimal string, not a float", () => {
+    expect(formatShare("0.3", "en")).toBe("30.00%");
+    expect(formatShare("1", "en")).toBe("100.00%");
+  });
+
+  it.each(["", "19.47%", "-0.1", "1e-2", "abc"])("rejects %j without echoing it", (fraction) => {
+    expect(() => formatShare(fraction, "uk")).toThrowError(new RangeError("Not a decimal fraction"));
+  });
+});
+
+describe("formatMonth", () => {
+  it.each([
+    ["uk", "червень 2026 р."],
+    ["es", "junio de 2026"],
+    ["en", "June 2026"],
+    ["ru", "июнь 2026 г."],
+  ] as const)("formats a year and month in %s", (locale, expected) => {
+    expect(formatMonth("2026-06", locale)).toBe(expected);
+  });
+
+  it.each(["2026-13", "2026-6", "2026-06-01", ""])("rejects %j", (yearMonth) => {
+    expect(() => formatMonth(yearMonth, "uk")).toThrowError(new RangeError("Not an ISO-8601 year and month"));
   });
 });
