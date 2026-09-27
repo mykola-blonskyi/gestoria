@@ -1,0 +1,727 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "GestorIA API",
+    "description": "SPEC-009. Money is a string with two decimals, dates are ISO-8601, errors are RFC 9457 problem+json.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/health/live": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "operationId": "live",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/set-aside/estimate": {
+      "post": {
+        "tags": [
+          "set-aside"
+        ],
+        "summary": "Runs the set-aside estimator on the console's input file for a tax year.",
+        "operationId": "estimateSetAside",
+        "parameters": [
+          {
+            "name": "taxYear",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAsideInputDocument"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetAsideEstimate"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/config/tax-years": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Every tax year the API holds a configuration for, oldest first.",
+        "operationId": "listTaxYears",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaxYearView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/config/tax-years/{year}": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "One tax year's configuration: its hash, regions and declared gaps.",
+        "operationId": "getTaxYear",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxYearView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActivityDocument": {
+        "required": [
+          "retenciones",
+          "actuals",
+          "projection"
+        ],
+        "type": "object",
+        "properties": {
+          "retenciones": {
+            "$ref": "#/components/schemas/RetencionesDocument"
+          },
+          "actuals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuarterToDateDocument"
+            }
+          },
+          "projection": {
+            "$ref": "#/components/schemas/ProjectionDocument"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeclaredGap": {
+        "required": [
+          "entry",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "entry": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "EmploymentDocument": {
+        "required": [
+          "ingresos",
+          "seguridadSocial"
+        ],
+        "type": "object",
+        "properties": {
+          "ingresos": {
+            "pattern": "^\\d+(\\.\\d+)?$",
+            "type": "string"
+          },
+          "seguridadSocial": {
+            "pattern": "^\\d+(\\.\\d+)?$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "NewActivityDocument": {
+        "oneOf": [
+          {
+            "enum": [
+              "established"
+            ],
+            "type": "string"
+          },
+          {
+            "required": [
+              "period",
+              "ingresosFromFormerEmployer"
+            ],
+            "type": "object",
+            "properties": {
+              "period": {
+                "enum": [
+                  "first",
+                  "following"
+                ],
+                "type": "string"
+              },
+              "ingresosFromFormerEmployer": {
+                "pattern": "^\\d+(\\.\\d+)?$",
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "NextModelo130": {
+        "required": [
+          "quarter",
+          "aIngresar",
+          "dueFrom",
+          "dueBy"
+        ],
+        "type": "object",
+        "properties": {
+          "quarter": {
+            "$ref": "#/components/schemas/Quarter"
+          },
+          "aIngresar": {
+            "pattern": "^-?\\d+\\.\\d{2}$",
+            "type": "string"
+          },
+          "dueFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "dueBy": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "NoticeView": {
+        "required": [
+          "code",
+          "severity",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/WarningSeverity"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "PreviousYearDocument": {
+        "oneOf": [
+          {
+            "enum": [
+              "noActivity"
+            ],
+            "type": "string"
+          },
+          {
+            "required": [
+              "rendimientoNeto"
+            ],
+            "type": "object",
+            "properties": {
+              "rendimientoNeto": {
+                "pattern": "^-?\\d+(\\.\\d+)?$",
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ProfileDocument": {
+        "required": [
+          "region",
+          "employment",
+          "activity"
+        ],
+        "type": "object",
+        "properties": {
+          "region": {
+            "type": "string"
+          },
+          "employment": {
+            "$ref": "#/components/schemas/EmploymentDocument"
+          },
+          "activity": {
+            "$ref": "#/components/schemas/RegistrationDocument"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectionDocument": {
+        "required": [
+          "ingresos",
+          "gastos",
+          "baseCotizacion"
+        ],
+        "type": "object",
+        "properties": {
+          "ingresos": {
+            "pattern": "^\\d+(\\.\\d+)?$",
+            "type": "string"
+          },
+          "gastos": {
+            "pattern": "^\\d+(\\.\\d+)?$",
+            "type": "string"
+          },
+          "baseCotizacion": {
+            "pattern": "^\\d+(\\.\\d+)?$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Quarter": {
+        "enum": [
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4"
+        ]
+      },
+      "QuarterToDateDocument": {
+        "required": [
+          "quarter",
+          "ingresosYtd",
+          "gastosYtd",
+          "cuotasSsYtd"
+        ],
+        "type": "object",
+        "properties": {
+          "quarter": {
+            "$ref": "#/components/schemas/Quarter"
+          },
+          "ingresosYtd": {
+            "pattern": "^\\d+(\\.\\d+)?$",
+            "type": "string"
+          },
+          "gastosYtd": {
+            "pattern": "^\\d+(\\.\\d+)?$",
+            "type": "string"
+          },
+          "cuotasSsYtd": {
+            "pattern": "^\\d+(\\.\\d+)?$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegionView": {
+        "required": [
+          "code",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "RegistrationDocument": {
+        "required": [
+          "alta",
+          "previousYear",
+          "newActivity"
+        ],
+        "type": "object",
+        "properties": {
+          "alta": {
+            "type": "string",
+            "format": "date"
+          },
+          "previousYear": {
+            "$ref": "#/components/schemas/PreviousYearDocument"
+          },
+          "newActivity": {
+            "$ref": "#/components/schemas/NewActivityDocument"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RetencionesDocument": {
+        "enum": [
+          "foreignPayersOnly"
+        ]
+      },
+      "SetAsideEstimate": {
+        "required": [
+          "taxYear",
+          "configHash",
+          "holdBackShare",
+          "nextPayment",
+          "monthlyCuotaSs",
+          "annualTrueUpGap",
+          "annualTrueUpPayableIn",
+          "ivaToSetAside",
+          "trace",
+          "notices"
+        ],
+        "type": "object",
+        "properties": {
+          "taxYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "configHash": {
+            "type": "string"
+          },
+          "holdBackShare": {
+            "type": "string"
+          },
+          "nextPayment": {
+            "$ref": "#/components/schemas/NextModelo130"
+          },
+          "monthlyCuotaSs": {
+            "pattern": "^-?\\d+\\.\\d{2}$",
+            "type": "string"
+          },
+          "annualTrueUpGap": {
+            "pattern": "^-?\\d+\\.\\d{2}$",
+            "type": "string"
+          },
+          "annualTrueUpPayableIn": {
+            "type": "string"
+          },
+          "ivaToSetAside": {
+            "pattern": "^-?\\d+\\.\\d{2}$",
+            "type": "string"
+          },
+          "trace": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TraceStepView"
+            }
+          },
+          "notices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoticeView"
+            }
+          }
+        }
+      },
+      "SetAsideInputDocument": {
+        "required": [
+          "asOf",
+          "profile",
+          "activity"
+        ],
+        "type": "object",
+        "properties": {
+          "asOf": {
+            "$ref": "#/components/schemas/Quarter"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/ProfileDocument"
+          },
+          "activity": {
+            "$ref": "#/components/schemas/ActivityDocument"
+          }
+        },
+        "additionalProperties": false,
+        "description": "The console's input file, byte for byte: src/GestorIA.Cli/README.md describes every field."
+      },
+      "TaxYearView": {
+        "required": [
+          "taxYear",
+          "configHash",
+          "regions",
+          "gaps"
+        ],
+        "type": "object",
+        "properties": {
+          "taxYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "configHash": {
+            "type": "string"
+          },
+          "regions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RegionView"
+            }
+          },
+          "gaps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeclaredGap"
+            }
+          }
+        }
+      },
+      "TraceInputView": {
+        "required": [
+          "name",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "TraceOutputView": {
+        "required": [
+          "kind",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/TraceValueKind"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "TraceSection": {
+        "enum": [
+          "Trabajo",
+          "Actividad",
+          "Ahorro",
+          "Inmuebles",
+          "Bases",
+          "Minimo",
+          "Cuota",
+          "Deducciones",
+          "Resultado",
+          "SeguridadSocial",
+          "Modelo130"
+        ]
+      },
+      "TraceStepView": {
+        "required": [
+          "id",
+          "section",
+          "title",
+          "inputs",
+          "formula",
+          "output",
+          "reference"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "section": {
+            "$ref": "#/components/schemas/TraceSection"
+          },
+          "title": {
+            "type": "string"
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TraceInputView"
+            }
+          },
+          "formula": {
+            "type": "string"
+          },
+          "output": {
+            "$ref": "#/components/schemas/TraceOutputView"
+          },
+          "reference": {
+            "type": "string"
+          }
+        }
+      },
+      "TraceValueKind": {
+        "enum": [
+          "money",
+          "rate",
+          "count",
+          "date"
+        ]
+      },
+      "WarningSeverity": {
+        "enum": [
+          "Info",
+          "Warning",
+          "Error"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "health"
+    },
+    {
+      "name": "set-aside"
+    },
+    {
+      "name": "config"
+    }
+  ]
+}
