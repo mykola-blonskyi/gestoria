@@ -12,9 +12,6 @@ public class TaxYearGapsAreRegistered
     {
         [TaxYearConfigFiles.Example2025] = new()
         {
-            ["/regions/MD"] =
-                "Madrid is out of v1.0 scope (ADR-0013). Closes by deleting the block, not by filling it.",
-
             ["/modelo130"] =
                 "line numbers. Due before the Q1 2027 forms (plans/current.md, Phase 0). minoracion bands filled (#5).",
 

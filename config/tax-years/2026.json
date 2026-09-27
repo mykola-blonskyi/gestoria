@@ -8,6 +8,7 @@
     { "ref": "Orden EHA/672/2007, art. 7 (plazos del modelo 130)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032" },
     { "ref": "Ley 13/1997 de la Generalitat Valenciana (tramo autonómico del IRPF), texto consolidado actualizado el 18/09/2026, arts. 2 y 2 bis", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1998-8202" },
     { "ref": "Ley 5/2026, de 31 de julio, de la Generalitat, de medidas fiscales, art. 18 (escala autonómica 2026); DOGV 10425 de 10/08/2026", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-19331" },
+    { "ref": "Decreto Legislativo 1/2010, de 21 de octubre, texto refundido de las disposiciones legales de la Comunidad de Madrid en materia de tributos cedidos por el Estado, arts. 1, 2, 2 bis, 2 ter y 2 quater, redacción de la Ley 13/2023, de 15 de diciembre (texto consolidado BOCM-m-2010-90068, última actualización 10/07/2026, which carries every later Madrid tax law through Ley 5/2026 and none of them amends these articles)", "url": "https://www.boe.es/buscar/act.php?id=BOCM-m-2010-90068" },
     { "ref": "Ley 37/1992 (IVA), texto consolidado, arts. 90 y 91", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
     { "ref": "Real Decreto-ley 3/2026, de 3 de febrero, art. 3 (bases y tope máximo de cotización hasta la LPGE)", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-2548" },
     { "ref": "Orden PJC/297/2026, de 30 de marzo, arts. 18 y 37 (bases y tipos RETA 2026)", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-7296" },
@@ -81,6 +82,23 @@
         "discapacidad33": 3300, "discapacidad65": 9900, "asistencia": 3300
       },
       "holidays": ["03-19", "04-06", "06-24", "10-09"]
+    },
+    "MD": {
+      "name": "Comunidad de Madrid",
+      "escalaAutonomica": [
+        { "upTo": 13362.22, "rate": 0.085 },
+        { "upTo": 19004.63, "rate": 0.107 },
+        { "upTo": 35425.68, "rate": 0.128 },
+        { "upTo": 57320.40, "rate": 0.174 },
+        { "upTo": null, "rate": 0.205 }
+      ],
+      "minimosOverride": {
+        "contribuyente": 5956.65, "mayor65": 1234.26, "mayor75": 1502.58,
+        "descendientes": [2575.85, 2897.83, 4400, 4950], "menor3": 3005.16,
+        "ascendiente": 1234.26, "ascendiente75": 1502.58,
+        "discapacidad33": 3219.81, "discapacidad65": 9659.44, "asistencia": 3219.81
+      },
+      "holidays": ["04-02", "11-02", "12-07"]
     }
   },
   "modelo130": {
@@ -156,6 +174,9 @@
     "/regions/VC/escalaAutonomica": { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2, redacción del art. 18 de la Ley 5/2026 de la Generalitat (BOE-A-2026-19331), con efectos para los hechos imponibles devengados desde 2026-01-01; its D.T. 3.ª sets another scale from 2027", "verified": "2026-09-27" },
     "/regions/VC/minimosOverride":  { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.1 (contribuyente, mayor65, mayor75), 2 bis.2 (descendientes, menor3), 2 bis.3 (ascendiente, ascendiente75), 2 bis.4 (discapacidad33, discapacidad65, asistencia), añadido por el Decreto-ley 14/2022; consolidated text updated 2026-09-18 with no later version", "verified": "2026-09-27" },
     "/regions/VC/holidays":         { "kind": "boe", "ref": "Días inhábiles de la Comunitat Valenciana beyond the national ones, Monday to Friday: Resolución de 18 de noviembre de 2025 (BOE-A-2025-23702), anexo", "verified": "2026-09-27" },
+    "/regions/MD/escalaAutonomica": { "kind": "boe", "ref": "DL 1/2010 (Madrid) art. 1, redacción de la Ley 13/2023 art. único.1, para los periodos impositivos iniciados desde el 1 de enero de 2023 (BOCM-m-2010-90068, versión vigente desde 2023-12-22); no later version: Leyes 6/2025, 3/2026 and 5/2026 of Madrid amend other articles", "verified": "2026-09-27" },
+    "/regions/MD/minimosOverride":  { "kind": "boe", "ref": "DL 1/2010 (Madrid) art. 2 (contribuyente, mayor65, mayor75), 2 bis (descendientes, menor3), 2 ter (ascendiente, ascendiente75), 2 quater (discapacidad33, discapacidad65, asistencia), redacción de la Ley 13/2023 art. único.2–5; no later version", "verified": "2026-09-27" },
+    "/regions/MD/holidays":         { "kind": "boe", "ref": "Días inhábiles de la Comunidad de Madrid beyond the national ones, Monday to Friday: Resolución de 18 de noviembre de 2025 (BOE-A-2025-23702), anexo", "verified": "2026-09-27" },
     "/modelo130/rate":              { "kind": "boe", "ref": "RIRPF art. 110.1.a", "verified": "2026-09-27" },
     "/modelo130/retencionExemptionShare": { "kind": "boe", "ref": "RIRPF art. 109.2", "verified": "2026-09-27" },
     "/modelo130/mortgageRate":      { "kind": "boe", "ref": "RIRPF art. 110.3.d.1.º: 2 % del rendimiento neto del trimestre, only where the contribuyente's rendimientos íntegros previsibles for the year are under 33.007,20 € and has derecho a la deducción por inversión en vivienda habitual under LIRPF D.T. 18.ª, which since 2013 requires the vivienda to have been adquirida, or its construcción started, before 2013-01-01. Neither condition is data any calculator reads yet (#2), so it is recorded here rather than in unused schema fields (#49)", "verified": "2026-09-27" },

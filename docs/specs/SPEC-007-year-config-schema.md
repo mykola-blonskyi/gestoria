@@ -59,7 +59,7 @@
 ```
 Scales use `upTo` (upper bound of tranche, `null` = open) so a tranche's width is derived, avoiding off-by-one edits.
 
-`minimosOverride` holds the mínimos the region's own scale is measured against (LIRPF art. 56.3 and 74.1). `null` means the region approved no amounts of its own, and the state `irpf.minimos` apply to its scale as well. Otherwise it carries every amount of `irpf.minimos` except `descendienteIncomeCap` and `descendienteAgeCap`, which are conditions a region cannot change. A partial set is a schema error: taking the missing amounts from the state would mix two laws without saying so. VC's amounts are Ley 13/1997 art. 2 bis (#29). The engine reads only `contribuyente` today; the others wait for the mínimo calculator (golden #7).
+`minimosOverride` holds the mínimos the region's own scale is measured against (LIRPF art. 56.3 and 74.1). `null` means the region approved no amounts of its own, and the state `irpf.minimos` apply to its scale as well. Otherwise it carries every amount of `irpf.minimos` except `descendienteIncomeCap` and `descendienteAgeCap`, which are conditions a region cannot change. A partial set is a schema error: taking the missing amounts from the state would mix two laws without saying so. VC's amounts are Ley 13/1997 art. 2 bis (#29), MD's DL 1/2010 (Madrid) arts. 2 to 2 quater (#60). The engine reads only `contribuyente` today; the others wait for the mínimo calculator (golden #7).
 
 Social security bands carry **both** bounds. The theory gives them as a range (§6.2), and keeping only the upper bound makes a gap between two bands undetectable.
 
@@ -105,7 +105,7 @@ That line is not stylistic. JSON Schema can express some ordering constraints th
 | Rates in [0,1] | `$defs/rate` |
 | Money non-negative | `$defs/money` |
 | `upTo` positive or `null` | `{"type": ["number","null"], "exclusiveMinimum": 0}` |
-| `regions` contains `VC` | `"regions": { "required": ["VC"] }` |
+| `regions` contains `VC` and `MD`, the v1.0 regions (ADR-0016) | `"regions": { "required": ["VC", "MD"] }` |
 | Region codes are ISO 3166-2:ES-shaped | `propertyNames` pattern |
 | Casilla keys are four digits | `propertyNames` pattern |
 | `sources` non-empty, each `ref` non-empty | `minItems` + `minLength` |

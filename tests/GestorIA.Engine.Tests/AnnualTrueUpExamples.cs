@@ -107,10 +107,12 @@ public class AnnualTrueUpExamples
     public void ARegionWithoutAScaleFailsRatherThanFallingBackToTheStateScale()
     {
         var unknown = Assert.Throws<ConfigNotFoundException>(() => Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 960m, region: "XX"));
-        var incomplete = Assert.Throws<ConfigNotFoundException>(() => Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 960m, region: "MD"));
+        var incomplete = Assert.Throws<ConfigNotFoundException>(() => Run(
+            salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 960m,
+            region: TaxYearConfigFiles.DeclaredIncompleteRegion, config: TaxYearConfigFiles.Year2025WithDeclaredIncompleteRegion));
 
         Assert.Equal("Region XX is not in this configuration.", unknown.Message);
-        Assert.StartsWith("Region MD is declared incomplete", incomplete.Message);
+        Assert.StartsWith("Region GA is declared incomplete", incomplete.Message);
     }
 
     [Fact]
