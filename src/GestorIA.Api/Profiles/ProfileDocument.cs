@@ -97,9 +97,10 @@ public sealed record ProfileProjection(
     [property: RegularExpression(ProfileAmounts.ZeroOrMore)] string BaseCotizacion);
 
 // Euros and cents as a person types them. Twelve digits before the point fit the numeric(18,6) columns (ADR-0006), and at most
-// two after it means nothing typed is rounded on the way into the database.
+// two after it means nothing typed is rounded on the way into the database. [0-9], not \d, which in .NET matches any
+// Unicode digit ("١٢٣") that decimal.Parse then refuses.
 public static class ProfileAmounts
 {
-    public const string ZeroOrMore = @"^\d{1,12}(\.\d{1,2})?$";
-    public const string Signed = @"^-?\d{1,12}(\.\d{1,2})?$";
+    public const string ZeroOrMore = @"^[0-9]{1,12}(\.[0-9]{1,2})?$";
+    public const string Signed = @"^-?[0-9]{1,12}(\.[0-9]{1,2})?$";
 }

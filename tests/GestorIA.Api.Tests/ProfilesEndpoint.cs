@@ -166,6 +166,23 @@ public class ProfilesEndpoint
         Assert.Empty(JsonNode.Parse(await api.CreateClient().GetStringAsync("/api/v1/profiles"))!.AsArray());
     }
 
+    // Both pass a naive \d...$ pattern and then fail to parse: they must be a 400 naming the field, never a 500 whose logged
+    // exception would carry the typed amount (SPEC-013).
+    [Theory]
+    [InlineData("١٢٣")]
+    [InlineData("123\n")]
+    public async Task AnAmountThatOnlyLooksLikeDigitsIsRefusedAtItsPath(string ingresos)
+    {
+        await using var api = await Api();
+        var profile = RepoFiles.GoldenProfile("G12");
+        profile["employment"]!["ingresos"] = ingresos;
+
+        var response = await api.CreateClient().PostProfile(profile);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(["$.employment.ingresos"], (await response.Json())["errors"]!.AsObject().Select(e => e.Key));
+    }
+
     [Theory]
     [InlineData(1999, "1999-01-15", "$.taxYear")]
     [InlineData(2025, "2026-01-01", "$.activity.alta")]

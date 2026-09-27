@@ -106,8 +106,8 @@ export function validate(values: ProfileValues): FieldErrors {
 }
 
 // The API's patterns (src/GestorIA.Api/Profiles/ProfileDocument.cs, ProfileAmounts).
-const amount = (text: string): ErrorKey | null => (/^\d{1,12}(\.\d{1,2})?$/.test(text) ? null : "amount");
-const signedAmount = (text: string): ErrorKey | null => (/^-?\d{1,12}(\.\d{1,2})?$/.test(text) ? null : "signedAmount");
+const amount = (text: string): ErrorKey | null => (/^[0-9]{1,12}(\.[0-9]{1,2})?$/.test(text) ? null : "amount");
+const signedAmount = (text: string): ErrorKey | null => (/^-?[0-9]{1,12}(\.[0-9]{1,2})?$/.test(text) ? null : "signedAmount");
 const date = (text: string): ErrorKey | null => {
   const day = /^\d{4}-\d{2}-\d{2}$/.test(text) ? new Date(`${text}T00:00:00Z`) : null;
   return day !== null && !Number.isNaN(day.getTime()) && day.toISOString().startsWith(text) ? null : "date";

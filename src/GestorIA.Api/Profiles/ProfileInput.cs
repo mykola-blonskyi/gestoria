@@ -44,9 +44,10 @@ public static class ProfileInput
         // A local function: declared inside Parse, it can add to errors, like a closure in TypeScript.
         DomainMoney Amount(string path, string text, Regex rule, string expected)
         {
-            if (rule.IsMatch(text))
+            // TryParse as well as the pattern: .NET's $ also matches before a final "\n", which the pattern lets through.
+            if (rule.IsMatch(text) && decimal.TryParse(text, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var amount))
             {
-                return new DomainMoney(decimal.Parse(text, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture));
+                return new DomainMoney(amount);
             }
 
             errors[path] = [$"{path} is \"{text}\"; it must be {expected}."];
