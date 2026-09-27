@@ -7,7 +7,7 @@ Versioned (`/api/v1`), JSON, OpenAPI 3.1 generated from code, problem+json error
 
 > **v1.0 trim (2026-09-18).** Idempotency keys and cursor pagination wait for a second user and a large collection. One user with four filings a year has neither problem. The versioned path, OpenAPI generation and problem+json stay, because they cost nothing now and are expensive to retrofit.
 
-## 1.1 Built so far (#66, #68, #69, #72)
+## 1.1 Built so far (#66, #68, #69, #72, #74)
 
 - `GET /api/v1/health/live` answers 204 while the process runs. `GET /api/v1/health/ready` answers 204 when PostgreSQL accepts a connection within 5 seconds, and otherwise the 503 `database-unavailable` problem (`src/GestorIA.Api/Health.cs`). Neither needs the key. OCR reachability joins readiness when the OCR service does (§2).
 - `GET /api/v1/config/tax-years` and `GET /api/v1/config/tax-years/{year}`: each year's `configHash`, usable regions and declared gaps (SPEC-007 §3), read through `TaxYearConfigLoader` from the files copied next to the binary (`TaxYears:Directory` overrides). An unknown year is a 404.
@@ -16,7 +16,8 @@ Versioned (`/api/v1`), JSON, OpenAPI 3.1 generated from code, problem+json error
   - `GET /api/v1/profiles` lists the stored profiles; `POST /api/v1/profiles` stores one (201 with `Location`); `GET` and `PUT /api/v1/profiles/{id}` read and replace it; an unknown id is a 404 `profile-not-found`. Local mode keeps one profile per installation, held by the database (a unique index on an always-true `Singleton` column), so concurrent creates store exactly one: a second `POST` is a 409 `profile-exists` naming the first. The tax year is a field of the profile, so changing year is a `PUT`.
   - The body is `ProfileInputDocument`: `taxYear`, `region`, `employment { ingresos, seguridadSocial }`, `activity { alta, previousYear, newActivity }` and `projection { ingresos, gastos, baseCotizacion }`, the console input file's profile and projection. The two either-or facts are objects tagged by `kind`: `previousYear` is `{ "kind": "noActivity" }` or `{ "kind": "rendimientoNeto", "rendimientoNeto": "-1234.56" }`, `newActivity` is `{ "kind": "established" }` or `{ "kind": "started", "period": "first" | "following", "ingresosFromFormerEmployer": "0.00" }`. Amounts are strings in euros with at most two decimals and twelve digits, so the `numeric(18,6)` columns hold them exactly. A body of the wrong shape is refused at its first wrong field; a body of the right shape has every value checked and every refused one named at once in `errors`: the year must have a configuration, the region must be in it, the alta must fall in the year or before, the base de cotización must be a base of the year's tables (LGSS art. 308.1.a 3.ª).
   - `GET /api/v1/profiles/{id}/set-aside/estimate?asOf=Qn` runs the set-aside estimator on the stored profile and answers `SetAsideEstimate`. No closed quarter is stated: the actuals are ledger data, which arrives with transactions, so the projection covers every month of alta. For a golden with no actuals (G12, G16, G22) the answer equals the input file's, step by step. A year whose configuration lacks what the estimate needs is a 422 `config-gap`: every 2026 estimate today, since `2026.json` declares its renta window and Q4 Modelo 130 deadline unpublished.
-  - Nothing about the profile is logged (SPEC-013 §2): `ProfileNotLogged` captures every log category at Trace, EF Core's SQL included, while a profile is created, refused, replaced, read and estimated, and finds none of its amounts and nothing shaped like a NIF or an IBAN.
+  - `GET /api/v1/profiles/{id}/export` answers everything stored for the profile in one versioned document (§2.1), with `Cache-Control: no-store` and `Content-Disposition: attachment; filename="gestoria-export-YYYY-MM-DD.json"`, the UTC day of the export and nothing about whose it is (#74). `DELETE /api/v1/profiles/{id}` deletes the profile and every row that belongs to it and answers 204; the rows go with it through their foreign keys' `ON DELETE CASCADE`, in one statement. Nothing is kept. Both answer an unknown id with 404 `profile-not-found`. `tests/GestorIA.Api.Tests/ProfileDeletion.cs` is the documented deletion test (SPEC-013 §4): it reads every table from the EF Core model, requires each to hold a row before the delete and none after, so a table added later is covered without editing it.
+  - Nothing about the profile is logged (SPEC-013 §2): `ProfileNotLogged` captures every log category at Trace, EF Core's SQL included, while a profile is created, refused, replaced, read, estimated, exported and deleted, and finds none of its amounts and nothing shaped like a NIF or an IBAN.
 - Bank statements and their movements (#72, `src/GestorIA.Api/Transactions/`), stored under the profile in PostgreSQL:
   - `POST /api/v1/profiles/{id}/bank-statements?bank=bbva` imports a statement. The body is the file itself, sent as `text/csv`, `text/plain` or `application/vnd.ms-excel` (the label Windows gives a `.csv` when Excel is installed); any other `Content-Type`, a form upload or JSON among them, or none, is a 415 `statement-media-type`, after the key check like every refusal. At most 2 MiB (`StatementFile.MaxBytes`; a year of a personal account is well under 200 KB), read before anything else and refused whole above that with a 413 `statement-too-large`. What is not text is refused before parsing: a ZIP archive such as an XLSX workbook, anything holding a NUL byte (UTF-16 among them). The text is UTF-8, with or without a byte-order mark, else Windows-1252. The `bank` adapter parses it (SPEC-004 §5); a file it cannot read is refused whole, with nothing stored, as `invalid-input` whose `errors` are keyed `file` or `line N` and never quote the file. The answer is `BankStatementImport { bank, lines, imported, alreadyImported }`.
   - **Idempotent by a key per line.** A line's key is the SHA-256 of its booking date, value date, amount and description, and of its occurrence: the count of identical lines before it in the same file. Two identical coffees on one day are two lines, and a later export covering the same days gives them the same two keys. The balance is not part of the key. A unique index on `(ProfileId, LineKey)` holds it in the database, and imports into one profile run one at a time under the profile's row lock (`SELECT … FOR UPDATE`), so importing a statement again, or an overlapping one, or the same one twice at once, stores each line once. Without an account in the key, two accounts that print the same line on the same day would count it once; accounts arrive with the classifier (SPEC-001 §7).
@@ -27,7 +28,7 @@ Versioned (`/api/v1`), JSON, OpenAPI 3.1 generated from code, problem+json error
 - Problem types (`src/GestorIA.Api/Problems.cs`): `invalid-input` (400, `errors` keyed by the JSON path of each refused value, by the name of a missing or malformed query parameter such as `taxYear`, `asOf`, `bank`, `year` or `quarter`, or by `file` or `line N` for a statement), `config-gap` (422: no file for the year, or a value the file lacks or declares unpublished), `estimate-refused` (422: an input only the engine can judge, such as actuals out of order), `tax-year-not-found` (404), `profile-not-found` (404), `profile-exists` (409), `statement-too-large` (413), `statement-media-type` (415), `api-key-required` (401: no key, more than one, or the wrong one, without saying which), `database-unavailable` (503: the API runs but PostgreSQL does not answer it).
 - The web app unlocks only once the key is accepted and `/health/ready` answers: with the database down, the unlock screen says so and shows `docker compose up -d postgres`, as it shows how to start the API when that does not answer. A 503 `database-unavailable` later on the overview, in settings or on the transactions page says the same in the app's language.
 - The OpenAPI 3.1 document is generated at build time into `src/GestorIA.Api/openapi/v1.json` and committed. CI fails when it is stale, and oasdiff fails a pull request that breaks the base branch's document (§5). `tests/GestorIA.Api.Tests` validates every set-aside golden's input and every answer against it.
-- CORS allows the web app's origin (`Cors:Origins`) and its `X-Api-Key` header.
+- CORS allows the web app's origin (`Cors:Origins`), the methods `GET`, `POST`, `PUT` and `DELETE`, and its `X-Api-Key` header.
 - The local API key of §3 (#68): every endpoint but the health checks answers `401` problem+json `api-key-required` without it.
 
 ## 2. Resources
@@ -49,8 +50,31 @@ Versioned (`/api/v1`), JSON, OpenAPI 3.1 generated from code, problem+json error
 | `GET /calculations/{id}` · `GET /calculations/{id}/trace` · `GET /calculations/{id}/export?format=csv|pdf` | |
 | `GET /profiles/{id}/calendar` | Upcoming deadlines with amounts when known |
 | `GET /config/tax-years` · `GET /config/tax-years/{year}` | Read-only config (for SPA labels) |
-| `GET /profiles/{id}/export` · `DELETE /profiles/{id}` | GDPR export/delete (SPEC-013) |
+| `GET /profiles/{id}/export` · `DELETE /profiles/{id}` | GDPR export/delete (SPEC-013); the export format is §2.1 (#74) |
 | `GET /health/live` · `GET /health/ready` | readiness includes DB and OCR reachability |
+
+## 2.1 Export format (#74)
+
+`GET /profiles/{id}/export` answers `ProfileExport`, the file the user keeps outside the machine and what the restore (#75) reads back:
+
+```json
+{
+  "format": "gestoria.export",
+  "formatVersion": 1,
+  "classification": "personal-financial-data",
+  "exportedAt": "2026-09-28T09:00:00+00:00",
+  "entities": {
+    "profiles": [ { "id": "…", "taxYear": 2025, "region": "VC", "employment": { … }, "activity": { … }, "projection": { … } } ]
+  }
+}
+```
+
+- `format` is always `gestoria.export`, so a reader can refuse a file that is not an export before it looks further.
+- `formatVersion` is an integer. It is raised when a change would make an existing export read differently: an entity kind or a field removed or renamed, or a field whose meaning changes. Adding an entity kind, or an optional field to one, keeps the version. A reader never drops what it does not know: a restore that meets a version, an entity kind or a field it does not know refuses the file rather than restore part of it.
+- `classification` labels the file as personal financial data (SPEC-013 §1) wherever it ends up.
+- `exportedAt` is the moment of the export, ISO-8601 with its offset, in UTC.
+- `entities` maps each stored entity kind to the list of that kind's rows that belong to the profile, each in the shape the API answers for it elsewhere: `profiles` holds the one `ProfileView` (§1.1), with its `id`. Money stays a two-decimal string and dates ISO-8601, as everywhere in the API. Version 1 has one kind, `profiles`; a kind added by a later ticket is a new member of `entities`.
+- The export holds only what the user entered or uploaded, plus the ids the API gave it, and nothing computed: estimates and traces are recomputed from it.
 
 ## 3. Auth
 v1 local mode: single user, API key in header. OIDC (Authorization Code + PKCE) behind a feature flag for hosted mode; all resources scoped to the authenticated user.
