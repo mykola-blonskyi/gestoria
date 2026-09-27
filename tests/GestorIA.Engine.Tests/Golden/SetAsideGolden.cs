@@ -26,7 +26,7 @@ internal static class SetAsideGolden
             : new PreviousYear.NoActivity();
 
         var actuals = pictureJson["actuals"]!.AsArray()
-            .Select(a => new QuarterToDate(Enum.Parse<Quarter>(a!["quarter"]!.GetValue<string>()), MoneyOf(a["ingresosYtd"]), MoneyOf(a["gastosYtd"])))
+            .Select(a => new QuarterToDate(Enum.Parse<Quarter>(a!["quarter"]!.GetValue<string>()), MoneyOf(a["ingresosYtd"]), MoneyOf(a["gastosYtd"]), MoneyOf(a["cuotasSsYtd"])))
             .ToList();
 
         var projectionJson = pictureJson["projection"]!;

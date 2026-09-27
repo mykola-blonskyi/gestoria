@@ -21,7 +21,8 @@
       {
         "quarter": "Q1",
         "ingresosYtd": "6000.00",
-        "gastosYtd": "345.33"
+        "gastosYtd": "345.33",
+        "cuotasSsYtd": "205.33"
       }
     ],
     "projection": {

@@ -35,7 +35,8 @@ The input is the `setAside.inputs` object of a set-aside golden (`tests/golden/2
 | `profile.activity.previousYear` | `"noActivity"`, or `{ "rendimientoNeto": "8000.00" }` for the previous year's activity net |
 | `profile.activity.newActivity` | `"established"`, or `{ "period": "first" \| "following", "ingresosFromFormerEmployer": "0.00" }` (LIRPF art. 32.3) |
 | `activity.retenciones` | `"foreignPayersOnly"`, the only case the estimator covers (SPEC-003 §0) |
-| `activity.actuals` | The closed quarters in order, each `{ "quarter", "ingresosYtd", "gastosYtd" }` cumulative from 1 January with the RETA cuotas in gastos; `[]` when none is closed |
+| `activity.actuals` | The closed quarters in order, each `{ "quarter", "ingresosYtd", "gastosYtd", "cuotasSsYtd" }` cumulative from 1 January; `[]` when none is closed |
+| `activity.actuals[].cuotasSsYtd` | The RETA cuotas TGSS actually charged from 1 January to the end of the quarter, as the bank statement shows them, also counted in `gastosYtd`. The TGSS rendimiento computable adds these back, not the cuota of the tramo the year settles on (#52) |
 | `activity.projection.ingresos`, `.gastos` | What the rest of the year is expected to invoice and spend, the RETA cuota excluded |
 
 A missing, null or unknown field, a negative amount, or a value of the wrong shape is rejected with its JSON path and what it must be. What only the engine can judge, such as actuals out of order, the engine rejects with its own reason.

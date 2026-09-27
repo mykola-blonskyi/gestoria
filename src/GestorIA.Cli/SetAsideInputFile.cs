@@ -49,8 +49,9 @@ public static class SetAsideInputFile
                 actual ?? throw new InvalidInputFileException(Invariant($"{actuals.GetPath()}[{index}] is null.")),
                 "quarter",
                 "ingresosYtd",
-                "gastosYtd"))
-            .Select(actual => new QuarterToDate(QuarterOf(actual, "quarter"), Amount(actual, "ingresosYtd"), Amount(actual, "gastosYtd")))
+                "gastosYtd",
+                "cuotasSsYtd"))
+            .Select(actual => new QuarterToDate(QuarterOf(actual, "quarter"), Amount(actual, "ingresosYtd"), Amount(actual, "gastosYtd"), Amount(actual, "cuotasSsYtd")))
             .ToList();
 
         return new SetAsideInput(
