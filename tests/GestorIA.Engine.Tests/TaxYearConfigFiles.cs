@@ -13,6 +13,12 @@ internal static class TaxYearConfigFiles
 
     internal static TaxYearConfig Year2025 => LazyYear2025.Value;
 
+    internal const string File2026 = "2026.json";
+
+    private static readonly Lazy<TaxYearConfig> LazyYear2026 = new(() => new TaxYearConfigLoader(Root()).Load(2026));
+
+    internal static TaxYearConfig Year2026 => LazyYear2026.Value;
+
     internal static string Root([CallerFilePath] string here = "")
     {
         var dir = Path.GetDirectoryName(here)
