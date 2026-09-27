@@ -29,7 +29,9 @@ The "no expense without invoice" rule is enforced structurally: `DEDUCTIBLE_EXPE
 User corrections are stored as `ClassificationFeedback { pattern, class }` and become per-user rules evaluated before step 7. No ML in v1.
 
 ## 5. Input adapters
-`IStatementParser` (existing interface in `Domain/Interfaces`) implementations per bank: BBVA CSV/XLSX (existing `BbvaCsvStatementParser` to be adapted to the new `BankTransaction`), Sabadell, Revolut, Wise, generic CSV with column mapping. PDF statements go through SPEC-005.
+`IStatementParser` (existing interface in `Domain/Interfaces`) implementations per bank: BBVA CSV/XLSX, Sabadell, Revolut, Wise, generic CSV with column mapping. PDF statements go through SPEC-005.
+
+Built so far (#72): `IStatementParser.Parse(text)` answers every `BankTransaction` of a statement in the file's order, or refuses the whole file with `InvalidStatementException`, whose errors name each unreadable line by number and never quote it. `BbvaCsvStatementParser` reads BBVA's CSV (`Fecha;Fecha Valor;Concepto;Importe;Saldo`, dates `dd/MM/yyyy`, Spanish amounts, `;` inside double quotes allowed). BBVA XLSX is not read yet; the API refuses a ZIP file with a message saying to export CSV.
 
 ## 6. Acceptance
 - Precision ≥ 98 % on SOCIAL_SECURITY, AEAT_PAYMENT, OWN_TRANSFER.

@@ -30,7 +30,7 @@ public class TransactionsNotLogged
             .SelectMany(amount => new[] { amount, decimal.Parse(amount, NumberStyles.Number, new CultureInfo("es-ES")).ToString("0.00", CultureInfo.InvariantCulture) });
 
         Assert.Contains(api.Lines, line => line.Contains("BankTransactions", StringComparison.Ordinal));
-        foreach (var secret in descriptions.Concat(amounts).Append("ES91"))
+        foreach (var secret in descriptions.Concat(amounts).Append("ES12"))
         {
             Assert.DoesNotContain(api.Lines, line => line.Contains(secret, StringComparison.Ordinal));
         }
