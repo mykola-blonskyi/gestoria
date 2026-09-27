@@ -20,6 +20,31 @@ public class ScaleCalculatorExamples
         Assert.Equal(2887.50m, ScaleCalculator.Cuota(Valenciana2025, 26050m));
     }
 
+    // The "Cuota íntegra" column of Ley 13/1997 (CV) art. 2.1 as worded by Ley 9/2022 (BOE-A-1998-8202, version in force
+    // from 2023-01-01), the same table as AEAT Manual práctico Renta 2025, cap. 15, Comunitat Valenciana (#48). The last row
+    // is the open tranche: 47,700 plus 29.50 % of 50,000.
+    public static TheoryData<decimal, decimal> ValencianaCuotaIntegraColumn() => new()
+    {
+        { 12000m, 1080m },
+        { 22000m, 2280m },
+        { 32000m, 3780m },
+        { 42000m, 5530m },
+        { 52000m, 7530m },
+        { 62000m, 9780m },
+        { 72000m, 12280m },
+        { 100000m, 19700m },
+        { 150000m, 33450m },
+        { 200000m, 47700m },
+        { 250000m, 62450m },
+    };
+
+    [Theory]
+    [MemberData(nameof(ValencianaCuotaIntegraColumn))]
+    public void Valenciana2025_ReproducesTheCuotaIntegraColumnOfTheLaw(decimal baseLiquidable, decimal cuota)
+    {
+        Assert.Equal(cuota, ScaleCalculator.Cuota(Valenciana2025, baseLiquidable));
+    }
+
     [Fact]
     public void BaseInsideOpenTranche_UsesTopRateForTheExcess()
     {

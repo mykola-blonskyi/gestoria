@@ -152,8 +152,8 @@ public class AnnualTrueUpExamples
     {
         var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 4802.40m, advances: 4787.54m);
 
-        Assert.Equal(9217.12748m, Output(result, "renta.liability-on-activity"));
-        Assert.Equal(new Money(9217.13m), result.LiabilityOnActivity);
+        Assert.Equal(9234.4652m, Output(result, "renta.liability-on-activity"));
+        Assert.Equal(new Money(9234.47m), result.LiabilityOnActivity);
     }
 
     [Fact]
@@ -163,8 +163,8 @@ public class AnnualTrueUpExamples
 
         Assert.Equal(new YearMonth(2026, 6), result.PayableIn);
         var warning = Assert.Single(result.Warnings, w => w.Code == WarningCodes.MarginalVsEffective);
-        Assert.Contains("Stacked on the employment income, the 23937.72 € of activity net income adds 9217.13 € of tax: an effective rate of 38.50 %, and 40.90 % on its last euro.", warning.Text);
-        Assert.Contains("4429.59 € more, payable by 2026-06-30", warning.Text);
+        Assert.Contains("Stacked on the employment income, the 23937.72 € of activity net income adds 9234.47 € of tax: an effective rate of 38.58 %, and 41.00 % on its last euro.", warning.Text);
+        Assert.Contains("4446.93 € more, payable by 2026-06-30", warning.Text);
     }
 
     [Fact]
@@ -181,7 +181,7 @@ public class AnnualTrueUpExamples
 
     private static TraceStep ReduccionInicio(AnnualTrueUpResult result) => result.Trace.Steps.Single(s => s.Id == "renta.actividad.reduccion-inicio");
 
-    // G11 as a new activity: 20 % of the 23,937.72 net comes off the stacked base. The #9 verifier estimated about 1,958 less tax.
+    // G11 as a new activity: 20 % of the 23,937.72 net comes off the stacked base.
     [Fact]
     public void AFirstPositivePeriodTakesTwentyPercentOffTheActivityNet()
     {
@@ -190,8 +190,8 @@ public class AnnualTrueUpExamples
 
         Assert.Equal(4787.544m, ReduccionInicio(started).Euros());
         Assert.Equal(54550.176m, Output(started, "renta.stacked.base-liquidable"));
-        Assert.Equal(new Money(7259.02m), started.LiabilityOnActivity);
-        Assert.Equal(1958.105496m, Output(established, "renta.liability-on-activity") - Output(started, "renta.liability-on-activity"));
+        Assert.Equal(new Money(7271.57m), started.LiabilityOnActivity);
+        Assert.Equal(1962.89304m, Output(established, "renta.liability-on-activity") - Output(started, "renta.liability-on-activity"));
     }
 
     [Fact]
@@ -274,15 +274,15 @@ public class AnnualTrueUpExamples
         Assert.Contains("Art. 32.2.1º is ruled out for this profile", first.Reference);
     }
 
-    // Below the 100,000 cap one more euro of net adds only 0.80 € to the base, so the base's 40.90 % costs 32.72 % of that euro.
+    // Below the 100,000 cap one more euro of net adds only 0.80 € to the base, so the base's 41.00 % costs 32.80 % of that euro.
     [Fact]
     public void WhileTheReductionAppliesTheLastEuroOfActivityIsTaxedAtTheReducedRate()
     {
         var result = Run(salary: 40000m, ss: 2600m, ingresos: 30000m, gastos: 960m, advances: 5408m, newActivity: FirstPeriod());
 
-        Assert.Equal(new Rate(0.409m), result.MarginalRate);
+        Assert.Equal(new Rate(0.41m), result.MarginalRate);
         var warning = Assert.Single(result.Warnings, w => w.Code == WarningCodes.MarginalVsEffective);
-        Assert.Contains("and 32.72 % on its last euro (40.90 % on the base, which takes only 80.00 % of that euro after the LIRPF art. 32.3 reduction)", warning.Text);
+        Assert.Contains("and 32.80 % on its last euro (41.00 % on the base, which takes only 80.00 % of that euro after the LIRPF art. 32.3 reduction)", warning.Text);
     }
 
     [Fact]

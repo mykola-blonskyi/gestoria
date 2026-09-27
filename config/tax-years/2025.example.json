@@ -10,6 +10,8 @@
     { "ref": "Real Decreto Legislativo 8/2015 (LGSS), art. 308.1.c, redacción del RDL 13/2022 (rendimiento computable de los autónomos)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11724" },
     { "ref": "AEAT, Instrucciones del modelo 130, casillas 05, 13, 15 y 19 (página actualizada 11/09/2026): sin actividad en el ejercicio anterior, rendimiento neto cero", "url": "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html" },
     { "ref": "Ley 13/1997, de 23 de diciembre, de la Generalitat Valenciana (tramo autonómico del IRPF), art. 2 bis, añadido por el Decreto-ley 14/2022 (texto consolidado, última actualización 10/08/2026)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1998-8202" },
+    { "ref": "Ley 13/1997, de 23 de diciembre, de la Generalitat Valenciana, art. 2.1 (escala autonómica), redacción de la Ley 9/2022, de 30 de diciembre, disp. final 1.1 (texto consolidado, versión vigente desde 01/01/2023)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1998-8202" },
+    { "ref": "AEAT Manual práctico Renta 2025, cap. 15, Gravamen autonómico, Comunitat Valenciana: escala aplicable en el ejercicio 2025 (página actualizada 17/03/2026)", "url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025/c15-calculo-impuesto-determinacion-cuotas-integras/gravamen-base-liquidable-general/gravamen-autonomico/comunitat-valenciana.html" },
     { "ref": "AEAT Manual práctico Renta 2025, cap. 14, Comunitat Valenciana: importes del mínimo personal y familiar (página actualizada 17/03/2026)", "url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025/c14-adecuacion-impuesto-circunstancias-personales/minimo-autonomico-personal-familiar/comunitat-valenciana-importes-minimo-personal-familiar.html" }
   ],
   "irpf": {
@@ -63,12 +65,12 @@
         { "upTo": 22000, "rate": 0.12 },
         { "upTo": 32000, "rate": 0.15 },
         { "upTo": 42000, "rate": 0.175 },
-        { "upTo": 52000, "rate": 0.199 },
-        { "upTo": 62000, "rate": 0.224 },
-        { "upTo": 72000, "rate": 0.249 },
-        { "upTo": 100000, "rate": 0.266 },
-        { "upTo": 150000, "rate": 0.279 },
-        { "upTo": 200000, "rate": 0.289 },
+        { "upTo": 52000, "rate": 0.20 },
+        { "upTo": 62000, "rate": 0.225 },
+        { "upTo": 72000, "rate": 0.25 },
+        { "upTo": 100000, "rate": 0.265 },
+        { "upTo": 150000, "rate": 0.275 },
+        { "upTo": 200000, "rate": 0.285 },
         { "upTo": null, "rate": 0.295 }
       ],
       "minimosOverride": {
@@ -144,7 +146,7 @@
     "/irpf/inmuebles":              { "kind": "theory", "ref": "Theory §8.2, ed. 2" },
     "/irpf/reducciones":            { "kind": "theory", "ref": "Theory §5.4, ed. 2" },
     "/irpf/obligacion":             { "kind": "theory", "ref": "Theory §3.1, ed. 2" },
-    "/regions/VC/escalaAutonomica": { "kind": "theory", "ref": "Theory §4.2, ed. 2" },
+    "/regions/VC/escalaAutonomica": { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2.1, redacción de la Ley 9/2022 disp. final 1.1, para los periodos impositivos concluidos desde el 1 de enero de 2023 (BOE-A-1998-8202, versión vigente desde 2023-01-01, the last before Ley 5/2026 changes it from 2026); AEAT Manual práctico Renta 2025, cap. 15, Comunitat Valenciana. Theory §4.2 has 19.9, 22.4, 24.9, 26.6, 27.9 and 28.9 from 42,000 up, which no version of the law has (#48)", "verified": "2026-09-27" },
     "/regions/VC/minimosOverride/contribuyente":  { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.1.a; AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },
     "/regions/VC/minimosOverride/mayor65":        { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.1.b; AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },
     "/regions/VC/minimosOverride/mayor75":        { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.1.b, adicionalmente; AEAT Manual práctico Renta 2025, cap. 14", "verified": "2026-09-26" },

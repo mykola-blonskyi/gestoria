@@ -15,7 +15,7 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - [x] ADR-0001…0007 written (`docs/adr/`)
 - [x] SPEC-001…013 drafted (`docs/specs/`)
 - [x] `config/tax-years/2025.example.json` with scales, minimums, employment relief, activity params, casilla map
-- [ ] Verify the values the first goldens touch against the AEAT Manual, not the vault: `escalaEstatal`, `regions.VC.escalaAutonomica`, `minimos.contribuyente`, `minimos.descendientes`, `minimos.menor3`, `trabajo.otrosGastos`, and the seven values in `trabajo.reduccion`
+- [ ] Verify the values the first goldens touch against the AEAT Manual, not the vault: `escalaEstatal`, `regions.VC.escalaAutonomica` (done: Ley 13/1997 art. 2.1, #48), `minimos.contribuyente`, `minimos.descendientes`, `minimos.menor3`, `trabajo.otrosGastos`, and the seven values in `trabajo.reduccion`
 - [x] Record where each value came from. Landed as the `provenance` block keyed by JSON Pointer at the granularity of the verifiable unit (SPEC-007 §1.1), not as a per-value `{value, source, verified}` wrapper — that form roughly triples the file and buries changed numbers among changed dates. Every entry reads `kind: "theory"` today; sorting by `verified` ascending is the January queue
 - [ ] Drop the Madrid `_todo` block (ADR-0013) and rename `2025.example.json` to `2025.json`
 - [x] Fill `seguridadSocial.tramos` before January: the registration decision on contribution base and tarifa plana depends on it (ADR-0014). Filled with real 2025 BOE data (Orden PJC/178/2025), `tarifaPlana` confirmed against Ley 20/2007 art. 38 ter (#5)
