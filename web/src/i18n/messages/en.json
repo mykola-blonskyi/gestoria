@@ -34,14 +34,103 @@
   "Dashboard": {
     "title": "Overview",
     "lead": "How much of each payment you receive is not yours, and what falls due next.",
-    "points": {
-      "holdBack": "The share of every incoming payment to put aside, explained in one sentence and in the full step-by-step calculation.",
-      "nextPayment": "The next Modelo 130 payment and the days you can pay it.",
-      "cuota": "The monthly TGSS cuota for this quarter, and when the tarifa plana ends.",
-      "renta": "What the Renta will ask for on top of the Modelo 130 advances, and the month it is due.",
-      "warnings": "Every warning from the calculation next to the figure it concerns, and the tax-year configuration that produced the answer."
+    "form": {
+      "heading": "Your figures",
+      "privacy": "What you enter stays in this tab only. Nothing is saved: reloading or closing the tab empties the form.",
+      "loadFile": "Load from file",
+      "loadFileHint": "The console's input file (JSON), kept in a folder outside the repository.",
+      "fileUnreadable": "This file is not a console input file: it is not a JSON object.",
+      "taxYear": "Tax year",
+      "asOf": "Quarter of the estimate",
+      "region": "Region",
+      "employment": "Salary this year",
+      "employmentIngresos": "Gross salary (0.00 without employment)",
+      "employmentSeguridadSocial": "Your own Seguridad Social on the salary",
+      "registration": "Autónomo registration",
+      "alta": "Date of alta",
+      "previousYear": "Activity last year",
+      "previousYearNone": "No activity last year",
+      "previousYearNet": "Activity with a known net",
+      "previousYearNetAmount": "Last year's rendimiento neto (negative after a loss)",
+      "newActivity": "New activity (LIRPF art. 32.3)",
+      "established": "Not a new activity",
+      "first": "First period with a positive net",
+      "following": "The period after it",
+      "ingresosFromFormerEmployer": "Ingresos from last year's employer",
+      "retenciones": "Clients: EU businesses and US clients only, who withhold no retención and pay no IVA.",
+      "actuals": "Closed quarters",
+      "actualsHint": "Cumulative from 1 January, in order. The gastos include the RETA cuotas TGSS charged.",
+      "quarter": "Quarter",
+      "ingresosYtd": "Ingresos to date",
+      "gastosYtd": "Gastos to date",
+      "cuotasSsYtd": "RETA cuotas charged to date",
+      "addQuarter": "Add a closed quarter",
+      "removeQuarter": "Remove {quarter}",
+      "projection": "Rest of the year",
+      "projectionIngresos": "Expected ingresos",
+      "projectionGastos": "Expected gastos, without the RETA cuota",
+      "baseCotizacion": "Monthly base de cotización you pay",
+      "submit": "Calculate",
+      "calculating": "Calculating…"
     },
-    "pending": "The estimate comes from the GestorIA API, which is not built yet."
+    "errors": {
+      "required": "Required.",
+      "amount": "An amount in euros like 1234.56: digits and a decimal point, zero or more.",
+      "signedAmount": "An amount in euros like 1234.56, or -1234.56 after a loss.",
+      "date": "A calendar date.",
+      "fromApi": "The API refused this value: {reason}"
+    },
+    "failure": {
+      "network": "The GestorIA API is not answering. Start it and try again.",
+      "gap": "Not published yet",
+      "gapLead": "The tax-year configuration lacks a value this estimate needs, so the engine refuses rather than guess. The engine says:",
+      "refused": "The engine cannot estimate these figures",
+      "invalid": "The API refused the input",
+      "other": "The API answered with an error ({status}). Try again."
+    },
+    "taxYears": {
+      "loading": "Loading the tax years…"
+    },
+    "estimate": {
+      "heading": "Estimate",
+      "holdBack": "Hold back {share} of every payment you receive.",
+      "nextPayment": "Next Modelo 130, {quarter}",
+      "due": "Pay from {from} to {by}.",
+      "localHolidays": "Municipal holidays are not applied, so the date can be early but never late.",
+      "cuota": "TGSS cuota per month this quarter",
+      "renta": "Renta on top of the Modelo 130 advances",
+      "payableIn": "Payable by the end of {month}.",
+      "iva": "IVA to set aside",
+      "config": "Tax year {year}, configuration sha256 {hash}"
+    },
+    "notices": {
+      "heading": "Read these before relying on the figures",
+      "Info": "Note",
+      "Warning": "Warning",
+      "Error": "Error"
+    },
+    "trace": {
+      "heading": "How it was calculated",
+      "lead": "{count} steps in the engine's order, grouped by section. Titles, formulas and sources are the engine's own.",
+      "section": "{name} ({count})",
+      "inputs": "Inputs",
+      "formula": "Formula",
+      "result": "Result",
+      "source": "Source",
+      "sections": {
+        "Trabajo": "Employment income",
+        "Actividad": "Self-employed activity",
+        "Ahorro": "Savings",
+        "Inmuebles": "Property",
+        "Bases": "Tax bases",
+        "Minimo": "Personal and family allowance",
+        "Cuota": "Tax due (cuota)",
+        "Deducciones": "Deductions",
+        "Resultado": "Result",
+        "SeguridadSocial": "Seguridad Social (TGSS)",
+        "Modelo130": "Modelo 130"
+      }
+    }
   },
   "Payments": {
     "title": "Payments",

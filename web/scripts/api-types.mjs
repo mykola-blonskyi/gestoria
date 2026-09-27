@@ -10,7 +10,7 @@ if (!existsSync(document)) {
   console.error(
     [
       `api:types: no OpenAPI document at ${path.relative(web, document)}.`,
-      "GestorIA.Api emits it at build time (dotnet build GestorIA.slnx), and it does not do so yet (#66).",
+      "GestorIA.Api writes it at build time: run dotnet build GestorIA.slnx from the repository root.",
       "Nothing was generated: the web types come only from the API's own document.",
     ].join("\n"),
   );

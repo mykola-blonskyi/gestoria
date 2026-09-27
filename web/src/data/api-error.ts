@@ -8,6 +8,13 @@ export type ProblemDetails = {
   extensions: Record<string, unknown>;
 };
 
+// The problem types GestorIA.Api answers with (src/GestorIA.Api/Problems.cs).
+export const PROBLEM_TYPES = {
+  invalidInput: "https://gestoria.local/problems/invalid-input",
+  configGap: "https://gestoria.local/problems/config-gap",
+  estimateRefused: "https://gestoria.local/problems/estimate-refused",
+} as const;
+
 export type ApiFailure =
   | { kind: "problem"; problem: ProblemDetails }
   | { kind: "http"; status: number }
