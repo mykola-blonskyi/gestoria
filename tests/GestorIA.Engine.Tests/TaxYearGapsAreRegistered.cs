@@ -10,23 +10,10 @@ public class TaxYearGapsAreRegistered
     // Keyed by file name: each tax-year file declares its own gaps and is graded against its own registry.
     private static readonly Dictionary<string, Dictionary<string, string>> Registered = new()
     {
-        [TaxYearConfigFiles.Example2025] = new()
-        {
-            ["/modelo130"] =
-                "line numbers. Due before the Q1 2027 forms (plans/current.md, Phase 0). minoracion bands filled (#5).",
-
-            ["/modelo303"] =
-                "line numbers. Due before the Q1 2027 forms (plans/current.md, Phase 0).",
-        },
+        [TaxYearConfigFiles.Example2025] = new(),
 
         [TaxYearConfigFiles.File2026] = new()
         {
-            ["/modelo130"] =
-                "line numbers. Due before the Modelo 130 mapper reads them (plans/current.md, Phase 0).",
-
-            ["/modelo303"] =
-                "line numbers. Due before the Modelo 303 mapper reads them (plans/current.md, Phase 0).",
-
             ["/seguridadSocial/tarifaPlana"] =
                 "amount unpublished: no LPGE 2026, and RDL 13/2022 D.T. 5.ª stops at 2025 (#47). Closes when a norm fixes it.",
 

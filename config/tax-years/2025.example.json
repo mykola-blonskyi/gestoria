@@ -13,6 +13,10 @@
     { "ref": "Ley 13/1997, de 23 de diciembre, de la Generalitat Valenciana, art. 2.1 (escala autonómica), redacción de la Ley 9/2022, de 30 de diciembre, disp. final 1.1 (texto consolidado, versión vigente desde 01/01/2023)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1998-8202" },
     { "ref": "AEAT Manual práctico Renta 2025, cap. 15, Gravamen autonómico, Comunitat Valenciana: escala aplicable en el ejercicio 2025 (página actualizada 17/03/2026)", "url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025/c15-calculo-impuesto-determinacion-cuotas-integras/gravamen-base-liquidable-general/gravamen-autonomico/comunitat-valenciana.html" },
     { "ref": "AEAT Manual práctico Renta 2025, cap. 14, Comunitat Valenciana: importes del mínimo personal y familiar (página actualizada 17/03/2026)", "url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025/c14-adecuacion-impuesto-circunstancias-personales/minimo-autonomico-personal-familiar/comunitat-valenciana-importes-minimo-personal-familiar.html" },
+    { "ref": "Orden EHA/672/2007, anexo I (modelo 130), sustituido por la Orden HAP/258/2015", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032" },
+    { "ref": "Orden EHA/3786/2008, anexo I (modelo 303), texto consolidado con las versiones de la Orden HAC/819/2024 y la Orden HAC/27/2026", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953" },
+    { "ref": "Orden EHA/769/2010, art. 10 y anexo (modelo 349), redacción de las Órdenes HAC/174/2020 y HAC/1274/2020", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098" },
+    { "ref": "AEAT, Instrucciones del modelo 303, 2025 (página actualizada 09/06/2026)", "url": "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-303-iva-autoliquidacion_/instrucciones-2025.html" },
     { "ref": "Decreto Legislativo 1/2010, de 21 de octubre, texto refundido de las disposiciones legales de la Comunidad de Madrid en materia de tributos cedidos por el Estado, arts. 1, 2, 2 bis, 2 ter y 2 quater, redacción de la Ley 13/2023, de 15 de diciembre, art. único.1–5, para los periodos impositivos iniciados desde el 1 de enero de 2023 (texto consolidado BOCM-m-2010-90068, última actualización 10/07/2026)", "url": "https://www.boe.es/buscar/act.php?id=BOCM-m-2010-90068" },
     { "ref": "AEAT Manual práctico Renta 2025, cap. 15, Gravamen autonómico, Comunidad de Madrid: escala aplicable en el ejercicio 2025 (página actualizada 17/03/2026)", "url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025/c15-calculo-impuesto-determinacion-cuotas-integras/gravamen-base-liquidable-general/gravamen-autonomico/comunidad-madrid.html" },
     { "ref": "AEAT Manual práctico Renta 2025, cap. 14, Comunidad de Madrid: importes del mínimo personal y familiar (página actualizada 17/03/2026)", "url": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2025/c14-adecuacion-impuesto-circunstancias-personales/minimo-autonomico-personal-familiar/comunidad-madrid-importes-minimo-personal-familiar.html" }
@@ -110,10 +114,47 @@
       { "prevYearNetUpTo": 11000, "amountPerQuarter": 50 },
       { "prevYearNetUpTo": 12000, "amountPerQuarter": 25 }
     ],
-    "lines": {},
-    "_todo": "line numbers for the Modelo 130 form; minoracion is filled (#5)"
+    "lines": {
+      "ingresos": "01", "gastos": "02", "rendimientoNeto": "03", "pagoBruto": "04",
+      "pagosAnteriores": "05", "retenciones": "06", "pagoPrevio": "07",
+      "sumaPagosPrevios": "12", "minoracion": "13", "diferencia": "14", "negativosAnteriores": "15",
+      "deduccionVivienda": "16", "total": "17", "resultado": "19"
+    }
   },
-  "modelo303": { "lines": {}, "_todo": "line numbers" },
+  "modelo303": {
+    "lines": {
+      "devengado": {
+        "superreducido": { "base": "01", "tipo": "02", "cuota": "03" },
+        "reducido": { "base": "04", "tipo": "05", "cuota": "06" },
+        "general": { "base": "07", "tipo": "08", "cuota": "09" },
+        "adquisicionesIntracomunitarias": { "base": "10", "cuota": "11" },
+        "otrasInversionSujetoPasivo": { "base": "12", "cuota": "13" },
+        "total": "27"
+      },
+      "deducible": {
+        "operacionesInteriores": { "base": "28", "cuota": "29" },
+        "adquisicionesIntracomunitarias": { "base": "36", "cuota": "37" },
+        "total": "45"
+      },
+      "resultadoRegimenGeneral": "46",
+      "entregasIntracomunitarias": "59", "noSujetasLocalizacion": "120",
+      "sumaResultados": "64", "porcentajeEstado": "65", "atribuibleEstado": "66",
+      "compensarPendientes": "110", "compensarAplicadas": "78", "compensarPosteriores": "87",
+      "resultadoAutoliquidacion": "69", "resultado": "71",
+      "aCompensar": "72", "aDevolver": "73"
+    }
+  },
+  "modelo349": {
+    "quarterlyFilingCap": 50000,
+    "claves": { "prestacionesServicios": "S", "adquisicionesServicios": "I" },
+    "lines": {
+      "codigoPais": { "from": 76, "to": 77 },
+      "nifOperador": { "from": 78, "to": 92 },
+      "nombreOperador": { "from": 93, "to": 132 },
+      "clave": { "from": 133, "to": 133 },
+      "baseImponible": { "from": 134, "to": 146 }
+    }
+  },
   "iva": { "rates": { "general": 0.21, "reducido": 0.10, "superreducido": 0.04 } },
   "seguridadSocial": {
     "tramos": [
@@ -199,6 +240,11 @@
     "/modelo130/mortgageRate":      { "kind": "boe", "ref": "RIRPF art. 110.3.d.1.º: 2 % del rendimiento neto del trimestre, only where the contribuyente's rendimientos íntegros previsibles for the year are under 33.007,20 € and has derecho a la deducción por inversión en vivienda habitual under LIRPF D.T. 18.ª, which since 2013 requires the vivienda to have been adquirida, or its construcción started, before 2013-01-01. Neither condition is data any calculator reads yet (#2), so it is recorded here rather than in unused schema fields (#49)", "verified": "2026-09-27" },
     "/modelo130/mortgageCap":       { "kind": "boe", "ref": "RIRPF art. 110.3.d.1.º: 660,14 € por trimestre", "verified": "2026-09-27" },
     "/modelo130/minoracion":        { "kind": "boe", "ref": "RD 439/2007 (RIRPF) art. 110.3.c", "verified": "2026-09-25" },
+    "/modelo130/lines": { "kind": "boe", "ref": "Orden EHA/672/2007 anexo I, modelo 130 in the version of Orden HAP/258/2015 (BOE-A-2015-1656), applied from the first quarter of 2015 and not replaced since (BOE consolidated text, análisis): casillas 01–07 (apartado I) and 12–17, 19 (apartado III). Apartado II (08–11, agrícolas) and casilla 18 (autoliquidación complementaria) are not mapped. AEAT, instrucciones del modelo 130 (actualizada 11/09/2026), describe the same casillas", "verified": "2026-09-27" },
+    "/modelo303/lines": { "kind": "boe", "ref": "Orden EHA/3786/2008 anexo I, modelo 303 in the version of Orden HAC/819/2024 (BOE-A-2024-16129), applied from the third quarter of 2024 to the first quarter of 2026. AEAT, instrucciones del modelo 303 2025 (actualizada 09/06/2026): 59 takes the prestaciones de servicios intracomunitarias, 120 every other service no sujeto por reglas de localización, 72 a compensar and 73 a devolver, the latter in the last period for a sujeto pasivo outside the registro de devolución mensual. Casillas 12 and 13 take the other reverse-charge operations (LIVA art. 84.Uno.2.º), such as services bought from suppliers outside the EU (instrucciones, casillas 12 y 13).", "verified": "2026-09-27" },
+    "/modelo349/quarterlyFilingCap": { "kind": "boe", "ref": "Orden EHA/769/2010 art. 10.2, version of Orden HAC/174/2020 (BOE-A-2020-2898): quarterly while neither the quarter nor any of the four previous quarters carries more than 50.000 € of entregas de bienes and prestaciones de servicios, IVA excluded; monthly from the month it is crossed", "verified": "2026-09-27" },
+    "/modelo349/claves": { "kind": "boe", "ref": "Orden EHA/769/2010 anexo, registro de tipo 2, clave de operación, version of Orden HAC/1274/2020 (BOE-A-2020-17269): S prestaciones intracomunitarias de servicios realizadas por el declarante, I adquisiciones intracomunitarias de servicios (art. 2.c and 2.d)", "verified": "2026-09-27" },
+    "/modelo349/lines": { "kind": "boe", "ref": "Orden EHA/769/2010 anexo, registro de tipo 2 (operador intracomunitario), version of Orden HAC/1274/2020 (BOE-A-2020-17269): positions 76–77 código país and 78–92 número of the NIF operador comunitario, 93–132 apellidos y nombre o razón social, 133 clave de operación, 134–146 base imponible (134–144 euros, 145–146 céntimos)", "verified": "2026-09-27" },
     "/iva/rates":                   { "kind": "theory", "ref": "Theory §9.1, ed. 2" },
     "/seguridadSocial/tramos":      { "kind": "boe", "ref": "Orden PJC/178/2025 art. 18.1 (bases); art. 18.2 y 37.5–37.6 (tipos: 28,30% + 1,30% + 0,90% + 0,10% + 0,80% MEI = 31,40%, aplicado a baseMin para cuotaMin)", "verified": "2026-09-25" },
     "/seguridadSocial/tarifaPlana": { "kind": "boe", "ref": "Ley 20/2007 art. 38 ter, D.T. 5.ª RDL 13/2022 (80€/mes vigente 2023–2025)", "verified": "2026-09-25" },

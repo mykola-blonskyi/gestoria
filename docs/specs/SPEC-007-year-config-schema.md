@@ -39,10 +39,12 @@
   },
   "modelo130": { "rate": 0.20, "retencionExemptionShare": 0.70,
                  "mortgageRate": 0.02, "mortgageCap": 660.14,          // cap is per quarter; rate applies to ingresosYTD
-                 "minoracion": [ { "netUpTo": ..., "amountPerQuarter": ... }, ... ], "lines": { ... } },
-  "modelo303": { "lines": { ... } },
-  "modelo349": { "periodThresholdEurPerYear": null,                    // above it, filing turns monthly; UNVERIFIED, see §2.1
-                 "lines": { ... } },
+                 "minoracion": [ { "netUpTo": ..., "amountPerQuarter": ... }, ... ],
+                 "lines": { "ingresos": "01", ..., "resultado": "19" } },  // semantic key → casilla; or { "_todo": "..." } while unpublished
+  "modelo303": { "lines": { "devengado": { "general": { "base": "07", "tipo": "08", "cuota": "09" }, ... }, ..., "aDevolver": "73" } },
+  "modelo349": { "quarterlyFilingCap": 50000,                          // per quarter, intra-EU supplies (Orden EHA/769/2010 art. 10.2)
+                 "claves": { "prestacionesServicios": "S", "adquisicionesServicios": "I" },
+                 "lines": { "codigoPais": { "from": 76, "to": 77 }, ..., "baseImponible": { "from": 134, "to": 146 } } },  // tipo-2 record positions
   "iva": { "rates": { "general": 0.21, "reducido": 0.10, "superreducido": 0.04 } },
   "seguridadSocial": { "tramos": [ { "name": "Reducida 1", "netFrom": 0, "netUpTo": 670,
                                      "baseMin": 653.59, "baseMax": 718.94,
@@ -130,6 +132,9 @@ That line is not stylistic. JSON Schema can express some ordering constraints th
 | `taxYear` equals the filename stem | the filename is outside the document |
 | Calendar windows chronological, `start <= end` | pairwise |
 | `calendar.holidays` and each complete region's `holidays` name at least one day in every year a window ends in, except the year after the tax year when `calendar` carries `_todo` | cross-node; a list never filled for the next year would leave the Q4 and renta deadlines unmoved |
+| Each casilla appears once within `modelo130.lines` and once within `modelo303.lines`; each clave once within `modelo349.claves` | pairwise across nested leaves |
+| `modelo349.lines` positions run forward and do not overlap | pairwise across fields |
+| Every filled form map is covered by a provenance entry | cross-node reference |
 
 **Casilla namespaces are not one namespace.** SPEC-008 §2's `casillas` keys are four-digit Modelo 100 fields. SPEC-006 §2's regional credits carry annex identifiers such as `B.VC.12`. So "every `deducciones[].casilla` exists in `casillas`", as earlier drafts of this section said, is false: it would reject the first regional credit anyone adds. The check splits by `scope` — `estatal` resolves against `casillas`, `autonomica` matches the annex pattern.
 
@@ -151,7 +156,7 @@ A block that does **not** carry a `_todo` note must be complete: its arrays carr
 
 ### Unverified values
 
-`modelo349.periodThresholdEurPerYear` and `seguridadSocial.tarifaPlana.extensionNetIncomeCap` are declared with `null`. Their shape is fixed; their values are not known to anyone here. Both come from the theory document and neither has been checked against AEAT or TGSS — SPEC-003 §2.1 already carries that as an open task before Q1 2027.
+`seguridadSocial.tarifaPlana.extensionNetIncomeCap` is declared with `null`: Ley 20/2007 art. 38 ter.2 compares against the SMI of the period the extension covers, which is not the tax year's (#47). The Modelo 349 threshold, once declared the same way, is now sourced: `modelo349.quarterlyFilingCap` 50,000 € per quarter, Orden EHA/769/2010 art. 10.2 (#58).
 
 Writing an unverified number into a file the engine treats as authoritative converts a guess into an apparent fact, which is precisely the distinction ADR-0011 draws for golden values. A `null` is honest; a plausible number is not.
 

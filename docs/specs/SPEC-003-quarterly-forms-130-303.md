@@ -53,21 +53,24 @@ From `config.calendar`: Q1 1–20 Apr, Q2 1–20 Jul, Q3 1–20 Oct, Q4 1–30 J
 ```
 IVA repercutido  = Σ FacturaEmitida.IvaAmount (by rate 21/10/4), Standard regime only, quarter by AccrualDate
 IVA soportado    = Σ FacturaRecibida.IvaAmount where IvaDeductible && Kind == Completa (× DeductibleShare)
-Reverse charge   = for ReverseChargeEU purchases: add both repercutido and soportado (net 0), report in intracomunitarias lines
-Intra-EU sales   = base only (0 % IVA) → Modelo 349 (see §2.1)
-Exports          = base in "exentas" line
+Reverse charge   = services bought from EU suppliers: devengado and deducible in the intracomunitarias lines (10/11, 36/37); services bought from
+                   suppliers outside the EU (e.g. US SaaS): devengado in "otras operaciones con inversión del sujeto pasivo" (12/13), LIVA art. 84.Uno.2.º,
+                   deducible with the operaciones interiores (28/29)
+Intra-EU sales   = services to EU businesses: base only (0 % IVA) in casilla 59 → Modelo 349 clave S (see §2.1)
+Services to US   = not subject to Spanish IVA by the location rules: base in casilla 120, not in an "exentas" line (casilla 60 is exportaciones and
+                   operaciones asimiladas, LIVA arts. 21–24)
 result           = repercutido − soportado + compensación previous quarter (negative carried, "a compensar")
 ```
-Output mirrors 130: numbered lines from config, trace, due window. Annual Modelo 390 = aggregation of four 303 results (v1: totals only; verify whether 390 is still required for this profile, the exemptions have moved in recent years).
+Output mirrors 130: numbered lines from `config.modelo303.lines` (#58; the design in force per Orden EHA/3786/2008 anexo I as amended by Orden HAC/819/2024 and, from 2T 2026, Orden HAC/27/2026), trace, due window. Annual Modelo 390 = aggregation of four 303 results (v1: totals only; verify whether 390 is still required for this profile, the exemptions have moved in recent years).
 
 ### 2.1 Modelo 349
 Supplying services to EU businesses under reverse charge triggers the recapitulative declaration. With EU clients confirmed (§0), this is a filing the author makes every quarter, not a list to read.
 
-Content: per EU client, the VIES VAT number and the total base for the period. US clients do not appear; 349 is intra-community only.
+Content: per EU client, the VIES VAT number and the total base for the period under clave S (services supplied); and per EU supplier, clave I for services acquired, which Orden EHA/769/2010 art. 2.d also requires. US clients and suppliers do not appear; 349 is intra-community only. The claves are `config.modelo349.claves`.
 
-Filing period is quarterly by default and monthly above a volume threshold. Verify the current threshold against AEAT before Q1 2027, and put it in `config.modelo349`.
+Filing period is quarterly by default. It becomes monthly when intra-community supplies exceed `config.modelo349.quarterlyFilingCap` (50,000 €) in the quarter or in any of the four before it (Orden EHA/769/2010 art. 10.2, as worded by Orden HAC/174/2020). The cap is per quarter, not per year.
 
-v1.0 produces the form, not just the totals (2026-09-18). Output mirrors 130 and 303: `Modelo349Result { Quarter, Lines, Trace, DueWindow }`, line numbers from `config.modelo349.lines`. A quarter with no intra-EU operations produces no filing, and saying so is part of the output.
+v1.0 produces the form, not just the totals (2026-09-18). Output mirrors 130 and 303: `Modelo349Result { Quarter, Lines, Trace, DueWindow }`. `config.modelo349.lines` holds the positions of the tipo-2 record fields (#58). A quarter with no intra-EU operations produces no filing, and saying so is part of the output.
 
 **Reverse charge depends on the client's VAT number being valid in VIES**, not on the author believing it is. If it is not valid at the time of invoicing, Spanish IVA is chargeable and both the 303 and the 349 are wrong. So `Client.InVies` cannot be a user-entered boolean; it is a verified fact with a date. Whether v1.0 calls the VIES service or records a manual check is open.
 

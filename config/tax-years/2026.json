@@ -14,7 +14,13 @@
     { "ref": "Orden PJC/297/2026, de 30 de marzo, arts. 18 y 37 (bases y tipos RETA 2026)", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-7296" },
     { "ref": "Real Decreto Legislativo 8/2015 (LGSS), art. 308.1.c, redacción del RDL 13/2022 (rendimiento computable de los autónomos)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11724" },
     { "ref": "Ley 20/2007 (Estatuto del Trabajo Autónomo), art. 38 ter, texto consolidado; RDL 13/2022 D.T. 5.ª", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-13409" },
-    { "ref": "Resolución de 18 de noviembre de 2025 de la Secretaría de Estado de Función Pública, calendario de días inhábiles 2026", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-23702" }
+    { "ref": "Resolución de 18 de noviembre de 2025 de la Secretaría de Estado de Función Pública, calendario de días inhábiles 2026", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-23702" },
+    { "ref": "Orden EHA/672/2007, anexo I (modelo 130), sustituido por la Orden HAP/258/2015", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032" },
+    { "ref": "Orden EHA/3786/2008, anexo I (modelo 303), texto consolidado con las versiones de la Orden HAC/819/2024 y la Orden HAC/27/2026", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953" },
+    { "ref": "Orden EHA/769/2010, art. 10 y anexo (modelo 349), redacción de las Órdenes HAC/174/2020 y HAC/1274/2020", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098" },
+    { "ref": "AEAT, Instrucciones del modelo 303, 01-1T de 2026 (página actualizada 09/06/2026)", "url": "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-303-iva-autoliquidacion_/instrucciones-2026.html" },
+    { "ref": "AEAT, Instrucciones del modelo 303, 02 a 12 y 2T a 4T de 2026 (página actualizada 09/06/2026)", "url": "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-303-iva-autoliquidacion_/instrucciones-2026/instrucciones-02-12-2t-4t-2026.html" },
+    { "ref": "AEAT, Instrucciones del modelo 130 (página actualizada 11/09/2026)", "url": "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html" }
   ],
   "irpf": {
     "escalaEstatal": [
@@ -109,10 +115,47 @@
       { "prevYearNetUpTo": 11000, "amountPerQuarter": 50 },
       { "prevYearNetUpTo": 12000, "amountPerQuarter": 25 }
     ],
-    "lines": {},
-    "_todo": "line numbers for the Modelo 130 form; minoracion is filled"
+    "lines": {
+      "ingresos": "01", "gastos": "02", "rendimientoNeto": "03", "pagoBruto": "04",
+      "pagosAnteriores": "05", "retenciones": "06", "pagoPrevio": "07",
+      "sumaPagosPrevios": "12", "minoracion": "13", "diferencia": "14", "negativosAnteriores": "15",
+      "deduccionVivienda": "16", "total": "17", "resultado": "19"
+    }
   },
-  "modelo303": { "lines": {}, "_todo": "line numbers" },
+  "modelo303": {
+    "lines": {
+      "devengado": {
+        "superreducido": { "base": "01", "tipo": "02", "cuota": "03" },
+        "reducido": { "base": "04", "tipo": "05", "cuota": "06" },
+        "general": { "base": "07", "tipo": "08", "cuota": "09" },
+        "adquisicionesIntracomunitarias": { "base": "10", "cuota": "11" },
+        "otrasInversionSujetoPasivo": { "base": "12", "cuota": "13" },
+        "total": "27"
+      },
+      "deducible": {
+        "operacionesInteriores": { "base": "28", "cuota": "29" },
+        "adquisicionesIntracomunitarias": { "base": "36", "cuota": "37" },
+        "total": "45"
+      },
+      "resultadoRegimenGeneral": "46",
+      "entregasIntracomunitarias": "59", "noSujetasLocalizacion": "120",
+      "sumaResultados": "64", "porcentajeEstado": "65", "atribuibleEstado": "66",
+      "compensarPendientes": "110", "compensarAplicadas": "78", "compensarPosteriores": "87",
+      "resultadoAutoliquidacion": "69", "resultado": "71",
+      "aCompensar": "72", "aDevolver": "73"
+    }
+  },
+  "modelo349": {
+    "quarterlyFilingCap": 50000,
+    "claves": { "prestacionesServicios": "S", "adquisicionesServicios": "I" },
+    "lines": {
+      "codigoPais": { "from": 76, "to": 77 },
+      "nifOperador": { "from": 78, "to": 92 },
+      "nombreOperador": { "from": 93, "to": 132 },
+      "clave": { "from": 133, "to": 133 },
+      "baseImponible": { "from": 134, "to": 146 }
+    }
+  },
   "iva": { "rates": { "general": 0.21, "reducido": 0.10, "superreducido": 0.04 } },
   "seguridadSocial": {
     "tramos": [
@@ -183,6 +226,11 @@
     "/modelo130/mortgageRate":      { "kind": "boe", "ref": "RIRPF art. 110.3.d.1.º: 2 % del rendimiento neto del trimestre, only where the contribuyente's rendimientos íntegros previsibles for the year are under 33.007,20 € and has derecho a la deducción por inversión en vivienda habitual under LIRPF D.T. 18.ª, which since 2013 requires the vivienda to have been adquirida, or its construcción started, before 2013-01-01. Neither condition is data any calculator reads yet (#2), so it is recorded here rather than in unused schema fields (#49)", "verified": "2026-09-27" },
     "/modelo130/mortgageCap":       { "kind": "boe", "ref": "RIRPF art. 110.3.d.1.º: 660,14 € por trimestre", "verified": "2026-09-27" },
     "/modelo130/minoracion":        { "kind": "boe", "ref": "RIRPF art. 110.3.c (RD 1003/2014)", "verified": "2026-09-27" },
+    "/modelo130/lines": { "kind": "boe", "ref": "Orden EHA/672/2007 anexo I, modelo 130 in the version of Orden HAP/258/2015 (BOE-A-2015-1656), applied from the first quarter of 2015 and not replaced since (BOE consolidated text, análisis): casillas 01–07 (apartado I) and 12–17, 19 (apartado III). Apartado II (08–11, agrícolas) and casilla 18 (autoliquidación complementaria) are not mapped. AEAT, instrucciones del modelo 130 (actualizada 11/09/2026), describe the same casillas", "verified": "2026-09-27" },
+    "/modelo303/lines": { "kind": "boe", "ref": "Orden EHA/3786/2008 anexo I: modelo 303 in the version of Orden HAC/819/2024 (BOE-A-2024-16129) for the first quarter of 2026, and in the version of Orden HAC/27/2026 (BOE-A-2026-1761) from the second (disposición final única.1). HAC/27/2026 adds casilla 112 (pago a cuenta of carburantes, modelo 319) and subtracts it in 71; every casilla mapped here keeps its number in both. AEAT, instrucciones del modelo 303 2026, 1T and 2T–4T (actualizadas 09/06/2026): 59 takes the prestaciones de servicios intracomunitarias, 120 every other service no sujeto por reglas de localización, 72 a compensar and 73 a devolver, the latter in the last period for a sujeto pasivo outside the registro de devolución mensual. Casillas 12 and 13 take the other reverse-charge operations (LIVA art. 84.Uno.2.º), such as services bought from suppliers outside the EU (instrucciones, casillas 12 y 13).", "verified": "2026-09-27" },
+    "/modelo349/quarterlyFilingCap": { "kind": "boe", "ref": "Orden EHA/769/2010 art. 10.2, version of Orden HAC/174/2020 (BOE-A-2020-2898): quarterly while neither the quarter nor any of the four previous quarters carries more than 50.000 € of entregas de bienes and prestaciones de servicios, IVA excluded; monthly from the month it is crossed", "verified": "2026-09-27" },
+    "/modelo349/claves": { "kind": "boe", "ref": "Orden EHA/769/2010 anexo, registro de tipo 2, clave de operación, version of Orden HAC/1274/2020 (BOE-A-2020-17269): S prestaciones intracomunitarias de servicios realizadas por el declarante, I adquisiciones intracomunitarias de servicios (art. 2.c and 2.d)", "verified": "2026-09-27" },
+    "/modelo349/lines": { "kind": "boe", "ref": "Orden EHA/769/2010 anexo, registro de tipo 2 (operador intracomunitario), version of Orden HAC/1274/2020 (BOE-A-2020-17269): positions 76–77 código país and 78–92 número of the NIF operador comunitario, 93–132 apellidos y nombre o razón social, 133 clave de operación, 134–146 base imponible (134–144 euros, 145–146 céntimos)", "verified": "2026-09-27" },
     "/iva/rates":                   { "kind": "boe", "ref": "Ley 37/1992 art. 90.uno (21 %, versión en vigor desde 2012-07-15) and art. 91.uno and dos (10 %, 4 %, versión en vigor desde 2024-12-22)", "verified": "2026-09-27" },
     "/seguridadSocial/tramos":      { "kind": "boe", "ref": "Orden PJC/297/2026 art. 18.1 (bases, per RDL 3/2026 art. 3); art. 18.2 and 37.5–37.6 (tipos: 28,30 % + 1,30 % + 0,90 % cese + 0,10 % FP + 0,90 % MEI = 31,50 %). cuotaMin is baseMin × 31,50 % rounded half up to the cent, the method that reproduces all fifteen 2025 values; rounding each component separately differs by one cent on Reducida 3 (267,66), General 4 (360,28) and General 7 (427,22), and which one TGSS applies in 2026 is unverified, so those three carry cuotaMinKind approximate", "verified": "2026-09-27" },
     "/seguridadSocial/gastosGenericos": { "kind": "boe", "ref": "RDL 8/2015 (LGSS) art. 308.1.c, regla 2.ª, redacción del RDL 13/2022 en vigor desde 2023-01-01 with no later version: deducción por gastos genéricos del 7 %; 3 % only for the art. 305.2.b and e societarios, not modelled", "verified": "2026-09-27" },

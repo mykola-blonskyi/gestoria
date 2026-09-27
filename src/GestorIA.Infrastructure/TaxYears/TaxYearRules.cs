@@ -91,6 +91,57 @@ internal static partial class TaxYearRules
             }
         }
 
+        // A casilla or clave used twice would silently fold two AEAT figures into one.
+        foreach (var message in DuplicateLeaves(root["modelo130"]!["lines"]!.AsObject(), "/modelo130/lines", "casilla", "a casilla holds one figure"))
+        {
+            yield return message;
+        }
+
+        foreach (var message in DuplicateLeaves(root["modelo303"]!["lines"]!.AsObject(), "/modelo303/lines", "casilla", "a casilla holds one figure"))
+        {
+            yield return message;
+        }
+
+        foreach (var message in DuplicateLeaves(root["modelo349"]!["claves"]!.AsObject(), "/modelo349/claves", "clave", "a clave marks one direction of operation"))
+        {
+            yield return message;
+        }
+
+        var modelo349Lines = root["modelo349"]!["lines"]!.AsObject();
+
+        // A _todo here declares the tipo-2 record layout unpublished (SPEC-007 §2), so there is nothing to check yet.
+        if (!modelo349Lines.ContainsKey("_todo"))
+        {
+            var fields = new List<(string Pointer, int From, int To)>();
+
+            foreach (var (key, value) in modelo349Lines)
+            {
+                fields.Add(($"/modelo349/lines/{key}", value!["from"]!.Read<int>(), value["to"]!.Read<int>()));
+            }
+
+            foreach (var field in fields)
+            {
+                if (field.From > field.To)
+                {
+                    yield return $"{field.Pointer} runs from {field.From} to {field.To}, which ends before it starts";
+                }
+            }
+
+            // OrderBy is a stable sort (a LINQ guarantee), so fields already in position order keep that relative order.
+            var byPosition = fields.OrderBy(f => f.From).ToList();
+
+            for (var i = 1; i < byPosition.Count; i++)
+            {
+                var previous = byPosition[i - 1];
+                var current = byPosition[i];
+
+                if (current.From <= previous.To)
+                {
+                    yield return $"{current.Pointer} starts at {current.From}, inside {previous.Pointer}, which ends at {previous.To}";
+                }
+            }
+        }
+
         var provenance = root["provenance"]!.AsObject();
 
         foreach (var (pointer, _) in provenance)
@@ -101,11 +152,34 @@ internal static partial class TaxYearRules
             }
         }
 
+        // A pointer is covered by its own provenance entry, or by an ancestor's (one BOE article can verify a whole block, SPEC-007 §1.1).
+        bool Covered(string pointer) =>
+            provenance.Any(e => pointer == e.Key || pointer.StartsWith(e.Key + "/", StringComparison.Ordinal));
+
         foreach (var (pointer, _) in Scales(root))
         {
-            if (!provenance.Any(e => pointer == e.Key || pointer.StartsWith(e.Key + "/", StringComparison.Ordinal)))
+            if (!Covered(pointer))
             {
                 yield return $"{pointer} is a tax scale with no provenance entry; add one saying where the numbers came from";
+            }
+        }
+
+        string[] formMapPointers =
+        [
+            "/modelo130/lines",
+            "/modelo303/lines",
+            "/modelo349/quarterlyFilingCap",
+            "/modelo349/claves",
+            "/modelo349/lines",
+        ];
+
+        foreach (var pointer in formMapPointers)
+        {
+            if (Resolve(root, pointer) is JsonObject map && map.ContainsKey("_todo")) { continue; }
+
+            if (!Covered(pointer))
+            {
+                yield return $"{pointer} is a form map with no provenance entry; add one citing the Orden that approves the form";
             }
         }
 
@@ -179,6 +253,46 @@ internal static partial class TaxYearRules
         if (stem != taxYear.ToString())
         {
             yield return $"/taxYear is {taxYear} but the file is named {fileName}";
+        }
+    }
+
+    private static IEnumerable<(string Pointer, string Value)> Leaves(JsonObject map, string pointer)
+    {
+        foreach (var (key, value) in map)
+        {
+            if (key == "_todo") { continue; }
+
+            var childPointer = $"{pointer}/{key}";
+
+            if (value is JsonObject child)
+            {
+                foreach (var leaf in Leaves(child, childPointer))
+                {
+                    yield return leaf;
+                }
+            }
+            else
+            {
+                yield return (childPointer, value!.Read<string>());
+            }
+        }
+    }
+
+    // First occurrence of a value wins; a later leaf that repeats it names both, so the fix is obvious from the message.
+    private static IEnumerable<string> DuplicateLeaves(JsonObject map, string pointer, string noun, string reason)
+    {
+        var seen = new Dictionary<string, string>();
+
+        foreach (var (leafPointer, value) in Leaves(map, pointer))
+        {
+            if (seen.TryGetValue(value, out var first))
+            {
+                yield return $"{leafPointer} is {noun} {value}, already used by {first}; {reason}";
+            }
+            else
+            {
+                seen[value] = leafPointer;
+            }
         }
     }
 
