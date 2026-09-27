@@ -47,6 +47,18 @@ public class Modelo130Examples
         // 0.20 × (20,000 − 1,000 difícil justificación) − 1,500 − 600 − 75
         Assert.Equal(new Money(1625m), result.Resultado);
         Assert.Equal(75m, Step(result, "m130.minoracion").Euros());
+        Assert.Equal(result.Resultado, result.Casillas["resultado"]);
+        Assert.Equal(new Money(75m), result.Casillas["minoracion"]);
+        Assert.Equal(new Money(19000m), result.Casillas["rendimientoNeto"]);
+        Assert.Equal(new Money(3800m), result.Casillas["pagoBruto"]);
+    }
+
+    [Fact]
+    public void CasillasAreKeyedTheSameAsTheTaxYearsModelo130Lines()
+    {
+        var result = Run(ingresos: 30000m, gastos: 10000m);
+
+        Assert.Equal(TaxYearConfigFiles.Year2025.Modelo130.Lines.Keys.ToHashSet(), result.Casillas.Keys.ToHashSet());
     }
 
     [Fact]

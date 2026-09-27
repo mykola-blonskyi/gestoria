@@ -90,7 +90,8 @@ public static class TaxYearConfigParser
             new Modelo130Config(
                 RateOf(modelo130["rate"]),
                 [.. modelo130["minoracion"]!.AsArray().Select(band =>
-                    new MinoracionBand(MoneyOf(band!["prevYearNetUpTo"]), MoneyOf(band["amountPerQuarter"])))]),
+                    new MinoracionBand(MoneyOf(band!["prevYearNetUpTo"]), MoneyOf(band["amountPerQuarter"])))],
+                LinesOf(modelo130["lines"]!.AsObject())),
             new SeguridadSocialConfig(
                 new TramoTable([.. seguridadSocial["tramos"]!.AsArray().Select(TramoOf)]),
                 new TarifaPlana(OptionalMoneyOf(tarifaPlana["amount"]), tarifaPlana["months"]!.Read<int>(), tarifaPlana["_todo"]?.Read<string>()),
@@ -166,6 +167,18 @@ public static class TaxYearConfigParser
         return DateOnly.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
             ? date
             : throw new ArgumentException($"The provenance entry for {pointer} was verified on {text}, which is not a calendar date.");
+    }
+
+    private static IReadOnlyDictionary<string, string> LinesOf(JsonObject lines)
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        foreach (var (key, value) in lines)
+        {
+            result[key] = value!.Read<string>();
+        }
+
+        return result;
     }
 
     private static MinimosConfig MinimosOf(JsonNode? minimos) => new(MoneyOf(minimos!["contribuyente"]));

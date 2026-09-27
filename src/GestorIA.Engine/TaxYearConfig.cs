@@ -43,7 +43,7 @@ public sealed record InicioActividadConfig(Rate Pct, Money MaxRendimiento, Rate 
 // Holidays are the region's own, on top of the national calendar.holidays.
 public sealed record RegionConfig(string Name, Scale EscalaAutonomica, MinimosConfig Minimos, IReadOnlyList<CalendarDay> Holidays);
 
-public sealed record Modelo130Config(Rate Rate, IReadOnlyList<MinoracionBand> Minoracion);
+public sealed record Modelo130Config(Rate Rate, IReadOnlyList<MinoracionBand> Minoracion, IReadOnlyDictionary<string, string> Lines);
 
 public sealed record MinoracionBand(Money PrevYearNetUpTo, Money AmountPerQuarter);
 

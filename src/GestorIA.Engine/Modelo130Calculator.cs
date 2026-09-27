@@ -61,7 +61,13 @@ public sealed record Modelo130Carry(Money PagosAnteriores, Money NegativosPendie
     public static readonly Modelo130Carry StartOfYear = new(Money.Zero, Money.Zero);
 }
 
-public sealed record Modelo130Result(Quarter Quarter, Money Resultado, Modelo130Carry Carry, DueWindow DueWindow, CalculationTrace Trace)
+public sealed record Modelo130Result(
+    Quarter Quarter,
+    Money Resultado,
+    Modelo130Carry Carry,
+    DueWindow DueWindow,
+    CalculationTrace Trace,
+    IReadOnlyDictionary<string, Money> Casillas)
 {
     public Money AIngresar => Resultado > Money.Zero ? Resultado : Money.Zero;
 }
@@ -153,7 +159,26 @@ public static class Modelo130Calculator
         var (dueWindow, dueStep) = FilingDeadline.Modelo130(input.Quarter, input.Region, config);
         steps.Add(dueStep);
 
-        return new Modelo130Result(input.Quarter, resultado, next, dueWindow, new CalculationTrace(steps));
+        // Relabels already-computed figures onto AEAT's own casilla numbers for display (#71); it introduces no new tax law.
+        var casillas = new Dictionary<string, Money>
+        {
+            ["ingresos"] = input.IngresosYtd,
+            ["gastos"] = casilla02,
+            ["rendimientoNeto"] = rendimientoNeto,
+            ["pagoBruto"] = pagoBruto,
+            ["pagosAnteriores"] = carry.PagosAnteriores,
+            ["retenciones"] = retenciones,
+            ["pagoPrevio"] = casilla07,
+            ["sumaPagosPrevios"] = casilla12,
+            ["minoracion"] = minoracion,
+            ["diferencia"] = casilla14,
+            ["negativosAnteriores"] = negativosDeducidos,
+            ["deduccionVivienda"] = Money.Zero,
+            ["total"] = minoracion + negativosDeducidos, // deducción vivienda is zero so it does not need to be added
+            ["resultado"] = resultado,
+        };
+
+        return new Modelo130Result(input.Quarter, resultado, next, dueWindow, new CalculationTrace(steps), casillas);
     }
 
     private static Money DificilJustificacion(Modelo130Input input, DificilJustificacionConfig config, List<TraceStep> steps)
