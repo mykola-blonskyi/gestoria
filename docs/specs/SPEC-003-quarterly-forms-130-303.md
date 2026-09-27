@@ -54,9 +54,11 @@ From `config.calendar`: Q1 1–20 Apr, Q2 1–20 Jul, Q3 1–20 Oct, Q4 1–30 J
 IVA repercutido  = Σ FacturaEmitida.IvaAmount (by rate 21/10/4), Standard regime only, quarter by AccrualDate
 IVA soportado    = Σ FacturaRecibida.IvaAmount where IvaDeductible && Kind == Completa (× DeductibleShare)
 Reverse charge   = services bought from EU suppliers: devengado and deducible in the intracomunitarias lines (10/11, 36/37); services bought from
-                   suppliers outside the EU (e.g. US SaaS): devengado in "otras operaciones con inversión del sujeto pasivo" (12/13), LIVA art. 84.Uno.2.º
+                   suppliers outside the EU (e.g. US SaaS): devengado in "otras operaciones con inversión del sujeto pasivo" (12/13), LIVA art. 84.Uno.2.º,
+                   deducible with the operaciones interiores (28/29)
 Intra-EU sales   = services to EU businesses: base only (0 % IVA) in casilla 59 → Modelo 349 clave S (see §2.1)
-Services to US   = not subject to Spanish IVA by the location rules: base in casilla 120, not in an "exentas" line (casilla 60 is exported goods)
+Services to US   = not subject to Spanish IVA by the location rules: base in casilla 120, not in an "exentas" line (casilla 60 is exportaciones and
+                   operaciones asimiladas, LIVA arts. 21–24)
 result           = repercutido − soportado + compensación previous quarter (negative carried, "a compensar")
 ```
 Output mirrors 130: numbered lines from `config.modelo303.lines` (#58; the design in force per Orden EHA/3786/2008 anexo I as amended by Orden HAC/819/2024 and, from 2T 2026, Orden HAC/27/2026), trace, due window. Annual Modelo 390 = aggregation of four 303 results (v1: totals only; verify whether 390 is still required for this profile, the exemptions have moved in recent years).

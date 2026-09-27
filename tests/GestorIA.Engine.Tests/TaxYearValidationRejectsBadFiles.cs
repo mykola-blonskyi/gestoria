@@ -49,7 +49,11 @@ public class TaxYearValidationRejectsBadFiles
             }, "/regions/GA"),
 
         ["_todo misspelled, which re-arms the gate"] =
-            (r => Rename(r["regions"]!["MD"]!.AsObject(), "_todo", "_tood"), "/regions/MD"),
+            (r =>
+            {
+                r["modelo303"]!["lines"] = new JsonObject { ["_todo"] = "the design is unpublished" };
+                Rename(r["modelo303"]!["lines"]!.AsObject(), "_todo", "_tood");
+            }, "/modelo303/lines"),
 
         ["tranches out of order"] =
             (r => Swap(r["irpf"]!["escalaEstatal"]!.AsArray(), 1, 2), "/irpf/escalaEstatal/2/upTo"),
