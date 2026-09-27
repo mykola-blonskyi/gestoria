@@ -19,7 +19,10 @@ public class PendingCalendarIsRefused
         root["calendar"]!["renta"] = null;
         root["provenance"]!.AsObject().Remove("/calendar/renta");
         RemoveNextYear(root["calendar"]!["holidays"]!.AsArray());
-        RemoveNextYear(root["regions"]!["VC"]!["holidays"]!.AsArray());
+        foreach (var (_, region) in root["regions"]!.AsObject())
+        {
+            RemoveNextYear(region!["holidays"]!.AsArray());
+        }
 
         return TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(root.ToJsonString()), TaxYearConfigFiles.Example2025);
     }

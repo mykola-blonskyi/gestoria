@@ -30,12 +30,15 @@ public class Year2026GapsAreRefused
     }
 
     [Theory]
-    [InlineData(Quarter.Q1, 2026, 4, 20)]
-    [InlineData(Quarter.Q2, 2026, 7, 20)]
-    [InlineData(Quarter.Q3, 2026, 10, 20)]
-    public void Modelo130DeadlinesInsideTheYearCompute(Quarter quarter, int year, int month, int day)
+    [InlineData(Quarter.Q1, "VC", 2026, 4, 20)]
+    [InlineData(Quarter.Q2, "VC", 2026, 7, 20)]
+    [InlineData(Quarter.Q3, "VC", 2026, 10, 20)]
+    [InlineData(Quarter.Q1, "MD", 2026, 4, 20)]
+    [InlineData(Quarter.Q2, "MD", 2026, 7, 20)]
+    [InlineData(Quarter.Q3, "MD", 2026, 10, 20)]
+    public void Modelo130DeadlinesInsideTheYearCompute(Quarter quarter, string region, int year, int month, int day)
     {
-        var (window, _) = FilingDeadline.Modelo130(quarter, "VC", Config);
+        var (window, _) = FilingDeadline.Modelo130(quarter, region, Config);
 
         Assert.Equal(new DateOnly(year, month, day), window.End);
     }

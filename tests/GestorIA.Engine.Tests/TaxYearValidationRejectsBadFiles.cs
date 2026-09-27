@@ -25,11 +25,28 @@ public class TaxYearValidationRejectsBadFiles
         ["region VC missing"] =
             (r => Rename(r["regions"]!.AsObject(), "VC", "XX"), "/regions"),
 
+        // Its provenance entries go too, or the dangling-pointer rule would catch the gap instead of schema.json.
+        ["region MD missing"] =
+            (r =>
+            {
+                r["regions"]!.AsObject().Remove("MD");
+                var provenance = r["provenance"]!.AsObject();
+                foreach (var key in provenance.Select(e => e.Key).Where(k => k.StartsWith("/regions/MD/", StringComparison.Ordinal)).ToList())
+                {
+                    provenance.Remove(key);
+                }
+            }, "/regions"),
+
         ["casilla key that is not four digits"] =
             (r => Rename(r["casillas"]!.AsObject(), "0003", "003"), "/casillas/003"),
 
         ["_todo removed while block still empty"] =
-            (r => r["regions"]!["MD"]!.AsObject().Remove("_todo"), "/regions/MD"),
+            (r =>
+            {
+                var block = TaxYearConfigFiles.DeclaredIncompleteRegionBlock();
+                block.Remove("_todo");
+                r["regions"]![TaxYearConfigFiles.DeclaredIncompleteRegion] = block;
+            }, "/regions/GA"),
 
         ["_todo misspelled, which re-arms the gate"] =
             (r => Rename(r["modelo303"]!.AsObject(), "_todo", "_tood"), "/modelo303"),
