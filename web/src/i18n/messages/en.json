@@ -221,6 +221,7 @@
         "heading": "Delete all my data",
         "what": "This deletes, from the GestorIA database on this machine:",
         "profile": "your taxpayer profile for {year} ({region}): salary, autónomo registration and the year's projection",
+        "transactions": "every bank movement imported from your statements",
         "irreversible": "It cannot be undone. GestorIA keeps no copy.",
         "retention": "Spanish tax law expects you to keep the records behind each return for at least four years after its filing deadline (Ley General Tributaria, arts. 66, 67 and 70). If you still need them, download a copy first.",
         "confirm": "To confirm, type {word}",

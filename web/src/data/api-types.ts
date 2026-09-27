@@ -220,8 +220,25 @@ export interface components {
             ingresos: string;
             seguridadSocial: string;
         };
+        ExportedBankTransaction: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            bookingDate: string;
+            /** Format: date */
+            valueDate: string;
+            description: string;
+            amount: string;
+            balance: null | string;
+            /** Format: int32 */
+            importSequence: number;
+            /** Format: int32 */
+            lineNumber: number;
+            lineKey: string;
+        };
         ExportedEntities: {
             profiles: components["schemas"]["ProfileView"][];
+            bankTransactions: components["schemas"]["ExportedBankTransaction"][];
         };
         HttpValidationProblemDetails: {
             type?: null | string;

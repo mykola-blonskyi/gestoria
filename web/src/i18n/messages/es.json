@@ -221,6 +221,7 @@
         "heading": "Borrar todos mis datos",
         "what": "Esto borra de la base de datos de GestorIA en este equipo:",
         "profile": "tu perfil de contribuyente de {year} ({region}): salario, alta de autónomo y la previsión del año",
+        "transactions": "todos los movimientos bancarios importados de tus extractos",
         "irreversible": "No se puede deshacer. GestorIA no guarda ninguna copia.",
         "retention": "La ley tributaria española te exige conservar los justificantes de cada declaración durante al menos cuatro años desde el fin de su plazo de presentación (Ley General Tributaria, arts. 66, 67 y 70). Si aún los necesitas, descarga antes una copia.",
         "confirm": "Para confirmar, escribe {word}",

@@ -1,8 +1,11 @@
 import type { ProfileExport } from "@/data/profiles";
 
-// The same name the API gives the file (Content-Disposition): what it is and the day it was made, nothing about whose it is.
+// The same name the API gives the file (Content-Disposition): what it is and the day it was made in Madrid time, nothing about
+// whose it is. The en-CA locale writes a date as yyyy-MM-dd.
+const MADRID_DAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit" });
+
 export function exportFileName(data: ProfileExport): string {
-  return `gestoria-export-${data.exportedAt.slice(0, 10)}.json`;
+  return `gestoria-export-${MADRID_DAY.format(new Date(data.exportedAt))}.json`;
 }
 
 // Hands the export to the browser as a download. The API needs the key in a header, so a plain link cannot fetch it: the

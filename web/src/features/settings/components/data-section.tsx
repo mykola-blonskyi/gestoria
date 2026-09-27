@@ -81,6 +81,7 @@ function DeleteAll({ profile, pending, onConfirm }: { profile: Profile; pending:
         </p>
         <ul className="mt-1 list-disc pl-5 text-sm">
           <li>{t("profile", { year: profile.taxYear, region: profile.region })}</li>
+          <li>{t("transactions")}</li>
         </ul>
       </div>
       <p className="text-sm">{t("irreversible")}</p>

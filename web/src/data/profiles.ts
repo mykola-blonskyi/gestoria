@@ -50,6 +50,8 @@ export const exportProfileMutation = () =>
   mutationOptions({
     mutationKey: ["profiles", "export"],
     mutationFn: (id: string) => apiFetch<ProfileExport>(`/profiles/${id}/export`, { cache: "no-store" }),
+    // The mutation cache would otherwise keep the whole document, as the mutation's data, for five minutes after the download.
+    gcTime: 0,
   });
 
 // Deletes the profile and everything stored for it. What a caller had cached under profileKeys.all is gone with it.

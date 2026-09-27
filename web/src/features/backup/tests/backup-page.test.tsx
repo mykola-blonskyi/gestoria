@@ -1,4 +1,5 @@
 import { screen } from "@testing-library/react";
+import { MutationCache } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -85,6 +86,33 @@ describe("BackupPage", () => {
     expect(file.type).toBe("application/json");
     expect(JSON.parse(await file.text())).toEqual(g12Export);
     await vi.waitFor(() => expect(downloads.revoked).toEqual(["blob:test/0"]));
+  });
+
+  // The file is dated by the day in Madrid, as the API names it: late evening in UTC is already tomorrow there.
+  it("dates the file by the day in Madrid", async () => {
+    stubApi({ exported: { status: 200, body: { ...g12Export, exportedAt: "2026-09-27T22:30:00+00:00" } } });
+    const downloads = catchDownloads();
+    const user = userEvent.setup();
+    renderInApp(<BackupPage />, { locale: "en" });
+
+    await user.click(await screen.findByRole("button", { name: text.download }));
+
+    await screen.findByText(text.done);
+    expect(downloads.files.map((file) => file.name)).toEqual(["gestoria-export-2026-09-28.json"]);
+  });
+
+  // The whole of the user's data must not linger in the mutation cache once the file is handed over.
+  it("lets go of the export once it is downloaded", async () => {
+    stubApi();
+    catchDownloads();
+    const removed = vi.spyOn(MutationCache.prototype, "remove");
+    const user = userEvent.setup();
+    renderInApp(<BackupPage />, { locale: "en" });
+
+    await user.click(await screen.findByRole("button", { name: text.download }));
+
+    await screen.findByText(text.done);
+    await vi.waitFor(() => expect(removed).toHaveBeenCalled());
   });
 
   it("says there is nothing to download before a profile is stored, and points to settings", async () => {

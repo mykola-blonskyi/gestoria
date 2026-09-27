@@ -254,9 +254,10 @@ describe("SettingsPage", () => {
       const submit = within(form).getByRole("button", { name: messages.delete.submit });
       const confirm = within(form).getByLabelText(messages.delete.confirm.replace("{word}", messages.delete.word));
 
-      expect(within(form).getByRole("listitem")).toHaveTextContent(
+      expect(within(form).getAllByRole("listitem").map((item) => item.textContent)).toEqual([
         messages.delete.profile.replace("{year}", "2025").replace("{region}", "VC"),
-      );
+        messages.delete.transactions,
+      ]);
       expect(confirm).toHaveAccessibleDescription(messages.delete.what);
       expect(within(form).getByText(messages.delete.retention)).toBeInTheDocument();
       expect(submit).toBeDisabled();
