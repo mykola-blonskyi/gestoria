@@ -45,6 +45,28 @@ public class ScaleCalculatorExamples
         Assert.Equal(cuota, ScaleCalculator.Cuota(Valenciana2025, baseLiquidable));
     }
 
+    // The "Cuota íntegra" column of DL 1/2010 (Madrid) art. 1 as worded by Ley 13/2023 (BOCM-m-2010-90068, version in force
+    // from 2023-12-22), the same table as AEAT Manual práctico Renta 2025, cap. 15, Comunidad de Madrid (#60). The law prints
+    // each row rounded to the cent: 1.135,79, 1.739,53, 3.841,42 and 7.651,10. No later version, so 2026 has the same scale.
+    public static TheoryData<int, decimal, decimal> MadridCuotaIntegraColumn() => new()
+    {
+        { 2025, 13362.22m, 1135.7887m },
+        { 2025, 19004.63m, 1739.52657m },
+        { 2025, 35425.68m, 3841.42097m },
+        { 2025, 57320.40m, 7651.10225m },
+        { 2026, 57320.40m, 7651.10225m },
+        { 2026, 107320.40m, 17901.10225m },
+    };
+
+    [Theory]
+    [MemberData(nameof(MadridCuotaIntegraColumn))]
+    public void Madrid_ReproducesTheCuotaIntegraColumnOfTheLaw(int year, decimal baseLiquidable, decimal cuota)
+    {
+        var config = year == 2025 ? TaxYearConfigFiles.Year2025 : TaxYearConfigFiles.Year2026;
+
+        Assert.Equal(cuota, ScaleCalculator.Cuota(config.Regions.For("MD").EscalaAutonomica, baseLiquidable));
+    }
+
     [Fact]
     public void BaseInsideOpenTranche_UsesTopRateForTheExcess()
     {

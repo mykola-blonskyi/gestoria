@@ -4,6 +4,8 @@
 
 > **Re-scoped 2026-09-18 (ADR-0013, superseding ADR-0012).** v1.0 keeps the full employee and autónomo scope: Modelo 100, 130 and 303, Valencia only, figures typed in by hand. Only the OCR service (Phase 4) and Madrid move to v1.x.
 >
+> **Madrid returned 2026-09-27 (ADR-0016).** v1.0 covers Valencia and Madrid; the OCR service stays in v1.x.
+>
 > Build order follows deadlines (ADR-0014). The author registers as an autónomo in January 2027, so Modelo 130 and 303 for Q1 2027 fall due 20 April 2027 alongside Renta 2026. Order: set-aside estimator, then the quarterly forms, then the employee annual path, then the autónomo annual path, which waits for April 2028. The milestone table in section 6 predates all of this and has not been re-estimated.
 
 ## 1. Goal and scope
@@ -27,7 +29,7 @@ Out of scope for v1: *estimación objetiva* (módulos), corporate tax (IS), non-
 | Solo dev, two new languages | Thin vertical slices; each phase ends with something runnable; Python surface kept small |
 | Zero-cost infrastructure for now | Self-hostable stack, free-tier cloud LLM as optional fallback only |
 | Personal financial data | Privacy-by-design from Phase 1 (SPEC-013). v1.0 runs on the author's own machine for one user (ADR-0010), so blob encryption at rest and PII-free logs stay; the rest of the control set is scoped when hosting is on the table |
-| Regions | v1.0 = Valencia (`VC`) only. A fake region in a test fixture proves the region model is data-driven (ADR-0013) |
+| Regions | v1.0 = Valencia (`VC`) and Madrid (`MD`), complete in every tax-year file (ADR-0016) |
 | Background work | In-process `Channel<T>` queue with Postgres as job-state source of truth (ADR-0009); no broker in v1 |
 
 ## 3. Architecture summary
@@ -66,7 +68,7 @@ Exit criteria
 
 | Phase | v1.0 status |
 |---|---|
-| 0 Foundation | In. One `_todo` block gone with Madrid; the other three return with the quarterly forms |
+| 0 Foundation | In. The Madrid block is filled (ADR-0016); the other three `_todo` blocks return with the quarterly forms |
 | 1 Core engine | In, in full. Employee path first (G1, G2, G6, G7, G8b, G10), then autónomo (G3, G4, G5, G8, G9) |
 | 2 Credits and explanations | In, and it is the point (SPEC-006, SPEC-010) |
 | 3 Application, persistence, API | Open. See `docs/decisions.md` |

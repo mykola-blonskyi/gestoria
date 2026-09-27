@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.Json.Nodes;
 using GestorIA.Infrastructure.TaxYears;
 
 namespace GestorIA.Engine.Tests;
@@ -18,6 +20,31 @@ internal static class TaxYearConfigFiles
     private static readonly Lazy<TaxYearConfig> LazyYear2026 = new(() => new TaxYearConfigLoader(Root()).Load(2026));
 
     internal static TaxYearConfig Year2026 => LazyYear2026.Value;
+
+    // A region the file names but declares incomplete, as MD was until #60. No real file carries one any more, so the tests
+    // that cover the refusal add this block to a copy of 2025.example.json.
+    internal const string DeclaredIncompleteRegion = "GA";
+
+    internal const string DeclaredIncompleteRegionNote = "scale, mínimos and holidays not researched";
+
+    internal static JsonObject DeclaredIncompleteRegionBlock() => new()
+    {
+        ["name"] = "Galicia",
+        ["escalaAutonomica"] = new JsonArray(),
+        ["minimosOverride"] = null,
+        ["holidays"] = new JsonArray(),
+        ["_todo"] = DeclaredIncompleteRegionNote,
+    };
+
+    private static readonly Lazy<TaxYearConfig> LazyYear2025WithDeclaredIncompleteRegion = new(() =>
+    {
+        var root = JsonNode.Parse(File.ReadAllBytes(Path.Combine(Root(), Example2025)))!;
+        root["regions"]![DeclaredIncompleteRegion] = DeclaredIncompleteRegionBlock();
+
+        return TaxYearConfigParser.Parse(Encoding.UTF8.GetBytes(root.ToJsonString()), Example2025);
+    });
+
+    internal static TaxYearConfig Year2025WithDeclaredIncompleteRegion => LazyYear2025WithDeclaredIncompleteRegion.Value;
 
     internal static string Root([CallerFilePath] string here = "")
     {

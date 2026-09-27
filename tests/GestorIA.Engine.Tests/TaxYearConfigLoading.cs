@@ -80,9 +80,12 @@ public sealed class TaxYearConfigLoading : IDisposable
     [Fact]
     public void ARegionTheFileDeclaresIncompleteRaisesConfigNotFound()
     {
-        var error = Assert.Throws<ConfigNotFoundException>(() => TaxYearConfigFiles.Year2025.Regions.For("MD"));
+        var error = Assert.Throws<ConfigNotFoundException>(
+            () => TaxYearConfigFiles.Year2025WithDeclaredIncompleteRegion.Regions.For(TaxYearConfigFiles.DeclaredIncompleteRegion));
 
-        Assert.Contains("Region MD is declared incomplete", error.Message, StringComparison.Ordinal);
+        Assert.Equal(
+            $"Region GA is declared incomplete in this configuration: {TaxYearConfigFiles.DeclaredIncompleteRegionNote}",
+            error.Message);
     }
 
     [Fact]
@@ -191,6 +194,20 @@ public sealed class TaxYearConfigLoading : IDisposable
         Assert.Equal(new Money(5550m), config.Irpf.Minimos.Contribuyente);
     }
 
+    // DL 1/2010 (Madrid) art. 2.a as worded by Ley 13/2023, in force for 2025 and 2026 alike.
+    [Fact]
+    public void MadridIsCompleteInEveryTaxYearWithItsOwnMinimoDelContribuyente()
+    {
+        foreach (var config in new[] { TaxYearConfigFiles.Year2025, TaxYearConfigFiles.Year2026 })
+        {
+            var madrid = config.Regions.For("MD");
+
+            Assert.Equal("Comunidad de Madrid", madrid.Name);
+            Assert.Equal(new Money(5956.65m), madrid.Minimos.Contribuyente);
+            Assert.Equal(new Money(5550m), config.Irpf.Minimos.Contribuyente);
+        }
+    }
+
     // LIRPF art. 56.3: a region that approves no amounts of its own uses the state ones for its scale too.
     [Fact]
     public void ARegionWithNoMinimosOverrideTakesTheStateMinimos()
@@ -295,17 +312,20 @@ public sealed class TaxYearConfigLoading : IDisposable
         yield return ("/irpf/actividad/inicioActividad/maxRendimiento", c.Irpf.Actividad.InicioActividad.MaxRendimiento);
         yield return ("/irpf/actividad/inicioActividad/formerEmployerShare", c.Irpf.Actividad.InicioActividad.FormerEmployerShare);
 
-        var valenciana = c.Regions.For("VC");
-        yield return ("/regions/VC/name", valenciana.Name);
-        yield return ("/regions/VC/minimosOverride/contribuyente", valenciana.Minimos.Contribuyente);
-
-        foreach (var value in ScaleValues("/regions/VC/escalaAutonomica", valenciana.EscalaAutonomica)) { yield return value; }
-
-        yield return ("/regions/VC/holidays", new Length(valenciana.Holidays.Count));
-
-        foreach (var (i, day) in valenciana.Holidays.Index())
+        foreach (var code in new[] { "VC", "MD" })
         {
-            yield return ($"/regions/VC/holidays/{i}", day);
+            var region = c.Regions.For(code);
+            yield return ($"/regions/{code}/name", region.Name);
+            yield return ($"/regions/{code}/minimosOverride/contribuyente", region.Minimos.Contribuyente);
+
+            foreach (var value in ScaleValues($"/regions/{code}/escalaAutonomica", region.EscalaAutonomica)) { yield return value; }
+
+            yield return ($"/regions/{code}/holidays", new Length(region.Holidays.Count));
+
+            foreach (var (i, day) in region.Holidays.Index())
+            {
+                yield return ($"/regions/{code}/holidays/{i}", day);
+            }
         }
 
         yield return ("/modelo130/rate", c.Modelo130.Rate);
@@ -325,12 +345,15 @@ public sealed class TaxYearConfigLoading : IDisposable
             yield return ($"/seguridadSocial/tramos/{i}/name", tramo.Name);
             yield return ($"/seguridadSocial/tramos/{i}/netFrom", tramo.NetFrom);
             yield return ($"/seguridadSocial/tramos/{i}/netUpTo", tramo.NetUpTo);
+            yield return ($"/seguridadSocial/tramos/{i}/baseMin", tramo.BaseMin);
+            yield return ($"/seguridadSocial/tramos/{i}/baseMax", tramo.BaseMax);
             yield return ($"/seguridadSocial/tramos/{i}/cuotaMin", tramo.CuotaMin);
         }
 
         yield return ("/seguridadSocial/tarifaPlana/amount", c.SeguridadSocial.TarifaPlana.Amount);
         yield return ("/seguridadSocial/tarifaPlana/months", c.SeguridadSocial.TarifaPlana.Months);
         yield return ("/seguridadSocial/gastosGenericos", c.SeguridadSocial.GastosGenericos);
+        yield return ("/seguridadSocial/tipoCotizacion", c.SeguridadSocial.TipoCotizacion);
 
         if (c.SeguridadSocial.TarifaPlana.DeclaredIncomplete is { } tarifaPlanaNote)
         {

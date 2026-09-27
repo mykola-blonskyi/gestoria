@@ -596,7 +596,8 @@
     "regions": {
       "type": "object",
       "required": [
-        "VC"
+        "VC",
+        "MD"
       ],
       "propertyNames": {
         "pattern": "^[A-Z]{2}$"
@@ -782,7 +783,8 @@
       "required": [
         "tramos",
         "tarifaPlana",
-        "gastosGenericos"
+        "gastosGenericos",
+        "tipoCotizacion"
       ],
       "properties": {
         "tramos": {
@@ -854,6 +856,9 @@
         "gastosGenericos": {
           "$ref": "#/$defs/rate",
           "exclusiveMaximum": 1
+        },
+        "tipoCotizacion": {
+          "$ref": "#/$defs/rate"
         },
         "_todo": {
           "$ref": "#/$defs/todoNote"

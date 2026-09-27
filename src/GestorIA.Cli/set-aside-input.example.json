@@ -27,7 +27,8 @@
     ],
     "projection": {
       "ingresos": "27000.00",
-      "gastos": "900.00"
+      "gastos": "900.00",
+      "baseCotizacion": "1356.21"
     }
   }
 }

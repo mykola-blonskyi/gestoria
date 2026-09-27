@@ -185,6 +185,7 @@ internal static partial class TaxYearRules
         }
 
         var tramos = root["seguridadSocial"]!["tramos"]!.AsArray();
+        var tipoCotizacion = root["seguridadSocial"]!["tipoCotizacion"]!.Read<decimal>();
 
         for (var i = 0; i < tramos.Count; i++)
         {
@@ -197,6 +198,18 @@ internal static partial class TaxYearRules
             if (baseMin > baseMax)
             {
                 yield return Invariant($"/seguridadSocial/tramos/{i} has baseMin {baseMin} above baseMax {baseMax}");
+            }
+
+            // An approximate cuotaMin may be a cent off: per the 2026 tramos provenance, rounding each component rate separately moves three rows by one.
+            var cuotaMin = tramo["cuotaMin"]!.Read<decimal>();
+            var expected = Math.Round(baseMin * tipoCotizacion, 2, MidpointRounding.AwayFromZero);
+            var exact = tramo["cuotaMinKind"]!.Read<string>() == "exact";
+
+            if (exact ? cuotaMin != expected : Math.Abs(cuotaMin - expected) > 0.01m)
+            {
+                yield return Invariant(
+                    $"/seguridadSocial/tramos/{i}/cuotaMin is {cuotaMin}, but baseMin × tipoCotizacion is {baseMin} × {tipoCotizacion} = {expected} rounded half up to the cent; ")
+                    + (exact ? "an exact cuotaMin must equal it" : "an approximate cuotaMin may differ from it by one cent at most");
             }
 
             if (i == 0) { continue; }

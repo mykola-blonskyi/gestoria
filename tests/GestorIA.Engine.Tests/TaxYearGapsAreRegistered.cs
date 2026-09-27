@@ -10,11 +10,7 @@ public class TaxYearGapsAreRegistered
     // Keyed by file name: each tax-year file declares its own gaps and is graded against its own registry.
     private static readonly Dictionary<string, Dictionary<string, string>> Registered = new()
     {
-        [TaxYearConfigFiles.Example2025] = new()
-        {
-            ["/regions/MD"] =
-                "Madrid is out of v1.0 scope (ADR-0013). Closes by deleting the block, not by filling it.",
-        },
+        [TaxYearConfigFiles.Example2025] = new(),
 
         [TaxYearConfigFiles.File2026] = new()
         {

@@ -4,9 +4,9 @@
 
 GestorIA — a tax engine for Spanish residents.
 
-**v1.0 scope (ADR-0013): Modelo 100, 130 and 303 for employees and autónomos, Valencia only, data entered by hand.**
+**v1.0 scope (ADR-0013, ADR-0016): Modelo 100, 130 and 303 for employees and autónomos, Valencia and Madrid, data entered by hand.**
 
-Deferred to v1.x: the OCR service (SPEC-005) and Madrid.
+Deferred to v1.x: the OCR service (SPEC-005).
 
 **Build order follows deadlines (ADR-0014).** The author registers as an autónomo in **January 2027**, so three filings cluster in April 2027:
 
@@ -42,7 +42,7 @@ Tax theory (the *why* behind the rules) lives **outside** the repo in the Obsidi
 - No deductible expense without a linked, confirmed invoice; nothing unconfirmed enters a calculation (business rules 1–2).
 - The 10 golden cases (SPEC-011) must pass to the cent before any engine change is merged.
 - No real personal data in fixtures, logs or the repo (SPEC-013).
-- v1.0 region: Valencia (`VC`) only (ADR-0013). Forms: 100, 130, 303.
+- v1.0 regions: Valencia (`VC`) and Madrid (`MD`) (ADR-0016). Forms: 100, 130, 303.
 - `seguridadSocial.tramos` is January work, not a deferred `_todo`. An autónomo picks a contribution base at registration and tarifa plana is an 80 €/month decision taken then.
 - The author registers as **Profesional with EU and US clients** (2026-09-18). Consequences in SPEC-003 §0: Modelo 130 is required, retención on foreign invoices is **0** (`retencionNuevo` does not apply to them), Modelo 303 usually nets to a refund, Modelo 349 becomes a real quarterly filing, and ROI/VIES registration must be on the Modelo 036.
 - All ten goldens gate v1.0, plus G8b. G8 hits the 6,500 € other-income cap through autónomo income; G8b hits the same cap through savings income, which is how an employee reaches it (SPEC-002 step 1).
@@ -89,4 +89,4 @@ Tax theory (the *why* behind the rules) lives **outside** the repo in the Obsidi
 - Criterio de caja is a flag with a warning; calculations still follow devengo.
 - Loss carry-forward across years and the foreign-tax credit are computed/flagged but not fully modelled.
 - Local (municipal) holidays are not in the calendar: the engine does not know the municipality, so a deadline one of them would move can show early, never late (#40).
-- `config/tax-years/2025.example.json` still has `_todo` blocks (Madrid scale, 130/303 line numbers). `seguridadSocial.tramos` and `modelo130.minoracion` are filled (#5).
+- `config/tax-years/2025.example.json` still has `_todo` blocks (130/303 line numbers). Madrid is filled (#60). `seguridadSocial.tramos` and `modelo130.minoracion` are filled (#5).

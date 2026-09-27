@@ -93,7 +93,7 @@ erDiagram
   TaxpayerProfile {
     Nif nif
     TaxYear year
-    Region region "VC only in v1.0"
+    Region region "VC and MD in v1.0"
     date snapshot "31 December"
   }
   SourceDocument {
