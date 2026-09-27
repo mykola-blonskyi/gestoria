@@ -48,7 +48,8 @@
                                      "baseMin": 653.59, "baseMax": 718.94,
                                      "cuotaMin": 205, "cuotaMinKind": "approximate" }, ... ],
                        "tarifaPlana": { "amount": 80, "months": 12, "extensionMonths": 12,
-                                        "extensionNetIncomeCap": null } },                      // SMI; UNVERIFIED, see §2.1
+                                        "extensionNetIncomeCap": null },                        // SMI; UNVERIFIED, see §2.1
+                       "gastosGenericos": 0.07 },                                              // LGSS art. 308.1.c 2.ª
   "calendar": { "modelo130": [ ["04-01","04-20"], ["07-01","07-20"], ["10-01","10-20"], ["+1-01-01","+1-01-30"] ],
                 "renta": ["+1-04-08","+1-06-30"], "holidays": [ "01-01", ..., "+1-01-01", ... ] },  // regional ones in regions.XX.holidays
   "casillas": { "0003": "trabajo.ingresos", ... },          // SPEC-008
@@ -73,7 +74,8 @@ Every 📅 value records what it was verified against, so that next January it c
   "/irpf/escalaEstatal":          { "kind": "boe",    "ref": "Ley 35/2006 art. 63.1, redacción Ley 31/2022", "verified": "2026-09-25" },
   "/irpf/trabajo/reduccion":      { "kind": "aeat-manual", "ref": "Manual Renta 2025, cap. 3", "verified": "2026-09-25" },
   "/regions/VC/escalaAutonomica": { "kind": "theory", "ref": "Theory §4.2, ed. 2" },
-  "/seguridadSocial/tramos":      { "kind": "theory", "ref": "Theory §6.2, ed. 2" }
+  "/seguridadSocial/tramos":      { "kind": "theory", "ref": "Theory §6.2, ed. 2" },
+  "/seguridadSocial/gastosGenericos": { "kind": "boe", "ref": "RDL 8/2015 (LGSS) art. 308.1.c, regla 2.ª", "verified": "2026-09-27" }
 }
 ```
 

@@ -156,12 +156,10 @@ public static class Modelo130Calculator
         return new Modelo130Result(input.Quarter, resultado, next, dueWindow, new CalculationTrace(steps));
     }
 
-    // Business rule 7: 5 % of a positive rendimiento neto previo, capped, never negative.
     private static Money DificilJustificacion(Modelo130Input input, DificilJustificacionConfig config, List<TraceStep> steps)
     {
         var previo = input.IngresosYtd - input.GastosYtd;
-        var pct = Positive(previo) * config.Pct;
-        var dj = pct < config.Max ? pct : config.Max;
+        var dj = config.On(previo);
 
         steps.Add(Step(
             "m130.dificil-justificacion",

@@ -5,14 +5,15 @@ namespace GestorIA.Engine.Tests;
 
 public class MonthlyCuotaExamples
 {
-    private static TramoTable Tramos2025 => TaxYearConfigFiles.Year2025.SeguridadSocial.Tramos;
+    private static SeguridadSocialConfig SeguridadSocial2025 => TaxYearConfigFiles.Year2025.SeguridadSocial;
 
-    private static TarifaPlana TarifaPlana2025 => TaxYearConfigFiles.Year2025.SeguridadSocial.TarifaPlana;
+    private static TramoTable Tramos2025 => SeguridadSocial2025.Tramos;
 
     private static readonly DateOnly Alta = new(2027, 1, 15);
 
-    private static MonthlyCuotaResult Run(YearMonth month, decimal annualNet = 30000m, DateOnly? alta = null) =>
-        MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta ?? Alta, annualNet, month), Tramos2025, TarifaPlana2025);
+    // 32,000 × (1 − 0.07) / 12 = 2,480 a month, General 7.
+    private static MonthlyCuotaResult Run(YearMonth month, decimal annualComputable = 32000m, DateOnly? alta = null) =>
+        MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta ?? Alta, annualComputable, month), SeguridadSocial2025);
 
     [Fact]
     public void MonthOfAlta_IsProratedByDaysOverThirty()
@@ -83,8 +84,29 @@ public class MonthlyCuotaExamples
         var step = Run(new YearMonth(2027, 2)).Trace.Steps.Single(s => s.Id == "ss.tramo");
 
         Assert.Contains(new TraceInput("tramo", "General 7"), step.Inputs);
-        Assert.Contains(new TraceInput("rendimientoNetoMensual", "2500"), step.Inputs);
+        Assert.Contains(new TraceInput("rendimientoNetoMensual", "2480.00"), step.Inputs);
         Assert.Equal(425.85m, step.Euros());
+    }
+
+    // LGSS art. 308.1.c 2.ª: 30,000 × (1 − 0.07) / 12 = 2,325, General 6. Without the 7 % it would be 2,500, General 7.
+    [Fact]
+    public void GastosGenericosAreDeductedBeforeTheTramoIsChosen()
+    {
+        var result = Run(new YearMonth(2028, 2), annualComputable: 30000m);
+
+        Assert.Contains(new TraceInput("tramo", "General 6"), result.Trace.Steps.Single(s => s.Id == "ss.tramo").Inputs);
+        Assert.Equal(400.20m, result.Cuota);
+    }
+
+    [Fact]
+    public void TheMonthlyStepShowsTheGastosGenericosAndCitesRule2()
+    {
+        var step = Run(new YearMonth(2027, 2), annualComputable: 30000m).Trace.Steps.Single(s => s.Id == "ss.rendimiento-neto-mensual");
+
+        Assert.Equal("30000 × (1 − 0.07) / 12 = 2325.00", step.Formula);
+        Assert.Equal(2325m, step.Euros());
+        Assert.Contains("308.1.c 2.ª", step.Reference, StringComparison.Ordinal);
+        Assert.DoesNotContain("over-reserves", step.Reference, StringComparison.Ordinal);
     }
 
     [Fact]

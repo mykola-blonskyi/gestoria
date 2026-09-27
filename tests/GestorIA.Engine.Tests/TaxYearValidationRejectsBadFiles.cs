@@ -108,6 +108,10 @@ public class TaxYearValidationRejectsBadFiles
         ["regional mínimos override with a key the loader does not know"] =
             (r => r["regions"]!["VC"]!["minimosOverride"]!["hijos"] = 2640m, "/regions/VC/minimosOverride"),
 
+        // 1 − gastosGenericos divides the top tramo's price in SetAsideEstimator, so 100 % would divide by zero.
+        ["gastos genéricos of 100 %"] =
+            (r => r["seguridadSocial"]!["gastosGenericos"] = 1m, "/seguridadSocial/gastosGenericos"),
+
         ["minoracion band with a misspelled property"] =
             (r => Rename(r["modelo130"]!["minoracion"]![0]!.AsObject(), "amountPerQuarter", "amountPerQuater"),
              "/modelo130/minoracion/0"),

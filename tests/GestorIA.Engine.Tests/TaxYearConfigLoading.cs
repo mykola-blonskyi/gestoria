@@ -330,6 +330,7 @@ public sealed class TaxYearConfigLoading : IDisposable
 
         yield return ("/seguridadSocial/tarifaPlana/amount", c.SeguridadSocial.TarifaPlana.Amount);
         yield return ("/seguridadSocial/tarifaPlana/months", c.SeguridadSocial.TarifaPlana.Months);
+        yield return ("/seguridadSocial/gastosGenericos", c.SeguridadSocial.GastosGenericos);
 
         if (c.SeguridadSocial.TarifaPlana.DeclaredIncomplete is { } tarifaPlanaNote)
         {

@@ -266,7 +266,7 @@ public static class AnnualTrueUpCalculator
     private static Money Actividad(ActivityIncome activity, DificilJustificacionConfig dificilJustificacion, List<TraceStep> steps)
     {
         var previo = activity.Ingresos - activity.Gastos;
-        var dj = Min(Positive(previo) * dificilJustificacion.Pct, dificilJustificacion.Max);
+        var dj = dificilJustificacion.On(previo);
         var rendimientoNeto = previo - dj;
 
         steps.Add(new TraceStep(

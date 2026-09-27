@@ -11,6 +11,7 @@
     { "ref": "Ley 37/1992 (IVA), texto consolidado, arts. 90 y 91", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
     { "ref": "Real Decreto-ley 3/2026, de 3 de febrero, art. 3 (bases y tope máximo de cotización hasta la LPGE)", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-2548" },
     { "ref": "Orden PJC/297/2026, de 30 de marzo, arts. 18 y 37 (bases y tipos RETA 2026)", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-7296" },
+    { "ref": "Real Decreto Legislativo 8/2015 (LGSS), art. 308.1.c, redacción del RDL 13/2022 (rendimiento computable de los autónomos)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11724" },
     { "ref": "Ley 20/2007 (Estatuto del Trabajo Autónomo), art. 38 ter, texto consolidado; RDL 13/2022 D.T. 5.ª", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-13409" },
     { "ref": "Resolución de 18 de noviembre de 2025 de la Secretaría de Estado de Función Pública, calendario de días inhábiles 2026", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-23702" }
   ],
@@ -116,7 +117,8 @@
     "tarifaPlana": {
       "amount": null, "months": 12, "extensionMonths": 12, "extensionNetIncomeCap": null,
       "_todo": "amount for months of 2026: Ley 20/2007 art. 38 ter.1 leaves it to the Ley de Presupuestos Generales del Estado, RDL 13/2022 D.T. 5.ª fixed 80 € for 2023–2025 only, neither RDL 3/2026 nor Orden PJC/297/2026 sets it, and no LPGE 2026 exists (checked 2026-09-27)"
-    }
+    },
+    "gastosGenericos": 0.07
   },
   "calendar": {
     "modelo130": [["04-01", "04-20"], ["07-01", "07-20"], ["10-01", "10-20"], ["+1-01-01", "+1-01-30"]],
@@ -160,6 +162,7 @@
     "/modelo130/minoracion":        { "kind": "boe", "ref": "RIRPF art. 110.3.c (RD 1003/2014)", "verified": "2026-09-27" },
     "/iva/rates":                   { "kind": "boe", "ref": "Ley 37/1992 art. 90.uno (21 %, versión en vigor desde 2012-07-15) and art. 91.uno and dos (10 %, 4 %, versión en vigor desde 2024-12-22)", "verified": "2026-09-27" },
     "/seguridadSocial/tramos":      { "kind": "boe", "ref": "Orden PJC/297/2026 art. 18.1 (bases, per RDL 3/2026 art. 3); art. 18.2 and 37.5–37.6 (tipos: 28,30 % + 1,30 % + 0,90 % cese + 0,10 % FP + 0,90 % MEI = 31,50 %). cuotaMin is baseMin × 31,50 % rounded half up to the cent, the method that reproduces all fifteen 2025 values; rounding each component separately differs by one cent on Reducida 3 (267,66), General 4 (360,28) and General 7 (427,22), and which one TGSS applies in 2026 is unverified", "verified": "2026-09-27" },
+    "/seguridadSocial/gastosGenericos": { "kind": "boe", "ref": "RDL 8/2015 (LGSS) art. 308.1.c, regla 2.ª, redacción del RDL 13/2022 en vigor desde 2023-01-01 with no later version: deducción por gastos genéricos del 7 %; 3 % only for the art. 305.2.b and e societarios, not modelled", "verified": "2026-09-27" },
     "/seguridadSocial/tarifaPlana": { "kind": "boe", "ref": "Ley 20/2007 art. 38 ter.1 (months) and 38 ter.2 (extensionMonths); extensionNetIncomeCap stays null because 38 ter.2 ties it to the SMI anual of the extension period, which for an alta in 2026 runs into years whose SMI is not fixed (SPEC-007 §2)", "verified": "2026-09-27" },
     "/calendar/modelo130":          { "kind": "boe", "ref": "RIRPF art. 111.1; Orden EHA/672/2007 art. 7", "verified": "2026-09-27" },
     "/calendar/holidays":           { "kind": "boe", "ref": "Días inhábiles en todo el territorio nacional that fall Monday to Friday: Resolución de 18 de noviembre de 2025 de la Secretaría de Estado de Función Pública (BOE-A-2025-23702), anexo", "verified": "2026-09-27" }

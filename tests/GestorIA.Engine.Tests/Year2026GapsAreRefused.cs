@@ -9,8 +9,7 @@ public class Year2026GapsAreRefused
     private static TaxYearConfig Config => TaxYearConfigFiles.Year2026;
 
     private static MonthlyCuotaResult Cuota(DateOnly alta, YearMonth month) =>
-        MonthlyCuotaCalculator.Cuota(
-            new MonthlyCuotaInput(alta, 30000m, month), Config.SeguridadSocial.Tramos, Config.SeguridadSocial.TarifaPlana);
+        MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, 30000m, month), Config.SeguridadSocial);
 
     [Fact]
     public void AMonthUnderTarifaPlanaIsRefusedQuotingTheNote()
@@ -26,7 +25,8 @@ public class Year2026GapsAreRefused
     {
         var result = Cuota(new DateOnly(2024, 6, 10), new YearMonth(2026, 2));
 
-        Assert.Equal(427.21m, result.Cuota);
+        // 30000 × (1 − 0.07) / 12 = 2325 a month: General 6, whose 2026 cuotaMin is 401.47.
+        Assert.Equal(401.47m, result.Cuota);
     }
 
     [Theory]
