@@ -68,14 +68,22 @@ namespace GestorIA.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2)
                         .HasColumnType("character varying(2)");
 
+                    b.Property<bool>("Singleton")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("TaxYear")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Singleton")
+                        .IsUnique();
+
                     b.ToTable("Profiles", null, t =>
                         {
                             t.HasCheckConstraint("CK_Profiles_NewActivity", "(\"NewActivityPeriod\" IS NULL) = (\"IngresosFromFormerEmployer\" IS NULL)");
+
+                            t.HasCheckConstraint("CK_Profiles_Singleton", "\"Singleton\"");
                         });
                 });
 #pragma warning restore 612, 618

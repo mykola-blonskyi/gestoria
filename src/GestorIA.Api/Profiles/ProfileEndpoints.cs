@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
+using Npgsql;
 
 namespace GestorIA.Api.Profiles;
 
@@ -82,7 +83,17 @@ public static class ProfileEndpoints
 
         var row = ProfileRow.From(profile);
         db.Profiles.Add(row);
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException e) when (e.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            // Another create won the race between the look above and this insert; the unique index on Singleton refused this one.
+            db.ChangeTracker.Clear();
+            return Problems.OneProfileOnly(await db.Profiles.Select(p => p.Id).SingleAsync(cancellationToken));
+        }
+
         return TypedResults.Created($"/api/v1/profiles/{row.Id}", View(row));
     }
 

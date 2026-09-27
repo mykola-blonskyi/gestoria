@@ -16,6 +16,7 @@ namespace GestorIA.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Singleton = table.Column<bool>(type: "boolean", nullable: false),
                     TaxYear = table.Column<int>(type: "integer", nullable: false),
                     Region = table.Column<string>(type: "character varying(2)", maxLength: 2, nullable: false),
                     EmploymentIngresos = table.Column<decimal>(type: "numeric(18,6)", precision: 18, scale: 6, nullable: false),
@@ -32,7 +33,14 @@ namespace GestorIA.Infrastructure.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_Profiles", x => x.Id);
                     table.CheckConstraint("CK_Profiles_NewActivity", "(\"NewActivityPeriod\" IS NULL) = (\"IngresosFromFormerEmployer\" IS NULL)");
+                    table.CheckConstraint("CK_Profiles_Singleton", "\"Singleton\"");
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Profiles_Singleton",
+                table: "Profiles",
+                column: "Singleton",
+                unique: true);
         }
 
         /// <inheritdoc />

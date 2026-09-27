@@ -16,7 +16,9 @@ public sealed class GestoriaDbContext(DbContextOptions<GestoriaDbContext> option
             profile.ToTable("Profiles", table =>
             {
                 table.HasCheckConstraint("CK_Profiles_NewActivity", "(\"NewActivityPeriod\" IS NULL) = (\"IngresosFromFormerEmployer\" IS NULL)");
+                table.HasCheckConstraint("CK_Profiles_Singleton", "\"Singleton\"");
             });
+            profile.HasIndex(p => p.Singleton).IsUnique();
             profile.Property(p => p.Region).HasMaxLength(2);
             profile.Property(p => p.NewActivityPeriod).HasConversion<string>().HasMaxLength(9);
         });

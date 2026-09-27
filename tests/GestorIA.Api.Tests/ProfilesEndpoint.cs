@@ -92,6 +92,25 @@ public class ProfilesEndpoint
         Assert.Single(JsonNode.Parse(await client.GetStringAsync("/api/v1/profiles"))!.AsArray());
     }
 
+    // The database holds the rule, not the handler's look-before-insert: of creates racing on an empty installation exactly
+    // one is stored, and every other one is the same 409 as a create that comes later.
+    [Fact]
+    public async Task OfConcurrentCreatesExactlyOneIsStored()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+
+        var responses = await Task.WhenAll(Enumerable.Range(0, 20).Select(_ => client.PostProfile(RepoFiles.GoldenProfile("G12"))));
+
+        Assert.Single(responses, r => r.StatusCode == HttpStatusCode.Created);
+        Assert.All(responses.Where(r => r.StatusCode != HttpStatusCode.Created), r => Assert.Equal(HttpStatusCode.Conflict, r.StatusCode));
+        foreach (var conflict in responses.Where(r => r.StatusCode == HttpStatusCode.Conflict))
+        {
+            Assert.Equal(ProfileExists, (await conflict.Json())["type"]!.GetValue<string>());
+        }
+        Assert.Single(JsonNode.Parse(await client.GetStringAsync("/api/v1/profiles"))!.AsArray());
+    }
+
     [Theory]
     [InlineData("GET", "")]
     [InlineData("PUT", "")]

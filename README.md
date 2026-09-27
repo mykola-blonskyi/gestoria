@@ -184,7 +184,7 @@ sed -i '' "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$PASSWORD/" .env      # on 
 dotnet user-secrets set ConnectionStrings:Gestoria "Host=localhost;Port=5432;Database=gestoria;Username=gestoria;Password=$PASSWORD" --project src/GestorIA.Api
 ```
 
-`.env` is ignored by git and gives Docker Compose the password; user secrets live in your home directory and give the API the same one. Anywhere else, set the `ConnectionStrings__Gestoria` environment variable. Then start the database, and leave it running:
+`.env` is ignored by git and gives Docker Compose the password; user secrets live in your home directory and give the API the same one. If you changed `POSTGRES_PORT` in `.env`, put that port in the connection string instead of 5432. Anywhere else, set the `ConnectionStrings__Gestoria` environment variable. Then start the database, and leave it running:
 
 ```bash
 docker compose up -d postgres     # docker compose ps shows it healthy

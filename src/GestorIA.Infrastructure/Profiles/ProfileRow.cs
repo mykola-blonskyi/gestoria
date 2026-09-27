@@ -10,6 +10,10 @@ public sealed class ProfileRow
 {
     public Guid Id { get; set; }
 
+    // Always true, under a unique index and a check constraint: the column that lets the database itself hold local mode's rule
+    // of one profile per installation, however many creates race.
+    public bool Singleton { get; private set; } = true;
+
     public int TaxYear { get; set; }
 
     // "required" makes an object initializer set the property, so a row is never built without a region.
