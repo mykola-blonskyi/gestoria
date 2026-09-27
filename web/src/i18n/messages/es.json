@@ -154,13 +154,56 @@
   },
   "Periods": {
     "title": "Periodos",
-    "lead": "Trimestres y ejercicios fiscales, cada uno con sus resultados.",
-    "points": {
-      "quarters": "Los resultados del Modelo 130 y del 303 de cada trimestre, con sus números de casilla.",
-      "years": "El resultado anual (Renta) de cada ejercicio y cómo se ha llegado a él.",
-      "trace": "El cálculo paso a paso, agrupado por secciones."
+    "lead": "Abre un trimestre o un ejercicio fiscal y consulta su resultado, con el rastro que lo justifica.",
+    "toggle": {
+      "label": "Elige un trimestre o un ejercicio fiscal",
+      "quarter": "Trimestre",
+      "year": "Ejercicio fiscal"
     },
-    "pending": "Necesita los cálculos trimestrales y anuales de la API, que aún no están construidos."
+    "profile": {
+      "loading": "Cargando tu perfil…",
+      "missing": "Aún no hay perfil de contribuyente",
+      "missingLead": "Introdúcelo una vez en Ajustes. Cada periodo de aquí se calcula a partir de él.",
+      "enter": "Introducir el perfil en Ajustes"
+    },
+    "quarter": {
+      "asOf": "Trimestre",
+      "calculating": "Calculando…",
+      "heading": "Modelo 130, {quarter}",
+      "aIngresar": "Importe a ingresar",
+      "due": "Se paga del {from} al {by}.",
+      "localHolidays": "No se aplican los festivos locales, así que la fecha puede ser anterior, nunca posterior.",
+      "basis": "Calculado a partir de la previsión del año: todavía no hay ningún trimestre cerrado registrado para este perfil (el #73 lo cambiará).",
+      "casillasHeading": "Casillas del Modelo 130"
+    },
+    "casillas": {
+      "line": "Casilla {number}",
+      "ingresos": "Ingresos desde el 1 de enero (ingresos)",
+      "gastos": "Gastos deducibles (gastos)",
+      "rendimientoNeto": "Rendimiento neto",
+      "pagoBruto": "20 % del rendimiento neto (pago bruto)",
+      "pagosAnteriores": "Trimestres anteriores del año (pagos anteriores)",
+      "retenciones": "Retenciones aplicadas",
+      "pagoPrevio": "Pago fraccionado del trimestre (pago previo)",
+      "sumaPagosPrevios": "Suma de los pagos del año hasta ahora (suma de pagos previos)",
+      "minoracion": "Minoración por un ejercicio anterior bajo",
+      "diferencia": "Diferencia tras la minoración",
+      "negativosAnteriores": "Resultados negativos de trimestres anteriores",
+      "deduccionVivienda": "Deducción por vivienda",
+      "total": "Total deducido",
+      "resultado": "Importe a pagar (resultado)"
+    },
+    "year": {
+      "calculating": "Calculando…",
+      "banner": "La declaración completa del Modelo 100 aún no se calcula. Esto es solo la regularización anual: lo que falta más allá de los pagos del Modelo 130 ya hechos.",
+      "heading": "Regularización anual",
+      "gap": "Diferencia más allá de los pagos del Modelo 130",
+      "payableIn": "A pagar antes de que termine {month}.",
+      "due": "Se paga del {from} al {by}.",
+      "liabilityOnActivity": "Cuota que añade la actividad a la declaración",
+      "marginalRate": "Tipo marginal sobre los rendimientos del trabajo",
+      "reduccionTrabajoLost": "Reducción por trabajo perdida por la actividad"
+    }
   },
   "Settings": {
     "title": "Ajustes",

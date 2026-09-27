@@ -154,13 +154,56 @@
   },
   "Periods": {
     "title": "Periods",
-    "lead": "Quarters and tax years, each with its results.",
-    "points": {
-      "quarters": "Each quarter's Modelo 130 and 303 results with their casilla numbers.",
-      "years": "Each tax year's annual result (Renta) and how it was reached.",
-      "trace": "The step-by-step calculation, grouped by section."
+    "lead": "Open a quarter or a tax year and see its result, with the trace behind it.",
+    "toggle": {
+      "label": "Choose a quarter or a tax year",
+      "quarter": "Quarter",
+      "year": "Tax year"
     },
-    "pending": "This needs the quarterly and annual calculations from the API, which are not built yet."
+    "profile": {
+      "loading": "Loading your profile…",
+      "missing": "No taxpayer profile yet",
+      "missingLead": "Enter it once in Settings. Every period here is computed from it.",
+      "enter": "Enter the profile in Settings"
+    },
+    "quarter": {
+      "asOf": "Quarter",
+      "calculating": "Calculating…",
+      "heading": "Modelo 130, {quarter}",
+      "aIngresar": "Amount to pay (a ingresar)",
+      "due": "Pay from {from} to {by}.",
+      "localHolidays": "Municipal holidays are not applied, so the date can be early but never late.",
+      "basis": "Based on the year's projection: no closed quarter is recorded yet for this profile (#73 will change this).",
+      "casillasHeading": "Modelo 130 casillas"
+    },
+    "casillas": {
+      "line": "Casilla {number}",
+      "ingresos": "Income since 1 January (ingresos)",
+      "gastos": "Deductible expenses (gastos)",
+      "rendimientoNeto": "Net income (rendimiento neto)",
+      "pagoBruto": "20% of the net income (pago bruto)",
+      "pagosAnteriores": "Earlier quarters of the year (pagos anteriores)",
+      "retenciones": "Withholdings applied (retenciones)",
+      "pagoPrevio": "Payment due for the quarter (pago previo)",
+      "sumaPagosPrevios": "Sum of this year's payments so far (suma de pagos previos)",
+      "minoracion": "Reduction for a small previous year (minoración)",
+      "diferencia": "Difference after the reduction (diferencia)",
+      "negativosAnteriores": "Negative results carried from earlier quarters (negativos anteriores)",
+      "deduccionVivienda": "Housing deduction (deducción por vivienda)",
+      "total": "Total deducted (total)",
+      "resultado": "Amount to pay (resultado)"
+    },
+    "year": {
+      "calculating": "Calculating…",
+      "banner": "The full Modelo 100 return is not computed yet. This is only the annual true-up: the gap beyond the Modelo 130 advances already paid.",
+      "heading": "Annual true-up",
+      "gap": "Gap beyond the Modelo 130 advances",
+      "payableIn": "Payable by the end of {month}.",
+      "due": "Pay from {from} to {by}.",
+      "liabilityOnActivity": "Tax the activity adds to the return",
+      "marginalRate": "Marginal rate on top of the employment income",
+      "reduccionTrabajoLost": "Employment-income reduction lost to the activity"
+    }
   },
   "Settings": {
     "title": "Settings",
