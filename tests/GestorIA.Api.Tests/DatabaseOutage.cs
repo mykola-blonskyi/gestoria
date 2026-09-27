@@ -77,11 +77,10 @@ public sealed class DatabaseOutage : IAsyncLifetime
         fixture.Remove("traceId");
         WebFixtures.AssertFixture("database-unavailable.json", fixture);
 
-        // Every line written since the stop at the levels the API logs by default (appsettings.json). EF Core's Debug events
-        // name the database and its server on every connection, outage or not; nothing turns them on.
+        // Every line written since the stop, at every level down to Trace.
         var outage = api.Lines.Skip(before).ToList();
         Assert.Contains(outage, line => line.StartsWith("Warning GestorIA.Api.DatabaseUnavailable The database is not reachable", StringComparison.Ordinal));
-        foreach (var line in outage.Where(line => !line.StartsWith("Trace ", StringComparison.Ordinal) && !line.StartsWith("Debug ", StringComparison.Ordinal)))
+        foreach (var line in outage)
         {
             AssertNamesNothing(line);
         }

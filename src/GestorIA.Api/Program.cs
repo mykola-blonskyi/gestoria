@@ -43,12 +43,25 @@ builder.Services.AddSingleton(new TaxYearConfigLoader(taxYears));
 // user secrets or the ConnectionStrings__Gestoria environment variable, never a file in the repository (README.md, "Database").
 // EF Core's three failure events log the exception, whose message names the database's host and port (SPEC-013 §2). The
 // exception reaches UseExceptionHandler anyway: DatabaseUnavailable answers 503 without logging it, and anything else is
-// logged there as a 500, so ignoring the events loses nothing.
+// logged there as a 500, so ignoring the events loses nothing. The Debug-level connection and data-reader events name the
+// database and its server on every connection, so they go too.
 builder.Services.AddDbContext<GestoriaDbContext>((services, options) => options
     .UseNpgsql(
         services.GetRequiredService<IConfiguration>().GetConnectionString("Gestoria")
             ?? throw new InvalidOperationException("ConnectionStrings:Gestoria is not set; README.md, \"Database\", shows how to set it."))
-    .ConfigureWarnings(events => events.Ignore(RelationalEventId.ConnectionError, CoreEventId.QueryIterationFailed, CoreEventId.SaveChangesFailed)));
+    .ConfigureWarnings(events => events.Ignore(
+        RelationalEventId.ConnectionError,
+        CoreEventId.QueryIterationFailed,
+        CoreEventId.SaveChangesFailed,
+        RelationalEventId.ConnectionOpening,
+        RelationalEventId.ConnectionOpened,
+        RelationalEventId.ConnectionClosing,
+        RelationalEventId.ConnectionClosed,
+        RelationalEventId.ConnectionDisposing,
+        RelationalEventId.ConnectionDisposed,
+        RelationalEventId.DataReaderClosing,
+        RelationalEventId.DataReaderDisposing,
+        RelationalEventId.MigrateUsingConnection)));
 
 // The web app runs on its own origin next to the API (ADR-0010, web/README.md).
 var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
