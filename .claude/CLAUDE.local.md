@@ -89,4 +89,4 @@ Tax theory (the *why* behind the rules) lives **outside** the repo in the Obsidi
 - Criterio de caja is a flag with a warning; calculations still follow devengo.
 - Loss carry-forward across years and the foreign-tax credit are computed/flagged but not fully modelled.
 - Local (municipal) holidays are not in the calendar: the engine does not know the municipality, so a deadline one of them would move can show early, never late (#40).
-- `config/tax-years/2025.example.json` still has `_todo` blocks (130/303 line numbers). Madrid is filled (#60). `seguridadSocial.tramos` and `modelo130.minoracion` are filled (#5).
+- `config/tax-years/2025.example.json` has no `_todo` blocks left: Madrid (#60), the 130/303/349 line maps (#58), `seguridadSocial.tramos` and `modelo130.minoracion` (#5) are filled.

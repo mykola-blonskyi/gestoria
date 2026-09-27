@@ -891,6 +891,7 @@
             "reducido",
             "general",
             "adquisicionesIntracomunitarias",
+            "otrasInversionSujetoPasivo",
             "total"
           ],
           "properties": {
@@ -904,6 +905,9 @@
               "$ref": "#/$defs/baseTipoCuota"
             },
             "adquisicionesIntracomunitarias": {
+              "$ref": "#/$defs/baseCuota"
+            },
+            "otrasInversionSujetoPasivo": {
               "$ref": "#/$defs/baseCuota"
             },
             "total": {

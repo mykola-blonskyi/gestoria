@@ -152,8 +152,7 @@ internal static partial class TaxYearRules
             }
         }
 
-        // Shared by the tax-scale and form-map coverage checks below: covered by its own provenance
-        // entry, or by an ancestor's (one BOE article can verify a whole block, SPEC-007 §1.1).
+        // A pointer is covered by its own provenance entry, or by an ancestor's (one BOE article can verify a whole block, SPEC-007 §1.1).
         bool Covered(string pointer) =>
             provenance.Any(e => pointer == e.Key || pointer.StartsWith(e.Key + "/", StringComparison.Ordinal));
 
@@ -257,12 +256,11 @@ internal static partial class TaxYearRules
         }
     }
 
-    // Shared by the casilla and clave duplicate checks: the string leaves of a map, in document order, skipping a declared gap.
     private static IEnumerable<(string Pointer, string Value)> Leaves(JsonObject map, string pointer)
     {
         foreach (var (key, value) in map)
         {
-            if (key == "_todo" || value is null) { continue; }
+            if (key == "_todo") { continue; }
 
             var childPointer = $"{pointer}/{key}";
 
@@ -275,7 +273,7 @@ internal static partial class TaxYearRules
             }
             else
             {
-                yield return (childPointer, value.Read<string>());
+                yield return (childPointer, value!.Read<string>());
             }
         }
     }

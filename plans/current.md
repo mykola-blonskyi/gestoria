@@ -21,7 +21,7 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - [ ] Rename `2025.example.json` to `2025.json` (#59)
 - [x] Fill `seguridadSocial.tramos` before January: the registration decision on contribution base and tarifa plana depends on it (ADR-0014). Filled with real 2025 BOE data (Orden PJC/178/2025), `tarifaPlana` confirmed against Ley 20/2007 art. 38 ter (#5)
 - [x] Fill `modelo130.minoracion` (RD 439/2007 art. 110.3.c) (#5). First-activity-year case settled by the AEAT instructions for casilla 13: no activity last year counts as a net of zero (#8)
-- [ ] Fill `modelo130.lines`, `modelo303.lines` and `modelo349` before the Q1 2027 forms
+- [x] Fill `modelo130.lines`, `modelo303.lines` and `modelo349` before the Q1 2027 forms (#58): mapped from the approving Órdenes for what SPEC-003 computes, 2025 and 2026
 - [ ] Confirm ROI/VIES is on the Modelo 036 filed in January; without it, EU invoices carry Spanish IVA they should not
 - [ ] Master key escrow and a rehearsed MinIO restore, before the first real document is uploaded (ADR-0015)
 - [x] `config/tax-years/2026.json` with 2026 law and `boe` provenance for every value (#47). Declared gaps, refused rather than computed: the tarifa plana amount (no LPGE 2026), the renta window and 2027 días inhábiles (Q4 Modelo 130 and renta deadlines), the Modelo 100 casillas

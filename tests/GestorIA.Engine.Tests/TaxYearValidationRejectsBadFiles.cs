@@ -179,6 +179,15 @@ public class TaxYearValidationRejectsBadFiles
         ["_todo beside filled lines"] =
             (r => r["modelo130"]!["lines"]!["_todo"] = "line numbers not needed anymore", "/modelo130/lines"),
 
+        ["Modelo 303 _todo beside filled lines"] =
+            (r => r["modelo303"]!["lines"]!["_todo"] = "line numbers not needed anymore", "/modelo303/lines"),
+
+        ["Modelo 303 reverse-charge line missing"] =
+            (r => r["modelo303"]!["lines"]!["devengado"]!.AsObject().Remove("otrasInversionSujetoPasivo"), "/modelo303/lines/devengado"),
+
+        ["Modelo 349 field missing"] =
+            (r => r["modelo349"]!["lines"]!.AsObject().Remove("baseImponible"), "/modelo349/lines"),
+
         ["the same casilla twice in one form"] =
             (r => r["modelo303"]!["lines"]!["resultado"] = "69", "/modelo303/lines/resultado"),
 
