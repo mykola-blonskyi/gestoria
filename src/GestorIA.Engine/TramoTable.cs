@@ -57,6 +57,12 @@ public sealed class TramoTable
         Tramos = tramos;
     }
 
+    // LGSS art. 308.1.a 3.ª: the taxpayer may choose any base of the year's tables, from the lowest base mínima (the reduced
+    // table's first tramo) to the highest base máxima (the general table's last); TGSS accepts no other.
+    public Money LowestBase => Tramos.Min(t => t.BaseMin);
+
+    public Money HighestBase => Tramos.Max(t => t.BaseMax);
+
     // BOE tables read "> netFrom y <= netUpTo": the upper bound is inclusive.
     public Tramo For(decimal monthlyNet) =>
         Tramos.First(t => t.NetUpTo is not { } upTo || monthlyNet <= upTo.Amount);

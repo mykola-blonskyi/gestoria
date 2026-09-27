@@ -7,13 +7,15 @@ Solution file: `../GestorIA.slnx` (projects under `src/`, test projects under `.
 ```
 src/GestorIA.Domain/          Money, Rate (SPEC-001); prototype Transaction, IStatementParser, Result<T>   — no dependencies
 src/GestorIA.Engine/          set-aside estimator, Modelo 130, annual true-up, TGSS cuota, deadlines     — → Domain
-src/GestorIA.Infrastructure/  tax-year config loader and validation; the set-aside input file parser; prototype BbvaCsvStatementParser — → Domain, Engine
+src/GestorIA.Infrastructure/  tax-year config loader and validation; the set-aside input file parser; PostgreSQL through EF Core (Persistence/, migrations included) and the stored profile (Profiles/); prototype BbvaCsvStatementParser — → Domain, Engine
 src/GestorIA.Cli/             console that prints a set-aside estimate from a file (#11)               — → Engine, Infrastructure
-src/GestorIA.Api/             /api/v1: health, tax-year configs, set-aside estimate; openapi/v1.json (#66) — → Engine, Infrastructure
+src/GestorIA.Api/             /api/v1: health, tax-year configs, set-aside estimate, profiles (#69); openapi/v1.json (#66) — → Engine, Infrastructure
 ../Directory.Build.props      nullable, warnings-as-errors, analyzers, banned double/float for money (ADR-0004)
 ```
 
 `GestorIA.Cli/README.md` says how to run the console and describes its input file, which is also the body of `POST /api/v1/set-aside/estimate`. Both parse it with `GestorIA.Infrastructure/SetAside/SetAsideInputFile`, so they refuse the same inputs with the same messages. `dotnet build` rewrites `GestorIA.Api/openapi/v1.json`; commit it with the change that moved it.
+
+After a change to the database model, add a migration with the pinned tool (`dotnet tool restore` once): `dotnet ef migrations add <Name> --project src/GestorIA.Infrastructure --output-dir Persistence/Migrations`. The API applies pending migrations as it starts.
 
 ## Target
 

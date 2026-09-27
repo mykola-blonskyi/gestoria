@@ -1,52 +1,84 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 
-import { ApiError } from "@/data/api-error";
+import type { Profile } from "@/data/profiles";
+import type { Quarter } from "@/data/set-aside";
+import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
 import { PageHeader } from "@/shared/ui/page-header";
 
+import { useProfile } from "../hooks/use-profile";
 import { useSetAsideEstimate } from "../hooks/use-set-aside-estimate";
-import { useTaxYears } from "../hooks/use-tax-years";
 import { ApiFailure } from "./api-failure";
-import { EstimateForm } from "./estimate-form";
+import { QUARTERS, defaultQuarter } from "./as-of";
 import { EstimateView } from "./estimate-view";
+
+const SETTINGS = "/settings";
 
 export function DashboardPage() {
   const t = useTranslations("Dashboard");
-  const taxYears = useTaxYears();
-  const estimate = useSetAsideEstimate();
+  const profile = useProfile();
 
   return (
     <>
       <PageHeader title={t("title")} lead={t("lead")} />
       <div className="grid gap-6">
-        {taxYears.isPending ? (
-          <p role="status">{t("taxYears.loading")}</p>
-        ) : taxYears.isError ? (
-          <ApiFailure error={taxYears.error} />
+        {profile.isPending ? (
+          <p role="status">{t("profile.loading")}</p>
+        ) : profile.isError ? (
+          <ApiFailure error={profile.error} />
+        ) : profile.data === null ? (
+          <div className="grid gap-2 rounded-xl border border-border p-4">
+            <h2 className="font-medium">{t("profile.missing")}</h2>
+            <p className="text-sm">{t("profile.missingLead")}</p>
+            <Link href={SETTINGS} className="text-sm font-medium underline underline-offset-4">
+              {t("profile.enter")}
+            </Link>
+          </div>
         ) : (
-          <EstimateForm
-            taxYears={taxYears.data}
-            pending={estimate.isPending}
-            refusals={refusalsOf(estimate.error)}
-            onSubmit={(request) => estimate.mutate(request)}
-          />
+          <Estimate profile={profile.data} />
         )}
-        {estimate.isError && <ApiFailure error={estimate.error} />}
-        {estimate.isSuccess && <EstimateView estimate={estimate.data} />}
       </div>
     </>
   );
 }
 
-// A 400's "errors" member maps the JSON path of each refused value to why (ValidationProblemDetails).
-function refusalsOf(error: Error | null): Record<string, string> {
-  if (!(error instanceof ApiError) || error.failure.kind !== "problem") return {};
-  const errors = error.failure.problem.extensions.errors;
-  if (typeof errors !== "object" || errors === null) return {};
-  return Object.fromEntries(
-    Object.entries(errors).flatMap(([path, reasons]) =>
-      Array.isArray(reasons) && typeof reasons[0] === "string" ? [[path, reasons[0]]] : [],
-    ),
+function Estimate({ profile }: { profile: Profile }) {
+  const t = useTranslations("Dashboard");
+  const [asOf, setAsOf] = useState<Quarter>(() => defaultQuarter(profile.taxYear, profile.activity.alta, new Date()));
+  const estimate = useSetAsideEstimate(profile.id, asOf);
+
+  return (
+    <>
+      <div className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-end">
+        <div className="grid gap-1.5">
+          <label htmlFor="as-of" className="text-sm font-medium">
+            {t("asOf")}
+          </label>
+          <NativeSelect id="as-of" value={asOf} onChange={(event) => setAsOf(event.target.value as Quarter)}>
+            {QUARTERS.map((quarter) => (
+              <NativeSelectOption key={quarter} value={quarter}>
+                {quarter}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {t("basis", { year: profile.taxYear })}{" "}
+          <Link href={SETTINGS} className="font-medium underline underline-offset-4">
+            {t("profile.edit")}
+          </Link>
+        </p>
+      </div>
+      {estimate.isPending ? (
+        <p role="status">{t("calculating")}</p>
+      ) : estimate.isError ? (
+        <ApiFailure error={estimate.error} settings={SETTINGS} />
+      ) : (
+        <EstimateView estimate={estimate.data} />
+      )}
+    </>
   );
 }

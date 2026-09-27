@@ -26,6 +26,10 @@ An ADR is **Accepted** only when the decision has been felt: code written, a ser
 
 ## Small decisions (no ADR)
 
+- **One taxpayer profile per local installation, its tax year a field** — 2026-09-27, #69. SPEC-001 calls the profile "per year"; with one user and one dashboard, one profile whose year is chosen in settings is enough, and a second `POST` is a 409. The database holds the rule (a unique index on an always-true column), not only the handler, so racing creates store one profile. Per-year profiles return with a second year to compare or a second user.
+- **A new profile starts on the newest tax year whose configuration declares no gap** — 2026-09-27, #69. The newest year, 2026, refuses every set-aside estimate until its renta window is published (around March 2027), so defaulting to it would greet a first profile with a refusal. A gapped year stays selectable, with its gaps listed in settings, and its estimate shows the 422 as "not published yet". The default moves on by itself when `2026.json` closes its gaps or `2027.json` lands complete.
+- **The API migrates its database as it starts** — 2026-09-27, #69. One user, one local database: `Database.MigrateAsync()` at start-up is idempotent and saves a setup step. It is skipped while `dotnet build` generates the OpenAPI document. Revisit with a second instance or a hosted database, where migrations become a deployment step.
+
 - **There is a web app, and the CLI stays** — 2026-09-27, settling the CLI-or-SPA question that was deferred to M3. The author chose a Next.js web app in `web/` (ADR-0017, #65).
 - **Regions in v1.0: Valencia (`VC`) and Madrid (`MD`)** — 2026-09-27, superseding the 2026-09-18 note that kept Valencia only. Both are complete in every tax-year file, and the schema requires both (ADR-0016).
 - **Build order follows deadlines, not scope** — 2026-09-18. Quarterly forms first, because the author registers as an autónomo in January 2027 and Modelo 130 and 303 for Q1 2027 fall due 20 April 2027, alongside Renta 2026 (ADR-0014). The autónomo annual path is not needed until April 2028.

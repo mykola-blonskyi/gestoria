@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.OpenApi;
@@ -23,7 +22,6 @@ public static class ApiKey
     private const string EmptyKeySha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
     // ValidateOnStart makes the API refuse to start without a usable hash, rather than start open or lock everyone out.
-    // `dotnet build` also starts the app, as GetDocument.Insider, to write openapi/v1.json, and no key is configured there.
     public static void AddApiKey(this IServiceCollection services)
     {
         var options = services.AddOptions<ApiKeyOptions>()
@@ -31,25 +29,27 @@ public static class ApiKey
             .Validate(
                 o => o.ApiKeySha256 is { Length: 64 } hash && hash.All(char.IsAsciiHexDigit) && !hash.Equals(EmptyKeySha256, StringComparison.OrdinalIgnoreCase),
                 "Auth:ApiKeySha256 must be the SHA-256 of a non-empty local API key, as 64 hex characters (web/README.md, \"The API key\").");
-        if (Assembly.GetEntryAssembly()?.GetName().Name != "GetDocument.Insider")
+        if (!OpenApiGeneration.IsRunning)
         {
             options.ValidateOnStart();
         }
     }
 
-    // Every endpoint mapped on the group needs the key (UseApiKey), and the OpenAPI document says so.
+    // Declares the key on every endpoint of the group in the OpenAPI document. UseApiKey enforces it by path, not by this.
     public static RouteGroupBuilder RequireApiKey(this RouteGroupBuilder group)
     {
         group.WithMetadata(new RequiresApiKey()).ProducesProblem(StatusCodes.Status401Unauthorized);
         return group;
     }
 
-    // app.Use adds inline middleware, code that runs on every request. This one runs once routing has chosen the endpoint
-    // and before its parameters are bound, so a request without the key is refused before the API reads anything else from it.
+    // app.Use adds inline middleware, code that runs on every request. The rule is the path, not the endpoint routing chose:
+    // a locked route asked with the wrong method or Content-Type matches no endpoint and would otherwise answer 405 or 415,
+    // telling a caller without the key which routes exist. It runs before parameter binding, so a request without the key
+    // is refused before the API reads anything else from it. CORS preflights never get here: UseCors answers them first.
     public static void UseApiKey(this WebApplication app) =>
         app.Use(async (context, next) =>
         {
-            if (context.GetEndpoint()?.Metadata.GetMetadata<RequiresApiKey>() is null || HasKey(context))
+            if (!NeedsKey(context.Request.Path) || HasKey(context))
             {
                 await next(context);
                 return;
@@ -58,6 +58,10 @@ public static class ApiKey
             context.Response.Headers.WWWAuthenticate = $"ApiKey header=\"{Header}\"";
             await Problems.Unauthorized().ExecuteAsync(context);
         });
+
+    // The health checks stay open so that a client can tell "not running" from "locked" (SPEC-009 §3).
+    private static bool NeedsKey(PathString path) =>
+        path.StartsWithSegments("/api/v1", StringComparison.OrdinalIgnoreCase) && !path.StartsWithSegments("/api/v1/health", StringComparison.OrdinalIgnoreCase);
 
     // Both sides are hashed, so FixedTimeEquals compares two 32-byte values and the time taken says nothing about the key.
     private static bool HasKey(HttpContext context)

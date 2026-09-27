@@ -34,62 +34,23 @@
   "Dashboard": {
     "title": "Overview",
     "lead": "How much of each payment you receive is not yours, and what falls due next.",
-    "form": {
-      "heading": "Your figures",
-      "privacy": "What you enter stays in this tab only. Nothing is saved: reloading or closing the tab empties the form.",
-      "loadFile": "Load from file",
-      "loadFileHint": "The console's input file (JSON), kept in a folder outside the repository.",
-      "fileUnreadable": "This file is not a console input file: it is not a JSON object.",
-      "taxYear": "Tax year",
-      "asOf": "Quarter of the estimate",
-      "region": "Region",
-      "employment": "Salary this year",
-      "employmentIngresos": "Gross salary (0.00 without employment)",
-      "employmentSeguridadSocial": "Your own Seguridad Social on the salary",
-      "registration": "Autónomo registration",
-      "alta": "Date of alta",
-      "previousYear": "Activity last year",
-      "previousYearNone": "No activity last year",
-      "previousYearNet": "Activity with a known net",
-      "previousYearNetAmount": "Last year's rendimiento neto (negative after a loss)",
-      "newActivity": "New activity (LIRPF art. 32.3)",
-      "established": "Not a new activity",
-      "first": "First period with a positive net",
-      "following": "The period after it",
-      "ingresosFromFormerEmployer": "Ingresos from last year's employer",
-      "retenciones": "Clients: EU businesses and US clients only, who withhold no retención and pay no IVA.",
-      "actuals": "Closed quarters",
-      "actualsHint": "Cumulative from 1 January, in order. The gastos include the RETA cuotas TGSS charged.",
-      "quarter": "Quarter",
-      "ingresosYtd": "Ingresos to date",
-      "gastosYtd": "Gastos to date",
-      "cuotasSsYtd": "RETA cuotas charged to date",
-      "addQuarter": "Add a closed quarter",
-      "removeQuarter": "Remove {quarter}",
-      "projection": "Rest of the year",
-      "projectionIngresos": "Expected ingresos",
-      "projectionGastos": "Expected gastos, without the RETA cuota",
-      "baseCotizacion": "Monthly base de cotización you pay",
-      "submit": "Calculate",
-      "calculating": "Calculating…"
+    "profile": {
+      "loading": "Loading your profile…",
+      "missing": "No taxpayer profile yet",
+      "missingLead": "Enter it once in Settings. Every estimate here is computed from it.",
+      "enter": "Enter the profile in Settings",
+      "edit": "Edit the profile"
     },
-    "errors": {
-      "required": "Required.",
-      "amount": "An amount in euros like 1234.56: digits and a decimal point, zero or more.",
-      "signedAmount": "An amount in euros like 1234.56, or -1234.56 after a loss.",
-      "date": "A calendar date.",
-      "fromApi": "The API refused this value: {reason}"
-    },
+    "asOf": "Quarter of the estimate",
+    "basis": "Estimated from your profile for {year}, with no closed quarter recorded: the projection covers the whole year.",
+    "calculating": "Calculating…",
     "failure": {
       "network": "The GestorIA API is not answering. Start it and try again.",
       "gap": "Not published yet",
       "gapLead": "The tax-year configuration lacks a value this estimate needs, so the engine refuses rather than guess. The engine says:",
       "refused": "The engine cannot estimate these figures",
-      "invalid": "The API refused the input",
-      "other": "The API answered with an error ({status}). Try again."
-    },
-    "taxYears": {
-      "loading": "Loading the tax years…"
+      "other": "The API answered with an error ({status}). Try again.",
+      "gapSettings": "Choose another tax year in Settings"
     },
     "estimate": {
       "heading": "Estimate",
@@ -167,11 +128,53 @@
     "title": "Settings",
     "lead": "Language, theme, your profile and your data, in one place.",
     "preferences": "Appearance and language",
+    "profile": {
+      "heading": "Your taxpayer profile",
+      "privacy": "Saved in the GestorIA database on this machine, not in the browser. The overview estimates from it.",
+      "loading": "Loading your profile…",
+      "taxYear": "Tax year",
+      "region": "Region",
+      "gaps": "Not published yet in the {year} configuration. An estimate that needs one of these is refused until it is:",
+      "employment": "Salary this year",
+      "employmentIngresos": "Gross salary (0.00 without employment)",
+      "employmentSeguridadSocial": "Your own Seguridad Social on the salary",
+      "registration": "Autónomo registration",
+      "alta": "Date of alta",
+      "previousYear": "Activity last year",
+      "previousYearNone": "No activity last year",
+      "previousYearNet": "Activity with a known net",
+      "previousYearNetAmount": "Last year's rendimiento neto (negative after a loss)",
+      "newActivity": "New activity (LIRPF art. 32.3)",
+      "established": "Not a new activity",
+      "first": "First period with a positive net",
+      "following": "The period after it",
+      "ingresosFromFormerEmployer": "Ingresos from last year's employer",
+      "retenciones": "Clients: EU businesses and US clients only, who withhold no retención and pay no IVA.",
+      "projection": "The tax year's activity",
+      "projectionHint": "What the months of alta in the tax year are expected to invoice and spend. No closed quarter is recorded yet, so this covers the whole year.",
+      "projectionIngresos": "Expected ingresos",
+      "projectionGastos": "Expected gastos, without the RETA cuota",
+      "baseCotizacion": "Monthly base de cotización you pay",
+      "submit": "Save the profile",
+      "saving": "Saving…",
+      "saved": "Saved. The overview now estimates from this profile.",
+      "errors": {
+        "required": "Required.",
+        "amount": "An amount in euros like 1234.56: digits and a decimal point with at most two decimals, zero or more.",
+        "signedAmount": "An amount in euros like 1234.56 with at most two decimals, or -1234.56 after a loss.",
+        "date": "A calendar date.",
+        "fromApi": "The API refused this value: {reason}"
+      },
+      "failure": {
+        "network": "The GestorIA API is not answering. Start it and try again.",
+        "invalid": "The API refused the profile. The fields it refused are marked.",
+        "other": "The API answered with an error ({status}). Try again."
+      }
+    },
     "points": {
-      "profile": "Your taxpayer profile for each year: region, family situation, salary and autónomo registration.",
       "data": "Exporting or deleting all your data, with a confirmation that names what will be deleted."
     },
-    "pending": "The profile and your data live in the API, which is not built yet."
+    "pending": "Exporting and deleting your data need API resources that are not built yet."
   },
   "Auth": {
     "title": "Access",

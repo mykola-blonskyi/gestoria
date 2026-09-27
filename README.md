@@ -41,7 +41,7 @@ The estimate always leans towards putting aside *more* rather than less. Having 
 - **No filled-in forms.** It computes the figures behind Modelo 130, 303 and 349, and the configuration knows which box (casilla) each figure goes in, but it does not yet produce the forms themselves.
 - **No 2027 configuration.** The 2027 values are published in the BOE around December 2026 (issue #12). Until then, 2027 cannot be computed.
 - **Some 2026 values are not published yet.** The engine refuses to guess them and tells you exactly what is missing (see [Tax-year configuration](#tax-year-configuration)).
-- **A small API, no database and no document reading (OCR).** The API answers the set-aside estimate and lists the tax years; nothing is stored, so the web app's form starts empty every time. The rest is planned (`plans/DEVELOPMENT_PLAN.md`), and `services/ocr` holds only a description.
+- **A small API and no document reading (OCR).** The API answers the set-aside estimate, lists the tax years and stores your taxpayer profile in a local PostgreSQL database. There are no transactions yet, so the overview's estimate states no closed quarter: the profile's projection covers the whole year. The rest is planned (`plans/DEVELOPMENT_PLAN.md`), and `services/ocr` holds only a description.
 - **Only the overview shows figures.** The other pages of the web app say what they will show once their API resources exist.
 - **No tax credits (deducciones) and no savings income** in the estimate. Leaving them out can only make the estimate higher, never lower.
 
@@ -53,6 +53,7 @@ The estimate always leans towards putting aside *more* rather than less. Having 
 - **The .NET 10 SDK** (version `10.0.x`). Check with `dotnet --version`.
 - **The GitHub CLI (`gh`)**, only if you want to work with issues and pull requests from the terminal.
 - **Node 24 and pnpm**, only for the web app (see [Web app](#web-app)).
+- **Docker** (Docker Desktop on a Mac), for the database the API keeps your profile in and for the API's tests, which start their own throwaway database.
 
 ### Get the code and build it
 
@@ -168,13 +169,33 @@ Estimate
 
 The web app lives in `web/`. It is a Next.js application that shows the engine's answers in the browser, in Ukrainian (the default), Spanish, English or Russian, with five colour themes. It never computes tax itself; every figure comes from the engine through the API (ADR-0017).
 
-The overview takes the same figures as the console's input file, typed in or loaded from that file, and shows the estimate, the notices and the step-by-step calculation. What you enter lives only in the browser tab: reloading or closing it empties the form. The access page says the app is unlocked and locks it on request. The other pages (payments, transactions, periods, settings, backup) say what they will show.
+Settings holds your taxpayer profile, entered once: tax year, region, salary, the autónomo registration (date of alta, last year's activity, new activity) and the year's projection with the base de cotización. The API stores it in the database. The overview computes the estimate from the stored profile for the quarter you pick, and shows the notices and the step-by-step calculation. A new profile starts on the newest tax year whose configuration declares no gap; a year with gaps can still be chosen, and settings lists them, but its estimate is refused until they are published (2026 today, whose renta window and tarifa plana are not published yet). The access page says the app is unlocked and locks it on request. The other pages (payments, transactions, periods, backup) say what they will show.
 
 The app opens locked and asks for the API key of your installation. Set the key up once, as `web/README.md` ("The API key") shows: the API keeps only its hash, in your user secrets outside the repository, and refuses to start without it. The browser keeps the key in the tab's memory only, so a reload asks for it again.
 
-Start the API, then the web app, in two terminals:
+### Database
+
+The API keeps the profile in PostgreSQL 16 (ADR-0006), which `compose.yaml` runs in Docker, listening on `127.0.0.1` only (ADR-0010). The data is personal financial data (SPEC-013), so the password lives in files outside git. Once per machine, from the repository root:
 
 ```bash
+cp .env.example .env
+PASSWORD=$(openssl rand -hex 24)
+sed -i '' "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$PASSWORD/" .env      # on Linux: sed -i without ''
+dotnet user-secrets set ConnectionStrings:Gestoria "Host=localhost;Port=5432;Database=gestoria;Username=gestoria;Password=$PASSWORD" --project src/GestorIA.Api
+```
+
+`.env` is ignored by git and gives Docker Compose the password; user secrets live in your home directory and give the API the same one. If you changed `POSTGRES_PORT` in `.env`, put that port in the connection string instead of 5432. Anywhere else, set the `ConnectionStrings__Gestoria` environment variable. Then start the database, and leave it running:
+
+```bash
+docker compose up -d postgres     # docker compose ps shows it healthy
+```
+
+The API brings the database up to date as it starts (EF Core migrations in `src/GestorIA.Infrastructure/Persistence/Migrations`), so there is no separate step. On the very first start EF Core logs a failed `SELECT` on `__EFMigrationsHistory` before it creates that table; it is expected. The data stays in the `gestoria_postgres-data` Docker volume across restarts; `docker compose down -v` deletes it for good.
+
+Start the database, the API, then the web app, in two terminals:
+
+```bash
+docker compose up -d postgres
 dotnet run --project src/GestorIA.Api      # http://localhost:5080
 cd web && pnpm install && pnpm dev          # open http://localhost:3000
 ```
@@ -199,16 +220,17 @@ config/tax-years/   one JSON file per tax year, plus schema.json that checks the
 src/
   GestorIA.Domain/          basic types (Money, Rate) and the prototype bank-transaction model
   GestorIA.Engine/          every tax calculation; pure code, no files, no network, no clock
-  GestorIA.Infrastructure/  reads and checks the yearly configuration files and the estimate's input file; prototype BBVA statement parser
+  GestorIA.Infrastructure/  reads and checks the yearly configuration files and the estimate's input file; the database (EF Core and its migrations); prototype BBVA statement parser
   GestorIA.Cli/             the console program
   GestorIA.Api/             the web API (/api/v1) and its OpenAPI document, openapi/v1.json
 tests/
-  GestorIA.Api.Tests/       the API over HTTP, and its OpenAPI document against what it accepts and answers
+  GestorIA.Api.Tests/       the API over HTTP against a real PostgreSQL (Testcontainers), and its OpenAPI document against what it accepts and answers
   GestorIA.Domain.Tests/    tests for Money, Rate and the BBVA statement parser
   GestorIA.Engine.Tests/    calculator tests, configuration checks, golden tests
   GestorIA.Cli.Tests/       input reading and output formatting of the console
   golden/2025/              golden cases: full scenarios with their expected results
 web/                the web app (Next.js); see web/README.md
+compose.yaml        the local database (PostgreSQL 16) in Docker
 docs/               specifications (specs/), decisions (adr/), conventions, architecture
 knowledge/          business rules, domain model, glossary of Spanish tax terms
 plans/              current plan, backlog, development plan
@@ -252,6 +274,8 @@ The full runbook is SPEC-007 §4.
 ```bash
 dotnet test GestorIA.slnx
 ```
+
+The API's tests need Docker running: they start a throwaway PostgreSQL from the image in `compose.yaml` and remove it when they finish.
 
 There are four kinds of tests:
 
@@ -328,6 +352,10 @@ The theory behind the rules (explanations and worked examples) is kept outside t
 **`No estimate: $.something is missing` (or `must be ...`).** Your input file has a missing, extra or badly written field. The part after `$` is the path to it in the JSON.
 
 **`ConfigNotFoundException` / "Region XX is not in this configuration".** The region code in your input is not `VC` or `MD`, or the year's file does not include it.
+
+**The API stops at start with `ConnectionStrings:Gestoria is not set`.** The connection string is missing; set it as [Database](#database) shows. If it is set and the API reports that it cannot connect, the database is not running: `docker compose up -d postgres`.
+
+**The API's tests fail with a Docker error.** They start their own PostgreSQL in Docker; start Docker Desktop and run them again.
 
 **Tests fail right after pulling, or after editing code that tests depend on.** A stale build can run old code. Rebuild from scratch: `dotnet build GestorIA.slnx --no-incremental`, then run the tests again.
 

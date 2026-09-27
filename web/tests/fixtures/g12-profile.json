@@ -1,0 +1,25 @@
+{
+  "id": "00000000-0000-0000-0000-000000000069",
+  "taxYear": 2025,
+  "region": "VC",
+  "employment": {
+    "ingresos": "0.00",
+    "seguridadSocial": "0.00"
+  },
+  "activity": {
+    "alta": "2025-01-15",
+    "previousYear": {
+      "kind": "noActivity"
+    },
+    "newActivity": {
+      "kind": "started",
+      "period": "first",
+      "ingresosFromFormerEmployer": "0.00"
+    }
+  },
+  "projection": {
+    "ingresos": "30000.00",
+    "gastos": "1200.00",
+    "baseCotizacion": "1274.51"
+  }
+}

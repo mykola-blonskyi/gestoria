@@ -19,7 +19,7 @@ public class ApiKeyRequirement(ApiFactory api) : IClassFixture<ApiFactory>
         {
             foreach (var (method, _) in methods!.AsObject())
             {
-                operations.Add(method.ToUpperInvariant(), path.Replace("{year}", "2025", StringComparison.Ordinal));
+                operations.Add(method.ToUpperInvariant(), path.Replace("{year}", "2025", StringComparison.Ordinal).Replace("{id}", Guid.Empty.ToString(), StringComparison.Ordinal));
             }
         }
         return operations;
@@ -41,6 +41,39 @@ public class ApiKeyRequirement(ApiFactory api) : IClassFixture<ApiFactory>
         {
             await AssertUnauthorized(response);
         }
+    }
+
+    // Without the key a caller learns nothing about which routes, methods or media types exist: routing alone would answer
+    // 404, 405 or 415 to these, and each must be the same 401 as any other request.
+    [Theory]
+    [InlineData("DELETE", "/api/v1/config/tax-years", null)]
+    [InlineData("PATCH", "/api/v1/config/tax-years/2025", null)]
+    [InlineData("GET", "/api/v1/set-aside/estimate", null)]
+    [InlineData("POST", "/api/v1/set-aside/estimate?taxYear=2025", "text/plain")]
+    [InlineData("GET", "/api/v1/no-such-resource", null)]
+    [InlineData("GET", "/API/V1/config/tax-years", null)]
+    public async Task EveryRequestUnderTheApiButTheHealthChecksIsRefusedWithoutTheKeyWhateverItsMethodOrMediaType(string method, string path, string? contentType)
+    {
+        await AssertUnauthorized(await api.CreateClientWithoutKey().SendAsync(Request(method, path, contentType)));
+    }
+
+    [Theory]
+    [InlineData("DELETE", "/api/v1/config/tax-years", null, HttpStatusCode.MethodNotAllowed)]
+    [InlineData("POST", "/api/v1/set-aside/estimate?taxYear=2025", "text/plain", HttpStatusCode.UnsupportedMediaType)]
+    [InlineData("GET", "/api/v1/no-such-resource", null, HttpStatusCode.NotFound)]
+    public async Task WithTheKeyRoutingAnswersAsItWould(string method, string path, string? contentType, HttpStatusCode expected)
+    {
+        var response = await api.CreateClient().SendAsync(Request(method, path, contentType));
+
+        Assert.Equal(expected, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task TheHealthCheckAnswersWithoutTheKey()
+    {
+        var response = await api.CreateClientWithoutKey().GetAsync("/api/v1/health/live");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
     [Theory]
@@ -122,6 +155,11 @@ public class ApiKeyRequirement(ApiFactory api) : IClassFixture<ApiFactory>
 
         provider.GetRequiredService<IStartupValidator>().Validate();
     }
+
+    private static HttpRequestMessage Request(string method, string path, string? contentType) => new(new HttpMethod(method), path)
+    {
+        Content = contentType is null ? null : new StringContent("{}", System.Text.Encoding.UTF8, contentType),
+    };
 
     private static async Task AssertUnauthorized(HttpResponseMessage response)
     {

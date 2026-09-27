@@ -7,6 +7,14 @@
 
   <ItemGroup>
     <PackageReference Include="JsonSchema.Net" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <!-- Raises the EF Core that Npgsql brings (10.0.4) to the Design package's and the dotnet-ef tool's version. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <!-- What `dotnet ef migrations add` loads to write a migration; nothing of it ships with the API. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>

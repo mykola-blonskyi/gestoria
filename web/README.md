@@ -2,7 +2,7 @@
 
 The browser side of GestorIA: a Next.js App Router application that shows the engine's answers in Ukrainian, Spanish, English or Russian. It runs on your machine next to the API (ADR-0010). It never computes tax; every figure comes from the engine through the API (ADR-0017, SPEC-012).
 
-The overview shows the set-aside estimate from the API (#66). The app opens locked and unlocks with the API key of your installation (#68). Every other page is an honest empty state that says what it will show.
+Settings edits the taxpayer profile the API stores, and the overview shows the set-aside estimate the API computes from it (#66, #69). The app opens locked and unlocks with the API key of your installation (#68). Every other page is an honest empty state that says what it will show.
 
 ## Run it
 
@@ -14,7 +14,7 @@ pnpm install
 pnpm dev          # http://localhost:3000
 ```
 
-The app needs the API: `dotnet run --project src/GestorIA.Api` from the repository root, once its key is set up (below). It listens on `http://localhost:5080` and allows calls from `http://localhost:3000` (`Cors:Origins` in its `appsettings.json`; set `Cors__Origins__0` when `pnpm dev` takes another port).
+The app needs the API: `dotnet run --project src/GestorIA.Api` from the repository root, once its key (below) and its database (the root `README.md`, "Database") are set up. It listens on `http://localhost:5080` and allows calls from `http://localhost:3000` (`Cors:Origins` in its `appsettings.json`; set `Cors__Origins__0` when `pnpm dev` takes another port).
 
 ### The API key
 
@@ -31,6 +31,15 @@ User secrets live in your home directory (`~/.microsoft/usersecrets/`), outside 
 The app shows an unlock screen until the API accepts the key: it sends the key to `GET /config/tax-years` and unlocks on a 200. A wrong key, and an API that is not running, each get their own message; the second says how to start it. Once unlocked, `apiFetch` sends the key in the `X-Api-Key` header on every request, and a 401 to the key in use locks the app again with a message saying why.
 
 **Where the key lives, and why.** Only in the memory of the browser tab (`src/data/api-key-store.ts`), for as long as the tab is open. A reload, a new tab or closing the browser forgets it, and the app asks again. It is never written to localStorage, sessionStorage, a cookie or the address, and never logged (SPEC-013); `features/auth/tests/auth-gate.test.tsx` checks all of these, and the input has no `name`, so a submit before the page is interactive sends nothing. The alternative the ticket offered, an httpOnly cookie set by a Next.js route handler, was rejected: the browser calls the API directly on another origin (CORS, #66), so a cookie would need `credentials: "include"` on every call plus a defence against cross-site request forgery, or a proxy in Next.js in front of the whole API. For one user on one machine, typing the key after a reload costs less than either. sessionStorage would survive a reload, but it is storage that any script on the page can read and the browser can write to disk.
+
+### The taxpayer profile
+
+Settings edits the profile (`features/settings`), entered once and stored by the API (`/profiles`, SPEC-009 §2). Local mode keeps one per installation: the first save is a `POST`, every later one a `PUT` to it. The overview (`features/dashboard`) reads it and asks the API for `GET /profiles/{id}/set-aside/estimate?asOf=Qn`, so the browser never sends the profile back to be computed and never computes anything itself. With no profile yet, the overview sends the user to settings.
+
+- **Which quarter.** The overview opens on today's quarter when the profile's tax year is the current one, Q4 for a year that is over and Q1 for one to come, and never before the quarter of the alta, which the engine refuses. The user can pick another.
+- **Which tax year a new profile starts on.** The newest year whose configuration declares no gap (`GET /config/tax-years`, `gaps`), else the newest. A year with gaps stays selectable, and the form lists them under the year. Today that means 2025: 2026.json declares its renta window and the Q4 Modelo 130 deadline unpublished (and the tarifa plana amount), and the estimate needs both whatever the quarter, so every 2026 estimate is a 422 `config-gap` until they are published. The overview shows that as "not published yet", with the engine's reason and a link back to settings to pick another year.
+- **No closed quarter yet.** The profile has no actuals; they are ledger data and arrive with transactions. Until then the projection covers every month of alta in the year.
+- **Where it lives.** In the API's database, and in this tab's query cache while the tab is open, which the lock empties. Never in browser storage, cookies, the address or the console (`features/settings/tests`, `features/dashboard/tests`).
 
 | Command | What it does |
 |---|---|
@@ -111,9 +120,9 @@ The colours are CSS variables, one block per theme, in `src/app/globals.css`, wi
 
 - `src/data/client.ts`: `apiFetch<T>(path)` calls `<NEXT_PUBLIC_API_BASE_URL>/api/v1<path>` with the API key from `api-key-store.ts` in `X-Api-Key`, and locks the app on a 401 to that key (see "The API key"). A problem+json answer (RFC 9457) becomes an `ApiError` whose `failure` is `{ kind: "problem", problem }`; another error status is `{ kind: "http", status }`; an unreachable API is `{ kind: "network" }`.
 - `src/data/query-provider.tsx`: the TanStack Query provider. Queries retry only an unreachable API or a 5xx; a 4xx, such as a 422 for a declared configuration gap, answers the same every time.
-- **Query keys.** One file per API resource in `src/data/`, exporting a key factory and the query or mutation options together, with keys that start with the resource path: `["tax-years"]` (`tax-years.ts`), `["set-aside", "estimate"]` (`set-aside.ts`). Features call those options from their `hooks/`; they never build keys or call `apiFetch` themselves.
-- **Calculations are mutations.** `POST /set-aside/estimate` is a TanStack Query mutation, not a query: its input is what the user typed, personal financial data, and it stays in the tab's memory, never under a cache key or in browser storage (SPEC-013).
-- **Problem types.** `PROBLEM_TYPES` in `api-error.ts` names the API's problem `type` URIs: `invalid-input` (400, with `errors` keyed by the JSON path of each refused value, or `taxYear` for the query parameter), `config-gap` (422, the configuration lacks or declares unpublished a value the calculation needs) and `estimate-refused` (422, the engine cannot estimate the input) and `api-key-required` (401).
+- **Query keys.** One file per API resource in `src/data/`, exporting a key factory and the query or mutation options together, with keys that start with the resource path: `["tax-years"]` (`tax-years.ts`), `["profiles"]` and `["profiles", id, "set-aside", asOf]` (`profiles.ts`). Features call those options from their `hooks/`; they never build keys or call `apiFetch` themselves.
+- **Saves are mutations, estimates are queries.** Saving the profile is a mutation that invalidates `["profiles"]`, and with it every cached estimate, whose keys start there. The estimate of a stored profile is a query: it is computed from what the API holds, not from what the browser sends. The raw `POST /set-aside/estimate`, which takes the console's whole input file, has no caller in the web app.
+- **Problem types.** `PROBLEM_TYPES` in `api-error.ts` names the API's problem `type` URIs: `invalid-input` (400, with `errors` keyed by the JSON path of each refused value, or `taxYear` or `asOf` for a query parameter; a profile names every refused value at once), `config-gap` (422, the configuration lacks or declares unpublished a value the calculation needs) and `estimate-refused` (422, the engine cannot estimate the input) and `api-key-required` (401).
 - **Money and dates.** Amounts arrive as strings with two decimals (SPEC-009) and are shown with `formatMoney(amount, locale)` from `shared/lib/format.ts`, which never turns them into a float. Dates arrive as ISO `yyyy-MM-dd` and are shown with `formatDate`.
 
 ### API types
@@ -127,7 +136,7 @@ The colours are CSS variables, one block per theme, in `src/app/globals.css`, wi
 - The root layout: `<html lang>` and `data-theme` come from the cookies, so the first paint is right (`tests/root-layout.test.tsx`).
 - The virtualised list with ten thousand synthetic rows.
 - The data client against stubbed `fetch` responses: JSON, 204, problem+json, a non-problem error and a network failure.
-- The overview through its `index.ts`, with `fetch` stubbed by the API's own answers in `features/dashboard/tests/fixtures/` (`tests/GestorIA.Api.Tests/WebFixtures.cs` fails when they drift from the API; rerun it with `GESTORIA_WRITE_WEB_FIXTURES=1` to rewrite them). Typing G14's figures and loading G14's input file both post exactly G14's input file; nothing lands in storage, cookies or the address; errors show next to their field.
+- Settings and the overview through their `index.ts`, with `fetch` stubbed by the API's own answers in `tests/fixtures/` (`tests/GestorIA.Api.Tests/WebFixtures.cs` fails when they drift from the API; rerun it with `GESTORIA_WRITE_WEB_FIXTURES=1` to rewrite them). Typing G12's figures saves exactly G12's stored profile, and a stored profile fills the form and is replaced on save; the API's refusals show next to their field; a new profile starts on the newest year without gaps. The overview asks for the stored profile's estimate at the right quarter, sends to settings without a profile, and shows a gap with a way back to settings. Nothing lands in storage, cookies, the address or the console.
 - Each test renders with a fresh QueryClient (`tests/render.tsx`), so no cached answer leaks from one test to the next.
 - The auth feature through its `index.ts`: the unlock screen in every language, the right key (then sent on every request), a wrong key, an API that is not running and then is, a 401 later on, the lock button, and the key kept out of storage, cookies, the address, the console and the form's data.
 - The structural checks in `tests/`.

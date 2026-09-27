@@ -126,7 +126,7 @@ src/GestorIA.Api             endpoints, auth, OpenAPI, composition root         
 src/GestorIA.Cli             console: a set-aside estimate from a file          (→ Engine, Infrastructure)  #11
 tests/GestorIA.Cli.Tests     input parsing and output formatting                (→ Cli)
 tests/GestorIA.Engine.Tests  golden + property tests                            (→ Engine; Infrastructure to load real config)  SPEC-011
-tests/GestorIA.Api.Tests     integration tests over HTTP; Testcontainers Postgres once there is a DB (→ Api)
+tests/GestorIA.Api.Tests     integration tests over HTTP on Testcontainers PostgreSQL, one database per API (→ Api)
 ```
 
 Responsibilities: everything stateful and everything that computes. Dependencies: PostgreSQL 16 (EF Core), `gestoria-ocr` over REST, `config/tax-years`.
