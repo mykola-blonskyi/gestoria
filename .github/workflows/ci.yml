@@ -27,18 +27,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - name: Look for the base branch's document
-        id: base
-        env:
-          BASE_REF: ${{ github.base_ref }}
-        run: |
-          if git cat-file -e "origin/$BASE_REF:src/GestorIA.Api/openapi/v1.json" 2>/dev/null; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "origin/$BASE_REF has no OpenAPI document yet, so nothing can break."
-          fi
-      - if: steps.base.outputs.exists == 'true'
-        uses: oasdiff/oasdiff-action/breaking@5e81b5c380accc6b523f9d32a637ca630e33620b # v0.1.17
+      - uses: oasdiff/oasdiff-action/breaking@5e81b5c380accc6b523f9d32a637ca630e33620b # v0.1.17
         with:
           base: "origin/${{ github.base_ref }}:src/GestorIA.Api/openapi/v1.json"
           revision: "HEAD:src/GestorIA.Api/openapi/v1.json"

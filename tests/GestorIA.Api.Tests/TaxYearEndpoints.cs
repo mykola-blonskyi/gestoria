@@ -1,11 +1,10 @@
 using System.Net;
 using System.Text.Json.Nodes;
 using GestorIA.Infrastructure.TaxYears;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GestorIA.Api.Tests;
 
-public class TaxYearEndpoints(WebApplicationFactory<Program> api) : IClassFixture<WebApplicationFactory<Program>>
+public class TaxYearEndpoints(ApiFactory api) : IClassFixture<ApiFactory>
 {
     private readonly HttpClient client = api.CreateClient();
 

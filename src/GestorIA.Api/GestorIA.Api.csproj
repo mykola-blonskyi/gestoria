@@ -6,6 +6,8 @@
     <OpenApiGenerateDocumentsOnBuild>true</OpenApiGenerateDocumentsOnBuild>
     <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/openapi</OpenApiDocumentsDirectory>
     <OpenApiGenerateDocumentsOptions>--file-name v1</OpenApiGenerateDocumentsOptions>
+    <!-- Names this machine's secret store (outside the repository) for `dotnet user-secrets`; the id itself is not a secret. -->
+    <UserSecretsId>2c359bd7-2b82-4a07-8f75-d2045e1542cc</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

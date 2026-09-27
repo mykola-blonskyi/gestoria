@@ -1,10 +1,9 @@
 using System.Net;
 using System.Text.Json.Nodes;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GestorIA.Api.Tests;
 
-public class SetAsideEstimateEndpoint(WebApplicationFactory<Program> api) : IClassFixture<WebApplicationFactory<Program>>
+public class SetAsideEstimateEndpoint(ApiFactory api) : IClassFixture<ApiFactory>
 {
     private readonly HttpClient client = api.CreateClient();
 
@@ -126,13 +125,19 @@ public class SetAsideEstimateEndpoint(WebApplicationFactory<Program> api) : ICla
         Assert.Equal("Actuals are the closed quarters in order from Q1, the first quarter of activity; got [Q2].", problem["detail"]!.GetValue<string>());
     }
 
-    [Fact]
-    public async Task AMissingTaxYearIsABadRequestProblem()
+    [Theory]
+    [InlineData("", "taxYear is missing; it must be the tax year as a whole number, such as 2025.")]
+    [InlineData("?taxYear=twenty", "taxYear is \"twenty\"; it must be the tax year as a whole number, such as 2025.")]
+    [InlineData("?taxYear=-2025", "taxYear is \"-2025\"; it must be the tax year as a whole number, such as 2025.")]
+    public async Task AMissingOrMalformedTaxYearIsAnInvalidInputProblemKeyedByTheParameter(string query, string message)
     {
-        var response = await client.PostAsync("/api/v1/set-aside/estimate", new StringContent(RepoFiles.GoldenInput("G14").ToJsonString(), System.Text.Encoding.UTF8, "application/json"));
+        var response = await client.PostAsync($"/api/v1/set-aside/estimate{query}", new StringContent(RepoFiles.GoldenInput("G14").ToJsonString(), System.Text.Encoding.UTF8, "application/json"));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal(Http.ProblemJson, response.MediaType());
+        var problem = await response.Json();
+        Assert.Equal("https://gestoria.local/problems/invalid-input", problem["type"]!.GetValue<string>());
+        Assert.Equal([message], problem["errors"]!["taxYear"]!.AsArray().Select(e => e!.GetValue<string>()));
     }
 
     private static (string Kind, string Value) Output(JsonNode output) => (output["kind"]!.GetValue<string>(), output["value"]!.GetValue<string>());

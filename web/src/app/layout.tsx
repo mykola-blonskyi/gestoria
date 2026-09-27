@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 
 import { QueryProvider } from "@/data/query-provider";
+import { AuthGate } from "@/features/auth";
 import { AppShell } from "@/shared/shell/app-shell";
 import { ThemeProvider } from "@/shared/theme/theme-provider";
 import { THEME_COOKIE, resolveTheme } from "@/shared/theme/themes";
@@ -30,7 +31,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <NextIntlClientProvider>
           <ThemeProvider initialTheme={theme}>
             <QueryProvider>
-              <AppShell>{children}</AppShell>
+              <AppShell>
+                <AuthGate>{children}</AuthGate>
+              </AppShell>
             </QueryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>

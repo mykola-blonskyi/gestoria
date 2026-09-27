@@ -19,6 +19,102 @@
         }
       }
     },
+    "/api/v1/config/tax-years": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Every tax year the API holds a configuration for, oldest first.",
+        "operationId": "listTaxYears",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaxYearView"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/config/tax-years/{year}": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "One tax year's configuration: its hash, regions and declared gaps.",
+        "operationId": "getTaxYear",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxYearView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/set-aside/estimate": {
       "post": {
         "tags": [
@@ -48,6 +144,16 @@
           "required": true
         },
         "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
@@ -78,73 +184,12 @@
               }
             }
           }
-        }
-      }
-    },
-    "/api/v1/config/tax-years": {
-      "get": {
-        "tags": [
-          "config"
-        ],
-        "summary": "Every tax year the API holds a configuration for, oldest first.",
-        "operationId": "listTaxYears",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TaxYearView"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/config/tax-years/{year}": {
-      "get": {
-        "tags": [
-          "config"
-        ],
-        "summary": "One tax year's configuration: its hash, regions and declared gaps.",
-        "operationId": "getTaxYear",
-        "parameters": [
+        },
+        "security": [
           {
-            "name": "year",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
+            "apiKey": [ ]
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaxYearView"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
+        ]
       }
     }
   },
@@ -711,6 +756,14 @@
           "Error"
         ]
       }
+    },
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "description": "The local installation's API key (SPEC-009 §3). The health checks do not need it.",
+        "name": "X-Api-Key",
+        "in": "header"
+      }
     }
   },
   "tags": [
@@ -718,10 +771,10 @@
       "name": "health"
     },
     {
-      "name": "set-aside"
+      "name": "config"
     },
     {
-      "name": "config"
+      "name": "set-aside"
     }
   ]
 }

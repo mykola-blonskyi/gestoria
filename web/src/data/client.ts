@@ -1,4 +1,5 @@
 import { ApiError, parseProblem } from "@/data/api-error";
+import { API_KEY_HEADER, apiKeyStore } from "@/data/api-key-store";
 
 const DEFAULT_API_BASE_URL = "http://localhost:5080";
 
@@ -11,6 +12,8 @@ export function apiBaseUrl(): string {
 export async function apiFetch<T>(path: `/${string}`, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json, application/problem+json");
+  const key = apiKeyStore.current();
+  if (key !== null && !headers.has(API_KEY_HEADER)) headers.set(API_KEY_HEADER, key);
 
   let response: Response;
   try {
@@ -18,6 +21,8 @@ export async function apiFetch<T>(path: `/${string}`, init: RequestInit = {}): P
   } catch {
     throw new ApiError({ kind: "network" });
   }
+
+  if (response.status === 401) apiKeyStore.refused(headers.get(API_KEY_HEADER));
 
   if (response.ok) {
     return (response.status === 204 ? undefined : await response.json()) as T;

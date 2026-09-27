@@ -13,6 +13,7 @@ export const PROBLEM_TYPES = {
   invalidInput: "https://gestoria.local/problems/invalid-input",
   configGap: "https://gestoria.local/problems/config-gap",
   estimateRefused: "https://gestoria.local/problems/estimate-refused",
+  apiKeyRequired: "https://gestoria.local/problems/api-key-required",
 } as const;
 
 export type ApiFailure =
