@@ -24,6 +24,9 @@ The console takes the tax-year file by path and never looks one up by year. The 
 
 ## Input format
 
+The same file is the body of the API's `POST /api/v1/set-aside/estimate?taxYear=YYYY` (SPEC-009), and the web overview builds it from its form. The console and the API parse it with the same code, `GestorIA.Infrastructure/SetAside/SetAsideInputFile.cs`.
+
+
 The input is the `setAside.inputs` object of a set-aside golden (`tests/golden/2025/G12.json` and `G14.json` to `G20.json`; G13 has no set-aside part), so any golden's inputs can be pasted in as they are. `set-aside-input.example.json` holds G14's figures. Every field is required and no other field is allowed. Amounts are strings with a decimal point and no thousands separator, such as `"27000.00"`, and are zero or more, except the previous year's `rendimientoNeto`, which is negative after a loss.
 
 | Field | Value |

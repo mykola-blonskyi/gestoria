@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 using GestorIA.Engine;
+using GestorIA.Infrastructure.SetAside;
 using GestorIA.Infrastructure.TaxYears;
 
 namespace GestorIA.Cli.Tests;

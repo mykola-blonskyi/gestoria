@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json.Nodes;
 using GestorIA.Domain.ValueObjects;
 using GestorIA.Engine;
+using GestorIA.Infrastructure.SetAside;
 
 namespace GestorIA.Cli.Tests;
 
@@ -50,6 +51,7 @@ public class SetAsideInputFileTests
 
         var e = Assert.Throws<InvalidInputFileException>(() => SetAsideInputFile.Parse(json, RepoFiles.Config));
         Assert.Equal(message, e.Message);
+        Assert.StartsWith(e.Path + " is ", e.Message, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -62,6 +64,7 @@ public class SetAsideInputFileTests
 
         var e = Assert.Throws<InvalidInputFileException>(() => SetAsideInputFile.Parse(json, RepoFiles.Config));
         Assert.Equal(message, e.Message);
+        Assert.StartsWith(e.Path + " is ", e.Message, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -131,6 +134,7 @@ public class SetAsideInputFileTests
 
         var e = Assert.Throws<InvalidInputFileException>(() => SetAsideInputFile.Parse(json, RepoFiles.Config));
         Assert.Equal(message, e.Message);
+        Assert.StartsWith(e.Path + " is ", e.Message, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -143,6 +147,7 @@ public class SetAsideInputFileTests
 
         var e = Assert.Throws<InvalidInputFileException>(() => SetAsideInputFile.Parse(json, RepoFiles.Config));
         Assert.Equal(message, e.Message);
+        Assert.StartsWith(e.Path + " is ", e.Message, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -169,6 +174,7 @@ public class SetAsideInputFileTests
 
         var e = Assert.Throws<InvalidInputFileException>(() => SetAsideInputFile.Parse(json, RepoFiles.Config));
         Assert.Equal(message, e.Message);
+        Assert.StartsWith(e.Path + " is ", e.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -178,6 +184,7 @@ public class SetAsideInputFileTests
 
         var e = Assert.Throws<InvalidInputFileException>(() => SetAsideInputFile.Parse(json, RepoFiles.Config));
         Assert.StartsWith("The input file is not valid JSON: Duplicate property 'asOf'", e.Message, StringComparison.Ordinal);
+        Assert.Equal("$", e.Path);
     }
 
     private static string Edit(Action<JsonNode> change)

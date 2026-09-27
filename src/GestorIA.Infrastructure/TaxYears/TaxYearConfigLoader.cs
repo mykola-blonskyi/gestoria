@@ -1,3 +1,4 @@
+using System.Globalization;
 using GestorIA.Engine;
 using static System.FormattableString;
 
@@ -13,6 +14,14 @@ public sealed class TaxYearConfigLoader
         this.directory = directory;
     }
 
+    // The years the directory holds a file for, by name only: "2025.json" is tax year 2025, and schema.json is not a year.
+    public IReadOnlyList<int> Years() =>
+        [.. Directory.EnumerateFiles(directory, "*.json")
+            .Select(Path.GetFileNameWithoutExtension)
+            .Where(name => name is { Length: 4 } && name.All(char.IsAsciiDigit))
+            .Select(name => int.Parse(name!, CultureInfo.InvariantCulture))
+            .Order()];
+
     public TaxYearConfig Load(int year)
     {
         var fileName = Invariant($"{year}.json");
@@ -24,7 +33,8 @@ public sealed class TaxYearConfigLoader
         }
         catch (FileNotFoundException)
         {
-            throw new ConfigNotFoundException(Invariant($"No configuration for tax year {year}: {fileName} is not in {directory}."));
+            // The directory stays out of the message: the API answers with it, and a server path is not the client's business.
+            throw new ConfigNotFoundException(Invariant($"No configuration for tax year {year}: there is no {fileName}."));
         }
 
         return TaxYearConfigParser.Parse(source, fileName);

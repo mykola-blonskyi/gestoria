@@ -6,7 +6,7 @@ using GestorIA.Domain.ValueObjects;
 using GestorIA.Engine;
 using static System.FormattableString;
 
-namespace GestorIA.Cli;
+namespace GestorIA.Infrastructure.SetAside;
 
 // The console's input: the "inputs" object of a set-aside golden (tests/golden/2025/G12.json), amounts as strings.
 // Every field is required and no other is allowed, since the engine never defaults a fact about the taxpayer and a field
@@ -23,10 +23,10 @@ public static class SetAsideInputFile
         }
         catch (JsonException e)
         {
-            throw new InvalidInputFileException($"The input file is not valid JSON: {e.Message}");
+            throw new InvalidInputFileException("$", $"The input file is not valid JSON: {e.Message}");
         }
 
-        var root = Object(parsed ?? throw new InvalidInputFileException("$ is null; it must be an object."), "asOf", "profile", "activity");
+        var root = Object(parsed ?? throw new InvalidInputFileException("$", "$ is null; it must be an object."), "asOf", "profile", "activity");
         var profile = Object(Field(root, "profile"), "region", "employment", "activity");
         var employment = Object(Field(profile, "employment"), "ingresos", "seguridadSocial");
         var registration = Object(Field(profile, "activity"), "alta", "previousYear", "newActivity");
@@ -46,7 +46,7 @@ public static class SetAsideInputFile
 
         var closed = actuals
             .Select((actual, index) => Object(
-                actual ?? throw new InvalidInputFileException(Invariant($"{actuals.GetPath()}[{index}] is null.")),
+                actual ?? throw Null(Invariant($"{actuals.GetPath()}[{index}]")),
                 "quarter",
                 "ingresosYtd",
                 "gastosYtd",
@@ -140,10 +140,10 @@ public static class SetAsideInputFile
         // TryGetPropertyValue tells a missing field apart from one present as JSON null, which the indexer returns alike.
         if (!parent.TryGetPropertyValue(name, out var value))
         {
-            throw new InvalidInputFileException($"{parent.GetPath()}.{name} is missing.");
+            throw new InvalidInputFileException($"{parent.GetPath()}.{name}", $"{parent.GetPath()}.{name} is missing.");
         }
 
-        return value ?? throw new InvalidInputFileException($"{parent.GetPath()}.{name} is null.");
+        return value ?? throw Null($"{parent.GetPath()}.{name}");
     }
 
     private static JsonObject Object(JsonNode node, params string[] fields)
@@ -157,6 +157,7 @@ public static class SetAsideInputFile
         if (unknown is not null)
         {
             throw new InvalidInputFileException(
+                $"{obj.GetPath()}.{unknown}",
                 $"{obj.GetPath()}.{unknown} is not a field the estimator reads; the fields of {obj.GetPath()} are {string.Join(", ", fields)}.");
         }
 
@@ -167,5 +168,7 @@ public static class SetAsideInputFile
     private static readonly JsonSerializerOptions AsTyped = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     private static InvalidInputFileException Invalid(JsonNode node, string expected) =>
-        new($"{node.GetPath()} is {node.ToJsonString(AsTyped)}; it must be {expected}.");
+        new(node.GetPath(), $"{node.GetPath()} is {node.ToJsonString(AsTyped)}; it must be {expected}.");
+
+    private static InvalidInputFileException Null(string path) => new(path, $"{path} is null.");
 }
