@@ -111,7 +111,7 @@
     },
     "trace": {
       "heading": "Cómo se ha calculado",
-      "lead": "{count} pasos en el orden del motor, agrupados por sección. Los títulos, las fórmulas y las fuentes son los del motor.",
+      "lead": "{count, plural, one {# paso} other {# pasos}} en el orden del motor, agrupados por sección. Los títulos, las fórmulas y las fuentes son los del motor.",
       "section": "{name} ({count})",
       "inputs": "Datos",
       "formula": "Fórmula",

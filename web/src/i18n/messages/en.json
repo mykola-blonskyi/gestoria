@@ -111,7 +111,7 @@
     },
     "trace": {
       "heading": "How it was calculated",
-      "lead": "{count} steps in the engine's order, grouped by section. Titles, formulas and sources are the engine's own.",
+      "lead": "{count, plural, one {# step} other {# steps}} in the engine's order, grouped by section. Titles, formulas and sources are the engine's own.",
       "section": "{name} ({count})",
       "inputs": "Inputs",
       "formula": "Formula",
