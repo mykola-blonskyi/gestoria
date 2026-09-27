@@ -1002,9 +1002,63 @@
         },
         "additionalProperties": false
       },
+      "ExportedBankTransaction": {
+        "required": [
+          "id",
+          "bookingDate",
+          "valueDate",
+          "description",
+          "amount",
+          "balance",
+          "importSequence",
+          "lineNumber",
+          "lineKey"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bookingDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "valueDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "pattern": "^-?\\d+\\.\\d{2}$",
+            "type": "string"
+          },
+          "balance": {
+            "pattern": "^-?\\d+\\.\\d{2}$",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "importSequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lineNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lineKey": {
+            "type": "string"
+          }
+        }
+      },
       "ExportedEntities": {
         "required": [
-          "profiles"
+          "profiles",
+          "bankTransactions"
         ],
         "type": "object",
         "properties": {
@@ -1012,6 +1066,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ProfileView"
+            }
+          },
+          "bankTransactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExportedBankTransaction"
             }
           }
         }

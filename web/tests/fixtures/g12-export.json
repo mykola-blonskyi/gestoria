@@ -30,6 +30,206 @@
           "baseCotizacion": "1274.51"
         }
       }
+    ],
+    "bankTransactions": [
+      {
+        "id": "00000000-0000-0000-0072-000000000001",
+        "bookingDate": "2025-01-02",
+        "valueDate": "2025-01-02",
+        "description": "TRANSFERENCIA RECIBIDA CLIENTE SINTETICO UNO",
+        "amount": "2345.67",
+        "balance": "8345.67",
+        "importSequence": 1,
+        "lineNumber": 2,
+        "lineKey": "cb2a6528f5b5797c4b27b08e30b030b75162e62fe7c6da44daa9c838732407f4"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000002",
+        "bookingDate": "2025-01-03",
+        "valueDate": "2025-01-03",
+        "description": "CUOTA AUTONOMOS TGSS",
+        "amount": "-87.61",
+        "balance": "8258.06",
+        "importSequence": 1,
+        "lineNumber": 3,
+        "lineKey": "5a849e2f83b201ca58d32f1146420a40681f521c77baed0288a9a78873b7ec29"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000003",
+        "bookingDate": "2025-01-15",
+        "valueDate": "2025-01-15",
+        "description": "CAFETERIA LA PRUEBA",
+        "amount": "-1.85",
+        "balance": "8256.21",
+        "importSequence": 1,
+        "lineNumber": 4,
+        "lineKey": "d9b1be57235c526d72ec936469c574f0cdc3030a286b57c57db49ae599d6f363"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000004",
+        "bookingDate": "2025-01-15",
+        "valueDate": "2025-01-15",
+        "description": "CAFETERIA LA PRUEBA",
+        "amount": "-1.85",
+        "balance": "8254.36",
+        "importSequence": 1,
+        "lineNumber": 5,
+        "lineKey": "3cee5e3407fa5cdbca3a4bb02109d50ca7d24776be330419292b5e59b7b527b8"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000005",
+        "bookingDate": "2025-01-20",
+        "valueDate": "2025-01-20",
+        "description": "COMPRA SUSCRIPCION SOFTWARE EJEMPLO",
+        "amount": "-23.79",
+        "balance": "8230.57",
+        "importSequence": 1,
+        "lineNumber": 6,
+        "lineKey": "1d9b64607ebc251cf3e77c7df8166790fe9ddaf7b0c3c489d3268994ee6828c0"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000006",
+        "bookingDate": "2025-02-14",
+        "valueDate": "2025-02-14",
+        "description": "RECIBO LUZ; FEBRERO",
+        "amount": "-64.32",
+        "balance": "8166.25",
+        "importSequence": 1,
+        "lineNumber": 7,
+        "lineKey": "6ef5cd343fc66a717b388d7c3652d24f8f229f08d21d8c18e337b38ec110f74f"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000007",
+        "bookingDate": "2025-03-03",
+        "valueDate": "2025-03-03",
+        "description": "TRANSFERENCIA A ES12 9999 0000 1111 2222 3333",
+        "amount": "-150.00",
+        "balance": "8016.25",
+        "importSequence": 1,
+        "lineNumber": 8,
+        "lineKey": "d083033284a534fa53198f598a7dbe2cf570705fef899ca9f63934c392bd167a"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000008",
+        "bookingDate": "2025-03-31",
+        "valueDate": "2025-04-01",
+        "description": "ABONO INTERESES CUENTA",
+        "amount": "0.43",
+        "balance": "8016.68",
+        "importSequence": 1,
+        "lineNumber": 9,
+        "lineKey": "9582dafe10b2a6f486d9ae7fc4cc3d2678507289f73f579c3f1ab0a1a6cfe802"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000009",
+        "bookingDate": "2025-04-07",
+        "valueDate": "2025-04-07",
+        "description": "TRANSFERENCIA RECIBIDA CLIENTE SINTETICO DOS",
+        "amount": "1876.54",
+        "balance": "9893.22",
+        "importSequence": 1,
+        "lineNumber": 10,
+        "lineKey": "88c3a7b9f226700be06f081e5f666a25e406a60b4de5e284ee22968b6e2ae01f"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000010",
+        "bookingDate": "2025-04-20",
+        "valueDate": "2025-04-20",
+        "description": "PAGO MODELO 130 1T AEAT",
+        "amount": "-312.88",
+        "balance": "9580.34",
+        "importSequence": 1,
+        "lineNumber": 11,
+        "lineKey": "b9b75d6e93bd8679ab5d3ed64b33575208ae897ba4a68d3d76f3246d973ce0c0"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000011",
+        "bookingDate": "2025-05-05",
+        "valueDate": "2025-05-05",
+        "description": "SUPERMERCADO FICTICIO",
+        "amount": "-47.16",
+        "balance": "9533.18",
+        "importSequence": 1,
+        "lineNumber": 12,
+        "lineKey": "0b4e1b90b1d83322eca5cf99ad5632bdd9abce304483a7c7a8930bcb54d6e87b"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000012",
+        "bookingDate": "2025-06-30",
+        "valueDate": "2025-06-30",
+        "description": "COMISION MANTENIMIENTO",
+        "amount": "-3.00",
+        "balance": "9530.18",
+        "importSequence": 1,
+        "lineNumber": 13,
+        "lineKey": "4d4005fcf59a663ad26f8eeb5e077f8140cc0986c92df3d29aaa402619ae3ec9"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000013",
+        "bookingDate": "2025-07-01",
+        "valueDate": "2025-07-01",
+        "description": "TRANSFERENCIA RECIBIDA CLIENTE SINTETICO UNO",
+        "amount": "2345.67",
+        "balance": "11875.85",
+        "importSequence": 1,
+        "lineNumber": 14,
+        "lineKey": "1f0e2b9738eda6c606a05e8c609ba68616403b7d291f66ac1784cd5a883bc41b"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000014",
+        "bookingDate": "2025-08-18",
+        "valueDate": "2025-08-18",
+        "description": "LIBRERIA TECNICA INVENTADA",
+        "amount": "-39.90",
+        "balance": "11835.95",
+        "importSequence": 1,
+        "lineNumber": 15,
+        "lineKey": "85889a0589b847c116bcb698a1a9e872c41f7ad6676b495e4543b2ea9f1fed8b"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000015",
+        "bookingDate": "2025-09-30",
+        "valueDate": "2025-09-30",
+        "description": "CUOTA AUTONOMOS TGSS",
+        "amount": "-87.61",
+        "balance": "11748.34",
+        "importSequence": 1,
+        "lineNumber": 16,
+        "lineKey": "fd240f9a397783512c73035e6c9071834cec48d2bae2ab0c6ef4fa1107afb78f"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000016",
+        "bookingDate": "2025-10-06",
+        "valueDate": "2025-10-06",
+        "description": "DEVOLUCION COMPRA",
+        "amount": "12.99",
+        "balance": "11761.33",
+        "importSequence": 1,
+        "lineNumber": 17,
+        "lineKey": "6aa1cd83df3228141b82bfc2a51162a1f8a2f459d5a265ddbcfd3b711b52f4c6"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000017",
+        "bookingDate": "2025-11-22",
+        "valueDate": "2025-11-22",
+        "description": "RESTAURANTE IMAGINARIO",
+        "amount": "-58.70",
+        "balance": "11702.63",
+        "importSequence": 1,
+        "lineNumber": 18,
+        "lineKey": "258bb2b65fd5b1bb267165a8db8ae9e8fe686d5fd2a28d7ee09139f527906cc5"
+      },
+      {
+        "id": "00000000-0000-0000-0072-000000000018",
+        "bookingDate": "2025-12-31",
+        "valueDate": "2025-12-31",
+        "description": "ABONO INTERESES CUENTA",
+        "amount": "0.51",
+        "balance": "11703.14",
+        "importSequence": 1,
+        "lineNumber": 19,
+        "lineKey": "1874565a02634f993c8b9397a01b886b2ffad25d6b8c3640714c76494fce8201"
+      }
     ]
   }
 }

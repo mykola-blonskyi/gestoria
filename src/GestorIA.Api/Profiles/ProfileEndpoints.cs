@@ -150,12 +150,18 @@ public static class ProfileEndpoints
             return Problems.NoProfile(id);
         }
 
+        var transactions = await db.BankTransactions.AsNoTracking()
+            .Where(t => t.ProfileId == id)
+            .OrderBy(t => t.BookingDate).ThenBy(t => t.ImportSequence).ThenBy(t => t.LineNumber)
+            .ToListAsync(cancellationToken);
         var exportedAt = DateTimeOffset.UtcNow;
         // No shared cache or browser cache may keep a copy of personal financial data (SPEC-013). The file name says what the
-        // file is and when it was made, and nothing about whose it is.
+        // file is and the day it was made where the user lives (ADR-0016's regions are all on Madrid time), and nothing about
+        // whose it is.
         response.Headers.CacheControl = "no-store";
-        response.Headers.ContentDisposition = string.Create(CultureInfo.InvariantCulture, $"attachment; filename=\"gestoria-export-{exportedAt:yyyy-MM-dd}.json\"");
-        return TypedResults.Ok(ProfileExport.Of(View(row), exportedAt));
+        var day = TimeZoneInfo.ConvertTime(exportedAt, TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid"));
+        response.Headers.ContentDisposition = string.Create(CultureInfo.InvariantCulture, $"attachment; filename=\"gestoria-export-{day:yyyy-MM-dd}.json\"");
+        return TypedResults.Ok(ProfileExport.Of(View(row), transactions, exportedAt));
     }
 
     private static async Task<Results<Ok<SetAsideEstimate>, ValidationProblem, ProblemHttpResult>> Estimate(

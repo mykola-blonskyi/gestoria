@@ -1,3 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using GestorIA.Api.SetAside;
+using GestorIA.Infrastructure.Transactions;
+
 namespace GestorIA.Api.Profiles;
 
 // Everything the installation stores about a profile, in one file the user keeps outside the machine (SPEC-013, #74), and
@@ -14,9 +19,41 @@ public sealed record ProfileExport(string Format, int FormatVersion, string Clas
     // The file is labelled as what it holds, so it is recognised as such wherever it ends up.
     public const string PersonalFinancialData = "personal-financial-data";
 
-    public static ProfileExport Of(ProfileView profile, DateTimeOffset exportedAt) =>
-        new(FormatName, CurrentVersion, PersonalFinancialData, exportedAt, new ExportedEntities([profile]));
+    public static ProfileExport Of(ProfileView profile, IEnumerable<BankTransactionRow> transactions, DateTimeOffset exportedAt) =>
+        new(FormatName, CurrentVersion, PersonalFinancialData, exportedAt, new ExportedEntities([profile], [.. transactions.Select(ExportedBankTransaction.From)]));
 }
 
-// One member per stored entity kind, each holding the rows that belong to the exported profile.
-public sealed record ExportedEntities(IReadOnlyList<ProfileView> Profiles);
+// One member per table of the database, named after it (ProfileExportEndpoint holds the two together), each holding the rows
+// that belong to the exported profile.
+public sealed record ExportedEntities(IReadOnlyList<ProfileView> Profiles, IReadOnlyList<ExportedBankTransaction> BankTransactions);
+
+// A stored statement line as the list answers it (TransactionView), plus what a restore needs to store it again exactly: its
+// place in the day's order and the key that keeps a later import of the same statement from storing it twice.
+public sealed record ExportedBankTransaction(
+    Guid Id,
+    DateOnly BookingDate,
+    DateOnly ValueDate,
+    string Description,
+    [property: RegularExpression(Amounts.Cents)] string Amount,
+    [property: RegularExpression(Amounts.Cents)] string? Balance,
+    int ImportSequence,
+    int LineNumber,
+    string LineKey)
+{
+    public static ExportedBankTransaction From(BankTransactionRow row)
+    {
+        var line = row.ToBankTransaction();
+        return new(
+            row.Id,
+            line.BookingDate,
+            line.ValueDate,
+            line.Description,
+            Euros(line.Amount.Amount),
+            line.Balance is { } balance ? Euros(balance.Amount) : null,
+            row.ImportSequence,
+            row.LineNumber,
+            row.LineKey);
+    }
+
+    private static string Euros(decimal amount) => amount.ToString("0.00", CultureInfo.InvariantCulture);
+}
