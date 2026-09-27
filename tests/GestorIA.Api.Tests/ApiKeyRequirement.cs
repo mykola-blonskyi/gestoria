@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json.Nodes;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace GestorIA.Api.Tests;
@@ -92,6 +94,8 @@ public class ApiKeyRequirement(ApiFactory api) : IClassFixture<ApiFactory>
         Assert.Equal(WebOrigin, refusal.Headers.GetValues("Access-Control-Allow-Origin").Single());
     }
 
+    // The check the host runs as it starts (ValidateOnStart), run here without a host: a failed start through
+    // WebApplicationFactory surfaces as an ObjectDisposedException on some runs instead of the validation error.
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -99,10 +103,24 @@ public class ApiKeyRequirement(ApiFactory api) : IClassFixture<ApiFactory>
     [InlineData("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")]
     public void TheApiRefusesToStartWithoutAUsableKeyHash(string? hash)
     {
-        using var unconfigured = new ApiFactoryWithHash(hash);
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().AddInMemoryCollection([new("Auth:ApiKeySha256", hash)]).Build());
+        services.AddApiKey();
+        using var provider = services.BuildServiceProvider();
 
-        var failure = Assert.Throws<OptionsValidationException>(() => unconfigured.CreateClient());
+        var failure = Assert.Throws<OptionsValidationException>(() => provider.GetRequiredService<IStartupValidator>().Validate());
         Assert.Contains("Auth:ApiKeySha256", failure.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AKeyHashIsAccepted()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().AddInMemoryCollection([new("Auth:ApiKeySha256", ApiFactory.Sha256(ApiFactory.Key))]).Build());
+        services.AddApiKey();
+        using var provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<IStartupValidator>().Validate();
     }
 
     private static async Task AssertUnauthorized(HttpResponseMessage response)
@@ -113,11 +131,5 @@ public class ApiKeyRequirement(ApiFactory api) : IClassFixture<ApiFactory>
         var problem = await response.Json();
         Assert.Equal("https://gestoria.local/problems/api-key-required", problem["type"]!.GetValue<string>());
         Assert.Equal(401, problem["status"]!.GetValue<int>());
-    }
-
-    // An empty hash (null) stands for a machine where the key was never set; appsettings.json holds none.
-    private sealed class ApiFactoryWithHash(string? hash) : ApiFactory
-    {
-        protected override string? ConfiguredHash => hash;
     }
 }

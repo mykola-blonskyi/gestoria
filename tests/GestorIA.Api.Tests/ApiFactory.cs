@@ -13,11 +13,9 @@ public class ApiFactory : WebApplicationFactory<Program>
 
     internal static string Sha256(string key) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)));
 
-    protected virtual string? ConfiguredHash => Sha256(Key);
-
     // Added last, so it wins over appsettings.json and a developer's own user secrets.
     protected override void ConfigureWebHost(IWebHostBuilder builder) =>
-        builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection([new("Auth:ApiKeySha256", ConfiguredHash)]));
+        builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection([new("Auth:ApiKeySha256", Sha256(Key))]));
 
     protected override void ConfigureClient(HttpClient client)
     {
