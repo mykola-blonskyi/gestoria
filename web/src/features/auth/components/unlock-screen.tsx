@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 
-import { ApiError, isDatabaseUnavailable } from "@/data/api-error";
+import { ApiError, isDatabaseUnavailable } from "@/shared/lib/api-error";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { PageHeader } from "@/shared/ui/page-header";

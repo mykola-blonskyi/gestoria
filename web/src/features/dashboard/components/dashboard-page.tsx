@@ -6,13 +6,13 @@ import { useState } from "react";
 
 import type { Profile } from "@/data/profiles";
 import type { Quarter } from "@/data/set-aside";
+import { QUARTERS, defaultQuarter } from "@/shared/lib/quarters";
+import { ApiFailure } from "@/shared/ui/api-failure";
 import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
 import { PageHeader } from "@/shared/ui/page-header";
 
 import { useProfile } from "../hooks/use-profile";
 import { useSetAsideEstimate } from "../hooks/use-set-aside-estimate";
-import { ApiFailure } from "./api-failure";
-import { QUARTERS, defaultQuarter } from "./as-of";
 import { EstimateView } from "./estimate-view";
 
 const SETTINGS = "/settings";

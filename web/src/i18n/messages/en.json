@@ -44,15 +44,6 @@
     "asOf": "Quarter of the estimate",
     "basis": "Estimated from your profile for {year}, with no closed quarter recorded: the projection covers the whole year.",
     "calculating": "Calculating…",
-    "failure": {
-      "network": "The GestorIA API is not answering. Start it and try again.",
-      "database": "The GestorIA database is not answering. Start it with docker compose up -d postgres and try again.",
-      "gap": "Not published yet",
-      "gapLead": "The tax-year configuration lacks a value this estimate needs, so the engine refuses rather than guess. The engine says:",
-      "refused": "The engine cannot estimate these figures",
-      "other": "The API answered with an error ({status}). Try again.",
-      "gapSettings": "Choose another tax year in Settings"
-    },
     "estimate": {
       "heading": "Estimate",
       "holdBack": "Hold back {share} of every payment you receive.",
@@ -64,35 +55,44 @@
       "payableIn": "Payable by the end of {month}.",
       "iva": "IVA to set aside",
       "config": "Tax year {year}, configuration sha256 {hash}"
-    },
-    "notices": {
-      "heading": "Read these before relying on the figures",
-      "Info": "Note",
-      "Warning": "Warning",
-      "Error": "Error"
-    },
-    "trace": {
-      "heading": "How it was calculated",
-      "lead": "{count, plural, one {# step} other {# steps}} in the engine's order, grouped by section. Titles, formulas and sources are the engine's own.",
-      "section": "{name} ({count})",
-      "inputs": "Inputs",
-      "formula": "Formula",
-      "result": "Result",
-      "source": "Source",
-      "sections": {
-        "Trabajo": "Employment income",
-        "Actividad": "Self-employed activity",
-        "Ahorro": "Savings",
-        "Inmuebles": "Property",
-        "Bases": "Tax bases",
-        "Minimo": "Personal and family allowance",
-        "Cuota": "Tax due (cuota)",
-        "Deducciones": "Deductions",
-        "Resultado": "Result",
-        "SeguridadSocial": "Seguridad Social (TGSS)",
-        "Modelo130": "Modelo 130"
-      }
     }
+  },
+  "Trace": {
+    "heading": "How it was calculated",
+    "lead": "{count, plural, one {# step} other {# steps}} in the engine's order, grouped by section. Titles, formulas and sources are the engine's own.",
+    "section": "{name} ({count})",
+    "inputs": "Inputs",
+    "formula": "Formula",
+    "result": "Result",
+    "source": "Source",
+    "sections": {
+      "Trabajo": "Employment income",
+      "Actividad": "Self-employed activity",
+      "Ahorro": "Savings",
+      "Inmuebles": "Property",
+      "Bases": "Tax bases",
+      "Minimo": "Personal and family allowance",
+      "Cuota": "Tax due (cuota)",
+      "Deducciones": "Deductions",
+      "Resultado": "Result",
+      "SeguridadSocial": "Seguridad Social (TGSS)",
+      "Modelo130": "Modelo 130"
+    }
+  },
+  "Notices": {
+    "heading": "Read these before relying on the figures",
+    "Info": "Note",
+    "Warning": "Warning",
+    "Error": "Error"
+  },
+  "Failure": {
+    "network": "The GestorIA API is not answering. Start it and try again.",
+    "database": "The GestorIA database is not answering. Start it with docker compose up -d postgres and try again.",
+    "gap": "Not published yet",
+    "gapLead": "The tax-year configuration lacks a value this estimate needs, so the engine refuses rather than guess. The engine says:",
+    "refused": "The engine cannot estimate these figures",
+    "other": "The API answered with an error ({status}). Try again.",
+    "gapSettings": "Choose another tax year in Settings"
   },
   "Payments": {
     "title": "Payments",

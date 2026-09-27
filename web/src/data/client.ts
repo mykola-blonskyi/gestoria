@@ -1,4 +1,4 @@
-import { ApiError, parseProblem } from "@/data/api-error";
+import { ApiError, parseProblem } from "@/shared/lib/api-error";
 import { API_KEY_HEADER, apiKeyStore } from "@/data/api-key-store";
 
 const DEFAULT_API_BASE_URL = "http://localhost:5080";

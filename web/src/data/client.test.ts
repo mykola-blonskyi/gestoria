@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError } from "@/data/api-error";
+import { ApiError } from "@/shared/lib/api-error";
 import { apiKeyStore } from "@/data/api-key-store";
 import { apiFetch } from "@/data/client";
 import { shouldRetry } from "@/data/query-provider";

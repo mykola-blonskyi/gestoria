@@ -140,12 +140,12 @@ describe("DashboardPage", () => {
     stubApi();
     renderDashboard();
 
-    const trace = MESSAGES.en.Dashboard.trace;
-    const heading = await screen.findByRole("heading", { name: MESSAGES.en.Dashboard.notices.heading });
+    const trace = MESSAGES.en.Trace;
+    const heading = await screen.findByRole("heading", { name: MESSAGES.en.Notices.heading });
     const items = within(heading.closest("[data-slot=card]") as HTMLElement).getAllByRole("listitem");
     expect(items).toHaveLength(g12Estimate.notices.length);
-    expect(items[0]).toHaveTextContent(MESSAGES.en.Dashboard.notices.Warning);
-    expect(items.at(-1)).toHaveTextContent(MESSAGES.en.Dashboard.notices.Info);
+    expect(items[0]).toHaveTextContent(MESSAGES.en.Notices.Warning);
+    expect(items.at(-1)).toHaveTextContent(MESSAGES.en.Notices.Info);
     expect(heading.compareDocumentPosition(screen.getByText(formatMoney("1228.99", "en"))) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     for (const section of new Set(g12Estimate.trace.map((step) => step.section as keyof typeof trace.sections))) {
@@ -163,8 +163,8 @@ describe("DashboardPage", () => {
     expect(screen.getByLabelText(messages.asOf)).toBeInTheDocument();
     expect(screen.getByText(fill(messages.basis, { year: 2025 }), { exact: false })).toBeInTheDocument();
     expect(screen.getByText(fill(messages.estimate.holdBack, { share: formatShare("0.1941", locale) }))).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: messages.notices.heading })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: messages.trace.heading })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: MESSAGES[locale].Notices.heading })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: MESSAGES[locale].Trace.heading })).toBeInTheDocument();
   });
 
   it.each(LOCALES)("says in %s that there is no profile yet", async (locale) => {
@@ -183,9 +183,9 @@ describe("DashboardPage", () => {
     renderDashboard();
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent(MESSAGES.en.Dashboard.failure.gap);
+    expect(alert).toHaveTextContent(MESSAGES.en.Failure.gap);
     expect(alert).toHaveTextContent(detail);
-    expect(within(alert).getByRole("link", { name: MESSAGES.en.Dashboard.failure.gapSettings })).toHaveAttribute("href", "/settings");
+    expect(within(alert).getByRole("link", { name: MESSAGES.en.Failure.gapSettings })).toHaveAttribute("href", "/settings");
     expect(screen.queryByRole("heading", { name: MESSAGES.en.Dashboard.estimate.heading })).not.toBeInTheDocument();
   });
 
@@ -197,7 +197,7 @@ describe("DashboardPage", () => {
     renderDashboard();
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent(MESSAGES.en.Dashboard.failure.refused);
+    expect(alert).toHaveTextContent(MESSAGES.en.Failure.refused);
     expect(alert).toHaveTextContent(detail);
   });
 
@@ -216,6 +216,6 @@ describe("DashboardPage", () => {
     stubApi({ profiles: "unreachable" });
     renderDashboard();
 
-    expect(await screen.findByRole("alert", {}, { timeout: 8_000 })).toHaveTextContent(MESSAGES.en.Dashboard.failure.network);
+    expect(await screen.findByRole("alert", {}, { timeout: 8_000 })).toHaveTextContent(MESSAGES.en.Failure.network);
   });
 });

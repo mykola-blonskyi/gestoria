@@ -44,15 +44,6 @@
     "asOf": "Trimestre de la estimación",
     "basis": "Estimado a partir de tu perfil de {year}, sin trimestres cerrados registrados: la previsión cubre todo el año.",
     "calculating": "Calculando…",
-    "failure": {
-      "network": "La API de GestorIA no responde. Iníciala y vuelve a intentarlo.",
-      "database": "La base de datos de GestorIA no responde. Iníciala con docker compose up -d postgres y vuelve a intentarlo.",
-      "gap": "Aún no publicado",
-      "gapLead": "A la configuración del ejercicio le falta un valor que esta estimación necesita, así que el motor se niega en lugar de suponerlo. El motor dice:",
-      "refused": "El motor no puede estimar estas cifras",
-      "other": "La API respondió con un error ({status}). Vuelve a intentarlo.",
-      "gapSettings": "Elige otro ejercicio en Ajustes"
-    },
     "estimate": {
       "heading": "Estimación",
       "holdBack": "Aparta el {share} de cada cobro que recibas.",
@@ -64,35 +55,44 @@
       "payableIn": "A pagar antes de que termine {month}.",
       "iva": "IVA a reservar",
       "config": "Ejercicio {year}, configuración sha256 {hash}"
-    },
-    "notices": {
-      "heading": "Léelos antes de fiarte de las cifras",
-      "Info": "Nota",
-      "Warning": "Aviso",
-      "Error": "Error"
-    },
-    "trace": {
-      "heading": "Cómo se ha calculado",
-      "lead": "{count, plural, one {# paso} other {# pasos}} en el orden del motor, agrupados por sección. Los títulos, las fórmulas y las fuentes son los del motor.",
-      "section": "{name} ({count})",
-      "inputs": "Datos",
-      "formula": "Fórmula",
-      "result": "Resultado",
-      "source": "Fuente",
-      "sections": {
-        "Trabajo": "Rendimientos del trabajo",
-        "Actividad": "Actividad económica",
-        "Ahorro": "Ahorro",
-        "Inmuebles": "Inmuebles",
-        "Bases": "Bases imponibles",
-        "Minimo": "Mínimo personal y familiar",
-        "Cuota": "Cuota",
-        "Deducciones": "Deducciones",
-        "Resultado": "Resultado",
-        "SeguridadSocial": "Seguridad Social (TGSS)",
-        "Modelo130": "Modelo 130"
-      }
     }
+  },
+  "Trace": {
+    "heading": "Cómo se ha calculado",
+    "lead": "{count, plural, one {# paso} other {# pasos}} en el orden del motor, agrupados por sección. Los títulos, las fórmulas y las fuentes son los del motor.",
+    "section": "{name} ({count})",
+    "inputs": "Datos",
+    "formula": "Fórmula",
+    "result": "Resultado",
+    "source": "Fuente",
+    "sections": {
+      "Trabajo": "Rendimientos del trabajo",
+      "Actividad": "Actividad económica",
+      "Ahorro": "Ahorro",
+      "Inmuebles": "Inmuebles",
+      "Bases": "Bases imponibles",
+      "Minimo": "Mínimo personal y familiar",
+      "Cuota": "Cuota",
+      "Deducciones": "Deducciones",
+      "Resultado": "Resultado",
+      "SeguridadSocial": "Seguridad Social (TGSS)",
+      "Modelo130": "Modelo 130"
+    }
+  },
+  "Notices": {
+    "heading": "Léelos antes de fiarte de las cifras",
+    "Info": "Nota",
+    "Warning": "Aviso",
+    "Error": "Error"
+  },
+  "Failure": {
+    "network": "La API de GestorIA no responde. Iníciala y vuelve a intentarlo.",
+    "database": "La base de datos de GestorIA no responde. Iníciala con docker compose up -d postgres y vuelve a intentarlo.",
+    "gap": "Aún no publicado",
+    "gapLead": "A la configuración del ejercicio le falta un valor que esta estimación necesita, así que el motor se niega en lugar de suponerlo. El motor dice:",
+    "refused": "El motor no puede estimar estas cifras",
+    "other": "La API respondió con un error ({status}). Vuelve a intentarlo.",
+    "gapSettings": "Elige otro ejercicio en Ajustes"
   },
   "Payments": {
     "title": "Pagos",
