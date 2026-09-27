@@ -56,6 +56,48 @@ public class OpenApiDocumentContract(ApiFactory api) : IClassFixture<ApiFactory>
         AssertValid("ProblemDetails", unauthorized);
     }
 
+    public static TheoryData<string> ProfileGoldens => new(RepoFiles.ProfileGoldens.Append("G15").Append("G17"));
+
+    [Theory]
+    [MemberData(nameof(ProfileGoldens))]
+    public void TheDocumentedProfileAcceptsEveryGoldensTaxpayer(string golden)
+    {
+        AssertValid("ProfileInputDocument", RepoFiles.GoldenProfile(golden));
+    }
+
+    [Theory]
+    [InlineData("previousYear", "{ \"rendimientoNeto\": \"8000.00\" }")]
+    [InlineData("newActivity", "\"established\"")]
+    [InlineData("newActivity", "{ \"kind\": \"started\", \"period\": \"first\" }")]
+    public void TheDocumentedProfileRefusesAUnionTheApiRefuses(string field, string value)
+    {
+        var profile = RepoFiles.GoldenProfile("G15");
+        profile["activity"]![field] = JsonNode.Parse(value);
+
+        Assert.False(Evaluate("ProfileInputDocument", profile).IsValid);
+    }
+
+    // The one test of this class that stores a profile: the class shares one API and so one database.
+    [Fact]
+    public async Task TheProfileAnswersMatchTheirDocumentedSchemas()
+    {
+        var created = await client.PostProfile(RepoFiles.GoldenProfile("G16"));
+        var profile = await created.Json();
+        var id = profile["id"]!.GetValue<string>();
+        var list = JsonNode.Parse(await client.GetStringAsync("/api/v1/profiles"))!.AsArray();
+        var estimate = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q1")).Json();
+        var conflict = await (await client.PostProfile(RepoFiles.GoldenProfile("G16"))).Json();
+        var notFound = await (await client.GetAsync($"/api/v1/profiles/{Guid.NewGuid()}")).Json();
+        var invalid = await (await client.PutProfile(id, new JsonObject { ["taxYear"] = 2025 })).Json();
+
+        AssertValid("ProfileView", profile);
+        Assert.All(list, item => AssertValid("ProfileView", item!));
+        AssertValid("SetAsideEstimate", estimate);
+        AssertValid("ProblemDetails", conflict);
+        AssertValid("ProblemDetails", notFound);
+        AssertValid("HttpValidationProblemDetails", invalid);
+    }
+
     [Fact]
     public void EveryOperationButTheHealthChecksDeclaresTheApiKeyAndItsRefusal()
     {

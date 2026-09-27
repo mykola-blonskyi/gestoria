@@ -6,7 +6,7 @@
 
 ```
 tests/
-├── GestorIA.Api.Tests/          # the API over HTTP (WebApplicationFactory), its OpenAPI document against real requests and answers, the web fixtures (#66)
+├── GestorIA.Api.Tests/          # the API over HTTP (WebApplicationFactory) on a real PostgreSQL (Testcontainers, Docker required), its OpenAPI document against real requests and answers, the web fixtures (#66, #69)
 ├── GestorIA.Cli.Tests/          # the console's input parsing and output formatting (#11)
 ├── GestorIA.Domain.Tests/       # Money and Rate, the double/float ban, BbvaParserTests
 ├── GestorIA.Engine.Tests/       # calculator examples, FsCheck properties, config validation and mutations

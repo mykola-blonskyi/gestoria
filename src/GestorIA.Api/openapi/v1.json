@@ -191,6 +191,326 @@
           }
         ]
       }
+    },
+    "/api/v1/profiles": {
+      "get": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "The stored profiles: none before the first is created, one after.",
+        "operationId": "listProfiles",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProfileView"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Stores the profile. Local mode keeps one: a second is refused with 409.",
+        "operationId": "createProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileInputDocument"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/profiles/{id}": {
+      "get": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "One stored profile.",
+        "operationId": "getProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Replaces a stored profile with the one in the body.",
+        "operationId": "replaceProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileInputDocument"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/profiles/{id}/set-aside/estimate": {
+      "get": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Runs the set-aside estimator on a stored profile for a quarter of its tax year, with no closed quarter stated.",
+        "operationId": "estimateSetAsideForProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOf",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Quarter"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetAsideEstimate"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -296,6 +616,59 @@
           }
         }
       },
+      "NewActivityChoice": {
+        "required": [
+          "kind"
+        ],
+        "type": "object",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/NewActivityChoiceEstablishedActivity"
+          },
+          {
+            "$ref": "#/components/schemas/NewActivityChoiceNewActivityStarted"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "established": "#/components/schemas/NewActivityChoiceEstablishedActivity",
+            "started": "#/components/schemas/NewActivityChoiceNewActivityStarted"
+          }
+        }
+      },
+      "NewActivityChoiceEstablishedActivity": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "established"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "NewActivityChoiceNewActivityStarted": {
+        "required": [
+          "period",
+          "ingresosFromFormerEmployer"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "started"
+            ],
+            "type": "string"
+          },
+          "period": {
+            "$ref": "#/components/schemas/StartedPeriod"
+          },
+          "ingresosFromFormerEmployer": {
+            "pattern": "^\\d{1,12}(\\.\\d{1,2})?$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "NewActivityDocument": {
         "oneOf": [
           {
@@ -371,6 +744,55 @@
             "type": "string"
           }
         }
+      },
+      "PreviousYearChoice": {
+        "required": [
+          "kind"
+        ],
+        "type": "object",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/PreviousYearChoiceNoActivityLastYear"
+          },
+          {
+            "$ref": "#/components/schemas/PreviousYearChoicePreviousYearNet"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "noActivity": "#/components/schemas/PreviousYearChoiceNoActivityLastYear",
+            "rendimientoNeto": "#/components/schemas/PreviousYearChoicePreviousYearNet"
+          }
+        }
+      },
+      "PreviousYearChoiceNoActivityLastYear": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "noActivity"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "PreviousYearChoicePreviousYearNet": {
+        "required": [
+          "rendimientoNeto"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "rendimientoNeto"
+            ],
+            "type": "string"
+          },
+          "rendimientoNeto": {
+            "pattern": "^-?\\d{1,12}(\\.\\d{1,2})?$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
       },
       "PreviousYearDocument": {
         "oneOf": [
@@ -450,6 +872,130 @@
           }
         },
         "additionalProperties": false
+      },
+      "ProfileEmployment": {
+        "required": [
+          "ingresos",
+          "seguridadSocial"
+        ],
+        "type": "object",
+        "properties": {
+          "ingresos": {
+            "pattern": "^\\d{1,12}(\\.\\d{1,2})?$",
+            "type": "string"
+          },
+          "seguridadSocial": {
+            "pattern": "^\\d{1,12}(\\.\\d{1,2})?$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProfileInputDocument": {
+        "required": [
+          "taxYear",
+          "region",
+          "employment",
+          "activity",
+          "projection"
+        ],
+        "type": "object",
+        "properties": {
+          "taxYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "region": {
+            "type": "string"
+          },
+          "employment": {
+            "$ref": "#/components/schemas/ProfileEmployment"
+          },
+          "activity": {
+            "$ref": "#/components/schemas/ProfileRegistration"
+          },
+          "projection": {
+            "$ref": "#/components/schemas/ProfileProjection"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProfileProjection": {
+        "required": [
+          "ingresos",
+          "gastos",
+          "baseCotizacion"
+        ],
+        "type": "object",
+        "properties": {
+          "ingresos": {
+            "pattern": "^\\d{1,12}(\\.\\d{1,2})?$",
+            "type": "string"
+          },
+          "gastos": {
+            "pattern": "^\\d{1,12}(\\.\\d{1,2})?$",
+            "type": "string"
+          },
+          "baseCotizacion": {
+            "pattern": "^\\d{1,12}(\\.\\d{1,2})?$",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProfileRegistration": {
+        "required": [
+          "alta",
+          "previousYear",
+          "newActivity"
+        ],
+        "type": "object",
+        "properties": {
+          "alta": {
+            "type": "string",
+            "format": "date"
+          },
+          "previousYear": {
+            "$ref": "#/components/schemas/PreviousYearChoice"
+          },
+          "newActivity": {
+            "$ref": "#/components/schemas/NewActivityChoice"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProfileView": {
+        "required": [
+          "id",
+          "taxYear",
+          "region",
+          "employment",
+          "activity",
+          "projection"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "taxYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "region": {
+            "type": "string"
+          },
+          "employment": {
+            "$ref": "#/components/schemas/ProfileEmployment"
+          },
+          "activity": {
+            "$ref": "#/components/schemas/ProfileRegistration"
+          },
+          "projection": {
+            "$ref": "#/components/schemas/ProfileProjection"
+          }
+        }
       },
       "ProjectionDocument": {
         "required": [
@@ -628,6 +1174,12 @@
         "additionalProperties": false,
         "description": "The console's input file, byte for byte: src/GestorIA.Cli/README.md describes every field."
       },
+      "StartedPeriod": {
+        "enum": [
+          "first",
+          "following"
+        ]
+      },
       "TaxYearView": {
         "required": [
           "taxYear",
@@ -775,6 +1327,9 @@
     },
     {
       "name": "set-aside"
+    },
+    {
+      "name": "profiles"
     }
   ]
 }

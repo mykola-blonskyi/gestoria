@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.OpenApi;
@@ -23,7 +22,6 @@ public static class ApiKey
     private const string EmptyKeySha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
     // ValidateOnStart makes the API refuse to start without a usable hash, rather than start open or lock everyone out.
-    // `dotnet build` also starts the app, as GetDocument.Insider, to write openapi/v1.json, and no key is configured there.
     public static void AddApiKey(this IServiceCollection services)
     {
         var options = services.AddOptions<ApiKeyOptions>()
@@ -31,7 +29,7 @@ public static class ApiKey
             .Validate(
                 o => o.ApiKeySha256 is { Length: 64 } hash && hash.All(char.IsAsciiHexDigit) && !hash.Equals(EmptyKeySha256, StringComparison.OrdinalIgnoreCase),
                 "Auth:ApiKeySha256 must be the SHA-256 of a non-empty local API key, as 64 hex characters (web/README.md, \"The API key\").");
-        if (Assembly.GetEntryAssembly()?.GetName().Name != "GetDocument.Insider")
+        if (!OpenApiGeneration.IsRunning)
         {
             options.ValidateOnStart();
         }

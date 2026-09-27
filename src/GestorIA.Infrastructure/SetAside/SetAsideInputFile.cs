@@ -67,18 +67,14 @@ public static class SetAsideInputFile
             QuarterOf(root, "asOf"));
     }
 
-    // LGSS art. 308.1.a 3.ª: any base of the year's tables, from the lowest base mínima (the reduced table's first tramo) to
-    // the highest base máxima (the general table's last); TGSS accepts no other.
     private static Money BaseCotizacionOf(JsonObject projection, TaxYearConfig config)
     {
         var chosen = Amount(projection, "baseCotizacion");
-        var tramos = config.SeguridadSocial.Tramos.Tramos;
-        var lowest = tramos.Min(t => t.BaseMin.Amount);
-        var highest = tramos.Max(t => t.BaseMax.Amount);
+        var tramos = config.SeguridadSocial.Tramos;
 
-        return chosen.Amount >= lowest && chosen.Amount <= highest
+        return chosen >= tramos.LowestBase && chosen <= tramos.HighestBase
             ? chosen
-            : throw Invalid(projection["baseCotizacion"]!, Invariant($"a base of the {config.TaxYear} tables, from {lowest} to {highest} (LGSS art. 308.1.a 3.ª)"));
+            : throw Invalid(projection["baseCotizacion"]!, Invariant($"a base of the {config.TaxYear} tables, from {tramos.LowestBase.Amount} to {tramos.HighestBase.Amount} (LGSS art. 308.1.a 3.ª)"));
     }
 
     // The previous year's net is the one amount that may be negative: a loss that year.

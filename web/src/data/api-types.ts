@@ -71,6 +71,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The stored profiles: none before the first is created, one after. */
+        get: operations["listProfiles"];
+        put?: never;
+        /** Stores the profile. Local mode keeps one: a second is refused with 409. */
+        post: operations["createProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One stored profile. */
+        get: operations["getProfile"];
+        /** Replaces a stored profile with the one in the body. */
+        put: operations["replaceProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/{id}/set-aside/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Runs the set-aside estimator on a stored profile for a quarter of its tax year, with no closed quarter stated. */
+        get: operations["estimateSetAsideForProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -99,6 +152,17 @@ export interface components {
                 [key: string]: string[];
             };
         };
+        NewActivityChoice: components["schemas"]["NewActivityChoiceEstablishedActivity"] | components["schemas"]["NewActivityChoiceNewActivityStarted"];
+        NewActivityChoiceEstablishedActivity: {
+            /** @enum {string} */
+            kind?: "established";
+        };
+        NewActivityChoiceNewActivityStarted: {
+            /** @enum {string} */
+            kind?: "started";
+            period: components["schemas"]["StartedPeriod"];
+            ingresosFromFormerEmployer: string;
+        };
         NewActivityDocument: "established" | {
             /** @enum {string} */
             period: "first" | "following";
@@ -117,6 +181,16 @@ export interface components {
             severity: components["schemas"]["WarningSeverity"];
             text: string;
         };
+        PreviousYearChoice: components["schemas"]["PreviousYearChoiceNoActivityLastYear"] | components["schemas"]["PreviousYearChoicePreviousYearNet"];
+        PreviousYearChoiceNoActivityLastYear: {
+            /** @enum {string} */
+            kind?: "noActivity";
+        };
+        PreviousYearChoicePreviousYearNet: {
+            /** @enum {string} */
+            kind?: "rendimientoNeto";
+            rendimientoNeto: string;
+        };
         PreviousYearDocument: "noActivity" | {
             rendimientoNeto: string;
         };
@@ -132,6 +206,39 @@ export interface components {
             region: string;
             employment: components["schemas"]["EmploymentDocument"];
             activity: components["schemas"]["RegistrationDocument"];
+        };
+        ProfileEmployment: {
+            ingresos: string;
+            seguridadSocial: string;
+        };
+        ProfileInputDocument: {
+            /** Format: int32 */
+            taxYear: number;
+            region: string;
+            employment: components["schemas"]["ProfileEmployment"];
+            activity: components["schemas"]["ProfileRegistration"];
+            projection: components["schemas"]["ProfileProjection"];
+        };
+        ProfileProjection: {
+            ingresos: string;
+            gastos: string;
+            baseCotizacion: string;
+        };
+        ProfileRegistration: {
+            /** Format: date */
+            alta: string;
+            previousYear: components["schemas"]["PreviousYearChoice"];
+            newActivity: components["schemas"]["NewActivityChoice"];
+        };
+        ProfileView: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            taxYear: number;
+            region: string;
+            employment: components["schemas"]["ProfileEmployment"];
+            activity: components["schemas"]["ProfileRegistration"];
+            projection: components["schemas"]["ProfileProjection"];
         };
         ProjectionDocument: {
             ingresos: string;
@@ -177,6 +284,8 @@ export interface components {
             profile: components["schemas"]["ProfileDocument"];
             activity: components["schemas"]["ActivityDocument"];
         };
+        /** @enum {unknown} */
+        StartedPeriod: "first" | "following";
         TaxYearView: {
             /** Format: int32 */
             taxYear: number;
@@ -338,6 +447,239 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    listProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileView"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    createProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileInputDocument"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    getProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileView"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    replaceProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileInputDocument"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    estimateSetAsideForProfile: {
+        parameters: {
+            query: {
+                asOf: components["schemas"]["Quarter"];
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetAsideEstimate"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

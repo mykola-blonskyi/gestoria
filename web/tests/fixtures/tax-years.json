@@ -1,0 +1,41 @@
+[
+  {
+    "taxYear": 2025,
+    "configHash": "4046cf06162bb6073a73449142e7e3a5278e523b284fa31aab99a6cc17b15e63",
+    "regions": [
+      {
+        "code": "MD",
+        "name": "Comunidad de Madrid"
+      },
+      {
+        "code": "VC",
+        "name": "Comunitat Valenciana"
+      }
+    ],
+    "gaps": []
+  },
+  {
+    "taxYear": 2026,
+    "configHash": "17e61f5fc34b54fbb0d5a236bada6782743cbab143f7cbfaf4fa0dbc09cc786a",
+    "regions": [
+      {
+        "code": "MD",
+        "name": "Comunidad de Madrid"
+      },
+      {
+        "code": "VC",
+        "name": "Comunitat Valenciana"
+      }
+    ],
+    "gaps": [
+      {
+        "entry": "seguridadSocial.tarifaPlana",
+        "note": "amount for months of 2026: Ley 20/2007 art. 38 ter.1 leaves it to the Ley de Presupuestos Generales del Estado, RDL 13/2022 D.T. 5.ª fixed 80 € for 2023–2025 only, neither RDL 3/2026 nor Orden PJC/297/2026 sets it, and no LPGE 2026 exists (checked 2026-09-27)"
+      },
+      {
+        "entry": "calendar",
+        "note": "unpublished as of 2026-09-27: the renta window for tax year 2026 (the Orden HAC approving Modelo 100, expected March 2027) and the 2027 días inhábiles (the Secretaría de Estado de Función Pública resolución, expected November–December 2026)"
+      }
+    ]
+  }
+]

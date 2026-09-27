@@ -1,0 +1,26 @@
+# The local installation's services (ADR-0010). Only PostgreSQL so far (ADR-0006); the API runs with `dotnet run` and the web app
+# with `pnpm dev`. README.md, "Database", shows how to start it.
+name: gestoria
+
+services:
+  postgres:
+    # tests/GestorIA.Api.Tests runs its Testcontainers database from this same image, so tests and the local database agree.
+    image: postgres:16.15-alpine
+    environment:
+      POSTGRES_DB: gestoria
+      POSTGRES_USER: gestoria
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env next to compose.yaml (copy .env.example)}
+    ports:
+      # Loopback only: nothing outside this machine reaches the database.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gestoria -d gestoria"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

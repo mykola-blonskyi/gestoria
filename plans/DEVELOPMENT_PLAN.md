@@ -71,7 +71,7 @@ Exit criteria
 | 0 Foundation | In. The Madrid block is filled (ADR-0016); the other three `_todo` blocks return with the quarterly forms |
 | 1 Core engine | In, in full. Employee path first (G1, G2, G6, G7, G8b, G10), then autónomo (G3, G4, G5, G8, G9) |
 | 2 Credits and explanations | In, and it is the point (SPEC-006, SPEC-010) |
-| 3 Application, persistence, API | Open. See `docs/decisions.md` |
+| 3 Application, persistence, API | Open. See `docs/decisions.md`. Started: PostgreSQL 16 through EF Core with migrations, `compose.yaml` for the database, Testcontainers integration tests and the stored taxpayer profile in #69; `GestorIA.Application` still has no caller |
 | 4 OCR and ingestion | Out. v1.x (SPEC-005) |
 | 5 Web application | In. Next.js in `web/`, decided 2026-09-27 (ADR-0017); scaffold in #65, the overview on the first API (health, tax years, set-aside estimate, generated OpenAPI) in #66, the other features as their API resources land |
 | 6 Hardening and release | In, and smaller, because ADR-0010 removed the server |

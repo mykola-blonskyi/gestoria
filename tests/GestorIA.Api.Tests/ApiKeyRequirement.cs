@@ -19,7 +19,7 @@ public class ApiKeyRequirement(ApiFactory api) : IClassFixture<ApiFactory>
         {
             foreach (var (method, _) in methods!.AsObject())
             {
-                operations.Add(method.ToUpperInvariant(), path.Replace("{year}", "2025", StringComparison.Ordinal));
+                operations.Add(method.ToUpperInvariant(), path.Replace("{year}", "2025", StringComparison.Ordinal).Replace("{id}", Guid.Empty.ToString(), StringComparison.Ordinal));
             }
         }
         return operations;
