@@ -317,7 +317,7 @@
             "movilidadExtra",
             "discapacidadExtra",
             "discapacidadExtra65",
-            "unionFeeCap",
+            "colegioFeeCap",
             "reduccion"
           ],
           "properties": {
@@ -333,7 +333,7 @@
             "discapacidadExtra65": {
               "$ref": "#/$defs/money"
             },
-            "unionFeeCap": {
+            "colegioFeeCap": {
               "$ref": "#/$defs/money"
             },
             "reduccion": {

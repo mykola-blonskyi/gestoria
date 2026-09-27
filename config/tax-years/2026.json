@@ -43,7 +43,7 @@
     },
     "trabajo": {
       "otrosGastos": 2000, "movilidadExtra": 2000, "discapacidadExtra": 3500, "discapacidadExtra65": 7750,
-      "unionFeeCap": 500,
+      "colegioFeeCap": 500,
       "reduccion": { "fixed": 7302, "t1": 14852, "t2": 17673.52, "t3": 19747.50, "k1": 1.75, "k2": 1.14, "otherIncomeCap": 6500 }
     },
     "actividad": {
@@ -135,7 +135,8 @@
     "/irpf/escalaEstatal":          { "kind": "boe", "ref": "LIRPF art. 63.1.1.º, redacción Ley 11/2020 en vigor desde 2021-01-01; no later version in the consolidated text", "verified": "2026-09-27" },
     "/irpf/escalaAhorro":           { "kind": "boe", "ref": "LIRPF art. 66.1 (estatal) and art. 76 (autonómica), each 9,5 / 10,5 / 11,5 / 13,5 / 15 %, redacción Ley 7/2024 D.F. 7.ª con efectos desde 2025-01-01; combined is their sum, estatalShare one half", "verified": "2026-09-27" },
     "/irpf/minimos":                { "kind": "boe", "ref": "LIRPF art. 57 (contribuyente, mayor65, mayor75), art. 58.1–2 (descendientes, menor3, descendienteIncomeCap, descendienteAgeCap), art. 59 (ascendiente, ascendiente75), art. 60.1–2 (discapacidad33, discapacidad65, asistencia), redacción Ley 26/2014 en vigor desde 2015-01-01; no later version", "verified": "2026-09-27" },
-    "/irpf/trabajo":                { "kind": "boe", "ref": "LIRPF art. 19.2.f (otrosGastos, movilidadExtra, discapacidadExtra, discapacidadExtra65), redacción Ley 26/2014; unionFeeCap is RIRPF art. 10, whose 500 € cap applies to colegio profesional fees only, union dues being deductible without cap (#49)", "verified": "2026-09-27" },
+    "/irpf/trabajo":                { "kind": "boe", "ref": "LIRPF art. 19.2.f (otrosGastos, movilidadExtra, discapacidadExtra, discapacidadExtra65), redacción Ley 26/2014", "verified": "2026-09-27" },
+    "/irpf/trabajo/colegioFeeCap":  { "kind": "boe", "ref": "RIRPF art. 10: the 500 € annual cap applies only to cuotas satisfechas a Colegios profesionales de colegiación obligatoria; cuotas satisfechas a sindicatos are deductible with no cap. Renamed from unionFeeCap, which the field never was (#49)", "verified": "2026-09-27" },
     "/irpf/trabajo/reduccion":      { "kind": "boe", "ref": "LIRPF art. 20, redacción RDL 4/2024 art. 3.1 con efectos desde 2024-01-01; no later version", "verified": "2026-09-27" },
     "/irpf/actividad/dificilJustificacion": { "kind": "boe", "ref": "RIRPF art. 30, regla 2.ª (RD 633/2015); LIRPF D.A. 64.ª raises it to 10 % in 2026 for Ceuta only", "verified": "2026-09-27" },
     "/irpf/actividad/inicioActividad": { "kind": "boe", "ref": "LIRPF art. 32.3, párrafos primero, cuarto y quinto (apartado 3 unchanged since Ley 11/2013; article version en vigor desde 2023-01-01)", "verified": "2026-09-27" },
@@ -158,7 +159,7 @@
     "/regions/VC/holidays":         { "kind": "boe", "ref": "Días inhábiles de la Comunitat Valenciana beyond the national ones, Monday to Friday: Resolución de 18 de noviembre de 2025 (BOE-A-2025-23702), anexo", "verified": "2026-09-27" },
     "/modelo130/rate":              { "kind": "boe", "ref": "RIRPF art. 110.1.a", "verified": "2026-09-27" },
     "/modelo130/retencionExemptionShare": { "kind": "boe", "ref": "RIRPF art. 109.2", "verified": "2026-09-27" },
-    "/modelo130/mortgageRate":      { "kind": "boe", "ref": "RIRPF art. 110.3.d.1.º; it also requires rendimientos íntegros previsibles under 33.007,20 € and the LIRPF D.T. 18.ª deducción por vivienda, which this file does not carry (#49)", "verified": "2026-09-27" },
+    "/modelo130/mortgageRate":      { "kind": "boe", "ref": "RIRPF art. 110.3.d.1.º: 2 % del rendimiento neto del trimestre, only where the contribuyente's rendimientos íntegros previsibles for the year are under 33.007,20 € and has derecho a la deducción por inversión en vivienda habitual under LIRPF D.T. 18.ª, which since 2013 requires the vivienda to have been adquirida, or its construcción started, before 2013-01-01. Neither condition is data any calculator reads yet (#2), so it is recorded here rather than in unused schema fields (#49)", "verified": "2026-09-27" },
     "/modelo130/mortgageCap":       { "kind": "boe", "ref": "RIRPF art. 110.3.d.1.º: 660,14 € por trimestre", "verified": "2026-09-27" },
     "/modelo130/minoracion":        { "kind": "boe", "ref": "RIRPF art. 110.3.c (RD 1003/2014)", "verified": "2026-09-27" },
     "/iva/rates":                   { "kind": "boe", "ref": "Ley 37/1992 art. 90.uno (21 %, versión en vigor desde 2012-07-15) and art. 91.uno and dos (10 %, 4 %, versión en vigor desde 2024-12-22)", "verified": "2026-09-27" },

@@ -32,7 +32,7 @@ public interface IIrpfAnnualCalculator { AnnualResult Run(AnnualInput input); }
 ### Step 1 — Employment (`EmploymentIncomeCalculator`)
 ```
 ingresos  = Σ nómina.TotalDevengado − Σ nómina.Exentas (+ en especie)      // if Certificado exists → use it, warn on mismatch
-ss        = Σ nómina.SsTrabajador (+ union fees ≤ config.trabajo.unionFeeCap, + colegio profesional if mandatory)
+ss        = Σ nómina.SsTrabajador (+ union fees, no cap, + colegio profesional if mandatory ≤ config.trabajo.colegioFeeCap)
 ret       = Σ nómina.IrpfRetenido
 rnPrevio  = ingresos − ss                                        // art. 19.2 a–e only
 rn        = rnPrevio − min(config.trabajo.otrosGastos (2000), max(0, rnPrevio))   [+ mobility/disability extras per config]
