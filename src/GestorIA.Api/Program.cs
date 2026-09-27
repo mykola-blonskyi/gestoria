@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using GestorIA.Api;
 using GestorIA.Api.SetAside;
 using GestorIA.Api.TaxYears;
 using GestorIA.Infrastructure.TaxYears;
@@ -14,9 +15,11 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddProblemDetails();
+builder.Services.AddApiKey();
 builder.Services.AddOpenApi("v1", options =>
 {
     options.AddSchemaTransformer<UnionSchemas>();
+    options.AddApiKeySecurity();
     options.AddDocumentTransformer((document, _, _) =>
     {
         document.Info.Title = "GestorIA API";
@@ -31,7 +34,7 @@ builder.Services.AddSingleton(new TaxYearConfigLoader(taxYears));
 
 // The web app runs on its own origin next to the API (ADR-0010, web/README.md).
 var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
-builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.WithOrigins(origins).WithMethods("GET", "POST").WithHeaders("Content-Type", "Accept")));
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.WithOrigins(origins).WithMethods("GET", "POST").WithHeaders("Content-Type", "Accept", ApiKey.Header)));
 
 var app = builder.Build();
 
@@ -42,6 +45,7 @@ app.UseExceptionHandler(new ExceptionHandlerOptions
 });
 app.UseStatusCodePages();
 app.UseCors();
+app.UseApiKey();
 
 if (app.Environment.IsDevelopment())
 {
@@ -50,8 +54,10 @@ if (app.Environment.IsDevelopment())
 
 var api = app.MapGroup("/api/v1");
 api.MapGet("/health/live", () => TypedResults.NoContent()).WithName("live").WithTags("health");
-api.MapTaxYears();
-api.MapSetAside();
+
+var locked = api.MapGroup("").RequireApiKey();
+locked.MapTaxYears();
+locked.MapSetAside();
 
 app.Run();
 

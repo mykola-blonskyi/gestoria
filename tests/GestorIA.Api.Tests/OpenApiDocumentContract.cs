@@ -2,14 +2,13 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Json.Schema;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GestorIA.Api.Tests;
 
 // The request schema is written from C# types that the endpoint never binds (SetAsideInputDocument), and the response schema
 // from the types it serializes. These tests hold the committed document to what the API actually accepts and answers, so the
 // web types generated from it cannot promise a shape the API does not keep.
-public class OpenApiDocumentContract(WebApplicationFactory<Program> api) : IClassFixture<WebApplicationFactory<Program>>
+public class OpenApiDocumentContract(ApiFactory api) : IClassFixture<ApiFactory>
 {
     private readonly HttpClient client = api.CreateClient();
 
@@ -50,9 +49,30 @@ public class OpenApiDocumentContract(WebApplicationFactory<Program> api) : IClas
         input["asOf"] = "Q5";
         var invalid = await (await client.Estimate(2025, input)).Json();
         var gap = await (await client.Estimate(1999, RepoFiles.GoldenInput("G14"))).Json();
+        var unauthorized = await (await api.CreateClientWithoutKey().GetAsync("/api/v1/config/tax-years")).Json();
 
         AssertValid("HttpValidationProblemDetails", invalid);
         AssertValid("ProblemDetails", gap);
+        AssertValid("ProblemDetails", unauthorized);
+    }
+
+    [Fact]
+    public void EveryOperationButTheHealthChecksDeclaresTheApiKeyAndItsRefusal()
+    {
+        var document = JsonNode.Parse(File.ReadAllText(RepoFiles.OpenApiDocument))!;
+        var scheme = document["components"]!["securitySchemes"]!["apiKey"]!;
+
+        Assert.Equal(("apiKey", "header", ApiKey.Header), (scheme["type"]!.GetValue<string>(), scheme["in"]!.GetValue<string>(), scheme["name"]!.GetValue<string>()));
+        foreach (var (path, methods) in document["paths"]!.AsObject())
+        {
+            var open = path.StartsWith("/api/v1/health/", StringComparison.Ordinal);
+            foreach (var (method, operation) in methods!.AsObject())
+            {
+                var secured = operation!["security"]?.AsArray().Any(requirement => requirement!["apiKey"] is not null) ?? false;
+                Assert.True(secured != open, $"{method} {path}: security declared {secured}");
+                Assert.True(operation["responses"]!["401"] is null == open, $"{method} {path}: 401 documented {!open}");
+            }
+        }
     }
 
     [Fact]

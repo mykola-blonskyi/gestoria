@@ -12,6 +12,7 @@ public static class Problems
     public const string ConfigGap = Base + "config-gap";
     public const string EstimateRefused = Base + "estimate-refused";
     public const string TaxYearNotFound = Base + "tax-year-not-found";
+    public const string ApiKeyRequired = Base + "api-key-required";
 
     // 400 with the ValidationProblemDetails "errors" member, keyed by the JSON path of the offending value.
     public static ValidationProblem Invalid(string path, string message) =>
@@ -28,4 +29,8 @@ public static class Problems
     // 422: an input the parser accepts but the engine cannot estimate, such as actuals out of order.
     public static ProblemHttpResult Refused(string reason) =>
         TypedResults.Problem(reason, statusCode: StatusCodes.Status422UnprocessableEntity, title: "The engine cannot estimate this input", type: EstimateRefused);
+
+    // 401: no key, more than one, or not the configured one. The answer does not say which.
+    public static ProblemHttpResult Unauthorized() =>
+        TypedResults.Problem($"Send the local API key in the {ApiKey.Header} header.", statusCode: StatusCodes.Status401Unauthorized, title: "The request needs the local API key", type: ApiKeyRequired);
 }

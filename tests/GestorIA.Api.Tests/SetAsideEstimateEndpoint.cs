@@ -1,10 +1,9 @@
 using System.Net;
 using System.Text.Json.Nodes;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GestorIA.Api.Tests;
 
-public class SetAsideEstimateEndpoint(WebApplicationFactory<Program> api) : IClassFixture<WebApplicationFactory<Program>>
+public class SetAsideEstimateEndpoint(ApiFactory api) : IClassFixture<ApiFactory>
 {
     private readonly HttpClient client = api.CreateClient();
 

@@ -1,13 +1,12 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GestorIA.Api.Tests;
 
 // The web dashboard's tests stub the API with these files, so each must be the API's own answer, not a hand-written guess.
 // After a change to an answer or its shape, run these tests with GESTORIA_WRITE_WEB_FIXTURES=1 to rewrite the files.
-public class WebFixtures(WebApplicationFactory<Program> api) : IClassFixture<WebApplicationFactory<Program>>
+public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
 {
     private readonly HttpClient client = api.CreateClient();
 

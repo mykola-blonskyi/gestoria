@@ -12,9 +12,10 @@ Versioned (`/api/v1`), JSON, OpenAPI 3.1 generated from code, problem+json error
 - `GET /api/v1/health/live` answers 204.
 - `GET /api/v1/config/tax-years` and `GET /api/v1/config/tax-years/{year}`: each year's `configHash`, usable regions and declared gaps (SPEC-007 §3), read through `TaxYearConfigLoader` from the files copied next to the binary (`TaxYears:Directory` overrides). An unknown year is a 404.
 - `POST /api/v1/set-aside/estimate?taxYear=YYYY`: the body is the console's input file byte for byte (`src/GestorIA.Cli/README.md`), parsed by the console's own parser, so both refuse the same inputs. The answer is `SetAsideResult` with money as two-decimal strings, the hold-back share as its exact decimal fraction, the trace in the engine's order and the notices.
-- Problem types (`src/GestorIA.Api/Problems.cs`): `invalid-input` (400, `errors` keyed by the JSON path of the refused value, or `taxYear` for a missing or malformed year), `config-gap` (422: no file for the year, or a value the file lacks or declares unpublished), `estimate-refused` (422: an input only the engine can judge, such as actuals out of order), `tax-year-not-found` (404).
+- Problem types (`src/GestorIA.Api/Problems.cs`): `invalid-input` (400, `errors` keyed by the JSON path of the refused value, or `taxYear` for a missing or malformed year), `config-gap` (422: no file for the year, or a value the file lacks or declares unpublished), `estimate-refused` (422: an input only the engine can judge, such as actuals out of order), `tax-year-not-found` (404), `api-key-required` (401: no key, more than one, or the wrong one, without saying which).
 - The OpenAPI 3.1 document is generated at build time into `src/GestorIA.Api/openapi/v1.json` and committed. CI fails when it is stale, and oasdiff fails a pull request that breaks the base branch's document (§5). `tests/GestorIA.Api.Tests` validates every set-aside golden's input and every answer against it.
-- CORS allows the web app's origin (`Cors:Origins`). No auth yet: the API key of §3 is its own ticket.
+- CORS allows the web app's origin (`Cors:Origins`) and its `X-Api-Key` header.
+- The local API key of §3 (#68): every endpoint but the health checks answers `401` problem+json `api-key-required` without it.
 
 ## 2. Resources
 
@@ -39,6 +40,12 @@ Versioned (`/api/v1`), JSON, OpenAPI 3.1 generated from code, problem+json error
 
 ## 3. Auth
 v1 local mode: single user, API key in header. OIDC (Authorization Code + PKCE) behind a feature flag for hosted mode; all resources scoped to the authenticated user.
+
+Local mode as built (#68, `src/GestorIA.Api/ApiKey.cs`):
+- The client sends the key in `X-Api-Key`. The OpenAPI document declares it as the `apiKey` security scheme on every operation but the health checks, which stay open so a client can tell "not running" from "locked".
+- Configuration holds only the key's SHA-256 (SPEC-013 §2), as `Auth:ApiKeySha256`: user secrets on a development machine, the `Auth__ApiKeySha256` environment variable elsewhere, never a file in the repository. The API refuses to start without a usable hash, including the hash of an empty key.
+- The presented key is hashed and compared with `CryptographicOperations.FixedTimeEquals`, so the comparison takes the same time however much of it matches.
+- The check runs as middleware after routing and before parameter binding, on endpoints mapped in the locked route group; a request without the key does no other work. Nothing logs the key: `ApiKeyNotLogged` captures every log category at Trace while the key is used, mistyped and left out.
 
 ## 4. Errors
 `400` validation (field errors), `404`, `409` (document already confirmed), `422` (calculation cannot run: missing config/region, unconfirmed required docs — body lists blockers), `503` (OCR unavailable — upload accepted and queued anyway).
