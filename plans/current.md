@@ -23,7 +23,8 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - [ ] Fill `modelo130.lines`, `modelo303.lines` and `modelo349` before the Q1 2027 forms
 - [ ] Confirm ROI/VIES is on the Modelo 036 filed in January; without it, EU invoices carry Spanish IVA they should not
 - [ ] Master key escrow and a rehearsed MinIO restore, before the first real document is uploaded (ADR-0015)
-- [ ] Start `config/tax-years/2026.json` and `2027.json`. Both are release blockers; BOE publishes 2027 around December 2026
+- [x] `config/tax-years/2026.json` with 2026 law and `boe` provenance for every value (#47). Declared gaps, refused rather than computed: the tarifa plana amount (no LPGE 2026), the renta window and 2027 días inhábiles (Q4 Modelo 130 and renta deadlines), the Modelo 100 casillas
+- [ ] `config/tax-years/2027.json` (#12), a release blocker; BOE publishes 2027 around December 2026. Ley 5/2026 GV D.T. 3.ª already sets the 2027 VC scale
 - [x] Write `config/tax-years/schema.json` (SPEC-007), validated in CI: schema plus cross-field rules in C# and mutation tests that prove both run (#4)
 - [x] Run the same validation at startup, from the typed loader (#14). Schema and cross-field rules moved into `GestorIA.Infrastructure`; `TaxYearConfigParser` refuses a file that fails either
 - [x] Add projects: `src/GestorIA.Engine`, `tests/GestorIA.Engine.Tests`; register in `GestorIA.slnx` (#17). `src/GestorIA.Application` is not created yet and has no caller
@@ -61,6 +62,6 @@ Build order follows deadlines (ADR-0014). The author registers as an autónomo i
 - Estimates assume ~15–20 h/week while learning C#; re-plan after Phase 1 exit.
 - `2025.json` values must be re-verified against the AEAT Manual before goldens are trusted.
 - The existing `Transaction` model (signed amount ⇒ income/expense) conflicts with SPEC-001 ledger design; migrate rather than extend. It survives only as the parser's output type.
-- The first production config is `2026.json`, which does not exist yet and cannot until BOE publishes the 2026 values. `2025.json` is the test corpus.
+- The first production config is `2026.json` (#47). Its gaps close as the norms land: the 2027 días inhábiles around December 2026, the renta window and casillas around March 2027, the tarifa plana amount whenever a norm fixes it. `2025.json` is the test corpus.
 - ~28 weeks to 20 April 2027, when Modelo 130, Modelo 303 and Renta 2026 all come due, against a 31-week plan that only Phase 4 has been cut from. Re-estimate before trusting any milestone date.
 - Whether Modelo 130 is required at all is unknown until the client mix is settled (SPEC-003 §1). If ≥ 70 % of activity income carries retención, it is not required, and one of the three April filings disappears.

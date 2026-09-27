@@ -70,6 +70,9 @@ internal static partial class TaxYearRules
             if (region!["_todo"] is null) { holidayLists.Add(($"/regions/{code}/holidays", region["holidays"]!)); }
         }
 
+        // calendar._todo declares the year after the tax year unpublished (#47): its holidays need not be listed yet.
+        var calendarPending = root["calendar"]!["_todo"] is not null;
+
         // DistinctBy keeps the first element for each key, like lodash's uniqBy: one failure per list and year, not per window.
         var lastDays = Windows(root["calendar"]!)
             .Select(w => (w.Pointer, End: TaxYearConfigParser.ParseDay(w.Window[1]!.Read<string>())))
@@ -77,6 +80,8 @@ internal static partial class TaxYearRules
 
         foreach (var (pointer, end) in lastDays)
         {
+            if (calendarPending && end.YearOffset > 0) { continue; }
+
             foreach (var (listPointer, list) in holidayLists)
             {
                 if (!list.AsArray().Any(day => TaxYearConfigParser.ParseDay(day!.Read<string>()).YearOffset == end.YearOffset))

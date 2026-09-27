@@ -111,6 +111,37 @@ public class TaxYearValidationRejectsBadFiles
         ["minoracion band with a misspelled property"] =
             (r => Rename(r["modelo130"]!["minoracion"]![0]!.AsObject(), "amountPerQuarter", "amountPerQuater"),
              "/modelo130/minoracion/0"),
+
+        // SPEC-007 §2, §3 (#47): calendar._todo declares the year after the tax year unpublished. The provenance entry
+        // is removed too, or the dangling-pointer rule (a provenance pointer at a JSON null counts as dangling) would
+        // catch this mutation instead of the rule under test.
+        ["renta null without a calendar _todo"] =
+            (r =>
+            {
+                r["calendar"]!["renta"] = null;
+                r["provenance"]!.AsObject().Remove("/calendar/renta");
+            }, "/calendar/renta"),
+
+        ["casillas _todo misspelled, which is not an allowed key"] =
+            (r => r["casillas"]!["_tood"] = "not a real todo note", "/casillas"),
+
+        ["national holidays of the tax year itself missing under a calendar _todo"] =
+            (r =>
+            {
+                r["calendar"]!["_todo"] = "2027 días inhábiles not yet published";
+                r["calendar"]!["renta"] = null;
+                r["provenance"]!.AsObject().Remove("/calendar/renta");
+                RemoveNextYear(r["calendar"]!["holidays"]!.AsArray());
+                RemoveTaxYear(r["calendar"]!["holidays"]!.AsArray());
+            }, "/calendar/holidays"),
+
+        // A tarifaPlana._todo and its null amount go together: a null with no note is a silent gap, a note beside an
+        // amount leaves the engine computing with a figure the file itself calls unpublished.
+        ["tarifa plana amount null without a _todo"] =
+            (r => r["seguridadSocial"]!["tarifaPlana"]!["amount"] = null, "/seguridadSocial/tarifaPlana/amount"),
+
+        ["tarifa plana _todo beside an amount"] =
+            (r => r["seguridadSocial"]!["tarifaPlana"]!["_todo"] = "amount not yet published", "/seguridadSocial/tarifaPlana/amount"),
     };
 
     public static TheoryData<string> Names()
@@ -120,11 +151,15 @@ public class TaxYearValidationRejectsBadFiles
         return data;
     }
 
+    // Pinned to Example2025: the mutations assume its shape (a renta window, an 80 € tarifa plana), and TaxYearConfigFiles.All()
+    // lists the files in no guaranteed order.
+    private static string ExamplePath() => Path.Combine(TaxYearConfigFiles.Root(), TaxYearConfigFiles.Example2025);
+
     [Theory]
     [MemberData(nameof(Names))]
     public void MutatedFileIsRejectedWithAMessageNamingThePath(string name)
     {
-        var path = TaxYearConfigFiles.All().First();
+        var path = ExamplePath();
         var root = JsonNode.Parse(File.ReadAllText(path))!;
         var (apply, pointer) = Mutations[name];
 
@@ -142,7 +177,7 @@ public class TaxYearValidationRejectsBadFiles
     [Fact]
     public void TheUnmutatedFileIsAccepted()
     {
-        var path = TaxYearConfigFiles.All().First();
+        var path = ExamplePath();
         var root = JsonNode.Parse(File.ReadAllText(path))!;
 
         Assert.Empty(TaxYearConfigValidator.Validate(root, Path.GetFileName(path)));
@@ -178,6 +213,14 @@ public class TaxYearValidationRejectsBadFiles
     private static void RemoveNextYear(JsonArray days)
     {
         foreach (var day in days.Where(d => d!.GetValue<string>().StartsWith("+1-", StringComparison.Ordinal)).ToList())
+        {
+            days.Remove(day);
+        }
+    }
+
+    private static void RemoveTaxYear(JsonArray days)
+    {
+        foreach (var day in days.Where(d => !d!.GetValue<string>().StartsWith("+1-", StringComparison.Ordinal)).ToList())
         {
             days.Remove(day);
         }

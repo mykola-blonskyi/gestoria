@@ -93,11 +93,12 @@ public static class TaxYearConfigParser
                     new MinoracionBand(MoneyOf(band!["prevYearNetUpTo"]), MoneyOf(band["amountPerQuarter"])))]),
             new SeguridadSocialConfig(
                 new TramoTable([.. seguridadSocial["tramos"]!.AsArray().Select(TramoOf)]),
-                new TarifaPlana(MoneyOf(tarifaPlana["amount"]), tarifaPlana["months"]!.Read<int>())),
+                new TarifaPlana(OptionalMoneyOf(tarifaPlana["amount"]), tarifaPlana["months"]!.Read<int>(), tarifaPlana["_todo"]?.Read<string>())),
             new TaxCalendar(
-                [.. calendar["modelo130"]!.AsArray().Select(window => WindowOf(window, taxYear))],
+                [.. calendar["modelo130"]!.AsArray().Select(window => WindowOf(window, taxYear)!)],
                 WindowOf(calendar["renta"], taxYear),
-                HolidaysOf(calendar["holidays"], taxYear)),
+                HolidaysOf(calendar["holidays"], taxYear),
+                calendar["_todo"]?.Read<string>()),
             ProvenanceOf(root["provenance"]!.AsObject()));
     }
 
@@ -176,8 +177,9 @@ public static class TaxYearConfigParser
     private static CalendarDay[] HolidaysOf(JsonNode? holidays, int taxYear) =>
         [.. holidays!.AsArray().Select(day => DayIn(day, taxYear))];
 
-    private static CalendarWindow WindowOf(JsonNode? window, int taxYear) =>
-        new(DayIn(window![0], taxYear), DayIn(window[1], taxYear));
+    // null only for calendar.renta, and only when calendar._todo declares the following year's window unpublished.
+    private static CalendarWindow? WindowOf(JsonNode? window, int taxYear) =>
+        window is null ? null : new(DayIn(window[0], taxYear), DayIn(window[1], taxYear));
 
     // The schema's calendarDay pattern admits 02-30, and 02-29 exists only in some years.
     private static CalendarDay DayIn(JsonNode? token, int taxYear)

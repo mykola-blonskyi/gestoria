@@ -49,7 +49,9 @@ public static class MonthlyCuotaCalculator
 
         var monthsInForce = tarifaPlana.LastMonth(input.Alta).MonthsSince(altaMonth);
         var tarifaPlanaInForce = monthsSinceAlta <= monthsInForce;
-        var fullMonth = tarifaPlanaInForce ? tarifaPlana.Amount.Amount : tramo.CuotaMin.Amount;
+        var fullMonth = !tarifaPlanaInForce ? tramo.CuotaMin.Amount
+            : tarifaPlana.Amount?.Amount ?? throw new ConfigNotFoundException(Invariant(
+                $"seguridadSocial.tarifaPlana.amount, the cuota for {input.Month} under tarifa plana, is declared incomplete in this configuration: {tarifaPlana.DeclaredIncomplete}"));
 
         steps.Add(new TraceStep(
             "ss.tarifa-plana",
@@ -57,7 +59,7 @@ public static class MonthlyCuotaCalculator
             tarifaPlanaInForce ? "Tarifa plana en vigor" : "Tarifa plana agotada",
             [new("alta", Invariant($"{input.Alta:yyyy-MM-dd}")), new("month", input.Month.ToString()), new("tarifaPlanaMonths", Invariant($"{monthsInForce}"))],
             tarifaPlanaInForce
-                ? Invariant($"months since alta {monthsSinceAlta} <= {monthsInForce} → {tarifaPlana.Amount.Amount}")
+                ? Invariant($"months since alta {monthsSinceAlta} <= {monthsInForce} → {fullMonth}")
                 : Invariant($"months since alta {monthsSinceAlta} > {monthsInForce} → tramo cuota {tramo.CuotaMin.Amount}"),
             new TraceValue.Money(new Money(fullMonth)),
             "Ley 20/2007 art. 38 ter.1: the alta month plus the complete calendar months after it, eleven when the alta is on the 1st (itself a complete calendar month) and twelve otherwise, per Seguridad Social's own reading of the benefit as the first 12 months of alta (portal.seg-social.gob.es)"));

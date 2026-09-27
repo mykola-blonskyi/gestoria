@@ -666,13 +666,37 @@
           }
         },
         "renta": {
-          "$ref": "#/$defs/window"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/window"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "holidays": {
           "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/calendarDay"
+          }
+        },
+        "_todo": {
+          "$ref": "#/$defs/todoNote"
+        }
+      },
+      "if": {
+        "not": {
+          "required": [
+            "_todo"
+          ]
+        }
+      },
+      "then": {
+        "properties": {
+          "renta": {
+            "type": "array"
           }
         }
       }
@@ -681,7 +705,12 @@
       "type": "object",
       "minProperties": 1,
       "propertyNames": {
-        "pattern": "^[0-9]{4}$"
+        "pattern": "^([0-9]{4}|_todo)$"
+      },
+      "properties": {
+        "_todo": {
+          "$ref": "#/$defs/todoNote"
+        }
       },
       "additionalProperties": {
         "type": "string",
@@ -714,7 +743,14 @@
           ],
           "properties": {
             "amount": {
-              "$ref": "#/$defs/money"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/money"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "months": {
               "$ref": "#/$defs/years"
@@ -728,6 +764,30 @@
                 "null"
               ],
               "exclusiveMinimum": 0
+            },
+            "_todo": {
+              "$ref": "#/$defs/todoNote"
+            }
+          },
+          "if": {
+            "not": {
+              "required": [
+                "_todo"
+              ]
+            }
+          },
+          "then": {
+            "properties": {
+              "amount": {
+                "type": "number"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "amount": {
+                "type": "null"
+              }
             }
           }
         },

@@ -1,0 +1,167 @@
+{
+  "taxYear": 2026,
+  "schemaVersion": 1,
+  "sources": [
+    { "ref": "Ley 35/2006 (LIRPF), texto consolidado, arts. 19, 20, 23, 30, 32, 49, 52, 57–60, 63, 66, 76, 84, 85 y 96 (versiones en vigor en 2026)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764" },
+    { "ref": "Real Decreto 439/2007 (RIRPF), texto consolidado, arts. 10, 14, 30, 95, 109, 110 y 111", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820" },
+    { "ref": "Orden de 27 de marzo de 1998, tabla de amortización simplificada (texto consolidado, sin modificaciones)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1998-7200" },
+    { "ref": "Orden EHA/672/2007, art. 7 (plazos del modelo 130)", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032" },
+    { "ref": "Ley 13/1997 de la Generalitat Valenciana (tramo autonómico del IRPF), texto consolidado actualizado el 18/09/2026, arts. 2 y 2 bis", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1998-8202" },
+    { "ref": "Ley 5/2026, de 31 de julio, de la Generalitat, de medidas fiscales, art. 18 (escala autonómica 2026); DOGV 10425 de 10/08/2026", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-19331" },
+    { "ref": "Ley 37/1992 (IVA), texto consolidado, arts. 90 y 91", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+    { "ref": "Real Decreto-ley 3/2026, de 3 de febrero, art. 3 (bases y tope máximo de cotización hasta la LPGE)", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-2548" },
+    { "ref": "Orden PJC/297/2026, de 30 de marzo, arts. 18 y 37 (bases y tipos RETA 2026)", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-7296" },
+    { "ref": "Ley 20/2007 (Estatuto del Trabajo Autónomo), art. 38 ter, texto consolidado; RDL 13/2022 D.T. 5.ª", "url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-13409" },
+    { "ref": "Resolución de 18 de noviembre de 2025 de la Secretaría de Estado de Función Pública, calendario de días inhábiles 2026", "url": "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-23702" }
+  ],
+  "irpf": {
+    "escalaEstatal": [
+      { "upTo": 12450, "rate": 0.095 },
+      { "upTo": 20200, "rate": 0.12 },
+      { "upTo": 35200, "rate": 0.15 },
+      { "upTo": 60000, "rate": 0.185 },
+      { "upTo": 300000, "rate": 0.225 },
+      { "upTo": null, "rate": 0.245 }
+    ],
+    "escalaAhorro": {
+      "combined": [
+        { "upTo": 6000, "rate": 0.19 },
+        { "upTo": 50000, "rate": 0.21 },
+        { "upTo": 200000, "rate": 0.23 },
+        { "upTo": 300000, "rate": 0.27 },
+        { "upTo": null, "rate": 0.30 }
+      ],
+      "estatalShare": 0.5
+    },
+    "minimos": {
+      "contribuyente": 5550, "mayor65": 1150, "mayor75": 1400,
+      "descendientes": [2400, 2700, 4000, 4500], "menor3": 2800,
+      "ascendiente": 1150, "ascendiente75": 1400,
+      "discapacidad33": 3000, "discapacidad65": 9000, "asistencia": 3000,
+      "descendienteIncomeCap": 8000, "descendienteAgeCap": 25
+    },
+    "trabajo": {
+      "otrosGastos": 2000, "movilidadExtra": 2000, "discapacidadExtra": 3500, "discapacidadExtra65": 7750,
+      "unionFeeCap": 500,
+      "reduccion": { "fixed": 7302, "t1": 14852, "t2": 17673.52, "t3": 19747.50, "k1": 1.75, "k2": 1.14, "otherIncomeCap": 6500 }
+    },
+    "actividad": {
+      "dificilJustificacion": { "pct": 0.05, "max": 2000 },
+      "inicioActividad": { "pct": 0.20, "maxRendimiento": 100000, "formerEmployerShare": 0.50 },
+      "homeUtilitiesFactor": 0.30,
+      "retencionProfesional": 0.15, "retencionNuevo": 0.07, "retencionNuevoYears": 3,
+      "depreciation": { "equipos": 4, "software": 4, "mobiliario": 10 }
+    },
+    "ahorro": { "lossOffsetPct": 0.25, "carryForwardYears": 4 },
+    "inmuebles": { "imputacionPct": 0.02, "imputacionPctRevisado": 0.011, "rentalReductionPct": 0.50, "depreciationPct": 0.03 },
+    "reducciones": { "planPensionesCap": 1500, "conjuntaBiparental": 3400, "conjuntaMonoparental": 2150 },
+    "obligacion": { "unPagador": 22000, "variosPagadores": 15876, "segundoPagadorMin": 1500, "ahorroCap": 1600, "imputadasCap": 1000 }
+  },
+  "regions": {
+    "VC": {
+      "name": "Comunitat Valenciana",
+      "escalaAutonomica": [
+        { "upTo": 12000, "rate": 0.088 },
+        { "upTo": 22000, "rate": 0.117 },
+        { "upTo": 32000, "rate": 0.146 },
+        { "upTo": 42000, "rate": 0.17 },
+        { "upTo": 52000, "rate": 0.194 },
+        { "upTo": 62000, "rate": 0.219 },
+        { "upTo": 72000, "rate": 0.244 },
+        { "upTo": 100000, "rate": 0.261 },
+        { "upTo": 150000, "rate": 0.2735 },
+        { "upTo": 200000, "rate": 0.2835 },
+        { "upTo": null, "rate": 0.2935 }
+      ],
+      "minimosOverride": {
+        "contribuyente": 6105, "mayor65": 1265, "mayor75": 1540,
+        "descendientes": [2640, 2970, 4400, 4950], "menor3": 3080,
+        "ascendiente": 1265, "ascendiente75": 1540,
+        "discapacidad33": 3300, "discapacidad65": 9900, "asistencia": 3300
+      },
+      "holidays": ["03-19", "04-06", "06-24", "10-09"]
+    }
+  },
+  "modelo130": {
+    "rate": 0.20, "retencionExemptionShare": 0.70, "mortgageRate": 0.02, "mortgageCap": 660.14,
+    "minoracion": [
+      { "prevYearNetUpTo": 9000, "amountPerQuarter": 100 },
+      { "prevYearNetUpTo": 10000, "amountPerQuarter": 75 },
+      { "prevYearNetUpTo": 11000, "amountPerQuarter": 50 },
+      { "prevYearNetUpTo": 12000, "amountPerQuarter": 25 }
+    ],
+    "lines": {},
+    "_todo": "line numbers for the Modelo 130 form; minoracion is filled"
+  },
+  "modelo303": { "lines": {}, "_todo": "line numbers" },
+  "iva": { "rates": { "general": 0.21, "reducido": 0.10, "superreducido": 0.04 } },
+  "seguridadSocial": {
+    "tramos": [
+      { "name": "Reducida 1", "netFrom": 0, "netUpTo": 670, "baseMin": 653.59, "baseMax": 718.94, "cuotaMin": 205.88, "cuotaMinKind": "exact" },
+      { "name": "Reducida 2", "netFrom": 670, "netUpTo": 900, "baseMin": 718.95, "baseMax": 900.00, "cuotaMin": 226.47, "cuotaMinKind": "exact" },
+      { "name": "Reducida 3", "netFrom": 900, "netUpTo": 1166.70, "baseMin": 849.67, "baseMax": 1166.70, "cuotaMin": 267.65, "cuotaMinKind": "exact" },
+      { "name": "General 1", "netFrom": 1166.70, "netUpTo": 1300, "baseMin": 950.98, "baseMax": 1300.00, "cuotaMin": 299.56, "cuotaMinKind": "exact" },
+      { "name": "General 2", "netFrom": 1300, "netUpTo": 1500, "baseMin": 960.78, "baseMax": 1500.00, "cuotaMin": 302.65, "cuotaMinKind": "exact" },
+      { "name": "General 3", "netFrom": 1500, "netUpTo": 1700, "baseMin": 960.78, "baseMax": 1700.00, "cuotaMin": 302.65, "cuotaMinKind": "exact" },
+      { "name": "General 4", "netFrom": 1700, "netUpTo": 1850, "baseMin": 1143.79, "baseMax": 1850.00, "cuotaMin": 360.29, "cuotaMinKind": "exact" },
+      { "name": "General 5", "netFrom": 1850, "netUpTo": 2030, "baseMin": 1209.15, "baseMax": 2030.00, "cuotaMin": 380.88, "cuotaMinKind": "exact" },
+      { "name": "General 6", "netFrom": 2030, "netUpTo": 2330, "baseMin": 1274.51, "baseMax": 2330.00, "cuotaMin": 401.47, "cuotaMinKind": "exact" },
+      { "name": "General 7", "netFrom": 2330, "netUpTo": 2760, "baseMin": 1356.21, "baseMax": 2760.00, "cuotaMin": 427.21, "cuotaMinKind": "exact" },
+      { "name": "General 8", "netFrom": 2760, "netUpTo": 3190, "baseMin": 1437.91, "baseMax": 3190.00, "cuotaMin": 452.94, "cuotaMinKind": "exact" },
+      { "name": "General 9", "netFrom": 3190, "netUpTo": 3620, "baseMin": 1519.61, "baseMax": 3620.00, "cuotaMin": 478.68, "cuotaMinKind": "exact" },
+      { "name": "General 10", "netFrom": 3620, "netUpTo": 4050, "baseMin": 1601.31, "baseMax": 4050.00, "cuotaMin": 504.41, "cuotaMinKind": "exact" },
+      { "name": "General 11", "netFrom": 4050, "netUpTo": 6000, "baseMin": 1732.03, "baseMax": 5101.20, "cuotaMin": 545.59, "cuotaMinKind": "exact" },
+      { "name": "General 12", "netFrom": 6000, "netUpTo": null, "baseMin": 1928.10, "baseMax": 5101.20, "cuotaMin": 607.35, "cuotaMinKind": "exact" }
+    ],
+    "tarifaPlana": {
+      "amount": null, "months": 12, "extensionMonths": 12, "extensionNetIncomeCap": null,
+      "_todo": "amount for months of 2026: Ley 20/2007 art. 38 ter.1 leaves it to the Ley de Presupuestos Generales del Estado, RDL 13/2022 D.T. 5.ª fixed 80 € for 2023–2025 only, neither RDL 3/2026 nor Orden PJC/297/2026 sets it, and no LPGE 2026 exists (checked 2026-09-27)"
+    }
+  },
+  "calendar": {
+    "modelo130": [["04-01", "04-20"], ["07-01", "07-20"], ["10-01", "10-20"], ["+1-01-01", "+1-01-30"]],
+    "renta": null,
+    "holidays": ["01-01", "01-06", "04-03", "05-01", "10-12", "12-08", "12-25"],
+    "_todo": "unpublished as of 2026-09-27: the renta window for tax year 2026 (the Orden HAC approving Modelo 100, expected March 2027) and the 2027 días inhábiles (the Secretaría de Estado de Función Pública resolución, expected November–December 2026)"
+  },
+  "casillas": {
+    "_todo": "the Modelo 100 casillas for tax year 2026 are fixed by the Orden HAC approving the Renta 2026 model, expected March 2027"
+  },
+  "deducciones": [],
+  "provenance": {
+    "/irpf/escalaEstatal":          { "kind": "boe", "ref": "LIRPF art. 63.1.1.º, redacción Ley 11/2020 en vigor desde 2021-01-01; no later version in the consolidated text", "verified": "2026-09-27" },
+    "/irpf/escalaAhorro":           { "kind": "boe", "ref": "LIRPF art. 66.1 (estatal) and art. 76 (autonómica), each 9,5 / 10,5 / 11,5 / 13,5 / 15 %, redacción Ley 7/2024 D.F. 7.ª con efectos desde 2025-01-01; combined is their sum, estatalShare one half", "verified": "2026-09-27" },
+    "/irpf/minimos":                { "kind": "boe", "ref": "LIRPF art. 57 (contribuyente, mayor65, mayor75), art. 58.1–2 (descendientes, menor3, descendienteIncomeCap, descendienteAgeCap), art. 59 (ascendiente, ascendiente75), art. 60.1–2 (discapacidad33, discapacidad65, asistencia), redacción Ley 26/2014 en vigor desde 2015-01-01; no later version", "verified": "2026-09-27" },
+    "/irpf/trabajo":                { "kind": "boe", "ref": "LIRPF art. 19.2.f (otrosGastos, movilidadExtra, discapacidadExtra, discapacidadExtra65), redacción Ley 26/2014; unionFeeCap is RIRPF art. 10, whose 500 € cap applies to colegio profesional fees only, union dues being deductible without cap (#49)", "verified": "2026-09-27" },
+    "/irpf/trabajo/reduccion":      { "kind": "boe", "ref": "LIRPF art. 20, redacción RDL 4/2024 art. 3.1 con efectos desde 2024-01-01; no later version", "verified": "2026-09-27" },
+    "/irpf/actividad/dificilJustificacion": { "kind": "boe", "ref": "RIRPF art. 30, regla 2.ª (RD 633/2015); LIRPF D.A. 64.ª raises it to 10 % in 2026 for Ceuta only", "verified": "2026-09-27" },
+    "/irpf/actividad/inicioActividad": { "kind": "boe", "ref": "LIRPF art. 32.3, párrafos primero, cuarto y quinto (apartado 3 unchanged since Ley 11/2013; article version en vigor desde 2023-01-01)", "verified": "2026-09-27" },
+    "/irpf/actividad/homeUtilitiesFactor": { "kind": "boe", "ref": "LIRPF art. 30.2.5.ª.b, redacción Ley 6/2017 en vigor desde 2018-01-01", "verified": "2026-09-27" },
+    "/irpf/actividad/retencionProfesional": { "kind": "boe", "ref": "RIRPF art. 95.1, párrafo primero (versión en vigor desde 2023-01-26)", "verified": "2026-09-27" },
+    "/irpf/actividad/retencionNuevo": { "kind": "boe", "ref": "RIRPF art. 95.1, párrafo segundo: 7 % in the year the activity starts and the two following", "verified": "2026-09-27" },
+    "/irpf/actividad/retencionNuevoYears": { "kind": "boe", "ref": "RIRPF art. 95.1, párrafo segundo: the year the activity starts and the two following", "verified": "2026-09-27" },
+    "/irpf/actividad/depreciation": { "kind": "boe", "ref": "Orden de 27 de marzo de 1998, tabla de amortización simplificada (RIRPF art. 30, regla 1.ª): grupo 5 equipos para tratamiento de la información y sistemas y programas informáticos 26 %, grupo 2 mobiliario 10 %; each value is the fewest whole years that stay within the coeficiente lineal máximo (100 / 26 = 3.85 → 4)", "verified": "2026-09-27" },
+    "/irpf/ahorro":                 { "kind": "boe", "ref": "LIRPF art. 49.1.a–b (25 %, cuatro años), redacción Ley 26/2014; no later version", "verified": "2026-09-27" },
+    "/irpf/inmuebles/imputacionPct": { "kind": "boe", "ref": "LIRPF art. 85.1, párrafo primero: 2 % general", "verified": "2026-09-27" },
+    "/irpf/inmuebles/imputacionPctRevisado": { "kind": "boe", "ref": "LIRPF art. 85.1, párrafo segundo: 1,1 % where the valores catastrales were revised in the last ten periods", "verified": "2026-09-27" },
+    "/irpf/inmuebles/rentalReductionPct": { "kind": "boe", "ref": "LIRPF art. 23.2.d: 50 % en cualquier otro caso (redacción Ley 12/2023 en vigor desde 2024-01-01)", "verified": "2026-09-27" },
+    "/irpf/inmuebles/depreciationPct": { "kind": "boe", "ref": "RIRPF art. 14.2.a: 3 %", "verified": "2026-09-27" },
+    "/irpf/reducciones/planPensionesCap": { "kind": "boe", "ref": "LIRPF art. 52.1.b, redacción Ley 31/2022 en vigor desde 2023-01-01", "verified": "2026-09-27" },
+    "/irpf/reducciones/conjuntaBiparental": { "kind": "boe", "ref": "LIRPF art. 84.2.3.º", "verified": "2026-09-27" },
+    "/irpf/reducciones/conjuntaMonoparental": { "kind": "boe", "ref": "LIRPF art. 84.2.4.º", "verified": "2026-09-27" },
+    "/irpf/obligacion":             { "kind": "boe", "ref": "LIRPF art. 96.2.a–c and 96.3.a.1.º, versión en vigor desde 2025-01-23 (BOE-A-2025-1136); no later version", "verified": "2026-09-27" },
+    "/regions/VC/escalaAutonomica": { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2, redacción del art. 18 de la Ley 5/2026 de la Generalitat (BOE-A-2026-19331), con efectos para los hechos imponibles devengados desde 2026-01-01; its D.T. 3.ª sets another scale from 2027", "verified": "2026-09-27" },
+    "/regions/VC/minimosOverride":  { "kind": "boe", "ref": "Ley 13/1997 (CV) art. 2 bis.1 (contribuyente, mayor65, mayor75), 2 bis.2 (descendientes, menor3), 2 bis.3 (ascendiente, ascendiente75), 2 bis.4 (discapacidad33, discapacidad65, asistencia), añadido por el Decreto-ley 14/2022; consolidated text updated 2026-09-18 with no later version", "verified": "2026-09-27" },
+    "/regions/VC/holidays":         { "kind": "boe", "ref": "Días inhábiles de la Comunitat Valenciana beyond the national ones, Monday to Friday: Resolución de 18 de noviembre de 2025 (BOE-A-2025-23702), anexo", "verified": "2026-09-27" },
+    "/modelo130/rate":              { "kind": "boe", "ref": "RIRPF art. 110.1.a", "verified": "2026-09-27" },
+    "/modelo130/retencionExemptionShare": { "kind": "boe", "ref": "RIRPF art. 109.2", "verified": "2026-09-27" },
+    "/modelo130/mortgageRate":      { "kind": "boe", "ref": "RIRPF art. 110.3.d.1.º; it also requires rendimientos íntegros previsibles under 33.007,20 € and the LIRPF D.T. 18.ª deducción por vivienda, which this file does not carry (#49)", "verified": "2026-09-27" },
+    "/modelo130/mortgageCap":       { "kind": "boe", "ref": "RIRPF art. 110.3.d.1.º: 660,14 € por trimestre", "verified": "2026-09-27" },
+    "/modelo130/minoracion":        { "kind": "boe", "ref": "RIRPF art. 110.3.c (RD 1003/2014)", "verified": "2026-09-27" },
+    "/iva/rates":                   { "kind": "boe", "ref": "Ley 37/1992 art. 90.uno (21 %, versión en vigor desde 2012-07-15) and art. 91.uno and dos (10 %, 4 %, versión en vigor desde 2024-12-22)", "verified": "2026-09-27" },
+    "/seguridadSocial/tramos":      { "kind": "boe", "ref": "Orden PJC/297/2026 art. 18.1 (bases, per RDL 3/2026 art. 3); art. 18.2 and 37.5–37.6 (tipos: 28,30 % + 1,30 % + 0,90 % cese + 0,10 % FP + 0,90 % MEI = 31,50 %). cuotaMin is baseMin × 31,50 % rounded half up to the cent, the method that reproduces all fifteen 2025 values; rounding each component separately differs by one cent on Reducida 3 (267,66), General 4 (360,28) and General 7 (427,22), and which one TGSS applies in 2026 is unverified", "verified": "2026-09-27" },
+    "/seguridadSocial/tarifaPlana": { "kind": "boe", "ref": "Ley 20/2007 art. 38 ter.1 (months) and 38 ter.2 (extensionMonths); extensionNetIncomeCap stays null because 38 ter.2 ties it to the SMI anual of the extension period, which for an alta in 2026 runs into years whose SMI is not fixed (SPEC-007 §2)", "verified": "2026-09-27" },
+    "/calendar/modelo130":          { "kind": "boe", "ref": "RIRPF art. 111.1; Orden EHA/672/2007 art. 7", "verified": "2026-09-27" },
+    "/calendar/holidays":           { "kind": "boe", "ref": "Días inhábiles en todo el territorio nacional that fall Monday to Friday: Resolución de 18 de noviembre de 2025 de la Secretaría de Estado de Función Pública (BOE-A-2025-23702), anexo", "verified": "2026-09-27" }
+  }
+}
