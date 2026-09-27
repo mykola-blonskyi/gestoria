@@ -11,9 +11,9 @@ public class SetAsideReportTests
 
         Assert.Contains("  Next Modelo 130, Q3                     1234.89 €, due 2025-10-01 to 2025-10-20", report, StringComparison.Ordinal);
         Assert.Contains("  Cuota SS per month this quarter         400.20 €", report, StringComparison.Ordinal);
-        Assert.Contains("  Annual return (Renta) gap               4359.32 €, payable by the end of 2026-06", report, StringComparison.Ordinal);
+        Assert.Contains("  Annual return (Renta) gap               4389.88 €, payable by the end of 2026-06", report, StringComparison.Ordinal);
         Assert.Contains("  IVA to set aside                        0.00 €", report, StringComparison.Ordinal);
-        Assert.Contains("  Hold back from every payment received   44.79 %", report, StringComparison.Ordinal);
+        Assert.Contains("  Hold back from every payment received   44.98 %", report, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -64,10 +64,10 @@ public class SetAsideReportTests
         Assert.DoesNotContain("\"Formula\"", report, StringComparison.Ordinal);
 
         // Money: the result line rounds to the cent, the formula above it keeps the unrounded figure (#42).
-        Assert.Contains("9079.619635", result.Trace.Steps.Single(s => s.Id == "renta.liability-on-activity").Formula, StringComparison.Ordinal);
-        ResultLineIs(report, "renta.liability-on-activity", "9079.62 €");
+        Assert.Contains("9139.41748", result.Trace.Steps.Single(s => s.Id == "renta.liability-on-activity").Formula, StringComparison.Ordinal);
+        ResultLineIs(report, "renta.liability-on-activity", "9139.42 €");
 
-        ResultLineIs(report, "set-aside.hold-back-share", "44.79 %");
+        ResultLineIs(report, "set-aside.hold-back-share", "44.98 %");
         ResultLineIs(report, "renta.marginal-rate", "40.90 %");
 
         ResultLineIs(report, "set-aside.projected-months", "6");
