@@ -90,6 +90,8 @@ public class OpenApiDocumentContract(ApiFactory api) : IClassFixture<ApiFactory>
         var conflict = await (await client.PostProfile(RepoFiles.GoldenProfile("G16"))).Json();
         var notFound = await (await client.GetAsync($"/api/v1/profiles/{Guid.NewGuid()}")).Json();
         var invalid = await (await client.PutProfile(id, new JsonObject { ["taxYear"] = 2025 })).Json();
+        var export = await (await client.GetAsync($"/api/v1/profiles/{id}/export")).Json();
+        var noDelete = await (await client.DeleteAsync($"/api/v1/profiles/{Guid.NewGuid()}")).Json();
 
         AssertValid("ProfileView", profile);
         Assert.All(list, item => AssertValid("ProfileView", item!));
@@ -97,6 +99,8 @@ public class OpenApiDocumentContract(ApiFactory api) : IClassFixture<ApiFactory>
         AssertValid("ProblemDetails", conflict);
         AssertValid("ProblemDetails", notFound);
         AssertValid("HttpValidationProblemDetails", invalid);
+        AssertValid("ProfileExport", export);
+        AssertValid("ProblemDetails", noDelete);
     }
 
     [Fact]

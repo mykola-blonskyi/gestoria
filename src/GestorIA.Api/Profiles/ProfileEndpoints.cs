@@ -1,3 +1,4 @@
+using System.Globalization;
 using GestorIA.Api.SetAside;
 using GestorIA.Engine;
 using GestorIA.Infrastructure.Persistence;
@@ -41,6 +42,16 @@ public static class ProfileEndpoints
             .WithName("replaceProfile")
             .WithSummary("Replaces a stored profile with the one in the body.")
             .Accepts<ProfileInputDocument>("application/json")
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        profiles.MapDelete("/{id:guid}", Delete)
+            .WithName("deleteProfile")
+            .WithSummary("Deletes the profile and everything stored for it. Nothing is kept: export it first to keep a copy.")
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        profiles.MapGet("/{id:guid}/export", Export)
+            .WithName("exportProfile")
+            .WithSummary("Everything stored for the profile, in one versioned document (SPEC-009 §2.1). Personal financial data: sent with Cache-Control: no-store.")
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         profiles.MapGet("/{id:guid}/set-aside/estimate", Estimate)
@@ -122,6 +133,29 @@ public static class ProfileEndpoints
 
         await db.SaveChangesAsync(cancellationToken);
         return TypedResults.Ok(View(row));
+    }
+
+    // The rows that belong to the profile go with it through their foreign keys' ON DELETE CASCADE, in the same statement.
+    // ProfileDeletion enumerates every table of the model to prove it, so a table added without the cascade fails that test.
+    private static async Task<Results<NoContent, ProblemHttpResult>> Delete(Guid id, GestoriaDbContext db, CancellationToken cancellationToken) =>
+        await db.Profiles.Where(p => p.Id == id).ExecuteDeleteAsync(cancellationToken) == 0
+            ? Problems.NoProfile(id)
+            : TypedResults.NoContent();
+
+    private static async Task<Results<Ok<ProfileExport>, ProblemHttpResult>> Export(
+        Guid id, HttpResponse response, GestoriaDbContext db, CancellationToken cancellationToken)
+    {
+        if (await db.Profiles.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken) is not { } row)
+        {
+            return Problems.NoProfile(id);
+        }
+
+        var exportedAt = DateTimeOffset.UtcNow;
+        // No shared cache or browser cache may keep a copy of personal financial data (SPEC-013). The file name says what the
+        // file is and when it was made, and nothing about whose it is.
+        response.Headers.CacheControl = "no-store";
+        response.Headers.ContentDisposition = string.Create(CultureInfo.InvariantCulture, $"attachment; filename=\"gestoria-export-{exportedAt:yyyy-MM-dd}.json\"");
+        return TypedResults.Ok(ProfileExport.Of(View(row), exportedAt));
     }
 
     private static async Task<Results<Ok<SetAsideEstimate>, ValidationProblem, ProblemHttpResult>> Estimate(

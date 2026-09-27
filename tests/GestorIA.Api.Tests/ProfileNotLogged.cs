@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 namespace GestorIA.Api.Tests;
 
 // SPEC-013 §2: nothing about the profile reaches a log. Every category is captured at Trace, EF Core's SQL included, while a
-// profile is created, refused, read, replaced and estimated. No line may hold one of its amounts, and none may look like a NIF
+// profile is created, refused, read, replaced, estimated, exported and deleted. No line may hold one of its amounts, and none may look like a NIF
 // or an IBAN, the identifiers the ledger will add.
 public partial class ProfileNotLogged
 {
@@ -32,6 +32,8 @@ public partial class ProfileNotLogged
         await client.GetAsync($"/api/v1/profiles/{id}");
         await client.GetAsync("/api/v1/profiles");
         await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q3");
+        await client.GetAsync($"/api/v1/profiles/{id}/export");
+        await client.DeleteAsync($"/api/v1/profiles/{id}");
 
         Assert.NotEmpty(api.Lines);
         Assert.Contains(api.Lines, line => line.Contains("Profiles", StringComparison.Ordinal));

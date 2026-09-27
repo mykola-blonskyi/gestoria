@@ -12,6 +12,9 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
     // A stored profile's id is new on every run; the fixture carries this one in its place.
     private const string FixtureId = "00000000-0000-0000-0000-000000000069";
 
+    // An export's time is new on every run too.
+    private const string FixtureExportedAt = "2026-09-28T09:00:00+00:00";
+
     private readonly HttpClient client = api.CreateClient();
 
     [Fact]
@@ -39,6 +42,7 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
         var fixtureIds = ids.Select((movement, index) => (movement, $"00000000-0000-0000-0072-{index + 1:D12}")).Append((id, FixtureId)).ToList();
         await AssertFixture("g12-transactions-2025.json", year, fixtureIds);
         await AssertFixture("g12-transactions-2025-q1.json", await client.GetAsync($"/api/v1/profiles/{id}/transactions?year=2025&quarter=Q1"), fixtureIds);
+        await AssertFixture("g12-export.json", await client.GetAsync($"/api/v1/profiles/{id}/export"), fixtureIds);
     }
 
     [Fact]
@@ -50,7 +54,13 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
     private static async Task AssertFixture(string name, HttpResponseMessage response, IEnumerable<(string Id, string FixtureId)>? ids = null)
     {
         var text = (ids ?? []).Aggregate(await response.Content.ReadAsStringAsync(), (answer, id) => answer.Replace(id.Id, id.FixtureId, StringComparison.Ordinal));
-        AssertFixture(name, JsonNode.Parse(text)!);
+        var answer = JsonNode.Parse(text)!;
+        if (answer is JsonObject export && export.ContainsKey("exportedAt"))
+        {
+            export["exportedAt"] = FixtureExportedAt;
+        }
+
+        AssertFixture(name, answer);
     }
 
     internal static void AssertFixture(string name, JsonNode answer)
