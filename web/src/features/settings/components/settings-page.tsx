@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { PageHeader } from "@/shared/ui/page-header";
 
+import { ProfileSection } from "./profile-section";
+
 export function SettingsPage() {
   const t = useTranslations("Settings");
 
@@ -23,7 +25,10 @@ export function SettingsPage() {
           <LanguageToggle />
         </CardContent>
       </Card>
-      <EmptyState points={[t("points.profile"), t("points.data")]} pending={t("pending")} />
+      <div className="mb-6">
+        <ProfileSection />
+      </div>
+      <EmptyState points={[t("points.data")]} pending={t("pending")} />
     </>
   );
 }

@@ -1,7 +1,8 @@
-import { useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
-import { estimateSetAsideMutation } from "@/data/set-aside";
+import { profileEstimateQuery } from "@/data/profiles";
+import type { Quarter } from "@/data/set-aside";
 
-export function useSetAsideEstimate() {
-  return useMutation(estimateSetAsideMutation());
+export function useSetAsideEstimate(profileId: string, asOf: Quarter) {
+  return useQuery(profileEstimateQuery(profileId, asOf));
 }
