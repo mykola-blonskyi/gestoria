@@ -160,7 +160,6 @@ public static class SetAsideEstimator
         var cuotas = activeMonths
             .Select(month => (Month: month, Result: MonthlyCuotaCalculator.Cuota(new MonthlyCuotaInput(alta, computable, month, baseCotizacion), seguridadSocial)))
             .ToList();
-        var closedCuotas = cuotas.Where(c => c.Month.Month <= actualThrough).ToList();
         var projectedCuotas = cuotas.Where(c => c.Month.Month > actualThrough).ToList();
 
         steps.Add(new TraceStep(
@@ -226,38 +225,36 @@ public static class SetAsideEstimator
                 + "of the month of alta, in the quarter's highest month. So an alta late in the quarter shows what TGSS debits every month from the next one, not the prorated first charge, "
                 + "and a quarter in which tarifa plana lapses shows the cuota after it"));
 
-        var floorToDate = closedCuotas.Sum(c => c.Result.Floor);
-        var ceilingToDate = closedCuotas.Sum(c => c.Result.Ceiling);
-        var closedKept = Math.Clamp(paidToDate.Amount, floorToDate, ceilingToDate);
-        var projectedKept = projectedCuotas.Sum(c => c.Result.Kept);
-        var annualTgss = new Money(closedKept + projectedKept);
-        var closedFormula = last is null ? "no closed quarter → 0"
-            : Invariant($"paid {Show(paidToDate)} between {floorToDate} at the base mínima and {ceilingToDate} at the base máxima → ")
-                + (paidToDate.Amount < floorToDate ? Invariant($"topped up to {floorToDate}")
-                    : paidToDate.Amount > ceilingToDate ? Invariant($"refunded down to {ceilingToDate}")
-                    : Invariant($"{Show(paidToDate)} stands"));
-        var projectedFormula = projectedCount == 0 ? "no projected month → 0"
-            : Invariant($"projected, debited {Show(projectedDebits)}, kept {string.Join(" + ", projectedCuotas.Select(c => Invariant($"{c.Month} {c.Result.Kept}")))} = {projectedKept}");
+        var debitedYear = paidToDate + projectedDebits;
+        var floorYear = cuotas.Sum(c => c.Result.Floor);
+        var ceilingYear = cuotas.Sum(c => c.Result.Ceiling);
+
+        // Math.Clamp(value, min, max) is Math.min(Math.max(value, min), max) in TypeScript.
+        var annualTgss = new Money(Math.Clamp(debitedYear.Amount, floorYear, ceilingYear));
         steps.Add(new TraceStep(
             "set-aside.cuota-ss-year",
             TraceSection.SeguridadSocial,
             "Cuotas SS del ejercicio",
             [
                 new("cuotasSsPagadas", Show(paidToDate)),
-                new("cuotasSsHastaHoyBaseMinima", Invariant($"{floorToDate}")),
-                new("cuotasSsHastaHoyBaseMaxima", Invariant($"{ceilingToDate}")),
-                new("baseCotizacion", Show(baseCotizacion)),
-                new("cuotaBaseCotizacion", Invariant($"{cuotaAtBase}")),
                 new("cuotasSsProyectadas", Show(projectedDebits)),
+                new("cuotasSsBaseMinima", Invariant($"{floorYear}")),
+                new("cuotasSsBaseMaxima", Invariant($"{ceilingYear}")),
                 new("meses", Invariant($"{n}")),
             ],
-            Invariant($"{closedFormula}; {projectedFormula}; {closedKept} + {projectedKept} = {Show(annualTgss)}"),
+            Invariant($"debited {Show(paidToDate)} paid + {Show(projectedDebits)} projected = {Show(debitedYear)}, between {floorYear} at the base mínima and {ceilingYear} at the base máxima → ")
+                + (debitedYear.Amount < floorYear ? Invariant($"topped up to {floorYear}")
+                    : debitedYear.Amount > ceilingYear ? Invariant($"refunded down to {ceilingYear}")
+                    : Invariant($"{Show(debitedYear)} stands")),
             new TraceValue.Money(annualTgss),
-            "What TGSS keeps for the year. LGSS art. 308.1.c 3.ª and 4.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): once the year's rendimientos are known, "
-                + "a cotización below the cuota at the base mínima of their tramo is topped up to it, one above the cuota at its base máxima is refunded down to it, and one between stands. "
-                + "So TGSS keeps what was debited clamped between those two cuotas, tarifa plana months as debited (Ley 20/2007 art. 38 ter.6). "
-                + "For the closed months the clamp is taken over their total, since only the total paid is stated, an approximation when the base changed during them; "
-                + "for the projected months it is taken month by month"));
+            "What TGSS keeps for the year. LGSS art. 308.1.c 3.ª–4.ª (boe.es consolidated RDL 8/2015, read 2026-09-27) and RD 2064/1995 art. 46.2 (boe.es "
+                + "BOE-A-1996-1579, version in force from 2024-08-01, read 2026-09-27): regla 3.ª sums the provisional bases of all the year's months less the "
+                + "tarifa plana days (1.ª), divides by those days and multiplies by 30; regla 5.ª compares that one average with the tramo's base mínima and base "
+                + "máxima. Between them nothing moves; below or above, TGSS reclaims or refunds the total of the differences between each month's base and the base "
+                + "mínima or máxima, at the period's tipo (7.ª). A whole month counts 30 days, as art. 45.1 prorates the cuota, so the average lies below the base "
+                + "mínima exactly when the year's debits total less than the cuotas at it: TGSS keeps the debits of the closed and projected months together, "
+                + "clamped between the cuotas at the two bases summed over the months. Tarifa plana months enter all three sums at their debit, so they stay as "
+                + "debited (Ley 20/2007 art. 38 ter.6). Clamping cuotas rather than bases can differ from TGSS by the rounding of each month's cuota, a few cents over the year"));
 
         var lastTarifaPlanaMonth = tarifaPlana.LastMonth(alta);
         var monthsInForce = lastTarifaPlanaMonth.MonthsSince(altaMonth);

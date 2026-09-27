@@ -8,13 +8,10 @@ namespace GestorIA.Engine;
 public sealed record MonthlyCuotaInput(DateOnly Alta, decimal AnnualRendimientoComputable, YearMonth Month, Money BaseCotizacion);
 
 // Cuota is what TGSS debits for the month, tarifa plana while it lasts and otherwise the cuota at the chosen base, and
-// FullMonthCuota the same before the month of alta is prorated. Floor and Ceiling are what TGSS keeps for the month at least
-// and at most once the year's rendimientos are known (LGSS art. 308.1.c 3.ª–4.ª), prorated as the debit is.
-public sealed record MonthlyCuotaResult(decimal Cuota, decimal FullMonthCuota, decimal Floor, decimal Ceiling, CalculationTrace Trace, IReadOnlyList<Warning> Warnings)
-{
-    // Math.Clamp(value, min, max) is Math.min(Math.max(value, min), max) in TypeScript.
-    public decimal Kept => Math.Clamp(Cuota, Floor, Ceiling);
-}
+// FullMonthCuota the same before the month of alta is prorated. Floor and Ceiling are the month's cuotas at the tramo's base
+// mínima and base máxima, prorated as the debit is, and the debit itself under tarifa plana. TGSS regularises the year, not
+// the month: it keeps the year's debits clamped between the sums of Floor and of Ceiling (RD 2064/1995 art. 46.2 3.ª and 5.ª).
+public sealed record MonthlyCuotaResult(decimal Cuota, decimal FullMonthCuota, decimal Floor, decimal Ceiling, CalculationTrace Trace, IReadOnlyList<Warning> Warnings);
 
 public static class MonthlyCuotaCalculator
 {
@@ -74,21 +71,24 @@ public static class MonthlyCuotaCalculator
 
         var floor = tramo.CuotaMin.Amount;
         var ceiling = config.CuotaAt(tramo.BaseMax);
-        var kept = Math.Clamp(chosen, floor, ceiling);
-        var bounds = Invariant($"base mínima {tramo.BaseMin.Amount} → {floor}, base máxima {tramo.BaseMax.Amount} × {tipo} = {ceiling}; ");
 
         steps.Add(new TraceStep(
             "ss.regularizacion",
             TraceSection.SeguridadSocial,
-            "Cuota que TGSS mantiene al regularizar",
+            "Cuota máxima que TGSS mantiene del mes al regularizar el año",
             [new("cuotaBaseCotizacion", Invariant($"{chosen}")), new("baseMinima", Invariant($"{tramo.BaseMin.Amount}")), new("baseMaxima", Invariant($"{tramo.BaseMax.Amount}"))],
-            bounds + (chosen < floor ? Invariant($"{chosen} < {floor} → topped up to {floor}")
-                : chosen > ceiling ? Invariant($"{chosen} > {ceiling} → refunded down to {ceiling}")
-                : Invariant($"{floor} <= {chosen} <= {ceiling} → {chosen}, neither topped up nor refunded")),
-            new TraceValue.Money(new Money(kept)),
-            "LGSS art. 308.1.c 3.ª–4.ª (boe.es consolidated RDL 8/2015, read 2026-09-27): once the year's rendimientos are known, a cotización below the cuota at the "
-                + "tramo's base mínima is topped up to it, one above the cuota at its base máxima is refunded down to it, and one between stands. The top-up is paid, "
-                + "and the refund made, in a later year. Config seguridadSocial.tramos, cuotaMin being the cuota at the base mínima"));
+            debit.TarifaPlanaInForce
+                ? Invariant($"tarifa plana → not regularised: TGSS keeps the {debit.FullMonth} debited, at least and at most")
+                : Invariant($"base mínima {tramo.BaseMin.Amount} → {floor}, base máxima {tramo.BaseMax.Amount} × {tipo} = {ceiling}; ")
+                    + Invariant($"the {chosen} debited is regularised with the year's other months, on their average base"),
+            new TraceValue.Money(new Money(debit.TarifaPlanaInForce ? debit.FullMonth : ceiling)),
+            "LGSS art. 308.1.c 3.ª–4.ª (boe.es consolidated RDL 8/2015, read 2026-09-27) and RD 2064/1995 art. 46.2 (boe.es BOE-A-1996-1579, "
+                + "version in force from 2024-08-01, read 2026-09-27): regla 3.ª averages the provisional bases of the year's months and regla 5.ª compares that one "
+                + "average with the tramo's base mínima and base máxima. Only if it falls outside them does TGSS reclaim or refund, the total of the differences "
+                + "between each month's base and the base mínima or máxima, so no month is topped up or refunded on its own. Here the month's cuotas at those two "
+                + "bases, which the year's regularisation sums; 5.ª d prorates them in a month of partial alta. Tarifa plana days are left out of the regularisation "
+                + "(art. 46.1 and 46.2 1.ª, Ley 20/2007 art. 38 ter.6), so such a month counts at its debit. The top-up is paid, and the refund made, in a later year. "
+                + "Config seguridadSocial.tramos, cuotaMin being the cuota at the base mínima"));
 
         steps.Add(new TraceStep(
             "ss.tarifa-plana",

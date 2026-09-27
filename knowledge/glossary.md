@@ -33,7 +33,7 @@ Code identifiers keep the Spanish term (see `docs/CONVENTIONS.md`). Full glossar
 | **Estimación directa simplificada** | the autónomo regime supported in v1 | scope |
 | **Tarifa plana** | reduced flat cuota for new autónomos | `seguridadSocial.tarifaPlana` |
 | **Base de cotización** | the monthly contribution base the autónomo chooses in Import@ss and changes as the forecast moves; TGSS debits it × the tipo | `ActivityProjection.BaseCotizacion`, `seguridadSocial.tipoCotizacion` |
-| **Regularización** | annual SS true-up by real income: what was debited is topped up to the cuota at the tramo's base mínima or refunded down to the one at its base máxima | explanations (`SS_REGULARIZACION_AHEAD`), `MonthlyCuotaResult.Floor`/`Ceiling` |
+| **Regularización** | annual SS true-up by real income: when the year's average base falls below the tramo's base mínima or above its base máxima, the year's debits are topped up or refunded to the cuotas at that base (RD 2064/1995 art. 46.2) | explanations (`SS_REGULARIZACION_AHEAD`), `MonthlyCuotaResult.Floor`/`Ceiling` |
 | **Casilla** | numbered field of a form | SPEC-008 |
 | **Borrador / datos fiscales** | AEAT draft / pre-filled data | `DatosFiscales` document type |
 | **Modelo 036/037** | autónomo registration form | `AutonomoRegistration` |
