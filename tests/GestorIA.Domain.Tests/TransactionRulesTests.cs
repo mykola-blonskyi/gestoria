@@ -15,8 +15,6 @@ public class TransactionRulesTests
         Shipped.Classify(decided, description, new Money(amount));
 
     [Theory]
-    [InlineData("CUOTA AUTONOMOS TGSS", -87.61, TransactionClass.SocialSecurity, "tgss")]
-    [InlineData("RECIBO SEGURIDAD SOCIAL REG.ESP.AUTONOMOS", -87.61, TransactionClass.SocialSecurity, "tgss")]
     [InlineData("PAGO MODELO 130 1T AEAT", -312.88, TransactionClass.AeatPayment, "aeat")]
     [InlineData("SUPERMERCADO FICTICIO", -47.16, TransactionClass.Personal, "personal")]
     [InlineData("COMPRA DIA SUPER", -12.00, TransactionClass.Personal, "personal")]
@@ -30,10 +28,14 @@ public class TransactionRulesTests
         Assert.Equal(new Classification.Confirmed(expected, rule), Classify(description, amount));
     }
 
-    // Money coming in could be activity income, so a rule may only suggest what a credit is (business rule 2): a client named
-    // Hacienda Los Olivos is a client.
+    // Money coming in could be activity income, and a class that counts moves the estimate, so a rule may only suggest either
+    // (business rule 2): a client named Hacienda Los Olivos is a client, and a TGSS receipt may be a domestic employee's.
     [Theory]
     [InlineData("GITHUB INC SAN FRANCISCO", -4.00, TransactionClass.DeductibleExpense, "vendors")]
+    [InlineData("CUOTA AUTONOMOS TGSS", -87.61, TransactionClass.SocialSecurity, "tgss")]
+    [InlineData("RECIBO SEGURIDAD SOCIAL REG.ESP.AUTONOMOS", -87.61, TransactionClass.SocialSecurity, "tgss")]
+    [InlineData("RECIBO TGSS EMPLEADA HOGAR", -190.00, TransactionClass.SocialSecurity, "tgss")]
+    [InlineData("TGSS RECARGO APREMIO", -20.00, TransactionClass.SocialSecurity, "tgss")]
     [InlineData("Nómina marzo", 1500.00, TransactionClass.EmploymentIncome, "nomina")]
     [InlineData("ABONO NOMINA", 1500.00, TransactionClass.EmploymentIncome, "nomina")]
     [InlineData("ABONO INTERESES CUENTA", 0.43, TransactionClass.SavingsIncome, "savings")]
@@ -41,15 +43,19 @@ public class TransactionRulesTests
     [InlineData("ABONO DIVIDEND ETF", 12.30, TransactionClass.SavingsIncome, "savings")]
     [InlineData("DEVOLUCION AEAT IRPF", 300.00, TransactionClass.AeatPayment, "aeat-credit")]
     [InlineData("TRANSF HACIENDA LOS OLIVOS SL FRA 12", 1200.00, TransactionClass.AeatPayment, "aeat-credit")]
-    public void ARuleOnlySuggestsAVendorAndEveryCredit(string description, decimal amount, TransactionClass expected, string rule)
+    public void ARuleOnlySuggestsAClassThatCountsAndEveryCredit(string description, decimal amount, TransactionClass expected, string rule)
     {
         Assert.Equal(new Classification.Suggested(expected, rule), Classify(description, amount));
     }
 
     [Fact]
-    public void NoShippedRuleConfirmsACredit()
+    public void NoShippedRuleConfirmsACreditOrAClassThatCounts()
     {
-        Assert.All(Shipped.Rules.Where(rule => rule.Certain), rule => Assert.Equal(RuleDirection.Debit, rule.Direction));
+        Assert.All(Shipped.Rules.Where(rule => rule.Certain), rule =>
+        {
+            Assert.Equal(RuleDirection.Debit, rule.Direction);
+            Assert.False(LedgerActuals.Counts(rule.Class), rule.Id);
+        });
     }
 
     [Theory]
@@ -65,6 +71,7 @@ public class TransactionRulesTests
     [InlineData("ABONO NOMINAL CLIENTE", 700.00)]
     [InlineData("AMORT VALOR NOMINAL BONO", 1000.00)]
     [InlineData("PAGO AEATX CONSULTING", -50.00)]
+    [InlineData("CUOTA AUTONOMICA COLEGIO", -60.00)]
     public void NoRuleMatchesInsideAWordOrAgainstItsDirection(string description, decimal amount)
     {
         Assert.Equal(new Classification.Unclear(), Classify(description, amount));
@@ -83,7 +90,7 @@ public class TransactionRulesTests
     [Fact]
     public void TheFirstMatchingRuleWins()
     {
-        Assert.Equal(new Classification.Confirmed(TransactionClass.SocialSecurity, "tgss"), Classify("HACIENDA Y TGSS", -10.00m));
+        Assert.Equal(new Classification.Suggested(TransactionClass.SocialSecurity, "tgss"), Classify("HACIENDA Y TGSS", -10.00m));
     }
 
     [Fact]
@@ -116,9 +123,9 @@ public class TransactionRulesTests
         TransactionClass? queue = null;
         Assert.Equal(
             [
-                queue, TransactionClass.SocialSecurity, TransactionClass.Personal, TransactionClass.Personal, queue, queue, queue,
+                queue, queue, TransactionClass.Personal, TransactionClass.Personal, queue, queue, queue,
                 queue, queue, TransactionClass.AeatPayment, TransactionClass.Personal, queue, queue, queue,
-                TransactionClass.SocialSecurity, queue, TransactionClass.Personal, queue,
+                queue, queue, TransactionClass.Personal, queue,
             ],
             classes);
     }
@@ -132,6 +139,9 @@ public class TransactionRulesTests
         { Rule("r", patterns: "[\"..\"]"), "rule \"r\": patterns" },
         { Rule("r", direction: "credit"), "rule \"r\" is certain for money coming in" },
         { Rule("r", direction: "any"), "rule \"r\" is certain for money coming in" },
+        { Rule("r", transactionClass: "socialSecurity"), "rule \"r\" is certain for socialSecurity, a class whose money enters the estimate" },
+        { Rule("r", transactionClass: "activityIncome"), "rule \"r\" is certain for activityIncome, a class whose money enters the estimate" },
+        { Rule("r", transactionClass: "deductibleExpense"), "rule \"r\" is certain for deductibleExpense, a class whose money enters the estimate" },
         { Rule(""), "rule 1 has no id" },
     };
 

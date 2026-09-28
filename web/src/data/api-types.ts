@@ -381,7 +381,7 @@ export interface components {
             /** Format: int32 */
             lineNumber: number;
             lineKey: string;
-            class: null | components["schemas"]["TransactionClass"];
+            class?: null | components["schemas"]["TransactionClass"];
         };
         ExportedEntities: {
             profiles: components["schemas"]["ProfileView"][];

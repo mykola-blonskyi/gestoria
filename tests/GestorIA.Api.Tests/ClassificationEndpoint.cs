@@ -15,10 +15,11 @@ public class ClassificationEndpoint
     private const string InvalidInput = "https://gestoria.local/problems/invalid-input";
 
     // The synthetic statement's lines no certain rule classifies (tests/fixtures/bank), in the transactions list's order. The
-    // interest is money coming in, so its rule only suggests.
+    // interest is money coming in and a TGSS cuota enters the estimate, so their rules only suggest.
     private static readonly string[] Queue =
     [
         "TRANSFERENCIA RECIBIDA CLIENTE SINTETICO UNO",
+        "CUOTA AUTONOMOS TGSS",
         "COMPRA SUSCRIPCION SOFTWARE EJEMPLO",
         "RECIBO LUZ; FEBRERO",
         "TRANSFERENCIA A ES12 9999 0000 1111 2222 3333",
@@ -27,6 +28,7 @@ public class ClassificationEndpoint
         "COMISION MANTENIMIENTO",
         "TRANSFERENCIA RECIBIDA CLIENTE SINTETICO UNO",
         "LIBRERIA TECNICA INVENTADA",
+        "CUOTA AUTONOMOS TGSS",
         "DEVOLUCION COMPRA",
         "ABONO INTERESES CUENTA",
     ];
@@ -45,9 +47,13 @@ public class ClassificationEndpoint
         var first = queue[0]!.AsObject();
         Assert.Equal(["id", "bookingDate", "valueDate", "description", "amount", "suggestion"], first.Select(member => member.Key));
         Assert.Equal(("2025-01-02", "2025-01-02", "2345.67"), (first["bookingDate"]!.GetValue<string>(), first["valueDate"]!.GetValue<string>(), first["amount"]!.GetValue<string>()));
-        var interest = new JsonObject { ["class"] = "savingsIncome", ["ruleId"] = "savings" };
-        Assert.All(queue, item => Assert.True(
-            item!["description"]!.GetValue<string>() == "ABONO INTERESES CUENTA" ? JsonNode.DeepEquals(interest, item["suggestion"]) : item["suggestion"] is null));
+        JsonNode? Suggestion(string description) => description switch
+        {
+            "ABONO INTERESES CUENTA" => new JsonObject { ["class"] = "savingsIncome", ["ruleId"] = "savings" },
+            "CUOTA AUTONOMOS TGSS" => new JsonObject { ["class"] = "socialSecurity", ["ruleId"] = "tgss" },
+            _ => null,
+        };
+        Assert.All(queue, item => Assert.True(JsonNode.DeepEquals(Suggestion(item!["description"]!.GetValue<string>()), item["suggestion"])));
     }
 
     [Fact]
@@ -262,6 +268,28 @@ public class ClassificationEndpoint
         var fromFile = await (await client.Estimate(2025, File("Q2", new JsonArray(Actual("Q1", "2345.67", "87.61"), Actual("Q2", "5422.21", "87.61")), "15000.00", "600.00"))).Json();
         var ledgerSteps = reviewed["trace"]!.AsArray().Count(step => step!["id"]!.GetValue<string>().StartsWith("ledger.", StringComparison.Ordinal));
         Assert.True(JsonNode.DeepEquals(EngineOnly(fromFile, 0), EngineOnly(reviewed, ledgerSteps)), reviewed.ToJsonString());
+    }
+
+    // A TGSS receipt may be a domestic employee's, whose cuota is no expense of the activity: it is only suggested, holds Q2 on
+    // the projection, and classified as personal leaves the reviewed estimate as it was.
+    [Fact]
+    public async Task ATgssDebitIsOnlySuggestedAndCountsOnlyWhenTheUserSaysSo()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var (id, _) = await ClassifiedG12(client);
+        var before = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n05/05/2025;05/05/2025;RECIBO TGSS EMPLEADA HOGAR;-190,00;\n"));
+
+        var receipt = Assert.Single(await client.ReviewQueue(id))!;
+        Assert.True(JsonNode.DeepEquals(new JsonObject { ["class"] = "socialSecurity", ["ruleId"] = "tgss" }, receipt["suggestion"]));
+        var waiting = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+        Assert.Equal("Q1", waiting["ledger"]!["actualsThrough"]!.GetValue<string>());
+
+        await client.ClassifyAs(receipt["id"]!.GetValue<string>(), "personal");
+        var reviewed = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+        Assert.Equal(before["nextPayment"]!.ToJsonString(), reviewed["nextPayment"]!.ToJsonString());
+        Assert.Equal(before["holdBackShare"]!.GetValue<string>(), reviewed["holdBackShare"]!.GetValue<string>());
     }
 
     // 10 August 2025: Q1 and Q2 are closed, Q3 is not, so the actuals end with Q2 and the projection keeps six of its twelve months.

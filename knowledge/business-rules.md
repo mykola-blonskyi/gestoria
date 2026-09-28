@@ -14,7 +14,7 @@ Until documents can be stored (SPEC-005), no expense can be linked, so none coun
 
 Extracted fields below the confidence threshold, and any `UNCLEAR` transaction, require explicit user confirmation. The engine only ever sees confirmed rows. — SPEC-005 §4.8, SPEC-001 §5.
 
-A bank line is confirmed by the user or by a rule marked `certain` in `config/transaction-rules.json`, and only a debit rule may be certain: no money coming in is confirmed without the user, since it could be activity income. A suggested or unclear line waits in the review queue and counts nowhere; its quarter is not taken as actuals until it is reviewed, since unknown income is not zero income (SPEC-004 §3, #73).
+A bank line is confirmed by the user or by a rule marked `certain` in `config/transaction-rules.json`, and only a debit rule into a class whose money enters no figure of the estimate may be certain: no credit, and no activity income, RETA cuota or deductible expense, is confirmed without the user. A suggested or unclear line waits in the review queue and counts nowhere; its quarter is not taken as actuals until it is reviewed, since unknown income is not zero income (SPEC-004 §3, #73).
 
 ## Rule 3 — Devengo (accrual) attribution by default
 

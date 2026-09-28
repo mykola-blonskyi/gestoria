@@ -8,6 +8,17 @@
     "suggestion": null
   },
   {
+    "id": "00000000-0000-0000-0072-000000000002",
+    "bookingDate": "2025-01-03",
+    "valueDate": "2025-01-03",
+    "description": "CUOTA AUTONOMOS TGSS",
+    "amount": "-87.61",
+    "suggestion": {
+      "class": "socialSecurity",
+      "ruleId": "tgss"
+    }
+  },
+  {
     "id": "00000000-0000-0000-0072-000000000005",
     "bookingDate": "2025-01-20",
     "valueDate": "2025-01-20",
@@ -73,6 +84,17 @@
     "description": "LIBRERIA TECNICA INVENTADA",
     "amount": "-39.90",
     "suggestion": null
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000015",
+    "bookingDate": "2025-09-30",
+    "valueDate": "2025-09-30",
+    "description": "CUOTA AUTONOMOS TGSS",
+    "amount": "-87.61",
+    "suggestion": {
+      "class": "socialSecurity",
+      "ruleId": "tgss"
+    }
   },
   {
     "id": "00000000-0000-0000-0072-000000000016",

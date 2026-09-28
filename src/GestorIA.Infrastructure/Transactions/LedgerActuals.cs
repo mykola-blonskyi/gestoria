@@ -23,6 +23,26 @@ public sealed record LedgerEstimate(SetAsideInput Input, IReadOnlyList<TraceStep
 // movements awaits review.
 public static class LedgerActuals
 {
+    // What a confirmed movement of each class does to the actuals, and so the one list of the classes whose money enters a
+    // figure of the estimate. A class not here is outside the activity and enters none. A rule may confirm only a class not
+    // here (TransactionRules): a wrong class here moves money nobody confirmed.
+    private enum Part
+    {
+        Ingresos,
+        CuotasSs,
+        // Would enter gastos with a linked, confirmed invoice (business rule 1), which cannot exist yet.
+        AwaitingInvoice,
+    }
+
+    private static readonly IReadOnlyDictionary<TransactionClass, Part> Parts = new Dictionary<TransactionClass, Part>
+    {
+        [TransactionClass.ActivityIncome] = Part.Ingresos,
+        [TransactionClass.SocialSecurity] = Part.CuotasSs,
+        [TransactionClass.DeductibleExpense] = Part.AwaitingInvoice,
+    };
+
+    public static bool Counts(TransactionClass transactionClass) => Parts.ContainsKey(transactionClass);
+
     // The amounts are cents; a sum of none keeps two decimals, so the engine's trace shows "0.00" as it does for an input file.
     private static readonly Money NoEuros = new(0.00m);
 
@@ -91,9 +111,9 @@ public static class LedgerActuals
         foreach (var quarter in actual)
         {
             var movements = byQuarter[quarter].ToList();
-            var income = movements.Where(line => line.Classification is Classification.Confirmed { Class: TransactionClass.ActivityIncome }).ToList();
-            var cuotas = movements.Where(line => line.Classification is Classification.Confirmed { Class: TransactionClass.SocialSecurity }).ToList();
-            var invoice = movements.Where(line => line.Classification is Classification.Confirmed { Class: TransactionClass.DeductibleExpense }).ToList();
+            List<ClassifiedLine> Of(Part part) =>
+                [.. movements.Where(line => line.Classification is Classification.Confirmed confirmed && Parts.TryGetValue(confirmed.Class, out var found) && found == part)];
+            var (income, cuotas, invoice) = (Of(Part.Ingresos), Of(Part.CuotasSs), Of(Part.AwaitingInvoice));
 
             // Signed: a debit classified as activity income lowers it, and a TGSS refund lowers the cuotas.
             var ingresos = income.Aggregate(NoEuros, (sum, line) => sum + line.Amount);

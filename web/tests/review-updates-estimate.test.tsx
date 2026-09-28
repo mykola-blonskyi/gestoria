@@ -63,10 +63,10 @@ it("resolving a movement in the review queue updates the overview's estimate", a
   );
   const estimateCalls = () => fetchStub.mock.calls.filter(([url]) => url.includes("/set-aside/estimate"));
   await screen.findByText(/with no closed quarter recorded/);
-  await screen.findByRole("heading", { name: "11 movements to review" });
+  await screen.findByRole("heading", { name: "13 movements to review" });
   expect(estimateCalls()).toHaveLength(1);
 
-  const [first] = within(screen.getByRole("list", { name: "11 movements to review" })).getAllByRole("listitem");
+  const [first] = within(screen.getByRole("list", { name: "13 movements to review" })).getAllByRole("listitem");
   await user.click(within(first!).getByRole("button", { name: "Income from my activity" }));
 
   expect(

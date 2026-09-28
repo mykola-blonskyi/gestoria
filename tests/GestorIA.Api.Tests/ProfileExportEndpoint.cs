@@ -49,7 +49,7 @@ public class ProfileExportEndpoint
         var exported = export["entities"]!["bankTransactions"]!.AsArray();
         Assert.Equal(movements.Count, exported.Count);
         Assert.Equal("activityIncome", exported[0]!["class"]!.GetValue<string>());
-        Assert.Equal(11, exported.Count(stored => stored!["class"] is not null));
+        Assert.Equal(13, exported.Count(stored => stored!["class"] is not null));
         foreach (var (listed, stored) in movements.Zip(exported))
         {
             var withoutRestoreFields = stored!.DeepClone().AsObject();

@@ -3,8 +3,8 @@
     "id": "tgss",
     "class": "socialSecurity",
     "direction": "debit",
-    "certain": true,
-    "patterns": ["TGSS", "SEGURIDAD SOCIAL", "CUOTA AUTONOM"],
+    "certain": false,
+    "patterns": ["TGSS", "SEGURIDAD SOCIAL", "CUOTA AUTONOMO ", "CUOTA AUTONOMOS ", "CUOTA AUTONOMA ", "CUOTA AUTONOMAS "],
     "source": "SPEC-004 §3.2"
   },
   {

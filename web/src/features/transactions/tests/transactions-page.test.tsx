@@ -295,7 +295,7 @@ describe("TransactionsPage", () => {
       const fetchStub = stubApi({ queue: withSuggestion });
       renderPage();
 
-      await screen.findByRole("heading", { name: "11 movements to review" });
+      await screen.findByRole("heading", { name: "13 movements to review" });
       expect(urls(fetchStub, "/review-queue")).toEqual([`${PROFILE}/review-queue`]);
       const [income, expense] = queueItems();
       expect(income).toHaveTextContent(formatDate("2025-01-02", "en"));
@@ -316,7 +316,7 @@ describe("TransactionsPage", () => {
     it("keeps one movement in the tab order and moves between them with the arrows, Home and End", async () => {
       stubApi();
       const user = renderPage();
-      await screen.findByRole("heading", { name: "11 movements to review" });
+      await screen.findByRole("heading", { name: "13 movements to review" });
       const items = queueItems();
       const inTabOrder = () => [...items, ...items.flatMap(buttons)].filter((element) => element.tabIndex === 0);
       expect(inTabOrder()).toEqual([items[0], ...buttons(items[0]!)]);
@@ -328,9 +328,9 @@ describe("TransactionsPage", () => {
       expect(items[1]).toHaveFocus();
       expect(inTabOrder()).toEqual([items[1], ...buttons(items[1]!)]);
       await user.keyboard("{End}");
-      expect(items[10]).toHaveFocus();
+      expect(items[12]).toHaveFocus();
       await user.keyboard("{ArrowDown}");
-      expect(items[10]).toHaveFocus();
+      expect(items[12]).toHaveFocus();
       await user.keyboard("{Home}");
       expect(items[0]).toHaveFocus();
 
@@ -341,38 +341,38 @@ describe("TransactionsPage", () => {
     it("classifies the focused movement with a digit key, then focuses the one that takes its place", async () => {
       const fetchStub = stubApi();
       const user = renderPage();
-      await screen.findByRole("heading", { name: "11 movements to review" });
+      await screen.findByRole("heading", { name: "13 movements to review" });
 
-      await user.click(queueItems()[1]!);
+      await user.click(queueItems()[2]!);
       await user.keyboard("2");
 
-      await screen.findByRole("heading", { name: "10 movements to review" });
+      await screen.findByRole("heading", { name: "12 movements to review" });
       const [[url, init]] = classifyCalls(fetchStub) as [[string, RequestInit]];
-      expect(url).toBe(`${API}/transactions/${g12Queue[1]!.id}/classify`);
+      expect(url).toBe(`${API}/transactions/${g12Queue[2]!.id}/classify`);
       expect(init.method).toBe("POST");
       expect(JSON.parse(init.body as string)).toEqual({ class: "deductibleExpense" });
       const headers = new Headers(init.headers);
       expect(headers.get("X-Api-Key")).toBe("test-key");
       expect(headers.get("Content-Type")).toBe("application/json");
       expect(urls(fetchStub, "/review-queue")).toHaveLength(2);
-      await waitFor(() => expect(queueItems()[1]).toHaveFocus());
-      expect(queueItems()[1]).toHaveTextContent(g12Queue[2]!.description);
+      await waitFor(() => expect(queueItems()[2]).toHaveFocus());
+      expect(queueItems()[2]).toHaveTextContent(g12Queue[3]!.description);
       expect(screen.getByText(fill(review.classified, { name: review.classes.deductibleExpense }))).toHaveAttribute("role", "status");
     });
 
     it("classifies with a button, and focuses the new last movement when the last one is resolved", async () => {
       const fetchStub = stubApi();
       const user = renderPage();
-      await screen.findByRole("heading", { name: "11 movements to review" });
+      await screen.findByRole("heading", { name: "13 movements to review" });
 
-      await user.click(within(queueItems()[10]!).getByRole("button", { name: review.classes.activityIncome }));
+      await user.click(within(queueItems()[12]!).getByRole("button", { name: review.classes.activityIncome }));
 
-      await screen.findByRole("heading", { name: "10 movements to review" });
+      await screen.findByRole("heading", { name: "12 movements to review" });
       const [[url, init]] = classifyCalls(fetchStub) as [[string, RequestInit]];
-      expect(url).toBe(`${API}/transactions/${g12Queue[10]!.id}/classify`);
+      expect(url).toBe(`${API}/transactions/${g12Queue[12]!.id}/classify`);
       expect(JSON.parse(init.body as string)).toEqual({ class: "activityIncome" });
       expect(new Headers(init.headers).get("X-Api-Key")).toBe("test-key");
-      await waitFor(() => expect(queueItems()[9]).toHaveFocus());
+      await waitFor(() => expect(queueItems()[11]).toHaveFocus());
     });
 
     it("leaves focus where the user moved it while a classification was on its way", async () => {
@@ -385,18 +385,18 @@ describe("TransactionsPage", () => {
         return answer(url, init);
       });
       const user = renderPage();
-      await screen.findByRole("heading", { name: "11 movements to review" });
+      await screen.findByRole("heading", { name: "13 movements to review" });
 
       await user.click(queueItems()[0]!);
       await user.keyboard("1");
       await user.keyboard("{End}");
-      expect(queueItems()[10]).toHaveFocus();
+      expect(queueItems()[12]).toHaveFocus();
       release();
 
       await screen.findByText(fill(review.classified, { name: review.classes.activityIncome }));
-      await screen.findByRole("heading", { name: "10 movements to review" });
-      expect(queueItems()[9]).toHaveTextContent(g12Queue[10]!.description);
-      expect(queueItems()[9]).toHaveFocus();
+      await screen.findByRole("heading", { name: "12 movements to review" });
+      expect(queueItems()[11]).toHaveTextContent(g12Queue[12]!.description);
+      expect(queueItems()[11]).toHaveFocus();
     });
 
     it("says when nothing waits, and focuses the heading once the last movement is resolved", async () => {
@@ -417,13 +417,13 @@ describe("TransactionsPage", () => {
         classified: problem(404, { type: "https://gestoria.local/problems/transaction-not-found", title: "The transaction does not exist" }),
       });
       const user = renderPage();
-      await screen.findByRole("heading", { name: "11 movements to review" });
+      await screen.findByRole("heading", { name: "13 movements to review" });
 
       await user.click(queueItems()[3]!);
       await user.keyboard("8");
 
       expect(await screen.findByRole("alert")).toHaveTextContent(fill(en.failure.other, { status: 404 }));
-      expect(queueItems()).toHaveLength(11);
+      expect(queueItems()).toHaveLength(13);
       expect(queueItems()[3]).toHaveFocus();
     });
 
@@ -432,8 +432,8 @@ describe("TransactionsPage", () => {
       renderPage("es");
       const messages = MESSAGES.es.Transactions.review;
 
-      await screen.findByRole("heading", { name: "11 movimientos por revisar" });
-      const [income] = within(screen.getByRole("list", { name: "11 movimientos por revisar" })).getAllByRole("listitem");
+      await screen.findByRole("heading", { name: "13 movimientos por revisar" });
+      const [income] = within(screen.getByRole("list", { name: "13 movimientos por revisar" })).getAllByRole("listitem");
       expect(income).toHaveTextContent(messages.question.in);
       expect(within(income!).getByRole("button", { name: messages.classes.socialSecurity })).toBeInTheDocument();
     });
@@ -443,11 +443,11 @@ describe("TransactionsPage", () => {
       const setItem = vi.spyOn(Storage.prototype, "setItem");
       const logged = (["log", "info", "warn", "error", "debug"] as const).map((method) => vi.spyOn(console, method));
       const user = renderPage();
-      await screen.findByRole("heading", { name: "11 movements to review" });
+      await screen.findByRole("heading", { name: "13 movements to review" });
 
       await user.click(queueItems()[0]!);
       await user.keyboard("1");
-      await screen.findByRole("heading", { name: "10 movements to review" });
+      await screen.findByRole("heading", { name: "12 movements to review" });
 
       expect(setItem).not.toHaveBeenCalled();
       expect(localStorage.length).toBe(0);
