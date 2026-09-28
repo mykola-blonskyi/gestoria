@@ -97,13 +97,55 @@
   "Payments": {
     "title": "Pagos",
     "lead": "Todo lo que pagas a Hacienda y a la Seguridad Social, por orden de fecha.",
-    "points": {
-      "obligations": "Cada obligación: Modelo 130, 303 y 349, la cuota mensual de la TGSS y el ajuste de la Renta.",
-      "amounts": "El importe cuando se conoce, y un claro «todavía no se conoce» cuando no.",
-      "windows": "El plazo de cada pago tras aplicar los fines de semana y los festivos autonómicos. Los festivos locales no se aplican.",
-      "history": "Las obligaciones pasadas con lo que correspondía pagar, y la exportación de las fechas a tu calendario."
+    "profile": {
+      "loading": "Cargando tu perfil…",
+      "missing": "Aún no hay perfil de contribuyente",
+      "missingLead": "Introdúcelo una vez en Ajustes. Cada obligación de aquí se calcula a partir de él.",
+      "enter": "Introducir el perfil en Ajustes"
     },
-    "pending": "Necesita el calendario de pagos y los cálculos trimestrales y anuales de la API, que aún no están construidos."
+    "loading": "Cargando el calendario…",
+    "localHolidays": {
+      "filing": "Plazos de presentación (Modelo 130, 303, 349 y Renta): no se aplican los festivos locales de tu municipio, así que una fecha mostrada puede ser anterior, nunca posterior.",
+      "cuota": "Cuota TGSS: no se aplican los festivos locales de tu municipio, así que una fecha mostrada puede ser ya un día hábil tarde — paga un día antes para ir sobre seguro."
+    },
+    "config": "Ejercicio {year}, configuración sha256 {hash}",
+    "kinds": {
+      "Modelo130": "Modelo 130",
+      "Modelo303": "Modelo 303",
+      "Modelo349": "Modelo 349",
+      "SeguridadSocial": "Cuota TGSS",
+      "RentaTrueUp": "Ajuste de la Renta"
+    },
+    "notes": {
+      "modelo349": "solo si tuviste operaciones intracomunitarias este trimestre"
+    },
+    "period": {
+      "taxYear": "Ejercicio {year}"
+    },
+    "table": {
+      "obligation": "Obligación",
+      "due": "Vencimiento",
+      "amount": "Importe"
+    },
+    "dueWindow": "{from} – {by}",
+    "amount": {
+      "notYetKnown": "Todavía no se conoce"
+    },
+    "export": {
+      "heading": "Exportar a tu calendario",
+      "lead": "Descarga un archivo .ics con todas las fechas de arriba, para tu propia aplicación de calendario.",
+      "includeAmounts": "Incluir los importes en el título de cada evento",
+      "button": "Descargar .ics",
+      "failed": "No se ha podido descargar la exportación. Vuelve a intentarlo."
+    },
+    "failure": {
+      "network": "La API de GestorIA no responde. Iníciala y vuelve a intentarlo.",
+      "gap": "Aún no publicado",
+      "gapLead": "A la configuración del ejercicio le falta un valor que este calendario necesita, así que el motor se niega en lugar de suponerlo. El motor dice:",
+      "refused": "El motor no puede construir este calendario",
+      "other": "La API respondió con un error ({status}). Vuelve a intentarlo.",
+      "gapSettings": "Elige otro ejercicio en Ajustes"
+    }
   },
   "Transactions": {
     "title": "Movimientos",

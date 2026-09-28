@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using GestorIA.Api.SetAside;
 using GestorIA.Engine;
 using GestorIA.Infrastructure.Persistence;
@@ -64,6 +65,32 @@ public static class ProfileEndpoints
                 var asOf = (OpenApiParameter)operation.Parameters!.Single(p => p.Name == "asOf");
                 asOf.Required = true;
                 asOf.Schema = new OpenApiSchemaReference(nameof(Quarter), context.Document);
+                return Task.CompletedTask;
+            });
+
+        profiles.MapGet("/{id:guid}/calendar", Calendar)
+            .WithName("calendarForProfile")
+            .WithSummary("Every obligation of the profile's tax year, in due-date order: Modelo 130, 303 and 349, the monthly TGSS cuota and the Renta true-up.")
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
+        profiles.MapGet("/{id:guid}/calendar.ics", CalendarIcs)
+            .WithName("calendarForProfileAsIcs")
+            .WithSummary("The upcoming calendar as an RFC 5545 export; amounts=true adds each obligation's known amount to its title, lang picks the event text's language.")
+            .Produces<string>(StatusCodes.Status200OK, "text/calendar")
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .AddOpenApiOperationTransformer((operation, _, _) =>
+            {
+                // Read as text so a malformed amounts or lang is an invalid-input problem; the document still says what each accepts.
+                var amounts = (OpenApiParameter)operation.Parameters!.Single(p => p.Name == "amounts");
+                amounts.Schema = new OpenApiSchema { Type = JsonSchemaType.Boolean };
+                var lang = (OpenApiParameter)operation.Parameters!.Single(p => p.Name == "lang");
+                lang.Schema = new OpenApiSchema
+                {
+                    Type = JsonSchemaType.String,
+                    Enum = [.. PaymentsCalendarIcsText.SupportedLocales.Select(l => (JsonNode)JsonValue.Create(l))],
+                };
                 return Task.CompletedTask;
             });
     }
@@ -178,6 +205,78 @@ public static class ProfileEndpoints
         {
             var config = loader.Load(profile.TaxYear);
             return TypedResults.Ok(SetAsideEstimate.From(SetAsideEstimator.Estimate(profile.SetAsideInput(config, quarter)), config.TaxYear));
+        }
+        catch (ConfigNotFoundException e)
+        {
+            return Problems.Gap(e.Message);
+        }
+        catch (Exception e) when (EngineRefusal.Is(e))
+        {
+            return Problems.Refused(EngineRefusal.Reason(e));
+        }
+    }
+
+    private static async Task<Results<Ok<PaymentsCalendarView>, ProblemHttpResult>> Calendar(Guid id, GestoriaDbContext db, TaxYearConfigLoader loader, CancellationToken cancellationToken)
+    {
+        if (await db.Profiles.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken) is not { } row)
+        {
+            return Problems.NoProfile(id);
+        }
+
+        var profile = row.ToProfile();
+        try
+        {
+            var config = loader.Load(profile.TaxYear);
+            var obligations = PaymentCalendar.Build(profile.SetAsideInput(config, Quarter.Q4));
+            return TypedResults.Ok(PaymentsCalendarView.From(obligations, config));
+        }
+        catch (ConfigNotFoundException e)
+        {
+            return Problems.Gap(e.Message);
+        }
+        catch (Exception e) when (EngineRefusal.Is(e))
+        {
+            return Problems.Refused(EngineRefusal.Reason(e));
+        }
+    }
+
+    private static async Task<Results<ContentHttpResult, ValidationProblem, ProblemHttpResult>> CalendarIcs(
+        Guid id, string? amounts, string? lang, GestoriaDbContext db, TaxYearConfigLoader loader, TimeProvider clock, CancellationToken cancellationToken)
+    {
+        var errors = new Dictionary<string, string[]>();
+
+        var includeAmounts = false;
+        if (amounts is not null && !bool.TryParse(amounts, out includeAmounts))
+        {
+            errors["amounts"] = [$"amounts is \"{amounts}\"; it must be \"true\" or \"false\"."];
+        }
+
+        var locale = lang ?? PaymentsCalendarIcsText.DefaultLocale;
+        if (lang is not null && !PaymentsCalendarIcsText.SupportedLocales.Contains(lang))
+        {
+            errors["lang"] = [$"lang is \"{lang}\"; it must be one of {string.Join(", ", PaymentsCalendarIcsText.SupportedLocales)}."];
+        }
+
+        if (errors.Count > 0)
+        {
+            return Problems.Invalid(errors);
+        }
+
+        if (await db.Profiles.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken) is not { } row)
+        {
+            return Problems.NoProfile(id);
+        }
+
+        var profile = row.ToProfile();
+        try
+        {
+            var config = loader.Load(profile.TaxYear);
+            var obligations = PaymentCalendar.Build(profile.SetAsideInput(config, Quarter.Q4));
+            // The export holds what is still upcoming, not the profile's whole tax year (#70 AC): a calendar app is for what
+            // comes next, and past obligations already show on the page.
+            var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+            var upcoming = obligations.Where(o => o.DueWindow.End >= today).ToList();
+            return TypedResults.Text(PaymentsCalendarIcs.Write(upcoming, config.TaxYear, id, includeAmounts, locale), "text/calendar");
         }
         catch (ConfigNotFoundException e)
         {

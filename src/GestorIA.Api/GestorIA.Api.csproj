@@ -17,6 +17,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <!-- RFC 5545 export of the payments calendar (#70): a well-maintained library rather than a hand-written serializer. -->
+    <PackageReference Include="Ical.Net" />
     <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

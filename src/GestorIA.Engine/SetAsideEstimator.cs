@@ -43,8 +43,12 @@ public sealed record SetAsideResult(
     CalculationTrace Trace,
     IReadOnlyList<Warning> Warnings,
     IReadOnlyList<Modelo130Result> Quarters,
+    IReadOnlyList<MonthlyCuota> MonthlyCuotas,
     AnnualTrueUpResult TrueUp,
     string ConfigHash);
+
+// One month of alta's TGSS cuota, with the calendar month it is debited in (the payments calendar, #70).
+public sealed record MonthlyCuota(YearMonth Month, MonthlyCuotaResult Result);
 
 // The single entry point of the set-aside estimator (#2). Actuals cover the closed quarters; the projection covers the rest (#15).
 public static class SetAsideEstimator
@@ -426,6 +430,7 @@ public static class SetAsideEstimator
             new CalculationTrace(steps),
             warnings,
             quarters,
+            [.. cuotas.Select(c => new MonthlyCuota(c.Month, c.Result))],
             trueUp,
             config.ConfigHash);
     }
