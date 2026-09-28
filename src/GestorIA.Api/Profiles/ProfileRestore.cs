@@ -119,6 +119,8 @@ public static class ProfileRestore
             entities[kind] = new JsonArray();
         }
 
+        RefuseClassesNotNamedExactly(entities);
+
         ProfileExport export;
         try
         {
@@ -259,6 +261,7 @@ public static class ProfileRestore
                     Description = movement.Description,
                     Amount = money,
                     Balance = balance,
+                    Class = movement.Class,
                 };
             }
         }
@@ -309,6 +312,42 @@ public static class ProfileRestore
 
         var ordered = stored.OrderBy(t => t.BookingDate).ThenBy(t => t.ImportSequence).ThenBy(t => t.LineNumber);
         return new Restored(profile!, stored, ProfileExport.Of(ProfileView.From(profile!.Id, profile.ToProfile()), ordered, DateTimeOffset.UnixEpoch).Entities);
+    }
+
+    // A movement's class (#73) as the export writes it: null, or one of the names ClassifyInput takes. The API's enum converter
+    // would also read a number, a member's C# name or a comma-joined list, so the text is checked before it runs. The API reads
+    // member names case-insensitively, so "Class" is the same member.
+    private static void RefuseClassesNotNamedExactly(JsonObject entities)
+    {
+        if (entities["bankTransactions"] is not JsonArray movements)
+        {
+            return;
+        }
+
+        var errors = new Dictionary<string, string[]>();
+        for (var i = 0; i < movements.Count; i++)
+        {
+            if (movements[i] is not JsonObject movement)
+            {
+                continue;
+            }
+
+            foreach (var (member, value) in movement.Where(member => member.Key.Equals("class", StringComparison.OrdinalIgnoreCase)))
+            {
+                if (value is null || (value is JsonValue text && text.TryGetValue<string>(out var name) && TransactionClassNames.TryParse(name, out _)))
+                {
+                    continue;
+                }
+
+                var path = Invariant($"{Movements}[{i}].{member}");
+                errors[path] = [$"{path} must be null, while the movement has no class, or one of {string.Join(", ", TransactionClassNames.All)}."];
+            }
+        }
+
+        if (errors.Count > 0)
+        {
+            throw new InvalidExportException(errors);
+        }
     }
 
     // The rule the API holds typed amounts to (ProfileInput): the pattern, and TryParse because .NET's $ also matches before

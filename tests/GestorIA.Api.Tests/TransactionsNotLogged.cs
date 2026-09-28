@@ -6,8 +6,9 @@ using System.Text.Json.Nodes;
 namespace GestorIA.Api.Tests;
 
 // SPEC-013 §2 for bank statements: no description, amount or IBAN of a statement reaches a log. Every category is captured at
-// Trace, EF Core's SQL included, while a statement is imported, imported again, refused for a bad line, and listed by filter, and
-// while its export is restored, restored again and refused for a line key that does not fit.
+// Trace, EF Core's SQL included, while a statement is imported, imported again, refused for a bad line, listed by filter,
+// reviewed, classified, and estimated from, and while its export is restored, restored again and refused for a line key that
+// does not fit.
 public class TransactionsNotLogged
 {
     [Fact]
@@ -24,6 +25,11 @@ public class TransactionsNotLogged
         await client.ImportStatement(id, Encoding.UTF8.GetBytes(text.Replace("-47,16", "-47,1x", StringComparison.Ordinal)));
         await client.GetAsync($"/api/v1/profiles/{id}/transactions");
         await client.GetAsync($"/api/v1/profiles/{id}/transactions?year=2025&quarter=Q1");
+        var queue = await client.ReviewQueue(id);
+        await client.ClassifyAs(queue[0]!["id"]!.GetValue<string>(), "activityIncome");
+        await client.ClassifyAs(queue[1]!["id"]!.GetValue<string>(), "deductibleExpense");
+        await client.Classify(queue[2]!["id"]!.GetValue<string>(), "{ \"class\": \"unclear\" }");
+        await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2");
         var export = await client.GetStringAsync($"/api/v1/profiles/{id}/export");
         await client.DeleteAsync($"/api/v1/profiles/{id}");
         Assert.Equal(HttpStatusCode.Created, (await client.Restore(export)).StatusCode);

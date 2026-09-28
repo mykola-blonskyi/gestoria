@@ -34,6 +34,12 @@ public sealed class BankTransactionRow
 
     public decimal? Balance { get; set; }
 
+    // The class the user gave the line, null until they decide. What the rules make of it is never stored: it is computed on
+    // every read, so a change to the rules reaches every line the user has not decided.
+    public TransactionClass? Class { get; set; }
+
+    public Classification ClassifiedBy(TransactionRules rules) => rules.Classify(Class, Description, Cents(Amount));
+
     public BankTransaction ToBankTransaction() =>
         new(BookingDate, ValueDate, Description, Cents(Amount), Balance is { } balance ? Cents(balance) : null);
 

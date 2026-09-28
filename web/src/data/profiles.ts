@@ -17,6 +17,7 @@ export const EXPORT_MAX_BYTES = 16 * 1024 * 1024;
 
 export const profileKeys = {
   all: ["profiles"] as const,
+  profile: (id: string) => ["profiles", id] as const,
   estimate: (id: string, asOf: Quarter) => ["profiles", id, "set-aside", asOf] as const,
 };
 

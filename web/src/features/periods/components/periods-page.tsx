@@ -22,6 +22,7 @@ import { PageHeader } from "@/shared/ui/page-header";
 import { Trace } from "@/shared/ui/trace-view";
 
 import { useProfile } from "../hooks/use-profile";
+import { LedgerBasis } from "./ledger-basis";
 
 const SETTINGS = "/settings";
 type Mode = "quarter" | "year";
@@ -122,7 +123,7 @@ function QuarterResultCard({ result, modelo130Lines }: { result: QuarterResult; 
           <p className="text-sm text-muted-foreground">
             {t(dueMessage(result), { from: formatDate(result.dueFrom, locale), by: formatDate(result.dueBy, locale) })} {t("localHolidays")}
           </p>
-          <p className="text-sm text-muted-foreground">{t("basis")}</p>
+          <LedgerBasis ledger={result.ledger} />
         </CardContent>
       </Card>
       <Card>
@@ -192,6 +193,7 @@ function AnnualTrueUpCard({ result }: { result: AnnualTrueUp }) {
             <Figure label={t("marginalRate")} value={formatShare(result.marginalRate, locale)} />
             <Figure label={t("reduccionTrabajoLost")} value={formatMoney(result.reduccionTrabajoLost, locale)} />
           </dl>
+          <LedgerBasis ledger={result.ledger} />
         </CardContent>
       </Card>
       <Notices notices={result.notices} />

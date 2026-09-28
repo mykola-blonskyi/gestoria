@@ -14,6 +14,7 @@ internal static class StoredData
     {
         var id = (await (await client.PostProfile(RepoFiles.GoldenProfile("G15"))).Json())["id"]!.GetValue<string>();
         (await client.ImportStatement(id, RepoFiles.Statement)).EnsureSuccessStatusCode();
+        await client.ClassifySyntheticQueue(id);
         return id;
     }
 

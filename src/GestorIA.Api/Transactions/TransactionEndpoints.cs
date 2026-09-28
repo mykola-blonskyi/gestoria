@@ -58,6 +58,19 @@ public static class TransactionEndpoints
                 parameters["quarter"].Description = "Needs year.";
                 return Task.CompletedTask;
             });
+
+        profile.MapGet("/review-queue", ReviewQueue)
+            .WithName("getReviewQueue")
+            .WithSummary("The movements of the profile's tax year waiting for the user's class, unclear or with a rule's suggestion, in the transactions list's order.")
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        api.MapPost("/transactions/{id:guid}/classify", Classify)
+            .WithName("classifyTransaction")
+            .WithTags("transactions")
+            .WithSummary("Stores the user's class for a movement. A later call replaces an earlier one.")
+            .Accepts<TransactionClassification>("application/json")
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
     }
 
     private static async Task<Results<Ok<BankStatementImport>, ValidationProblem, ProblemHttpResult>> Import(
@@ -185,7 +198,42 @@ public static class TransactionEndpoints
             rows = rows.Where(t => t.BookingDate >= first && t.BookingDate <= last);
         }
 
-        var found = await rows.OrderBy(t => t.BookingDate).ThenBy(t => t.ImportSequence).ThenBy(t => t.LineNumber).ToListAsync(cancellationToken);
+        var found = await rows.InListOrder().ToListAsync(cancellationToken);
         return TypedResults.Ok(found.Select(TransactionView.From).ToList());
+    }
+
+    // Scoped to the profile's tax year: the transactions page and the estimate work on it, and a line of another year changes
+    // nothing the app computes.
+    private static async Task<Results<Ok<List<ReviewItem>>, ProblemHttpResult>> ReviewQueue(
+        Guid id, GestoriaDbContext db, TransactionRules rules, CancellationToken cancellationToken)
+    {
+        if (await db.Profiles.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken) is not { } profile)
+        {
+            return Problems.NoProfile(id);
+        }
+
+        var rows = await db.BankTransactions.AsNoTracking().OfTaxYear(id, profile.TaxYear).ToListAsync(cancellationToken);
+        return TypedResults.Ok(rows
+            .Select(row => (Row: row, Classification: row.ClassifiedBy(rules)))
+            .Where(line => line.Classification is not Classification.Confirmed)
+            .Select(line => ReviewItem.From(line.Row, line.Classification))
+            .ToList());
+    }
+
+    private static async Task<Results<NoContent, ValidationProblem, ProblemHttpResult>> Classify(
+        Guid id, HttpRequest request, GestoriaDbContext db, CancellationToken cancellationToken)
+    {
+        using var reader = new StreamReader(request.Body);
+        if (ClassifyInput.Refusal(await reader.ReadToEndAsync(cancellationToken), out var decided) is { } refused)
+        {
+            return refused;
+        }
+
+        // Only a line whose profile is this installation's: the route names no profile. ExecuteUpdateAsync sends one UPDATE
+        // without loading the row and answers how many rows it changed.
+        var updated = await db.BankTransactions
+            .Where(t => t.Id == id && db.Profiles.Any(p => p.Id == t.ProfileId))
+            .ExecuteUpdateAsync(set => set.SetProperty(t => t.Class, decided), cancellationToken);
+        return updated == 0 ? Problems.NoTransaction(id) : TypedResults.NoContent();
     }
 }

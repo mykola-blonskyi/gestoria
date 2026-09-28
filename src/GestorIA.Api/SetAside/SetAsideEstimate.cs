@@ -3,13 +3,15 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json.Serialization;
 using GestorIA.Engine;
+using GestorIA.Infrastructure.Transactions;
 using DomainMoney = GestorIA.Domain.ValueObjects.Money;
 using DomainRate = GestorIA.Domain.ValueObjects.Rate;
 
 namespace GestorIA.Api.SetAside;
 
 // SetAsideResult on the wire (SPEC-009 §1): money as strings with two decimals, rates as the exact decimal fraction
-// ("0.1947" is 19.47 %), dates ISO-8601, months "yyyy-MM". The trace and the notices keep the engine's order.
+// ("0.1947" is 19.47 %), dates ISO-8601, months "yyyy-MM". The trace and the notices keep the engine's order; a stored
+// profile's trace starts with the steps that explain its actuals. Ledger is null for an input file, which states its actuals.
 public sealed record SetAsideEstimate(
     int TaxYear,
     string ConfigHash,
@@ -20,9 +22,10 @@ public sealed record SetAsideEstimate(
     string AnnualTrueUpPayableIn,
     [property: RegularExpression(Amounts.Cents)] string IvaToSetAside,
     IReadOnlyList<TraceStepView> Trace,
-    IReadOnlyList<NoticeView> Notices)
+    IReadOnlyList<NoticeView> Notices,
+    LedgerView? Ledger)
 {
-    public static SetAsideEstimate From(SetAsideResult result, int taxYear) => new(
+    public static SetAsideEstimate From(SetAsideResult result, int taxYear, LedgerEstimate? ledger) => new(
         taxYear,
         result.ConfigHash,
         Share(result.HoldBackShare),
@@ -31,8 +34,9 @@ public sealed record SetAsideEstimate(
         Euros(result.AnnualTrueUpGap),
         result.AnnualTrueUpPayableIn.ToString(),
         Euros(result.IvaToSetAside),
-        [.. result.Trace.Steps.Select(TraceStepView.From)],
-        [.. result.Warnings.Select(w => new NoticeView(w.Code, w.Severity, w.Text))]);
+        [.. (ledger?.Steps ?? []).Concat(result.Trace.Steps).Select(TraceStepView.From)],
+        [.. result.Warnings.Select(w => new NoticeView(w.Code, w.Severity, w.Text))],
+        ledger is null ? null : LedgerView.From(ledger.Counts));
 
     // Rounded half away from zero to the cent, as TraceValue.Money.Display() and the console show it (SPEC-002 §5).
     internal static string Euros(DomainMoney money) => money.Round2().Amount.ToString("0.00", CultureInfo.InvariantCulture);
@@ -41,6 +45,13 @@ public sealed record SetAsideEstimate(
 }
 
 public sealed record NextModelo130(Quarter Quarter, [property: RegularExpression(Amounts.Cents)] string AIngresar, DateOnly DueFrom, DateOnly DueBy);
+
+// What the profile's movements contribute: the last quarter they cover as actuals (null: none, the projection covers the
+// year), how many of those quarters' movements entered the estimate, and how many wait for a review or for an invoice.
+public sealed record LedgerView(Quarter? ActualsThrough, int Counted, int AwaitingReview, int AwaitingInvoice)
+{
+    public static LedgerView From(LedgerCounts counts) => new(counts.ActualsThrough, counts.Counted, counts.AwaitingReview, counts.AwaitingInvoice);
+}
 
 public sealed record NoticeView(string Code, WarningSeverity Severity, string Text);
 

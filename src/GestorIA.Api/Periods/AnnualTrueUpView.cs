@@ -1,5 +1,6 @@
 using GestorIA.Api.SetAside;
 using GestorIA.Engine;
+using GestorIA.Infrastructure.Transactions;
 
 namespace GestorIA.Api.Periods;
 
@@ -16,9 +17,10 @@ public sealed record AnnualTrueUpView(
     DateOnly DueBy,
     string PayableIn,
     IReadOnlyList<TraceStepView> Trace,
-    IReadOnlyList<NoticeView> Notices)
+    IReadOnlyList<NoticeView> Notices,
+    LedgerView Ledger)
 {
-    public static AnnualTrueUpView From(AnnualTrueUpResult result, int taxYear, string configHash) => new(
+    public static AnnualTrueUpView From(AnnualTrueUpResult result, int taxYear, string configHash, LedgerEstimate ledger) => new(
         taxYear,
         configHash,
         SetAsideEstimate.Euros(result.LiabilityOnActivity),
@@ -28,6 +30,7 @@ public sealed record AnnualTrueUpView(
         result.DueWindow.Start,
         result.DueWindow.End,
         result.PayableIn.ToString(),
-        [.. result.Trace.Steps.Select(TraceStepView.From)],
-        [.. result.Warnings.Select(w => new NoticeView(w.Code, w.Severity, w.Text))]);
+        [.. ledger.Steps.Concat(result.Trace.Steps).Select(TraceStepView.From)],
+        [.. result.Warnings.Select(w => new NoticeView(w.Code, w.Severity, w.Text))],
+        LedgerView.From(ledger.Counts));
 }

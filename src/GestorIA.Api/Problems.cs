@@ -24,6 +24,7 @@ public static class Problems
     public const string InstallationNotEmpty = Base + "installation-not-empty";
     public const string DatabaseUnavailable = Base + "database-unavailable";
     public const string NoUpcomingObligations = Base + "no-upcoming-obligations";
+    public const string TransactionNotFound = Base + "transaction-not-found";
 
     // 400 with the ValidationProblemDetails "errors" member, keyed by the JSON path of the offending value.
     public static ValidationProblem Invalid(string path, string message) =>
@@ -39,6 +40,9 @@ public static class Problems
 
     public static ProblemHttpResult NoProfile(Guid id) =>
         TypedResults.Problem($"There is no profile {id}.", statusCode: StatusCodes.Status404NotFound, title: "No such profile", type: ProfileNotFound);
+
+    public static ProblemHttpResult NoTransaction(Guid id) =>
+        TypedResults.Problem($"There is no movement {id}.", statusCode: StatusCodes.Status404NotFound, title: "No such movement", type: TransactionNotFound);
 
     // 409: local mode keeps one profile (SPEC-009 §1.1); a second one is a PUT to the first.
     public static ProblemHttpResult OneProfileOnly(Guid existing) =>

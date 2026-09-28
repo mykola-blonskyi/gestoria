@@ -30,6 +30,42 @@ internal static class Http
     internal static Task<HttpResponseMessage> Restore(this HttpClient client, string json, string contentType = "application/json") =>
         client.PostAsync("/api/v1/profiles/restore", new StringContent(json, Encoding.UTF8, contentType));
 
+    internal static Task<HttpResponseMessage> Classify(this HttpClient client, string transactionId, string body) =>
+        client.PostAsync($"/api/v1/transactions/{transactionId}/classify", new StringContent(body, Encoding.UTF8, "application/json"));
+
+    internal static Task<HttpResponseMessage> ClassifyAs(this HttpClient client, string transactionId, string transactionClass) =>
+        client.Classify(transactionId, new JsonObject { ["class"] = transactionClass }.ToJsonString());
+
+    // Every movement of the synthetic statement's review queue (tests/fixtures/bank) given the class its description says: the
+    // client transfers are activity income, the software and the books expenses, the interest savings and the TGSS lines
+    // cuotas, as their rules suggest, the transfer to an IBAN the user's own.
+    internal static async Task ClassifySyntheticQueue(this HttpClient client, string profileId)
+    {
+        foreach (var item in await client.ReviewQueue(profileId))
+        {
+            var description = item!["description"]!.GetValue<string>();
+            var transactionClass = description switch
+            {
+                _ when description.StartsWith("TRANSFERENCIA RECIBIDA CLIENTE", StringComparison.Ordinal) => "activityIncome",
+                "COMPRA SUSCRIPCION SOFTWARE EJEMPLO" or "LIBRERIA TECNICA INVENTADA" => "deductibleExpense",
+                "ABONO INTERESES CUENTA" => "savingsIncome",
+                "CUOTA AUTONOMOS TGSS" => "socialSecurity",
+                _ when description.StartsWith("TRANSFERENCIA A ", StringComparison.Ordinal) => "ownTransfer",
+                _ => "personal",
+            };
+            (await client.ClassifyAs(item["id"]!.GetValue<string>(), transactionClass)).EnsureSuccessStatusCode();
+        }
+    }
+
+    // A statement of 1 January of the next year: the synthetic 2025 statement ends on 31 December, and only imports reaching past
+    // a quarter's last day show it covered, so this one, meeting it, lets Q4 be actuals. Its line belongs to 2026, outside the
+    // queue.
+    internal static async Task ImportNextJanuary(this HttpClient client, string profileId) =>
+        (await client.ImportStatement(profileId, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n01/01/2026;01/01/2026;CAFETERIA LA PRUEBA;-1,85;\n"))).EnsureSuccessStatusCode();
+
+    internal static async Task<JsonArray> ReviewQueue(this HttpClient client, string profileId) =>
+        JsonNode.Parse(await client.GetStringAsync($"/api/v1/profiles/{profileId}/review-queue"))!.AsArray();
+
     internal static async Task<string> CreateProfile(this HttpClient client, string golden = "G12") =>
         (await (await client.PostProfile(RepoFiles.GoldenProfile(golden))).Json())["id"]!.GetValue<string>();
 

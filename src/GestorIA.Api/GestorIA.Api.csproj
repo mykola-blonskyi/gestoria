@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <Content Include="..\..\config\tax-years\*.json" Exclude="..\..\config\tax-years\schema.json" LinkBase="config\tax-years" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\config\transaction-rules.json" Link="config\transaction-rules.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

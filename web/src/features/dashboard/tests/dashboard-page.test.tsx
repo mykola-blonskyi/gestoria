@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import databaseUnavailable from "@tests/fixtures/database-unavailable.json";
 import g12Estimate from "@tests/fixtures/g12-estimate.json";
+import g12Ledger from "@tests/fixtures/g12-estimate-ledger.json";
 import g12Profile from "@tests/fixtures/g12-profile.json";
 import { MESSAGES, renderInApp } from "@tests/render";
 
@@ -244,5 +245,78 @@ describe("DashboardPage", () => {
     renderDashboard();
 
     expect(await screen.findByRole("alert", {}, { timeout: 8_000 })).toHaveTextContent(MESSAGES.en.Failure.network);
+  });
+
+  describe("the basis of the estimate", () => {
+    const messages = MESSAGES.en.Dashboard;
+    const withLedger = (ledger: Partial<typeof g12Ledger.ledger>) => ({
+      status: 200,
+      body: { ...g12Ledger, ledger: { ...g12Ledger.ledger, ...ledger } },
+    });
+
+    it("says the estimate counts classified movements through the last closed quarter", async () => {
+      stubApi({ estimate: { status: 200, body: g12Ledger } });
+      renderDashboard();
+
+      expect(
+        await screen.findByText("Estimated for 2025 from actuals through Q2, 3 classified movements; the projection covers the rest of the year.", {
+          exact: false,
+        }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(fill(messages.basis, { year: 2025 }), { exact: false })).not.toBeInTheDocument();
+      expect(screen.getByText(/^1 expense awaits an invoice and is not counted/)).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: messages.review })).not.toBeInTheDocument();
+    });
+
+    it("does not leave any of the year to the projection once the actuals run through Q4", async () => {
+      stubApi({ estimate: withLedger({ actualsThrough: "Q4", counted: 5 }) });
+      renderDashboard();
+
+      expect(
+        await screen.findByText("Estimated for 2025 from actuals through Q4, 5 classified movements, which cover the whole year.", { exact: false }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/the projection covers the rest of the year/)).not.toBeInTheDocument();
+    });
+
+    it("says what awaits review keeps the closed quarters on the projection, with a link to them", async () => {
+      const ledger = { actualsThrough: null, counted: 0, awaitingReview: 9, awaitingInvoice: 0 };
+      stubApi({ estimate: { status: 200, body: { ...g12Ledger, ledger } } });
+      renderDashboard();
+
+      expect(
+        await screen.findByText(
+          "9 movements of the closed quarters await review; until they are classified, the projection covers their quarters and those after them.",
+          { exact: false },
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText(fill(messages.basis, { year: 2025 }), { exact: false })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: messages.review })).toHaveAttribute("href", "/transactions");
+      expect(screen.queryByText(/and GestorIA cannot store invoices yet/)).not.toBeInTheDocument();
+    });
+
+    it("says an expense awaiting its invoice is not counted, and why", async () => {
+      stubApi({ estimate: withLedger({ counted: 1, awaitingReview: 0, awaitingInvoice: 2 }) });
+      renderDashboard();
+
+      expect(
+        await screen.findByText(
+          "2 expenses await an invoice and are not counted: a deductible expense needs a linked invoice, and GestorIA cannot store invoices yet.",
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/from actuals through Q2, 1 classified movement;/)).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: messages.review })).not.toBeInTheDocument();
+    });
+
+    it.each([
+      ["no ledger", null],
+      ["no closed quarter with movements", { ...g12Ledger.ledger, actualsThrough: null }],
+    ])("keeps the projection's basis with %s", async (_, ledger) => {
+      stubApi({ estimate: { status: 200, body: { ...g12Ledger, ledger } } });
+      renderDashboard();
+
+      await screen.findByRole("heading", { name: messages.estimate.heading });
+      expect(screen.getByText(fill(messages.basis, { year: 2025 }), { exact: false })).toBeInTheDocument();
+      expect(screen.queryByText(/actuals through/)).not.toBeInTheDocument();
+    });
   });
 });

@@ -8,9 +8,13 @@ Invariants the code must enforce. Each points to its spec and to the theory sect
 
 A bank transaction classified as a deductible expense counts in any calculation **only** when linked to a confirmed `FacturaRecibida`. Unlinked = candidate, shown in the review queue. — SPEC-004 §3, Theory §15.2.
 
+Until documents can be stored (SPEC-005), no expense can be linked, so none counts. The estimate names each line that waits, and the overview says how many (#73).
+
 ## Rule 2 — Nothing unconfirmed enters the ledger
 
 Extracted fields below the confidence threshold, and any `UNCLEAR` transaction, require explicit user confirmation. The engine only ever sees confirmed rows. — SPEC-005 §4.8, SPEC-001 §5.
+
+A bank line is confirmed by the user or by a rule marked `certain` in `config/transaction-rules.json`, and only a debit rule into a class whose money enters no figure of the estimate may be certain: no credit, and no activity income, RETA cuota or deductible expense, is confirmed without the user. A suggested or unclear line waits in the review queue and counts nowhere; its quarter is not taken as actuals until it is reviewed, since unknown income is not zero income (SPEC-004 §3, #73).
 
 ## Rule 3 — Devengo (accrual) attribution by default
 

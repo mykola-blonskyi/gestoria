@@ -403,5 +403,11 @@
       "reference": "Assumes the employer's retenciones settle the tax on the employment income alone, so only the activity's share is left. Conservative (#2): a refund is not counted on, no deducciones (SPEC-006) are applied, and the LIRPF art. 32.2.3º reduction of the activity net is not applied"
     }
   ],
-  "notices": []
+  "notices": [],
+  "ledger": {
+    "actualsThrough": null,
+    "counted": 0,
+    "awaitingReview": 0,
+    "awaitingInvoice": 0
+  }
 }

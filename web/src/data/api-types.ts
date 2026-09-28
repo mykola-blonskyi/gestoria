@@ -89,6 +89,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/transactions/{id}/classify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stores the user's class for a movement. A later call replaces an earlier one. */
+        post: operations["classifyTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/profiles": {
         parameters: {
             query?: never;
@@ -167,7 +184,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Runs the set-aside estimator on a stored profile for a quarter of its tax year, with no closed quarter stated. */
+        /** Runs the set-aside estimator on a stored profile for a quarter of its tax year, its classified movements giving the actuals of the closed quarters. */
         get: operations["estimateSetAsideForProfile"];
         put?: never;
         post?: never;
@@ -245,6 +262,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/profiles/{id}/review-queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The movements of the profile's tax year waiting for the user's class, unclear or with a rule's suggestion, in the transactions list's order. */
+        get: operations["getReviewQueue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/profiles/{id}/calculations/quarter": {
         parameters: {
             query?: never;
@@ -303,6 +337,7 @@ export interface components {
             payableIn: string;
             trace: components["schemas"]["TraceStepView"][];
             notices: components["schemas"]["NoticeView"][];
+            ledger: components["schemas"]["LedgerView"];
         };
         BankStatementImport: {
             bank: string;
@@ -346,6 +381,7 @@ export interface components {
             /** Format: int32 */
             lineNumber: number;
             lineKey: string;
+            class?: null | components["schemas"]["TransactionClass"];
         };
         ExportedEntities: {
             profiles: components["schemas"]["ProfileView"][];
@@ -361,6 +397,15 @@ export interface components {
             errors?: {
                 [key: string]: string[];
             };
+        };
+        LedgerView: {
+            actualsThrough: null | components["schemas"]["Quarter"];
+            /** Format: int32 */
+            counted: number;
+            /** Format: int32 */
+            awaitingReview: number;
+            /** Format: int32 */
+            awaitingInvoice: number;
         };
         NewActivityChoice: components["schemas"]["NewActivityChoiceEstablishedActivity"] | components["schemas"]["NewActivityChoiceNewActivityStarted"];
         NewActivityChoiceEstablishedActivity: {
@@ -507,6 +552,7 @@ export interface components {
             dueBy: string;
             casillas: components["schemas"]["CasillaView"][];
             trace: components["schemas"]["TraceStepView"][];
+            ledger: components["schemas"]["LedgerView"];
         };
         QuarterToDateDocument: {
             quarter: components["schemas"]["Quarter"];
@@ -531,6 +577,21 @@ export interface components {
         };
         /** @enum {unknown} */
         RetencionesDocument: "foreignPayersOnly";
+        ReviewItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            bookingDate: string;
+            /** Format: date */
+            valueDate: string;
+            description: string;
+            amount: string;
+            suggestion: null | components["schemas"]["ReviewSuggestion"];
+        };
+        ReviewSuggestion: {
+            class: components["schemas"]["TransactionClass"];
+            ruleId: string;
+        };
         SetAsideEstimate: {
             /** Format: int32 */
             taxYear: number;
@@ -543,6 +604,7 @@ export interface components {
             ivaToSetAside: string;
             trace: components["schemas"]["TraceStepView"][];
             notices: components["schemas"]["NoticeView"][];
+            ledger: null | components["schemas"]["LedgerView"];
         };
         /** @description The console's input file, byte for byte: src/GestorIA.Cli/README.md describes every field. */
         SetAsideInputDocument: {
@@ -583,6 +645,11 @@ export interface components {
         };
         /** @enum {unknown} */
         TraceValueKind: "money" | "rate" | "count" | "date";
+        /** @enum {unknown} */
+        TransactionClass: "activityIncome" | "deductibleExpense" | "socialSecurity" | "aeatPayment" | "employmentIncome" | "savingsIncome" | "ownTransfer" | "personal";
+        TransactionClassification: {
+            class: components["schemas"]["TransactionClass"];
+        };
         TransactionView: {
             /** Format: uuid */
             id: string;
@@ -763,6 +830,66 @@ export interface operations {
             };
             /** @description Unprocessable Entity */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    classifyTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionClassification"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1478,6 +1605,55 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    getReviewQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewItem"][];
                 };
             };
             /** @description Unauthorized */

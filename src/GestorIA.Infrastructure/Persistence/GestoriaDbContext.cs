@@ -1,3 +1,4 @@
+using GestorIA.Domain.Models;
 using GestorIA.Infrastructure.Profiles;
 using GestorIA.Infrastructure.Transactions;
 using Microsoft.EntityFrameworkCore;
@@ -28,11 +29,15 @@ public sealed class GestoriaDbContext(DbContextOptions<GestoriaDbContext> option
 
         modelBuilder.Entity<BankTransactionRow>(line =>
         {
-            line.ToTable("BankTransactions");
+            var classes = Enum.GetNames<TransactionClass>();
+            line.ToTable("BankTransactions", table => table.HasCheckConstraint(
+                "CK_BankTransactions_Class",
+                $"\"Class\" IS NULL OR \"Class\" IN ({string.Join(", ", classes.Select(name => $"'{name}'"))})"));
             // The database, not only the import, refuses a statement line stored twice (LineKeys).
             line.HasIndex(t => new { t.ProfileId, t.LineKey }).IsUnique();
             line.HasIndex(t => new { t.ProfileId, t.BookingDate });
             line.Property(t => t.LineKey).HasMaxLength(64).IsFixedLength();
+            line.Property(t => t.Class).HasConversion<string>().HasMaxLength(classes.Max(name => name.Length));
             line.HasOne<ProfileRow>().WithMany().HasForeignKey(t => t.ProfileId).OnDelete(DeleteBehavior.Cascade);
         });
     }

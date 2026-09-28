@@ -59,6 +59,8 @@ public sealed class DatabaseOutage : IAsyncLifetime
             await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q1"),
             await client.ImportStatement(id, RepoFiles.Statement),
             await client.GetAsync($"/api/v1/profiles/{id}/transactions?year=2025"),
+            await client.GetAsync($"/api/v1/profiles/{id}/review-queue"),
+            await client.PostAsync($"/api/v1/transactions/{Guid.NewGuid()}/classify", new StringContent("""{ "class": "personal" }""", System.Text.Encoding.UTF8, "application/json")),
             await client.GetAsync($"/api/v1/profiles/{id}/export"),
             await client.DeleteAsync($"/api/v1/profiles/{id}"),
             await client.Restore(export),

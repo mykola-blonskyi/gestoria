@@ -73,6 +73,10 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
         var changed = JsonNode.Parse(file)!;
         changed["entities"]!["profiles"]![0]!["projection"]!["gastos"] = "1.00";
         await AssertFixture("g12-restore-conflict.json", await client.Restore(changed.ToJsonString()), fixtureIds);
+        await AssertFixture("g12-review-queue.json", await client.GetAsync($"/api/v1/profiles/{id}/review-queue"), fixtureIds);
+
+        await client.ClassifySyntheticQueue(id);
+        await AssertFixture("g12-estimate-ledger.json", await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2"), fixtureIds);
     }
 
     [Fact]
