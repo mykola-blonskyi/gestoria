@@ -254,8 +254,10 @@ Each tax year has one file: `config/tax-years/2025.json`, `config/tax-years/2026
 **Missing values are declared, never guessed.** When a value has not been published yet, the file marks it with a `_todo` note explaining what is missing. The engine then refuses any calculation that would need it, and says why, instead of borrowing last year's value. Today `2026.json` has three such gaps:
 
 - the tarifa plana amount for people registering in 2026 (no law has set it yet);
-- the 2027 holidays and the Renta 2026 window, so the Q4 2026 Modelo 130 and the annual gap for 2026 are refused, while Q1 to Q3 2026 work;
+- the 2027 holidays and the Renta 2026 window, so the Q4 2026 Modelo 130 and the annual gap for 2026 are refused, while `Modelo130Calculator` can compute Q1 to Q3 2026 directly;
 - the Modelo 100 casillas for 2026.
+
+The set-aside estimator (`SetAsideEstimator.Estimate`, #2) and everything built on it — the set-aside estimate endpoints and the periods endpoints (`POST /profiles/{id}/calculations/quarter`, `POST /profiles/{id}/calculations/annual-true-up`, #71) — always compute the whole year's annual true-up alongside whichever quarter was asked for, so every one of their calls on a 2026 profile is refused, Q1 to Q3 included, until the renta window is published. Only a direct `Modelo130Calculator.Pago` call (the CLI's own path) can still answer Q1 to Q3 2026 on their own.
 
 **The files are checked every time they load.** `schema.json` checks the shape, and extra rules in `src/GestorIA.Infrastructure/TaxYears/TaxYearRules.cs` check what a schema cannot: that scales go up in order, that Seguridad Social bands do not leave gaps, that every provenance entry points at a real value, and more (SPEC-007 §2). A file that breaks a rule is rejected with a message naming the exact place.
 
