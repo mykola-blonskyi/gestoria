@@ -27,6 +27,7 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
         await AssertFixture("g12-estimate.json", await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q1"));
         await AssertFixture("g12-quarter.json", await client.PostAsync($"/api/v1/profiles/{id}/calculations/quarter?quarter=Q1", null));
         await AssertFixture("g12-annual-true-up.json", await client.PostAsync($"/api/v1/profiles/{id}/calculations/annual-true-up", null));
+        await AssertFixture("g12-calendar.json", await client.GetAsync($"/api/v1/profiles/{id}/calendar"));
     }
 
     // G12 with its projection's ingresos and gastos swapped: a quarter with far more spent than earned, so casilla 19

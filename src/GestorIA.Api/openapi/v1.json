@@ -712,6 +712,190 @@
         ]
       }
     },
+    "/api/v1/profiles/{id}/calendar": {
+      "get": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Every obligation of the profile's tax year, in due-date order: Modelo 130, 303 and 349, the monthly TGSS cuota and the Renta true-up.",
+        "operationId": "calendarForProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentsCalendarView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/profiles/{id}/calendar.ics": {
+      "get": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "The upcoming calendar as an RFC 5545 export; amounts=true adds each obligation's known amount to its title, lang picks the event text's language.",
+        "operationId": "calendarForProfileAsIcs",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "amounts",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "schema": {
+              "enum": [
+                "uk",
+                "es",
+                "en",
+                "ru"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/calendar": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/profiles/{id}/bank-statements": {
       "post": {
         "tags": [
@@ -1493,6 +1677,126 @@
           },
           "text": {
             "type": "string"
+          }
+        }
+      },
+      "ObligationAmountView": {
+        "required": [
+          "kind"
+        ],
+        "type": "object",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ObligationAmountViewKnownAmount"
+          },
+          {
+            "$ref": "#/components/schemas/ObligationAmountViewNotYetKnownAmount"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "known": "#/components/schemas/ObligationAmountViewKnownAmount",
+            "notYetKnown": "#/components/schemas/ObligationAmountViewNotYetKnownAmount"
+          }
+        }
+      },
+      "ObligationAmountViewKnownAmount": {
+        "required": [
+          "euros"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "known"
+            ],
+            "type": "string"
+          },
+          "euros": {
+            "pattern": "^-?\\d+\\.\\d{2}$",
+            "type": "string"
+          }
+        }
+      },
+      "ObligationAmountViewNotYetKnownAmount": {
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "notYetKnown"
+            ],
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ObligationKind": {
+        "enum": [
+          "Modelo130",
+          "Modelo303",
+          "Modelo349",
+          "SeguridadSocial",
+          "RentaTrueUp"
+        ]
+      },
+      "ObligationView": {
+        "required": [
+          "kind",
+          "period",
+          "dueFrom",
+          "dueBy",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/ObligationKind"
+          },
+          "period": {
+            "type": "string"
+          },
+          "dueFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "dueBy": {
+            "type": "string",
+            "format": "date"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/ObligationAmountView"
+          }
+        }
+      },
+      "PaymentsCalendarView": {
+        "required": [
+          "taxYear",
+          "configHash",
+          "modelo349QuarterlyFilingCap",
+          "obligations"
+        ],
+        "type": "object",
+        "properties": {
+          "taxYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "configHash": {
+            "type": "string"
+          },
+          "modelo349QuarterlyFilingCap": {
+            "pattern": "^-?\\d+\\.\\d{2}$",
+            "type": "string"
+          },
+          "obligations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObligationView"
+            }
           }
         }
       },

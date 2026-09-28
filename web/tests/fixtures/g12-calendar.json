@@ -1,0 +1,257 @@
+{
+  "taxYear": 2025,
+  "configHash": "929fff34adecb4c34da92a22c6523a3b4973a9efc6ed55e237a1464bf7554e21",
+  "modelo349QuarterlyFilingCap": "50000.00",
+  "obligations": [
+    {
+      "kind": "SeguridadSocial",
+      "period": "2025-01",
+      "dueFrom": "2025-01-01",
+      "dueBy": "2025-01-31",
+      "amount": {
+        "kind": "known",
+        "euros": "45.33"
+      }
+    },
+    {
+      "kind": "SeguridadSocial",
+      "period": "2025-02",
+      "dueFrom": "2025-02-01",
+      "dueBy": "2025-02-28",
+      "amount": {
+        "kind": "known",
+        "euros": "80.00"
+      }
+    },
+    {
+      "kind": "SeguridadSocial",
+      "period": "2025-03",
+      "dueFrom": "2025-03-01",
+      "dueBy": "2025-03-31",
+      "amount": {
+        "kind": "known",
+        "euros": "80.00"
+      }
+    },
+    {
+      "kind": "Modelo130",
+      "period": "Q1",
+      "dueFrom": "2025-04-01",
+      "dueBy": "2025-04-22",
+      "amount": {
+        "kind": "known",
+        "euros": "1228.99"
+      }
+    },
+    {
+      "kind": "Modelo303",
+      "period": "Q1",
+      "dueFrom": "2025-04-01",
+      "dueBy": "2025-04-22",
+      "amount": {
+        "kind": "notYetKnown",
+        "reason": "GestorIA has no Modelo 303 calculator yet"
+      }
+    },
+    {
+      "kind": "Modelo349",
+      "period": "Q1",
+      "dueFrom": "2025-04-01",
+      "dueBy": "2025-04-22",
+      "amount": {
+        "kind": "notYetKnown",
+        "reason": "GestorIA has no Modelo 349 calculator yet, and this filing is only due for a quarter with intra-EU operations"
+      }
+    },
+    {
+      "kind": "SeguridadSocial",
+      "period": "2025-04",
+      "dueFrom": "2025-04-01",
+      "dueBy": "2025-04-30",
+      "amount": {
+        "kind": "known",
+        "euros": "80.00"
+      }
+    },
+    {
+      "kind": "SeguridadSocial",
+      "period": "2025-05",
+      "dueFrom": "2025-05-01",
+      "dueBy": "2025-05-30",
+      "amount": {
+        "kind": "known",
+        "euros": "80.00"
+      }
+    },
+    {
+      "kind": "SeguridadSocial",
+      "period": "2025-06",
+      "dueFrom": "2025-06-01",
+      "dueBy": "2025-06-30",
+      "amount": {
+        "kind": "known",
+        "euros": "80.00"
+      }
+    },
+    {
+      "kind": "Modelo130",
+      "period": "Q2",
+      "dueFrom": "2025-07-01",
+      "dueBy": "2025-07-21",
+      "amount": {
+        "kind": "known",
+        "euros": "1222.40"
+      }
+    },
+    {
+      "kind": "Modelo303",
+      "period": "Q2",
+      "dueFrom": "2025-07-01",
+      "dueBy": "2025-07-21",
+      "amount": {
+        "kind": "notYetKnown",
+        "reason": "GestorIA has no Modelo 303 calculator yet"
+      }
+    },
+    {
+      "kind": "Modelo349",
+      "period": "Q2",
+      "dueFrom": "2025-07-01",
+      "dueBy": "2025-07-21",
+      "amount": {
+        "kind": "notYetKnown",
+        "reason": "GestorIA has no Modelo 349 calculator yet, and this filing is only due for a quarter with intra-EU operations"
+      }
+    },
+    {
+      "kind": "SeguridadSocial",
+      "period": "2025-07",
+      "dueFrom": "2025-07-01",
+      "dueBy": "2025-07-31",
+      "amount": {
+        "kind": "known",
+        "euros": "80.00"
+      }
+    },
+    {
+      "kind": "SeguridadSocial",
+      "period": "2025-08",
+      "dueFrom": "2025-08-01",
+      "dueBy": "2025-08-29",
+      "amount": {
+        "kind": "known",
+        "euros": "80.00"
+      }
+    },
+    {
+      "kind": "SeguridadSocial",
+      "period": "2025-09",
+      "dueFrom": "2025-09-01",
+      "dueBy": "2025-09-30",
+      "amount": {
+        "kind": "known",
+        "euros": "80.00"
+      }
+    },
+    {
+      "kind": "Modelo130",
+      "period": "Q3",
+      "dueFrom": "2025-10-01",
+      "dueBy": "2025-10-20",
+      "amount": {
+        "kind": "known",
+        "euros": "1222.40"
+      }
+    },
+    {
+      "kind": "Modelo303",
+      "period": "Q3",
+      "dueFrom": "2025-10-01",
+      "dueBy": "2025-10-20",
+      "amount": {
+        "kind": "notYetKnown",
+        "reason": "GestorIA has no Modelo 303 calculator yet"
+      }
+    },
+    {
+      "kind": "Modelo349",
+      "period": "Q3",
+      "dueFrom": "2025-10-01",
+      "dueBy": "2025-10-20",
+      "amount": {
+        "kind": "notYetKnown",
+        "reason": "GestorIA has no Modelo 349 calculator yet, and this filing is only due for a quarter with intra-EU operations"
+      }
+    },
+    {
+      "kind": "SeguridadSocial",
+      "period": "2025-10",
+      "dueFrom": "2025-10-01",
+      "dueBy": "2025-10-31",
+      "amount": {
+        "kind": "known",
+        "euros": "80.00"
+      }
+    },
+    {
+      "kind": "SeguridadSocial",
+      "period": "2025-11",
+      "dueFrom": "2025-11-01",
+      "dueBy": "2025-11-28",
+      "amount": {
+        "kind": "known",
+        "euros": "80.00"
+      }
+    },
+    {
+      "kind": "SeguridadSocial",
+      "period": "2025-12",
+      "dueFrom": "2025-12-01",
+      "dueBy": "2025-12-31",
+      "amount": {
+        "kind": "known",
+        "euros": "80.00"
+      }
+    },
+    {
+      "kind": "Modelo130",
+      "period": "Q4",
+      "dueFrom": "2026-01-01",
+      "dueBy": "2026-01-30",
+      "amount": {
+        "kind": "known",
+        "euros": "1222.40"
+      }
+    },
+    {
+      "kind": "Modelo303",
+      "period": "Q4",
+      "dueFrom": "2026-01-01",
+      "dueBy": "2026-01-30",
+      "amount": {
+        "kind": "notYetKnown",
+        "reason": "GestorIA has no Modelo 303 calculator yet"
+      }
+    },
+    {
+      "kind": "Modelo349",
+      "period": "Q4",
+      "dueFrom": "2026-01-01",
+      "dueBy": "2026-01-30",
+      "amount": {
+        "kind": "notYetKnown",
+        "reason": "GestorIA has no Modelo 349 calculator yet, and this filing is only due for a quarter with intra-EU operations"
+      }
+    },
+    {
+      "kind": "RentaTrueUp",
+      "period": "2025",
+      "dueFrom": "2026-04-08",
+      "dueBy": "2026-06-30",
+      "amount": {
+        "kind": "known",
+        "euros": "0.00"
+      }
+    }
+  ]
+}

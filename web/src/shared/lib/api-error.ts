@@ -16,6 +16,7 @@ export const PROBLEM_TYPES = {
   apiKeyRequired: "https://gestoria.local/problems/api-key-required",
   statementTooLarge: "https://gestoria.local/problems/statement-too-large",
   databaseUnavailable: "https://gestoria.local/problems/database-unavailable",
+  noUpcomingObligations: "https://gestoria.local/problems/no-upcoming-obligations",
   profileNotFound: "https://gestoria.local/problems/profile-not-found",
   profileExists: "https://gestoria.local/problems/profile-exists",
 } as const;

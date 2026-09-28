@@ -41,6 +41,9 @@ builder.Services.AddOpenApi("v1", options =>
 var taxYears = builder.Configuration["TaxYears:Directory"] ?? Path.Combine(AppContext.BaseDirectory, "config", "tax-years");
 builder.Services.AddSingleton(new TaxYearConfigLoader(taxYears));
 
+// "Today" for the payments calendar's ICS export (#70): the system clock, so tests can substitute a fixed one.
+builder.Services.AddSingleton(TimeProvider.System);
+
 // PostgreSQL (ADR-0006), started locally by compose.yaml (ADR-0010). The connection string holds a password, so it comes from
 // user secrets or the ConnectionStrings__Gestoria environment variable, never a file in the repository (README.md, "Database").
 // EF Core's three failure events log the exception, whose message names the database's host and port (SPEC-013 §2). The

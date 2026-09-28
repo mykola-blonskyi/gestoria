@@ -3,13 +3,15 @@ using static System.FormattableString;
 
 namespace GestorIA.Engine;
 
-// SPEC-007. Holds the values the set-aside estimator reads (#2); the rest of the file is validated at load but not mapped.
+// SPEC-007. Holds the values the set-aside estimator (#2) and the payments calendar (#70) read; the rest of the file is validated
+// at load but not mapped.
 public sealed record TaxYearConfig(
     int TaxYear,
     string ConfigHash,
     IrpfConfig Irpf,
     RegionTable Regions,
     Modelo130Config Modelo130,
+    Modelo349Config Modelo349,
     SeguridadSocialConfig SeguridadSocial,
     TaxCalendar Calendar,
     ProvenanceTable Provenance);
@@ -44,6 +46,10 @@ public sealed record InicioActividadConfig(Rate Pct, Money MaxRendimiento, Rate 
 public sealed record RegionConfig(string Name, Scale EscalaAutonomica, MinimosConfig Minimos, IReadOnlyList<CalendarDay> Holidays);
 
 public sealed record Modelo130Config(Rate Rate, IReadOnlyList<MinoracionBand> Minoracion, IReadOnlyDictionary<string, string> Lines);
+
+// Orden EHA/769/2010 art. 10.2: Modelo 349 is quarterly while neither the quarter nor any of the four before carries more
+// than QuarterlyFilingCap of intra-EU supplies, monthly from the month it is crossed.
+public sealed record Modelo349Config(Money QuarterlyFilingCap);
 
 public sealed record MinoracionBand(Money PrevYearNetUpTo, Money AmountPerQuarter);
 

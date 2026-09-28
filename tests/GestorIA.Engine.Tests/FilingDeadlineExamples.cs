@@ -83,4 +83,30 @@ public class FilingDeadlineExamples
         Assert.Equal(DayOfWeek.Tuesday, window.End.DayOfWeek);
         Assert.Equal("2026-06-30 Tuesday, a working day → 2026-06-30", step.Formula);
     }
+
+    // Modelo 303 and 349 have no calculator (#70), but the same quarterly plazo as Modelo 130 (Reglamento del IVA, RD
+    // 1624/1992 art. 71.4; Orden EHA/769/2010 art. 10.2), so the window is exactly Modelo130's, region and all.
+    [Fact]
+    public void TheSharedQuarterlyWindowIsModelo130sOwnWindow()
+    {
+        var (modelo130, _) = FilingDeadline.Modelo130(Quarter.Q1, "MD", Config);
+        var (shared, _) = FilingDeadline.SharedQuarterlyWindow(Quarter.Q1, "MD", Config);
+
+        Assert.Equal(modelo130, shared);
+    }
+
+    // RD 1415/2004 art. 56.1.b).1.º: due within the same month. Unlike a filing (ALastDayThatIsNotAWorkingDayMovesToTheNextOne),
+    // art. 8.b) moves a non-working last day backwards, never past the month it corresponds to.
+    [Theory]
+    [InlineData(1, "2025-01-01", "2025-01-31")] // Friday, already a working day
+    [InlineData(5, "2025-05-01", "2025-05-30")] // last day Saturday 31 → the Friday before
+    [InlineData(8, "2025-08-01", "2025-08-29")] // last day Sunday 31 → Saturday 30 is also not working → the Friday before
+    [InlineData(11, "2025-11-01", "2025-11-28")] // last day Sunday 30 → the Friday before
+    public void ARetaCuotaIsDueByTheLastWorkingDayOfItsOwnMonth(int month, string start, string end)
+    {
+        var window = FilingDeadline.MonthlyCuotaSs(new YearMonth(2025, month), "VC", Config);
+
+        Assert.Equal(DateOnly.ParseExact(start, "yyyy-MM-dd", CultureInfo.InvariantCulture), window.Start);
+        Assert.Equal(DateOnly.ParseExact(end, "yyyy-MM-dd", CultureInfo.InvariantCulture), window.End);
+    }
 }

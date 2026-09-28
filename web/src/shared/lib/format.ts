@@ -56,3 +56,11 @@ export function formatMonth(yearMonth: string, locale: Locale): string {
     new Date(Date.UTC(Number(match[1]), month - 1, 1)),
   );
 }
+
+// The day an instant falls on where the user lives, as yyyy-MM-dd: every region GestorIA covers is on Madrid time (ADR-0016),
+// the same day the API calls today. The en-CA locale writes a date as yyyy-MM-dd.
+const MADRID_DAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit" });
+
+export function madridDay(instant: Date): string {
+  return MADRID_DAY.format(instant);
+}

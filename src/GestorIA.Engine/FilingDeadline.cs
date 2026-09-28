@@ -12,6 +12,11 @@ public static class FilingDeadline
     public const string LocalHolidaysNotApplied =
         "municipal holidays where the taxpayer lives are not applied, so the date shown can be early but never late";
 
+    // MonthlyCuotaSs moves the opposite way (backward, RD 1415/2004 art. 8.b)): a municipal holiday the engine does not know
+    // about (Ley 39/2015 art. 30.6) can make the real last day one working day earlier than the one shown, never later.
+    public const string LocalHolidaysNotAppliedBackward =
+        "municipal holidays where the taxpayer lives are not applied, so the date shown may already be a working day late: pay a day earlier to be safe";
+
     public const string Rule =
         "a last day that is a Saturday, a Sunday or a national or regional holiday moves to the next working day "
             + "(Orden EHA/672/2007 art. 7 for Modelo 130; Ley 39/2015 art. 30.2, 30.5 and 30.6, supletoria under its DA 1ª.2.a and LGT art. 97.b); "
@@ -39,6 +44,45 @@ public static class FilingDeadline
             "calendar.renta",
             "calendar.renta");
 
+    // Modelo 303 (IVA) shares calendar.modelo130's windows: Reglamento del IVA (RD 1624/1992) art. 71.4 sets the same 1–20
+    // (1–30 for the fourth period) days after the quarter. Modelo 349 filed quarterly has the same plazo, Orden EHA/769/2010
+    // art. 10.2; above modelo349.quarterlyFilingCap it is monthly (art. 10.1), which needs intra-EU volumes the engine does
+    // not have yet, so only the quarterly case is computed. Neither 303 nor 349 has a calculator (#70), so only the window is
+    // asked for here.
+    public static (DueWindow Window, TraceStep Step) SharedQuarterlyWindow(Quarter quarter, string region, TaxYearConfig config) =>
+        Resolve(
+            config.Calendar.Modelo130[(int)quarter - 1],
+            region,
+            config,
+            "shared-quarterly.due-date",
+            TraceSection.Modelo130,
+            Invariant($"Último día del plazo trimestral compartido con el IVA del {quarter}"),
+            "calendar.modelo130",
+            Invariant($"calendar.modelo130 {quarter}"));
+
+    // RD 1415/2004 (Reglamento General de Recaudación de la Seguridad Social) art. 56.1.b).1.º: a RETA cuota is due within the
+    // same month it corresponds to. Art. 8.b): when the last day of that plazo is inhábil, it ends the previous working day
+    // instead, the opposite direction from a tax filing's deadline, which moves forward.
+    public static DueWindow MonthlyCuotaSs(YearMonth month, string region, TaxYearConfig config)
+    {
+        var holidays = Holidays(region, config);
+        var start = new DateOnly(month.Year, month.Month, 1);
+        var end = new DateOnly(month.Year, month.Month, DateTime.DaysInMonth(month.Year, month.Month));
+
+        while (end.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || holidays.Contains(end))
+        {
+            end = end.AddDays(-1);
+        }
+
+        return new DueWindow(start, end);
+    }
+
+    private static HashSet<DateOnly> Holidays(string region, TaxYearConfig config) =>
+        config.Calendar.Holidays
+            .Concat(config.Regions.For(region).Holidays)
+            .Select(day => day.In(config.TaxYear))
+            .ToHashSet();
+
     private static (DueWindow Window, TraceStep Step) Resolve(
         CalendarWindow? window, string region, TaxYearConfig config, string id, TraceSection section, string title, string calendarName, string entryLabel)
     {
@@ -58,10 +102,7 @@ public static class FilingDeadline
                 $"{entryLabel} of tax year {config.TaxYear} ends on {Iso(window.End.In(config.TaxYear))}, and this configuration declares the calendar after {config.TaxYear} incomplete: {note}"));
         }
 
-        var holidays = config.Calendar.Holidays
-            .Concat(config.Regions.For(region).Holidays)
-            .Select(day => day.In(config.TaxYear))
-            .ToHashSet();
+        var holidays = Holidays(region, config);
         var start = window.Start.In(config.TaxYear);
         var configuredEnd = window.End.In(config.TaxYear);
         var end = configuredEnd;

@@ -89,21 +89,57 @@
     "network": "The GestorIA API is not answering. Start it and try again.",
     "database": "The GestorIA database is not answering. Start it with docker compose up -d postgres and try again.",
     "gap": "Not published yet",
-    "gapLead": "The tax-year configuration lacks a value this estimate needs, so the engine refuses rather than guess. The engine says:",
-    "refused": "The engine cannot estimate these figures",
+    "gapLead": "The tax-year configuration lacks a value this calculation needs, so the engine refuses rather than guess. The engine says:",
+    "refused": "The engine cannot calculate these figures",
     "other": "The API answered with an error ({status}). Try again.",
     "gapSettings": "Choose another tax year in Settings"
   },
   "Payments": {
     "title": "Payments",
     "lead": "Everything you pay to Hacienda and the Seguridad Social, in date order.",
-    "points": {
-      "obligations": "Every obligation: Modelo 130, 303 and 349, the monthly TGSS cuota and the Renta true-up.",
-      "amounts": "The amount when it is known, and a clear “not known yet” when it is not.",
-      "windows": "The window for each payment after the weekend and regional holiday rules. Local holidays are not applied.",
-      "history": "Past obligations with what was due, and an export of the dates to your calendar app."
+    "profile": {
+      "loading": "Loading your profile…",
+      "missing": "No taxpayer profile yet",
+      "missingLead": "Enter it once in Settings. Every obligation here is computed from it.",
+      "enter": "Enter the profile in Settings"
     },
-    "pending": "This needs the payment calendar and the quarterly and annual calculations from the API, which are not built yet."
+    "loading": "Loading the calendar…",
+    "localHolidays": {
+      "filing": "Filing deadlines (Modelo 130, 303, 349 and Renta): municipal holidays where you live are not applied, so a date shown can be early but never late.",
+      "cuota": "TGSS cuota: municipal holidays where you live are not applied, so a date shown may already be a working day late — pay a day earlier to be safe."
+    },
+    "config": "Tax year {year}, configuration sha256 {hash}",
+    "kinds": {
+      "Modelo130": "Modelo 130",
+      "Modelo303": "Modelo 303",
+      "Modelo349": "Modelo 349",
+      "SeguridadSocial": "TGSS cuota",
+      "RentaTrueUp": "Renta true-up"
+    },
+    "notes": {
+      "modelo349": "only if you had intra-EU operations this quarter",
+      "modelo349Monthly": "Modelo 349 dates are the quarterly filer's. When the entregas de bienes and prestaciones de servicios you declare on Modelo 349, IVA excluded, go above {cap} in a quarter, or in any of the four before it, Modelo 349 is filed monthly instead, and these dates no longer apply."
+    },
+    "period": {
+      "taxYear": "Tax year {year}"
+    },
+    "table": {
+      "obligation": "Obligation",
+      "due": "Due",
+      "amount": "Amount"
+    },
+    "dueWindow": "{from} – {by}",
+    "amount": {
+      "notYetKnown": "Not known yet"
+    },
+    "export": {
+      "heading": "Export to your calendar",
+      "lead": "Downloads an .ics file of the dates still to come, for your own calendar app. Past dates stay on this page.",
+      "includeAmounts": "Include amounts in event titles",
+      "button": "Download .ics",
+      "failed": "The export could not be downloaded. Try again.",
+      "nothingUpcoming": "Nothing is still to come in this tax year, so there is no date to export."
+    }
   },
   "Transactions": {
     "title": "Transactions",
