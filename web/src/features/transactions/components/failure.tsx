@@ -12,6 +12,7 @@ export function Failure({ error }: { error: Error }) {
   if (failure?.kind !== "problem") return <Alert title={t("other", { status: failure?.status ?? 0 })} />;
 
   const { problem } = failure;
+  if (problem.type === PROBLEM_TYPES.databaseUnavailable) return <Alert title={t("database")} />;
   if (problem.type === PROBLEM_TYPES.statementTooLarge) return <Alert title={t("tooLarge")} />;
   if (problem.type === PROBLEM_TYPES.invalidInput) return <Alert title={t("refused")} reasons={reasonsOf(problem.extensions.errors)} />;
   return <Alert title={t("other", { status: problem.status })} />;

@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import databaseUnavailable from "@tests/fixtures/database-unavailable.json";
 import g12Profile from "@tests/fixtures/g12-profile.json";
 import g12Import from "@tests/fixtures/g12-statement-import.json";
 import g12Q1 from "@tests/fixtures/g12-transactions-2025-q1.json";
@@ -198,6 +199,17 @@ describe("TransactionsPage", () => {
     await user.click(screen.getByRole("button", { name: en.import.submit }));
     expect(screen.getByRole("alert")).toHaveTextContent(en.failure.tooLarge);
     expect(urls(fetchStub, "/bank-statements")).toHaveLength(1);
+  });
+
+  it("says the database is not answering when the API cannot reach it", async () => {
+    stubApi({ imported: { status: 503, body: databaseUnavailable } });
+    const user = renderPage();
+    await screen.findByText(fill(en.list.count, { count: g12Year.length }));
+
+    await user.upload(screen.getByLabelText(en.import.file), statement());
+    await user.click(screen.getByRole("button", { name: en.import.submit }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(en.failure.database);
   });
 
   it("sends to settings when there is no profile yet", async () => {

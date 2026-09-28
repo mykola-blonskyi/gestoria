@@ -12,4 +12,13 @@ public class HealthEndpoint(ApiFactory api) : IClassFixture<ApiFactory>
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
+
+    // DatabaseOutage stops the database and asks again.
+    [Fact]
+    public async Task ReadyAnswersNoContentWithoutTheKeyWhileTheDatabaseAnswers()
+    {
+        var response = await api.CreateClientWithoutKey().GetAsync("/api/v1/health/ready");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
 }

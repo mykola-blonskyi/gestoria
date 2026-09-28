@@ -49,10 +49,13 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
 
     private static async Task AssertFixture(string name, HttpResponseMessage response, IEnumerable<(string Id, string FixtureId)>? ids = null)
     {
-        var path = RepoFiles.WebFixture(name);
         var text = (ids ?? []).Aggregate(await response.Content.ReadAsStringAsync(), (answer, id) => answer.Replace(id.Id, id.FixtureId, StringComparison.Ordinal));
-        var answer = JsonNode.Parse(text)!;
+        AssertFixture(name, JsonNode.Parse(text)!);
+    }
 
+    internal static void AssertFixture(string name, JsonNode answer)
+    {
+        var path = RepoFiles.WebFixture(name);
         if (Environment.GetEnvironmentVariable("GESTORIA_WRITE_WEB_FIXTURES") == "1")
         {
             var options = new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };

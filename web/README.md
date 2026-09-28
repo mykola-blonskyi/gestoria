@@ -18,7 +18,7 @@ The app needs the API: `dotnet run --project src/GestorIA.Api` from the reposito
 
 ### The API key
 
-Every API endpoint but the health checks refuses a request without the local API key (SPEC-009 §3). The API is configured with the key's SHA-256, never the key itself (SPEC-013), and refuses to start without it. Set it up once per machine, from the repository root:
+Every API endpoint but the health checks refuses a request without the local API key (SPEC-009 §3). Unlocking checks the key, then `/health/ready`, so a stopped database is named on the unlock screen rather than on every page after it. The API is configured with the key's SHA-256, never the key itself (SPEC-013), and refuses to start without it. Set it up once per machine, from the repository root:
 
 ```bash
 KEY=$(openssl rand -hex 32)

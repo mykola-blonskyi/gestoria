@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-import { ApiError } from "@/data/api-error";
+import { ApiError, isDatabaseUnavailable } from "@/data/api-error";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 
 import { useProfile, useSaveProfile } from "../hooks/use-profile";
@@ -58,13 +58,16 @@ export function ProfileSection() {
 function Failure({ error }: { error: Error }) {
   const t = useTranslations("Settings.profile.failure");
   const failure = error instanceof ApiError ? error.failure : null;
+  const database = isDatabaseUnavailable(error);
   const title =
     failure?.kind === "network"
       ? t("network")
-      : failure?.kind === "problem" && failure.problem.status === 400
-        ? t("invalid")
-        : t("other", { status: failure?.kind === "problem" ? failure.problem.status : failure?.kind === "http" ? failure.status : 0 });
-  const detail = failure?.kind === "problem" && failure.problem.status !== 400 ? failure.problem.detail : undefined;
+      : database
+        ? t("database")
+        : failure?.kind === "problem" && failure.problem.status === 400
+          ? t("invalid")
+          : t("other", { status: failure?.kind === "problem" ? failure.problem.status : failure?.kind === "http" ? failure.status : 0 });
+  const detail = failure?.kind === "problem" && failure.problem.status !== 400 && !database ? failure.problem.detail : undefined;
 
   return (
     <div role="alert" className="rounded-xl border border-destructive bg-background p-4">

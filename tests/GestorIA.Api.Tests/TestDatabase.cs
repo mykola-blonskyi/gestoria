@@ -20,4 +20,9 @@ internal static class TestDatabase
         var container = await Container.Value;
         return new NpgsqlConnectionStringBuilder(container.GetConnectionString()) { Database = $"gestoria_{Guid.NewGuid():N}" }.ConnectionString;
     }
+
+    // A container of its own, for a test that stops it: the shared one serves every other test running at the same time.
+    // The caller disposes it.
+    internal static PostgreSqlContainer OwnContainer(string username, string password) =>
+        new PostgreSqlBuilder(RepoFiles.ComposePostgresImage).WithUsername(username).WithPassword(password).Build();
 }

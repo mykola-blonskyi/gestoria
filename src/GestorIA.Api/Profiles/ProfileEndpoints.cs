@@ -19,7 +19,8 @@ public static class ProfileEndpoints
 {
     public static void MapProfiles(this IEndpointRouteBuilder api)
     {
-        var profiles = api.MapGroup("/profiles").WithTags("profiles");
+        // Every profile endpoint reads PostgreSQL, so each may answer 503 database-unavailable (DatabaseUnavailable).
+        var profiles = api.MapGroup("/profiles").WithTags("profiles").ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         profiles.MapGet("/", List)
             .WithName("listProfiles")

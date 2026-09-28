@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import databaseUnavailable from "@tests/fixtures/database-unavailable.json";
 import g12Profile from "@tests/fixtures/g12-profile.json";
 import taxYears from "@tests/fixtures/tax-years.json";
 import { MESSAGES, renderInApp } from "@tests/render";
@@ -219,5 +220,14 @@ describe("SettingsPage", () => {
     renderInApp(<SettingsPage />, { locale: "en" });
 
     expect(await screen.findByRole("alert", {}, { timeout: 8_000 })).toHaveTextContent(form.failure.network);
+  });
+
+  it("says the database is not answering, in the app's words, when the API cannot reach it", { timeout: 10_000 }, async () => {
+    stubApi({ profiles: { status: 503, body: databaseUnavailable } });
+    renderInApp(<SettingsPage />, { locale: "en" });
+
+    const alert = await screen.findByRole("alert", {}, { timeout: 8_000 });
+    expect(alert).toHaveTextContent(form.failure.database);
+    expect(alert).not.toHaveTextContent(databaseUnavailable.detail);
   });
 });

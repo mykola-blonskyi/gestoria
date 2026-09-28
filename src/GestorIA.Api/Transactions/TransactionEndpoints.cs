@@ -20,7 +20,8 @@ public static class TransactionEndpoints
 
     public static void MapTransactions(this IEndpointRouteBuilder api)
     {
-        var profile = api.MapGroup("/profiles/{id:guid}").WithTags("transactions");
+        // Every endpoint here reads PostgreSQL, so each may answer 503 database-unavailable (DatabaseUnavailable).
+        var profile = api.MapGroup("/profiles/{id:guid}").WithTags("transactions").ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         profile.MapPost("/bank-statements", Import)
             .WithName("importBankStatement")
