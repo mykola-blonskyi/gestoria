@@ -3,6 +3,7 @@ import { MutationCache } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import databaseUnavailable from "@tests/fixtures/database-unavailable.json";
 import g12Export from "@tests/fixtures/g12-export.json";
 import g12Profile from "@tests/fixtures/g12-profile.json";
 import { MESSAGES, renderInApp } from "@tests/render";
@@ -138,6 +139,18 @@ describe("BackupPage", () => {
     await user.click(await screen.findByRole("button", { name: text.download }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(text.failure.gone);
+    expect(downloads.files).toEqual([]);
+  });
+
+  it("says the database is not answering when the export cannot be read", async () => {
+    stubApi({ exported: { status: 503, body: databaseUnavailable } });
+    const downloads = catchDownloads();
+    const user = userEvent.setup();
+    renderInApp(<BackupPage />, { locale: "en" });
+
+    await user.click(await screen.findByRole("button", { name: text.download }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(text.failure.database);
     expect(downloads.files).toEqual([]);
   });
 

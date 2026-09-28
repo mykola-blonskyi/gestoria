@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
-import { ApiError } from "@/data/api-error";
+import { ApiError, isDatabaseUnavailable } from "@/data/api-error";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 
@@ -79,7 +79,7 @@ function Failure({ error }: { error: Error }) {
 
   return (
     <p role="alert" className="rounded-xl border border-destructive p-4 font-medium text-destructive">
-      {failure?.kind === "network" ? t("network") : status === 404 ? t("gone") : t("other", { status })}
+      {failure?.kind === "network" ? t("network") : isDatabaseUnavailable(error) ? t("database") : status === 404 ? t("gone") : t("other", { status })}
     </p>
   );
 }

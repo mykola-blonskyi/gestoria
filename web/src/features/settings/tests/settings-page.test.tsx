@@ -298,6 +298,19 @@ describe("SettingsPage", () => {
       expect(screen.queryByRole("button", { name: data.delete.submit })).not.toBeInTheDocument();
     });
 
+    it("says nothing was deleted when the database is not answering", async () => {
+      stubApi({ profiles: { status: 200, body: [g12Profile] }, remove: { status: 503, body: databaseUnavailable } });
+      const user = await renderSettings();
+
+      await user.type(screen.getByLabelText(data.delete.confirm.replace("{word}", data.delete.word)), data.delete.word);
+      await user.click(screen.getByRole("button", { name: data.delete.submit }));
+
+      const alert = await screen.findByRole("alert");
+      expect(alert).toHaveTextContent(data.failure.database);
+      expect(alert).not.toHaveTextContent(databaseUnavailable.detail);
+      expect(screen.queryByText(data.deleted)).not.toBeInTheDocument();
+    });
+
     it("says nothing was deleted when the API is not answering, and keeps the profile", async () => {
       stubApi({ profiles: { status: 200, body: [g12Profile] }, remove: "unreachable" });
       const user = await renderSettings();
