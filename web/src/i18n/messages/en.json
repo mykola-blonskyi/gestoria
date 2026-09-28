@@ -134,7 +134,7 @@
     },
     "export": {
       "heading": "Export to your calendar",
-      "lead": "Downloads an .ics file of every date above, for your own calendar app.",
+      "lead": "Downloads an .ics file of the dates still to come, for your own calendar app. Past dates stay on this page.",
       "includeAmounts": "Include amounts in event titles",
       "button": "Download .ics",
       "failed": "The export could not be downloaded. Try again."

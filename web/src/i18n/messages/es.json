@@ -134,7 +134,7 @@
     },
     "export": {
       "heading": "Exportar a tu calendario",
-      "lead": "Descarga un archivo .ics con todas las fechas de arriba, para tu propia aplicación de calendario.",
+      "lead": "Descarga un archivo .ics con las fechas que aún están por llegar, para tu propia aplicación de calendario. Las fechas pasadas siguen en esta página.",
       "includeAmounts": "Incluir los importes en el título de cada evento",
       "button": "Descargar .ics",
       "failed": "No se ha podido descargar la exportación. Vuelve a intentarlo."
