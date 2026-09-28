@@ -313,7 +313,7 @@ public class ClassificationEndpoint
         Assert.True(JsonNode.DeepEquals(EngineOnly(fromFile, 0), EngineOnly(estimate, ledgerSteps)), estimate.ToJsonString());
         Assert.Equal("Q1", estimate["ledger"]!["actualsThrough"]!.GetValue<string>());
         Assert.Equal(
-            "no movements imported from 2025-04-23 on; Q2 needs movements from 2025-04-01 through 2025-07-01, so the projection covers Q2 and what follows",
+            "no stored import spans the days from 2025-04-23 on; Q2 stays on the projection, with what follows, until its days from 2025-04-01 through 2025-07-01 are spanned",
             Coverage(estimate));
 
         await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n23/04/2025;23/04/2025;MERCADONA;-20,00;\n15/07/2025;15/07/2025;MERCADONA;-20,00;\n"));
@@ -340,7 +340,7 @@ public class ClassificationEndpoint
 
         var after = await client.GetStringAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2");
         Assert.Equal(before, after);
-        Assert.Contains("no movements imported between 2025-04-21 and 2025-06-09", before, StringComparison.Ordinal);
+        Assert.Contains("no stored import spans the days from 2025-04-21 through 2025-06-09", before, StringComparison.Ordinal);
     }
 
     // A first statement starting on 15 February lacks the first month of alta: Q1 stays projected, and the trace names the days.
@@ -357,7 +357,7 @@ public class ClassificationEndpoint
 
         Assert.Null(estimate["ledger"]!["actualsThrough"]);
         Assert.Equal(
-            "no movements imported between 2025-01-15 and 2025-02-13; Q1 needs movements from 2025-01-15 through 2025-04-01, so the projection covers Q1 and what follows",
+            "no stored import spans the days from 2025-01-15 through 2025-02-13; Q1 stays on the projection, with what follows, until its days from 2025-01-15 through 2025-04-01 are spanned",
             Coverage(estimate));
     }
 

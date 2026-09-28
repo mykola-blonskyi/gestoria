@@ -116,11 +116,11 @@ public static class LedgerActuals
                 "Trimestre no cubierto por los movimientos importados",
                 [new("quarter", Invariant($"{reached}")), new("uncoveredFrom", Invariant($"{gap:yyyy-MM-dd}")), new("uncoveredThrough", gapEnd is { } end ? Invariant($"{end:yyyy-MM-dd}") : "")],
                 (gapEnd is { } through
-                    ? Invariant($"no movements imported between {gap:yyyy-MM-dd} and {through:yyyy-MM-dd}")
-                    : Invariant($"no movements imported from {gap:yyyy-MM-dd} on"))
-                    + Invariant($"; {reached} needs movements from {From(reached):yyyy-MM-dd} through {LastDay(reached).AddDays(1):yyyy-MM-dd}, so the projection covers {reached} and what follows"),
+                    ? Invariant($"no stored import spans the days from {gap:yyyy-MM-dd} through {through:yyyy-MM-dd}")
+                    : Invariant($"no stored import spans the days from {gap:yyyy-MM-dd} on"))
+                    + Invariant($"; {reached} stays on the projection, with what follows, until its days from {From(reached):yyyy-MM-dd} through {LastDay(reached).AddDays(1):yyyy-MM-dd} are spanned"),
                 new TraceValue.Count(byQuarter[reached].Count()),
-                "#73: an import spans only the days from its first line to its last; a quarter the imports do not span may hold income not imported yet, so it stays projected"));
+                "#73: an import spans the days from the first to the last movement it stored; a quarter no stored import spans may hold income not stored, so it stays on the projection. Statement periods: #88"));
         }
 
         if (waiting.Count > 0)

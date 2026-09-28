@@ -209,7 +209,7 @@ public class LedgerActualsTests
         if (q2 is null)
         {
             var gap = DateOnly.Parse(to, System.Globalization.CultureInfo.InvariantCulture).AddDays(1);
-            Assert.Equal($"no movements imported from {gap:yyyy-MM-dd} on; Q2 needs movements from 2025-04-01 through 2025-07-01, so the projection covers Q2 and what follows", coverage!.Formula);
+            Assert.Equal($"no stored import spans the days from {gap:yyyy-MM-dd} on; Q2 stays on the projection, with what follows, until its days from 2025-04-01 through 2025-07-01 are spanned", coverage!.Formula);
         }
         else
         {
@@ -220,9 +220,9 @@ public class LedgerActualsTests
     // A first statement starting on 15 February lacks January, and a gap between two imports lacks those days: a quarter missing
     // days stays projected, and the trace names the days. Two imports that meet cover it together.
     [Theory]
-    [InlineData("2025-02-15", "2025-12-31", null, null, "Q1", "no movements imported between 2025-01-15 and 2025-02-14; Q1 needs movements from 2025-01-15 through 2025-04-01")]
-    [InlineData("2025-01-02", "2025-02-28", "2025-06-01", "2025-12-31", "Q1", "no movements imported between 2025-03-01 and 2025-05-31; Q1 needs movements from 2025-01-15 through 2025-04-01")]
-    [InlineData("2025-01-02", "2025-04-30", "2025-06-01", "2025-12-31", "Q2", "no movements imported between 2025-05-01 and 2025-05-31; Q2 needs movements from 2025-04-01 through 2025-07-01")]
+    [InlineData("2025-02-15", "2025-12-31", null, null, "Q1", "no stored import spans the days from 2025-01-15 through 2025-02-14; Q1 stays on the projection, with what follows, until its days from 2025-01-15 through 2025-04-01")]
+    [InlineData("2025-01-02", "2025-02-28", "2025-06-01", "2025-12-31", "Q1", "no stored import spans the days from 2025-03-01 through 2025-05-31; Q1 stays on the projection, with what follows, until its days from 2025-01-15 through 2025-04-01")]
+    [InlineData("2025-01-02", "2025-04-30", "2025-06-01", "2025-12-31", "Q2", "no stored import spans the days from 2025-05-01 through 2025-05-31; Q2 stays on the projection, with what follows, until its days from 2025-04-01 through 2025-07-01")]
     [InlineData("2025-01-02", "2025-03-31", "2025-04-01", "2025-12-31", null, null)]
     public void AQuarterIsActualsOnlyWhenTheImportsSpanEveryDayOfIt(string firstFrom, string firstTo, string? secondFrom, string? secondTo, string? projected, string? why)
     {
