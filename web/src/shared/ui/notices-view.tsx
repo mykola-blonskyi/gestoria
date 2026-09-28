@@ -19,6 +19,8 @@ export function Notices({ notices }: { notices: readonly Notice[] }) {
   const t = useTranslations("Notices");
   const ordered = [...notices].sort((a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity]);
 
+  if (ordered.length === 0) return null;
+
   return (
     <Card>
       <CardHeader>
