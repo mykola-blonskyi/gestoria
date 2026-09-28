@@ -166,6 +166,29 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
         Assert.Contains(("BankTransactions", 0), await StoredData.RowsPerTable(api));
     }
 
+    // SPEC-009 §2.1: a movement without class, as in every file exported before #73, restores undecided; the classes the file
+    // does hold come back as they were.
+    [Fact]
+    public async Task AMovementWithoutAClassRestoresUndecided()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var file = JsonNode.Parse(deleted.Export)!;
+        var movements = file["entities"]!["bankTransactions"]!.AsArray();
+        Assert.Contains(movements, movement => movement!["class"] is not null);
+        foreach (var movement in movements)
+        {
+            movement!.AsObject().Remove("class");
+        }
+
+        var response = await client.Restore(file.ToJsonString());
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var id = (await response.Json())["profileId"]!.GetValue<string>();
+        var export = JsonNode.Parse(await client.GetStringAsync($"/api/v1/profiles/{id}/export"))!;
+        Assert.All(export["entities"]!["bankTransactions"]!.AsArray(), movement => Assert.Null(movement!["class"]));
+    }
+
     public static TheoryData<string, string> Refusals => new()
     {
         { "format", "$.format" },
@@ -195,6 +218,11 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
         { "a NUL in a description, with the key it gives", "$.entities.bankTransactions[0].description" },
         { "half a character in a description", "$" },
         { "a line key with one digit changed", "$.entities.bankTransactions[0].lineKey" },
+        { "a class the API does not write", "$.entities.bankTransactions[0].class" },
+        { "a class by its C# name", "$.entities.bankTransactions[0].class" },
+        { "a class as a number", "$.entities.bankTransactions[0].class" },
+        { "two classes joined by a comma", "$.entities.bankTransactions[0].class" },
+        { "a class under a capitalised name", "$.entities.bankTransactions[0].Class" },
     };
 
     [Theory]
@@ -246,6 +274,14 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
             case "a line key with one digit changed":
                 var key = first["lineKey"]!.GetValue<string>();
                 first["lineKey"] = (key[0] == '0' ? "1" : "0") + key[1..];
+                break;
+            case "a class the API does not write": first["class"] = "unclear"; break;
+            case "a class by its C# name": first["class"] = "ActivityIncome"; break;
+            case "a class as a number": first["class"] = 0; break;
+            case "two classes joined by a comma": first["class"] = "personal, activityIncome"; break;
+            case "a class under a capitalised name":
+                first.AsObject().Remove("class");
+                first["Class"] = "ActivityIncome";
                 break;
         }
 

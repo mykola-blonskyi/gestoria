@@ -46,7 +46,8 @@ public sealed record ExportedBankTransaction(
     int ImportSequence,
     int LineNumber,
     string LineKey,
-    TransactionClass? Class)
+    // Optional within version 1: a file exported before #73 has none, and its movements restore undecided (SPEC-009 §2.1).
+    TransactionClass? Class = null)
 {
     public static ExportedBankTransaction From(BankTransactionRow row)
     {
