@@ -69,7 +69,8 @@ public static class TransactionEndpoints
             .WithTags("transactions")
             .WithSummary("Stores the user's class for a movement. A later call replaces an earlier one.")
             .Accepts<TransactionClassification>("application/json")
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
     }
 
     private static async Task<Results<Ok<BankStatementImport>, ValidationProblem, ProblemHttpResult>> Import(
