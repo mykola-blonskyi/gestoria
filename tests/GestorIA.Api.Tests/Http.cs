@@ -30,6 +30,15 @@ internal static class Http
     internal static Task<HttpResponseMessage> Restore(this HttpClient client, string json, string contentType = "application/json") =>
         client.PostAsync("/api/v1/profiles/restore", new StringContent(json, Encoding.UTF8, contentType));
 
+    internal static Task<HttpResponseMessage> Classify(this HttpClient client, string transactionId, string body) =>
+        client.PostAsync($"/api/v1/transactions/{transactionId}/classify", new StringContent(body, Encoding.UTF8, "application/json"));
+
+    internal static Task<HttpResponseMessage> ClassifyAs(this HttpClient client, string transactionId, string transactionClass) =>
+        client.Classify(transactionId, new JsonObject { ["class"] = transactionClass }.ToJsonString());
+
+    internal static async Task<JsonArray> ReviewQueue(this HttpClient client, string profileId) =>
+        JsonNode.Parse(await client.GetStringAsync($"/api/v1/profiles/{profileId}/review-queue"))!.AsArray();
+
     internal static async Task<string> CreateProfile(this HttpClient client, string golden = "G12") =>
         (await (await client.PostProfile(RepoFiles.GoldenProfile(golden))).Json())["id"]!.GetValue<string>();
 

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "tgss",
+    "class": "socialSecurity",
+    "direction": "any",
+    "certain": true,
+    "patterns": ["TGSS", "SEGURIDAD SOCIAL", "CUOTA AUTONOM"],
+    "source": "SPEC-004 §3.2"
+  },
+  {
+    "id": "aeat",
+    "class": "aeatPayment",
+    "direction": "any",
+    "certain": true,
+    "patterns": ["AEAT", "AGENCIA TRIBUTARIA", "HACIENDA", "MODELO 130", "MODELO 303", "MOD.130"],
+    "source": "SPEC-004 §3.3"
+  },
+  {
+    "id": "nomina",
+    "class": "employmentIncome",
+    "direction": "credit",
+    "certain": true,
+    "patterns": ["NOMINA", "SALARIO"],
+    "source": "SPEC-004 §3.4"
+  },
+  {
+    "id": "savings",
+    "class": "savingsIncome",
+    "direction": "credit",
+    "certain": true,
+    "patterns": ["INTERESES", "DIVIDENDO", "CUPON"],
+    "source": "SPEC-004 §3.5"
+  },
+  {
+    "id": "vendors",
+    "class": "deductibleExpense",
+    "direction": "debit",
+    "certain": false,
+    "patterns": [
+      "GOOGLE",
+      "ADOBE",
+      "GITHUB",
+      "OPENAI",
+      "ANTHROPIC",
+      "AMAZON BUSINESS",
+      "JETBRAINS",
+      "HETZNER",
+      "DIGITALOCEAN",
+      "AMAZON WEB SERVICES",
+      "AWS EMEA",
+      "MICROSOFT",
+      "NOTION",
+      "FIGMA"
+    ],
+    "source": "SPEC-004 §3.7"
+  },
+  {
+    "id": "personal",
+    "class": "personal",
+    "direction": "debit",
+    "certain": true,
+    "patterns": [
+      "SUPERMERCADO",
+      "MERCADONA",
+      "CARREFOUR",
+      "LIDL",
+      "ALDI",
+      "DIA ",
+      "CONSUM",
+      "EROSKI",
+      "RESTAURANTE",
+      "CAFETERIA",
+      "BAR ",
+      "GIMNASIO",
+      "NETFLIX",
+      "SPOTIFY",
+      "ZARA",
+      "PRIMARK"
+    ],
+    "source": "SPEC-004 §3.9"
+  }
+]

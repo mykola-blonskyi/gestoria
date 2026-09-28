@@ -6,6 +6,7 @@ using GestorIA.Infrastructure.Persistence;
 using GestorIA.Infrastructure.Profiles;
 using GestorIA.Infrastructure.SetAside;
 using GestorIA.Infrastructure.TaxYears;
+using GestorIA.Infrastructure.Transactions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
@@ -79,7 +80,7 @@ public static class ProfileEndpoints
 
         profiles.MapGet("/{id:guid}/set-aside/estimate", Estimate)
             .WithName("estimateSetAsideForProfile")
-            .WithSummary("Runs the set-aside estimator on a stored profile for a quarter of its tax year, with no closed quarter stated.")
+            .WithSummary("Runs the set-aside estimator on a stored profile for a quarter of its tax year, its classified movements giving the actuals of the closed quarters.")
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
             .AddOpenApiOperationTransformer((operation, context, _) =>
@@ -279,7 +280,7 @@ public static class ProfileEndpoints
     }
 
     private static async Task<Results<Ok<SetAsideEstimate>, ValidationProblem, ProblemHttpResult>> Estimate(
-        Guid id, string? asOf, GestoriaDbContext db, TaxYearConfigLoader loader, CancellationToken cancellationToken)
+        Guid id, string? asOf, GestoriaDbContext db, TaxYearConfigLoader loader, TransactionRules rules, TimeProvider time, CancellationToken cancellationToken)
     {
         if (QuarterParameter.Parse(asOf) is not { } quarter)
         {
@@ -291,11 +292,11 @@ public static class ProfileEndpoints
             return Problems.NoProfile(id);
         }
 
-        var profile = row.ToProfile();
         try
         {
-            var config = loader.Load(profile.TaxYear);
-            return TypedResults.Ok(SetAsideEstimate.From(SetAsideEstimator.Estimate(profile.SetAsideInput(config, quarter)), config.TaxYear));
+            var config = loader.Load(row.TaxYear);
+            var ledger = await db.SetAsideInputAsync(rules, row, config, quarter, DateOnly.FromDateTime(time.GetLocalNow().DateTime), cancellationToken);
+            return TypedResults.Ok(SetAsideEstimate.From(SetAsideEstimator.Estimate(ledger.Input), config.TaxYear, ledger));
         }
         catch (ConfigNotFoundException e)
         {

@@ -1,0 +1,138 @@
+using System.Runtime.CompilerServices;
+using GestorIA.Domain.Models;
+using GestorIA.Domain.ValueObjects;
+using GestorIA.Infrastructure.Parsers;
+using GestorIA.Infrastructure.Transactions;
+using Xunit;
+
+namespace GestorIA.Domain.Tests;
+
+public class TransactionRulesTests
+{
+    private static readonly TransactionRules Shipped = TransactionRules.Load(Path.Combine(RepoRoot(), "config", "transaction-rules.json"));
+
+    private static Classification Classify(string description, decimal amount, TransactionClass? decided = null) =>
+        Shipped.Classify(decided, description, new Money(amount));
+
+    [Theory]
+    [InlineData("CUOTA AUTONOMOS TGSS", -87.61, TransactionClass.SocialSecurity, "tgss")]
+    [InlineData("DEVOLUCION TGSS", 20.00, TransactionClass.SocialSecurity, "tgss")]
+    [InlineData("PAGO MODELO 130 1T AEAT", -312.88, TransactionClass.AeatPayment, "aeat")]
+    [InlineData("Nómina marzo", 1500.00, TransactionClass.EmploymentIncome, "nomina")]
+    [InlineData("ABONO INTERESES CUENTA", 0.43, TransactionClass.SavingsIncome, "savings")]
+    [InlineData("SUPERMERCADO FICTICIO", -47.16, TransactionClass.Personal, "personal")]
+    [InlineData("COMPRA DIA SUPER", -12.00, TransactionClass.Personal, "personal")]
+    [InlineData("café bar el rincón", -3.10, TransactionClass.Personal, "personal")]
+    public void ACertainRuleConfirmsItsClass(string description, decimal amount, TransactionClass expected, string rule)
+    {
+        Assert.Equal(new Classification.Confirmed(expected, rule), Classify(description, amount));
+    }
+
+    [Fact]
+    public void AVendorDebitIsOnlySuggested()
+    {
+        Assert.Equal(new Classification.Suggested(TransactionClass.DeductibleExpense, "vendors"), Classify("GITHUB INC SAN FRANCISCO", -4.00m));
+    }
+
+    [Theory]
+    [InlineData("PARAGUAS Y DIARIOS", -9.99)]
+    [InlineData("VIAJE BARCELONA", -60.00)]
+    [InlineData("SUBTGSS", -1.00)]
+    [InlineData("NOMINA", -1500.00)]
+    [InlineData("DEVOLUCION GITHUB", 4.00)]
+    [InlineData("TRANSFERENCIA RECIBIDA CLIENTE", 2345.67)]
+    public void NoRuleMatchesInsideAWordOrAgainstItsDirection(string description, decimal amount)
+    {
+        Assert.Equal(new Classification.Unclear(), Classify(description, amount));
+    }
+
+    [Fact]
+    public void TheFirstMatchingRuleWins()
+    {
+        Assert.Equal(new Classification.Confirmed(TransactionClass.SocialSecurity, "tgss"), Classify("HACIENDA Y TGSS", -10.00m));
+    }
+
+    [Fact]
+    public void TheUsersDecisionWinsOverEveryRule()
+    {
+        Assert.Equal(new Classification.Confirmed(TransactionClass.Personal, null), Classify("CUOTA AUTONOMOS TGSS", -87.61m, TransactionClass.Personal));
+    }
+
+    [Fact]
+    public void AMatchIgnoresCaseAndDiacriticsOnBothSides()
+    {
+        var rules = TransactionRules.Parse(Rules("{ \"id\": \"agua\", \"class\": \"personal\", \"direction\": \"any\", \"certain\": true, \"patterns\": [\"Agüa\"], \"source\": \"test\" }"), "rules.json");
+
+        Assert.Equal(new Classification.Confirmed(TransactionClass.Personal, "agua"), rules.Classify(null, "RECIBO AGUA", new Money(-9.00m)));
+        Assert.Equal(new Classification.Unclear(), rules.Classify(null, "PARAGÜAS", new Money(-9.00m)));
+    }
+
+    // The synthetic statement's lines (tests/fixtures/bank), each with the class the shipped rules give it; null is unclear.
+    [Fact]
+    public void TheSyntheticStatementIsClassifiedAsSpec004Says()
+    {
+        var statement = new BbvaCsvStatementParser().Parse(File.ReadAllText(Path.Combine(RepoRoot(), "tests", "fixtures", "bank", "bbva-2025-synthetic.csv")));
+
+        var classes = statement.Select(line => Classify(line.Movement.Description, line.Movement.Amount.Amount) switch
+        {
+            Classification.Confirmed confirmed => confirmed.Class,
+            _ => (TransactionClass?)null,
+        });
+
+        TransactionClass? queue = null;
+        Assert.Equal(
+            [
+                queue, TransactionClass.SocialSecurity, TransactionClass.Personal, TransactionClass.Personal, queue, queue, queue,
+                TransactionClass.SavingsIncome, queue, TransactionClass.AeatPayment, TransactionClass.Personal, queue, queue, queue,
+                TransactionClass.SocialSecurity, queue, TransactionClass.Personal, TransactionClass.SavingsIncome,
+            ],
+            classes);
+    }
+
+    public static TheoryData<string, string> MalformedRules => new()
+    {
+        { Rule("r", transactionClass: "unclear"), "rule \"r\": class \"unclear\"" },
+        { Rule("r", direction: "in"), "rule \"r\": direction \"in\"" },
+        { Rule("r", patterns: "[]"), "rule \"r\": patterns" },
+        { Rule("r", patterns: "[\" \"]"), "rule \"r\": patterns" },
+        { Rule(""), "rule 1 has no id" },
+    };
+
+    [Theory]
+    [MemberData(nameof(MalformedRules))]
+    public void AMalformedRuleIsRefusedByName(string rule, string failure)
+    {
+        var refused = Assert.Throws<InvalidTransactionRulesException>(() => TransactionRules.Parse(Rules(rule), "rules.json"));
+
+        Assert.StartsWith(failure, Assert.Single(refused.Failures), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ARepeatedIdIsRefused()
+    {
+        var refused = Assert.Throws<InvalidTransactionRulesException>(() => TransactionRules.Parse(Rules(Rule("r"), Rule("r")), "rules.json"));
+
+        Assert.Equal("rule \"r\" repeats an id an earlier rule has.", Assert.Single(refused.Failures));
+    }
+
+    [Theory]
+    [InlineData("not json")]
+    [InlineData("[{ \"id\": \"r\" }]")]
+    public void AFileOfTheWrongShapeIsRefused(string json)
+    {
+        Assert.Throws<InvalidTransactionRulesException>(() => TransactionRules.Parse(json, "rules.json"));
+    }
+
+    [Fact]
+    public void AnUnknownFieldIsRefused()
+    {
+        Assert.Throws<InvalidTransactionRulesException>(() => TransactionRules.Parse(Rules(Rule("r").Replace("\"certain\"", "\"regex\": \".*\", \"certain\"", StringComparison.Ordinal)), "rules.json"));
+    }
+
+    private static string Rule(string id, string transactionClass = "personal", string direction = "debit", string patterns = "[\"X\"]") =>
+        $"{{ \"id\": \"{id}\", \"class\": \"{transactionClass}\", \"direction\": \"{direction}\", \"certain\": true, \"patterns\": {patterns}, \"source\": \"test\" }}";
+
+    private static string Rules(params string[] rules) => $"[{string.Join(", ", rules)}]";
+
+    private static string RepoRoot([CallerFilePath] string here = "") => Path.GetFullPath(Path.Combine(Path.GetDirectoryName(here)!, "..", ".."));
+}

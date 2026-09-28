@@ -89,6 +89,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/transactions/{id}/classify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stores the user's class for a movement. A later call replaces an earlier one. */
+        post: operations["classifyTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/profiles": {
         parameters: {
             query?: never;
@@ -167,7 +184,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Runs the set-aside estimator on a stored profile for a quarter of its tax year, with no closed quarter stated. */
+        /** Runs the set-aside estimator on a stored profile for a quarter of its tax year, its classified movements giving the actuals of the closed quarters. */
         get: operations["estimateSetAsideForProfile"];
         put?: never;
         post?: never;
@@ -245,34 +262,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/profiles/{id}/calculations/quarter": {
+    "/api/v1/profiles/{id}/review-queue": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** The movements of the profile's tax year waiting for the user's class, unclear or with a rule's suggestion, in the transactions list's order. */
+        get: operations["getReviewQueue"];
         put?: never;
-        /** Runs the set-aside estimator on a stored profile and returns one quarter's Modelo 130, its casillas and trace. */
-        post: operations["calculateQuarter"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/profiles/{id}/calculations/annual-true-up": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Runs the set-aside estimator on a stored profile and returns the annual true-up gap, due window and trace. */
-        post: operations["calculateAnnualTrueUp"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -288,22 +288,6 @@ export interface components {
             actuals: components["schemas"]["QuarterToDateDocument"][];
             projection: components["schemas"]["ProjectionDocument"];
         };
-        AnnualTrueUpView: {
-            /** Format: int32 */
-            taxYear: number;
-            configHash: string;
-            liabilityOnActivity: string;
-            marginalRate: string;
-            reduccionTrabajoLost: string;
-            gap: string;
-            /** Format: date */
-            dueFrom: string;
-            /** Format: date */
-            dueBy: string;
-            payableIn: string;
-            trace: components["schemas"]["TraceStepView"][];
-            notices: components["schemas"]["NoticeView"][];
-        };
         BankStatementImport: {
             bank: string;
             /** Format: int32 */
@@ -312,10 +296,6 @@ export interface components {
             imported: number;
             /** Format: int32 */
             alreadyImported: number;
-        };
-        CasillaView: {
-            key: string;
-            amount: string;
         };
         DeclaredGap: {
             entry: string;
@@ -361,6 +341,15 @@ export interface components {
             errors?: {
                 [key: string]: string[];
             };
+        };
+        LedgerView: {
+            actualsThrough: null | components["schemas"]["Quarter"];
+            /** Format: int32 */
+            counted: number;
+            /** Format: int32 */
+            awaitingReview: number;
+            /** Format: int32 */
+            awaitingInvoice: number;
         };
         NewActivityChoice: components["schemas"]["NewActivityChoiceEstablishedActivity"] | components["schemas"]["NewActivityChoiceNewActivityStarted"];
         NewActivityChoiceEstablishedActivity: {
@@ -495,19 +484,6 @@ export interface components {
         };
         /** @enum {unknown} */
         Quarter: "Q1" | "Q2" | "Q3" | "Q4";
-        QuarterResultView: {
-            /** Format: int32 */
-            taxYear: number;
-            configHash: string;
-            quarter: components["schemas"]["Quarter"];
-            aIngresar: string;
-            /** Format: date */
-            dueFrom: string;
-            /** Format: date */
-            dueBy: string;
-            casillas: components["schemas"]["CasillaView"][];
-            trace: components["schemas"]["TraceStepView"][];
-        };
         QuarterToDateDocument: {
             quarter: components["schemas"]["Quarter"];
             ingresosYtd: string;
@@ -531,6 +507,21 @@ export interface components {
         };
         /** @enum {unknown} */
         RetencionesDocument: "foreignPayersOnly";
+        ReviewItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            bookingDate: string;
+            /** Format: date */
+            valueDate: string;
+            description: string;
+            amount: string;
+            suggestion: null | components["schemas"]["ReviewSuggestion"];
+        };
+        ReviewSuggestion: {
+            class: components["schemas"]["TransactionClass"];
+            ruleId: string;
+        };
         SetAsideEstimate: {
             /** Format: int32 */
             taxYear: number;
@@ -543,6 +534,7 @@ export interface components {
             ivaToSetAside: string;
             trace: components["schemas"]["TraceStepView"][];
             notices: components["schemas"]["NoticeView"][];
+            ledger: null | components["schemas"]["LedgerView"];
         };
         /** @description The console's input file, byte for byte: src/GestorIA.Cli/README.md describes every field. */
         SetAsideInputDocument: {
@@ -558,9 +550,6 @@ export interface components {
             configHash: string;
             regions: components["schemas"]["RegionView"][];
             gaps: components["schemas"]["DeclaredGap"][];
-            modelo130Lines: {
-                [key: string]: string;
-            };
         };
         TraceInputView: {
             name: string;
@@ -583,6 +572,11 @@ export interface components {
         };
         /** @enum {unknown} */
         TraceValueKind: "money" | "rate" | "count" | "date";
+        /** @enum {unknown} */
+        TransactionClass: "activityIncome" | "deductibleExpense" | "socialSecurity" | "aeatPayment" | "employmentIncome" | "savingsIncome" | "ownTransfer" | "personal";
+        TransactionClassification: {
+            class: components["schemas"]["TransactionClass"];
+        };
         TransactionView: {
             /** Format: uuid */
             id: string;
@@ -763,6 +757,57 @@ export interface operations {
             };
             /** @description Unprocessable Entity */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    classifyTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionClassification"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1509,67 +1554,7 @@ export interface operations {
             };
         };
     };
-    calculateQuarter: {
-        parameters: {
-            query?: {
-                quarter?: string;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QuarterResultView"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Unprocessable Entity */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-        };
-    };
-    calculateAnnualTrueUp: {
+    getReviewQueue: {
         parameters: {
             query?: never;
             header?: never;
@@ -1586,7 +1571,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AnnualTrueUpView"];
+                    "application/json": components["schemas"]["ReviewItem"][];
                 };
             };
             /** @description Unauthorized */
@@ -1600,15 +1585,6 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["ProblemDetails"];
-                };
-            };
-            /** @description Unprocessable Entity */
-            422: {
                 headers: {
                     [name: string]: unknown;
                 };
