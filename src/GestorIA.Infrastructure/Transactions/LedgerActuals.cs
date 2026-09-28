@@ -46,8 +46,9 @@ public static class LedgerActuals
     // The amounts are cents; a sum of none keeps two decimals, so the engine's trace shows "0.00" as it does for an input file.
     private static readonly Money NoEuros = new(0.00m);
 
-    // lines: the profile's movements of its tax year. today decides which quarters are closed.
-    public static LedgerEstimate Of(Profile profile, IReadOnlyList<ClassifiedLine> lines, TaxYearConfig config, Quarter asOf, DateOnly today)
+    // lines: the profile's movements of its tax year. importedThrough: the latest booking date of any movement the profile holds,
+    // of any year, null with none. today decides which quarters are closed.
+    public static LedgerEstimate Of(Profile profile, IReadOnlyList<ClassifiedLine> lines, DateOnly? importedThrough, TaxYearConfig config, Quarter asOf, DateOnly today)
     {
         var year = config.TaxYear;
         var alta = profile.Taxpayer.Activity.Alta;
@@ -55,15 +56,21 @@ public static class LedgerActuals
         var monthsOfAlta = 13 - firstMonth;
         // A lookup is a dictionary whose values are lists: the lines of each quarter, none for a quarter no line is in.
         var byQuarter = lines.ToLookup(line => QuarterOf(line.BookingDate));
-        bool Closed(Quarter quarter) => today > new DateOnly(year, (int)quarter * 3, 1).AddMonths(1).AddDays(-1);
+        DateOnly LastDay(Quarter quarter) => new DateOnly(year, (int)quarter * 3, 1).AddMonths(1).AddDays(-1);
+        bool Closed(Quarter quarter) => today > LastDay(quarter);
+        // A statement shows only the days it spans, and a BBVA export does not say which: the movements imported reach a day,
+        // and only a quarter that ends before it can hold them all. A statement ending on a quarter's last day leaves that
+        // quarter projected until a later movement arrives.
+        bool Covered(Quarter quarter) => importedThrough > LastDay(quarter);
         static bool AwaitsReview(ClassifiedLine line) => line.Classification is Classification.Unclear or Classification.Suggested;
 
         // The quarters that could be actuals: from the first of activity, closed, and not after asOf, so an unbroken run.
         var firstQuarter = QuarterOf(new DateOnly(year, firstMonth, 1));
         var closed = Enum.GetValues<Quarter>().Where(quarter => quarter >= firstQuarter && quarter <= asOf && Closed(quarter)).ToList();
-        // A quarter with no imported line has no evidence, and one with a line awaiting review has income not known yet; either
-        // would read as zero income, so it and the rest stay projected.
-        var actual = closed.TakeWhile(quarter => byQuarter.Contains(quarter) && !byQuarter[quarter].Any(AwaitsReview)).ToList();
+        // A quarter with no imported line has no evidence, one the imported movements do not reach past may have more, and one
+        // with a line awaiting review has income not known yet; each would read as missing income, so it and the rest stay
+        // projected.
+        var actual = closed.TakeWhile(quarter => byQuarter.Contains(quarter) && Covered(quarter) && !byQuarter[quarter].Any(AwaitsReview)).ToList();
         var waiting = closed.SelectMany(quarter => byQuarter[quarter]).Where(AwaitsReview).ToList();
 
         var steps = new List<TraceStep>();
@@ -82,6 +89,19 @@ public static class LedgerActuals
                     + Invariant($"; the projection covers {next} and what follows, the movements of {string.Join(", ", later)} included"),
                 new TraceValue.Count(later.Count),
                 "#73: a quarter with no imported movement has no evidence and would read as zero income, so it stays projected"));
+        }
+
+        // The run stopped at a quarter with movements that the imported movements do not reach past.
+        if (actual.Count < closed.Count && closed[actual.Count] is var reached && byQuarter.Contains(reached) && !Covered(reached))
+        {
+            steps.Add(new TraceStep(
+                "ledger.coverage",
+                TraceSection.Actividad,
+                "Trimestre no cubierto por los movimientos importados",
+                [new("quarter", Invariant($"{reached}")), new("importedThrough", Invariant($"{importedThrough:yyyy-MM-dd}"))],
+                Invariant($"movements imported through {importedThrough:yyyy-MM-dd}; {reached} needs movements after {LastDay(reached):yyyy-MM-dd}, so the projection covers {reached} and what follows"),
+                new TraceValue.Count(byQuarter[reached].Count()),
+                "#73: a statement shows only the days it spans; a quarter it does not reach past may hold income not imported yet, so it stays projected"));
         }
 
         if (waiting.Count > 0)

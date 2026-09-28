@@ -26,6 +26,8 @@ public static class Ledger
         var profile = row.ToProfile();
         var stored = await db.BankTransactions.AsNoTracking().OfTaxYear(row.Id, profile.TaxYear).ToListAsync(cancellationToken);
         var lines = stored.Select(line => new ClassifiedLine(line.Id, line.BookingDate, line.ToBankTransaction().Amount, line.ClassifiedBy(rules))).ToList();
-        return LedgerActuals.Of(profile, lines, config, asOf, today);
+        // Of every year: a movement of January next year shows the statement reached past December.
+        var importedThrough = await db.BankTransactions.Where(t => t.ProfileId == row.Id).MaxAsync(t => (DateOnly?)t.BookingDate, cancellationToken);
+        return LedgerActuals.Of(profile, lines, importedThrough, config, asOf, today);
     }
 }

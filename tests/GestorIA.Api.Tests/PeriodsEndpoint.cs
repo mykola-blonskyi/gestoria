@@ -62,6 +62,7 @@ public class PeriodsEndpoint
         var client = api.CreateClient();
         var id = await client.CreateProfile("G12");
         await client.ImportStatement(id, RepoFiles.Statement);
+        await client.ImportNextJanuary(id);
 
         var unreviewed = await Periods(client, id);
         Assert.Equal(["ledger.pending-review"], LedgerSteps(unreviewed.Quarter));
@@ -92,6 +93,7 @@ public class PeriodsEndpoint
         if (ledger != "none")
         {
             await client.ImportStatement(id, RepoFiles.Statement);
+            await client.ImportNextJanuary(id);
         }
 
         if (ledger == "reviewed")

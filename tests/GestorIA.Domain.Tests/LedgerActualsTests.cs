@@ -16,6 +16,9 @@ public class LedgerActualsTests
 
     private static readonly DateOnly AfterTheYear = new(2026, 9, 28);
 
+    // A statement reaching into the next year, so every quarter of 2025 that holds lines is covered.
+    private static readonly DateOnly ThroughNextJanuary = new(2026, 1, 31);
+
     private static Profile Profile(DateOnly alta, decimal ingresos = 30000.00m, decimal gastos = 1200.00m) => new(
         2025,
         new TaxpayerProfile("VC", new EmploymentIncome(Money.Zero, Money.Zero), new AutonomoRegistration(alta, new PreviousYear.NoActivity(), new NewActivity.Established())),
@@ -34,7 +37,7 @@ public class LedgerActualsTests
     [Fact]
     public void WithoutLinesTheInputIsTheWholeProjectionAndNoStepIsAdded()
     {
-        var ledger = LedgerActuals.Of(January, [], Config, Quarter.Q2, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, [], null, Config, Quarter.Q2, AfterTheYear);
 
         Assert.Equal((January.Taxpayer, Quarter.Q2), (ledger.Input.Profile, ledger.Input.AsOf));
         Assert.Empty(ledger.Input.Activity.Actuals);
@@ -57,7 +60,7 @@ public class LedgerActualsTests
             Line(5, 2, -87.61m, Cuota),
         ];
 
-        var actuals = LedgerActuals.Of(January, lines, Config, Quarter.Q2, AfterTheYear).Input.Activity.Actuals;
+        var actuals = LedgerActuals.Of(January, lines, ThroughNextJanuary, Config, Quarter.Q2, AfterTheYear).Input.Activity.Actuals;
 
         Assert.Equal(
             [
@@ -78,7 +81,7 @@ public class LedgerActualsTests
             Line(1, 9, 700.00m, new Classification.Confirmed(TransactionClass.SavingsIncome, "savings")),
         ];
 
-        var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q1, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, ThroughNextJanuary, Config, Quarter.Q1, AfterTheYear);
 
         Assert.Equal(new QuarterToDate(Quarter.Q1, new Money(1000.00m), new Money(0.00m), new Money(0.00m)), Assert.Single(ledger.Input.Activity.Actuals));
         Assert.Equal(new LedgerCounts(Quarter.Q1, 1, 0, 1), ledger.Counts);
@@ -104,7 +107,7 @@ public class LedgerActualsTests
             Line(11, 6, 900.00m, Income),
         ];
 
-        var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q4, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, ThroughNextJanuary, Config, Quarter.Q4, AfterTheYear);
 
         Assert.Equal([Quarter.Q1], ledger.Input.Activity.Actuals.Select(actual => actual.Quarter));
         Assert.Equal(new LedgerCounts(Quarter.Q1, 1, 2, 0), ledger.Counts);
@@ -121,7 +124,7 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [.. Enumerable.Range(0, 4).Select(q => Line(q * 3 + 1, 5, 1000.00m, new Classification.Unclear()))];
 
-        var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q4, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, ThroughNextJanuary, Config, Quarter.Q4, AfterTheYear);
 
         Assert.Empty(ledger.Input.Activity.Actuals);
         Assert.Equal(January.Projection, ledger.Input.Activity.Projection);
@@ -135,7 +138,7 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [Line(2, 1, 100.00m, Income), Line(5, 1, 100.00m, new Classification.Unclear()), Line(8, 1, 100.00m, new Classification.Unclear())];
 
-        var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q2, new DateOnly(2025, 8, 10));
+        var ledger = LedgerActuals.Of(January, lines, ThroughNextJanuary, Config, Quarter.Q2, new DateOnly(2025, 8, 10));
 
         Assert.Equal(new LedgerCounts(Quarter.Q1, 1, 1, 0), ledger.Counts);
     }
@@ -145,8 +148,8 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [Line(2, 1, 100.00m, Income), Line(5, 1, 100.00m, Income), Line(8, 1, 100.00m, Income)];
 
-        var open = LedgerActuals.Of(January, lines, Config, Quarter.Q3, new DateOnly(2025, 8, 10));
-        var asOf = LedgerActuals.Of(January, lines, Config, Quarter.Q1, AfterTheYear);
+        var open = LedgerActuals.Of(January, lines, ThroughNextJanuary, Config, Quarter.Q3, new DateOnly(2025, 8, 10));
+        var asOf = LedgerActuals.Of(January, lines, ThroughNextJanuary, Config, Quarter.Q1, AfterTheYear);
 
         Assert.Equal(Quarter.Q2, open.Counts.ActualsThrough);
         Assert.Equal(Quarter.Q1, asOf.Counts.ActualsThrough);
@@ -158,7 +161,7 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [Line(2, 1, 100.00m, Income), Line(8, 1, 100.00m, Income), Line(11, 1, 100.00m, Income)];
 
-        var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q4, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, ThroughNextJanuary, Config, Quarter.Q4, AfterTheYear);
 
         Assert.Equal(Quarter.Q1, ledger.Counts.ActualsThrough);
         var coverage = Assert.Single(ledger.Steps, step => step.Id == "ledger.coverage");
@@ -171,7 +174,7 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [Line(5, 1, 100.00m, Income)];
 
-        var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q2, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, ThroughNextJanuary, Config, Quarter.Q2, AfterTheYear);
 
         Assert.Null(ledger.Counts.ActualsThrough);
         Assert.Empty(ledger.Input.Activity.Actuals);
@@ -181,13 +184,42 @@ public class LedgerActualsTests
         Assert.Equal([new TraceInput("quarter", "Q1"), new TraceInput("laterWithMovements", "Q2")], coverage.Inputs);
     }
 
+    // A statement exported on 22 April holds Q1 and three weeks of Q2. A quarter holding lines is not a quarter the statement
+    // covers: Q2 stays projected, whatever its lines are and whoever classified them, until movements after 30 June arrive.
+    [Theory]
+    [InlineData("2025-04-22", null)]
+    [InlineData("2025-06-30", null)]
+    [InlineData("2025-07-15", Quarter.Q2)]
+    public void OnlyAQuarterTheImportedMovementsReachPastIsActuals(string importedThrough, Quarter? q2)
+    {
+        List<ClassifiedLine> lines =
+        [
+            Line(1, 2, 1000.00m, Income),
+            Line(4, 20, -312.88m, new Classification.Confirmed(TransactionClass.AeatPayment, "aeat")),
+            Line(4, 22, -35.10m, new Classification.Confirmed(TransactionClass.Personal, "personal")),
+        ];
+
+        var ledger = LedgerActuals.Of(January, lines, DateOnly.Parse(importedThrough, System.Globalization.CultureInfo.InvariantCulture), Config, Quarter.Q4, AfterTheYear);
+
+        Assert.Equal(q2 ?? Quarter.Q1, ledger.Counts.ActualsThrough);
+        var coverage = ledger.Steps.SingleOrDefault(step => step.Id == "ledger.coverage");
+        if (q2 is null)
+        {
+            Assert.Equal($"movements imported through {importedThrough}; Q2 needs movements after 2025-06-30, so the projection covers Q2 and what follows", coverage!.Formula);
+        }
+        else
+        {
+            Assert.Null(coverage);
+        }
+    }
+
     [Fact]
     public void TheActualsStartAtTheQuarterOfTheAlta()
     {
         var may = Profile(new(2025, 5, 10));
         List<ClassifiedLine> lines = [Line(2, 1, 100.00m, Income), Line(5, 20, 200.00m, Income), Line(8, 1, 300.00m, Income)];
 
-        var ledger = LedgerActuals.Of(may, lines, Config, Quarter.Q3, AfterTheYear);
+        var ledger = LedgerActuals.Of(may, lines, ThroughNextJanuary, Config, Quarter.Q3, AfterTheYear);
 
         Assert.Equal([Quarter.Q2, Quarter.Q3], ledger.Input.Activity.Actuals.Select(actual => actual.Quarter));
         Assert.Equal(new Money(500.00m), ledger.Input.Activity.Actuals[^1].IngresosYtd);
@@ -201,7 +233,7 @@ public class LedgerActualsTests
     {
         var profile = Profile(new(2025, 1, 15), ingresos: 1000.06m, gastos: 1200.00m);
 
-        var ledger = LedgerActuals.Of(profile, [Line(1, 2, 100.00m, Income)], Config, Quarter.Q2, AfterTheYear);
+        var ledger = LedgerActuals.Of(profile, [Line(1, 2, 100.00m, Income)], ThroughNextJanuary, Config, Quarter.Q2, AfterTheYear);
 
         Assert.Equal(new ActivityProjection(new Money(750.05m), new Money(900.00m), new Money(1274.51m)), ledger.Input.Activity.Projection);
         var step = Assert.Single(ledger.Steps, step => step.Id == "ledger.projection-remaining");
@@ -214,7 +246,7 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [.. Enumerable.Range(0, 4).Select(q => Line(q * 3 + 1, 5, 1000.00m, Income))];
 
-        var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q4, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, ThroughNextJanuary, Config, Quarter.Q4, AfterTheYear);
 
         Assert.Equal(new Money(0.00m), ledger.Input.Activity.Projection.Ingresos);
         Assert.Equal(Quarter.Q4, SetAsideEstimator.Estimate(ledger.Input).NextPayment.Quarter);
@@ -225,7 +257,7 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [Line(1, 2, 2345.67m, Income), Line(1, 3, -87.61m, Cuota), Line(1, 4, -23.79m, Confirmed(TransactionClass.DeductibleExpense))];
 
-        var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q1, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, ThroughNextJanuary, Config, Quarter.Q1, AfterTheYear);
 
         var values = ledger.Steps[0].Inputs.Select(input => input.Value).ToList();
         Assert.Equal(lines.Select(line => $"{line.Id} {line.BookingDate:yyyy-MM-dd}"), values);

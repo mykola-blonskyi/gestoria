@@ -292,6 +292,36 @@ public class ClassificationEndpoint
         Assert.Equal(before["holdBackShare"]!.GetValue<string>(), reviewed["holdBackShare"]!.GetValue<string>());
     }
 
+    // A statement exported on 22 April: Q1 reviewed, and two lines of Q2 that rules confirm and nobody is asked about. Q2 holds
+    // lines but the statement does not reach past it, so it stays projected; movements after 30 June make it actuals.
+    [Fact]
+    public async Task AQuarterTheStatementDoesNotReachPastStaysProjected()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = await client.CreateProfile("G12");
+        var firstQuarter = Encoding.UTF8.GetString(RepoFiles.Statement).ReplaceLineEndings("\n").Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Where(line => line.StartsWith("Fecha", StringComparison.Ordinal) || line[3..5] is "01" or "02" or "03");
+        var text = string.Join("\n", firstQuarter) + "\n";
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes(text));
+        await client.ClassifySyntheticQueue(id);
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n20/04/2025;20/04/2025;PAGO MODELO 130 1T AEAT;-312,88;\n22/04/2025;22/04/2025;MERCADONA;-35,10;\n"));
+        Assert.Empty(await client.ReviewQueue(id));
+
+        var april = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+        var fromFile = await (await client.Estimate(2025, File("Q2", new JsonArray(Actual("Q1", "2345.67", "87.61")), "22500.00", "900.00"))).Json();
+
+        var ledgerSteps = april["trace"]!.AsArray().Count(step => step!["id"]!.GetValue<string>().StartsWith("ledger.", StringComparison.Ordinal));
+        Assert.True(JsonNode.DeepEquals(EngineOnly(fromFile, 0), EngineOnly(april, ledgerSteps)), april.ToJsonString());
+        Assert.Equal("Q1", april["ledger"]!["actualsThrough"]!.GetValue<string>());
+        var coverage = april["trace"]!.AsArray().Single(step => step!["id"]!.GetValue<string>() == "ledger.coverage")!;
+        Assert.Equal("movements imported through 2025-04-22; Q2 needs movements after 2025-06-30, so the projection covers Q2 and what follows", coverage["formula"]!.GetValue<string>());
+
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n15/07/2025;15/07/2025;MERCADONA;-20,00;\n"));
+        var july = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+        Assert.Equal("Q2", july["ledger"]!["actualsThrough"]!.GetValue<string>());
+    }
+
     // 10 August 2025: Q1 and Q2 are closed, Q3 is not, so the actuals end with Q2 and the projection keeps six of its twelve months.
     [Fact]
     public async Task AQuarterStillOpenStaysProjected()
@@ -310,12 +340,14 @@ public class ClassificationEndpoint
         Assert.True(JsonNode.DeepEquals(Ledger("Q2", 3, 0, 1), fromProfile["ledger"]));
     }
 
-    // The G12 profile with the synthetic statement imported and every movement of its review queue classified. The ids are of
+    // The G12 profile with the synthetic statement and a movement of next January imported, so every quarter of 2025 is
+    // covered, and every movement of its review queue classified. The ids are of
     // the first two movements in the list, the first transfer and the first TGSS cuota.
     private static async Task<(string Id, List<string> Movements)> ClassifiedG12(HttpClient client)
     {
         var id = await client.CreateProfile("G12");
         await client.ImportStatement(id, RepoFiles.Statement);
+        await client.ImportNextJanuary(id);
         await client.ClassifySyntheticQueue(id);
         var movements = JsonNode.Parse(await client.GetStringAsync($"/api/v1/profiles/{id}/transactions?year=2025"))!.AsArray();
         return (id, [.. movements.Take(2).Select(t => t!["id"]!.GetValue<string>())]);
