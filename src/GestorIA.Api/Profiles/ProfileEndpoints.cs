@@ -43,6 +43,16 @@ public static class ProfileEndpoints
             .Accepts<ProfileInputDocument>("application/json")
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        profiles.MapDelete("/{id:guid}", Delete)
+            .WithName("deleteProfile")
+            .WithSummary("Deletes the profile and everything stored for it. Nothing is kept: export it first to keep a copy.")
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        profiles.MapGet("/{id:guid}/export", Export)
+            .WithName("exportProfile")
+            .WithSummary("Everything stored for the profile, in one versioned document (SPEC-009 §2.1). Personal financial data: sent with Cache-Control: no-store.")
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         profiles.MapGet("/{id:guid}/set-aside/estimate", Estimate)
             .WithName("estimateSetAsideForProfile")
             .WithSummary("Runs the set-aside estimator on a stored profile for a quarter of its tax year, with no closed quarter stated.")
@@ -122,6 +132,32 @@ public static class ProfileEndpoints
 
         await db.SaveChangesAsync(cancellationToken);
         return TypedResults.Ok(View(row));
+    }
+
+    // The rows that belong to the profile go with it through their foreign keys' ON DELETE CASCADE, in the same statement.
+    // ProfileDeletion enumerates every table of the model to prove it, so a table added without the cascade fails that test.
+    private static async Task<Results<NoContent, ProblemHttpResult>> Delete(Guid id, GestoriaDbContext db, CancellationToken cancellationToken) =>
+        await db.Profiles.Where(p => p.Id == id).ExecuteDeleteAsync(cancellationToken) == 0
+            ? Problems.NoProfile(id)
+            : TypedResults.NoContent();
+
+    private static async Task<Results<Ok<ProfileExport>, ProblemHttpResult>> Export(
+        Guid id, HttpResponse response, GestoriaDbContext db, CancellationToken cancellationToken)
+    {
+        if (await db.Profiles.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken) is not { } row)
+        {
+            return Problems.NoProfile(id);
+        }
+
+        var transactions = await db.BankTransactions.AsNoTracking()
+            .Where(t => t.ProfileId == id)
+            .OrderBy(t => t.BookingDate).ThenBy(t => t.ImportSequence).ThenBy(t => t.LineNumber)
+            .ToListAsync(cancellationToken);
+        var exportedAt = DateTimeOffset.UtcNow;
+        // No shared cache or browser cache may keep a copy of personal financial data (SPEC-013).
+        response.Headers.CacheControl = "no-store";
+        response.Headers.ContentDisposition = $"attachment; filename=\"{ProfileExport.FileName(exportedAt)}\"";
+        return TypedResults.Ok(ProfileExport.Of(View(row), transactions, exportedAt));
     }
 
     private static async Task<Results<Ok<SetAsideEstimate>, ValidationProblem, ProblemHttpResult>> Estimate(

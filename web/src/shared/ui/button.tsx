@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 const VARIANTS = {
   primary: "bg-primary text-primary-foreground",
   outline: "border border-input bg-transparent",
+  destructive: "border border-destructive bg-transparent text-destructive",
 } as const;
 
 export function Button({ className, variant = "primary", type = "button", ...props }: ComponentProps<"button"> & { variant?: keyof typeof VARIANTS }) {

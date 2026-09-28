@@ -490,6 +490,131 @@
             "apiKey": [ ]
           }
         ]
+      },
+      "delete": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Deletes the profile and everything stored for it. Nothing is kept: export it first to keep a copy.",
+        "operationId": "deleteProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/profiles/{id}/export": {
+      "get": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Everything stored for the profile, in one versioned document (SPEC-009 §2.1). Personal financial data: sent with Cache-Control: no-store.",
+        "operationId": "exportProfile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileExport"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
       }
     },
     "/api/v1/profiles/{id}/set-aside/estimate": {
@@ -897,6 +1022,80 @@
         },
         "additionalProperties": false
       },
+      "ExportedBankTransaction": {
+        "required": [
+          "id",
+          "bookingDate",
+          "valueDate",
+          "description",
+          "amount",
+          "balance",
+          "importSequence",
+          "lineNumber",
+          "lineKey"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bookingDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "valueDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "pattern": "^-?\\d+\\.\\d{2}$",
+            "type": "string"
+          },
+          "balance": {
+            "pattern": "^-?\\d+\\.\\d{2}$",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "importSequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lineNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lineKey": {
+            "type": "string"
+          }
+        }
+      },
+      "ExportedEntities": {
+        "required": [
+          "profiles",
+          "bankTransactions"
+        ],
+        "type": "object",
+        "properties": {
+          "profiles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProfileView"
+            }
+          },
+          "bankTransactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExportedBankTransaction"
+            }
+          }
+        }
+      },
       "HttpValidationProblemDetails": {
         "type": "object",
         "properties": {
@@ -1216,6 +1415,35 @@
           }
         },
         "additionalProperties": false
+      },
+      "ProfileExport": {
+        "required": [
+          "format",
+          "formatVersion",
+          "classification",
+          "exportedAt",
+          "entities"
+        ],
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string"
+          },
+          "formatVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "classification": {
+            "type": "string"
+          },
+          "exportedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "entities": {
+            "$ref": "#/components/schemas/ExportedEntities"
+          }
+        }
       },
       "ProfileInputDocument": {
         "required": [

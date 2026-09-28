@@ -1,0 +1,106 @@
+using System.Globalization;
+using System.Net;
+using System.Text.Json.Nodes;
+
+namespace GestorIA.Api.Tests;
+
+// GET /profiles/{id}/export (SPEC-009 §2.1, #74): everything stored for the profile, in the versioned document #75 restores.
+public class ProfileExportEndpoint
+{
+    // The export's promise, held against the database rather than a list of kinds: every table of the EF Core model has its
+    // member in entities, named after it, with as many rows as the table holds for the profile. A table the export forgets
+    // fails here, as a table the delete forgets fails ProfileDeletion.
+    [Fact]
+    public async Task EveryTableOfTheModelIsExportedWithAllItsRows()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = await StoredData.Seed(client);
+        var tables = await StoredData.RowsPerTable(api);
+
+        var entities = (await (await client.GetAsync($"/api/v1/profiles/{id}/export")).Json())["entities"]!.AsObject();
+
+        Assert.Equal(tables.Select(table => Member(table.Name)).Order(StringComparer.Ordinal), entities.Select(kind => kind.Key).Order(StringComparer.Ordinal));
+        Assert.All(tables, table => Assert.True(table.Rows > 0, $"{table.Name} holds no row; seed it in StoredData.Seed."));
+        Assert.All(tables, table => Assert.Equal(table.Rows, entities[Member(table.Name)]!.AsArray().Count));
+    }
+
+    [Fact]
+    public async Task TheExportHoldsTheProfileAndItsMovementsAsTheApiAnswersThem()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = await StoredData.Seed(client);
+        var profile = JsonNode.Parse(await client.GetStringAsync($"/api/v1/profiles/{id}"))!;
+        var movements = JsonNode.Parse(await client.GetStringAsync($"/api/v1/profiles/{id}/transactions"))!.AsArray();
+
+        var response = await client.GetAsync($"/api/v1/profiles/{id}/export");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var export = await response.Json();
+        Assert.Equal("gestoria.export", export["format"]!.GetValue<string>());
+        Assert.Equal(1, export["formatVersion"]!.GetValue<int>());
+        Assert.Equal("personal-financial-data", export["classification"]!.GetValue<string>());
+        Assert.True(DateTimeOffset.UtcNow - DateTimeOffset.Parse(export["exportedAt"]!.GetValue<string>(), CultureInfo.InvariantCulture) < TimeSpan.FromMinutes(1));
+        Assert.True(JsonNode.DeepEquals(new JsonArray(profile.DeepClone()), export["entities"]!["profiles"]), export.ToJsonString());
+
+        // Each movement is the list's answer, in the list's order, plus what a restore needs to store it again exactly.
+        var exported = export["entities"]!["bankTransactions"]!.AsArray();
+        Assert.Equal(movements.Count, exported.Count);
+        foreach (var (listed, stored) in movements.Zip(exported))
+        {
+            var withoutRestoreFields = stored!.DeepClone().AsObject();
+            Assert.True(withoutRestoreFields.Remove("importSequence") && withoutRestoreFields.Remove("lineNumber") && withoutRestoreFields.Remove("lineKey"));
+            Assert.True(JsonNode.DeepEquals(listed, withoutRestoreFields), stored.ToJsonString());
+            Assert.Matches("^[0-9a-f]{64}$", stored["lineKey"]!.GetValue<string>());
+        }
+    }
+
+    // The file holds personal financial data: no cache may keep a copy, and its name says nothing about whose it is.
+    [Fact]
+    public async Task TheExportIsNotCachedAndIsOfferedUnderItsDatedFileName()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = await client.CreateProfile();
+
+        var response = await client.GetAsync($"/api/v1/profiles/{id}/export");
+
+        Assert.True(response.Headers.CacheControl!.NoStore);
+        var exportedAt = DateTimeOffset.Parse((await response.Json())["exportedAt"]!.GetValue<string>(), CultureInfo.InvariantCulture);
+        Assert.Equal($"attachment; filename=\"{Profiles.ProfileExport.FileName(exportedAt)}\"", response.Content.Headers.GetValues("Content-Disposition").Single());
+    }
+
+    // The file is dated by the day in Madrid, where the user files, at fixed instants either side of midnight there: 22:30 UTC
+    // is already tomorrow in summer (UTC+2) and still today in winter (UTC+1).
+    [Theory]
+    [InlineData("2026-09-27T22:30:00+00:00", "gestoria-export-2026-09-28.json")]
+    [InlineData("2026-09-27T21:59:59+00:00", "gestoria-export-2026-09-27.json")]
+    [InlineData("2026-01-15T22:30:00+00:00", "gestoria-export-2026-01-15.json")]
+    [InlineData("2026-01-15T23:00:00+00:00", "gestoria-export-2026-01-16.json")]
+    public void TheFileNameCarriesOnlyTheDayInMadrid(string exportedAt, string name)
+    {
+        Assert.Equal(name, Profiles.ProfileExport.FileName(DateTimeOffset.Parse(exportedAt, CultureInfo.InvariantCulture)));
+    }
+
+    [Fact]
+    public async Task AnUnknownProfileHasNoExport()
+    {
+        await using var api = await Api();
+
+        var response = await api.CreateClient().GetAsync($"/api/v1/profiles/{Guid.NewGuid()}/export");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("https://gestoria.local/problems/profile-not-found", (await response.Json())["type"]!.GetValue<string>());
+    }
+
+    // The entities member a table is exported under: its name with a lower-case first letter, as the API writes JSON names.
+    private static string Member(string table) => char.ToLowerInvariant(table[0]) + table[1..];
+
+    private static async Task<ApiFactory> Api()
+    {
+        var api = new ApiFactory();
+        await api.InitializeAsync();
+        return api;
+    }
+}

@@ -66,7 +66,7 @@ builder.Services.AddDbContext<GestoriaDbContext>((services, options) => options
 
 // The web app runs on its own origin next to the API (ADR-0010, web/README.md).
 var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
-builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.WithOrigins(origins).WithMethods("GET", "POST", "PUT").WithHeaders("Content-Type", "Accept", ApiKey.Header)));
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.WithOrigins(origins).WithMethods("GET", "POST", "PUT", "DELETE").WithHeaders("Content-Type", "Accept", ApiKey.Header)));
 
 var app = builder.Build();
 

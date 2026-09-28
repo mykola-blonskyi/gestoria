@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Npgsql;
 
 namespace GestorIA.Api.Tests;
 
@@ -34,6 +35,19 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     // WebApplicationFactory already has a DisposeAsync of another type; naming the interface keeps the two apart.
     Task IAsyncLifetime.DisposeAsync() => Task.CompletedTask;
+
+    // Npgsql keeps a pool of idle connections per connection string after the API is gone. Every test API has a database of its
+    // own in one shared container, so those pools add up past PostgreSQL's max_connections ("53300: too many clients"); a
+    // disposed API closes its idle connections. A later API on the same database opens new ones.
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        if (ConnectionString != "")
+        {
+            await using var connection = new NpgsqlConnection(ConnectionString);
+            NpgsqlConnection.ClearPool(connection);
+        }
+    }
 
     // Added last, so it wins over appsettings.json and a developer's own user secrets.
     protected override void ConfigureWebHost(IWebHostBuilder builder) =>
