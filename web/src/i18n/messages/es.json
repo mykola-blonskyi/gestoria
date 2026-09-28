@@ -185,12 +185,12 @@
       "pagosAnteriores": "Trimestres anteriores del año (pagos anteriores)",
       "retenciones": "Retenciones aplicadas",
       "pagoPrevio": "Pago fraccionado del trimestre (pago previo)",
-      "sumaPagosPrevios": "Suma de los pagos del año hasta ahora (suma de pagos previos)",
+      "sumaPagosPrevios": "Pago de este trimestre, casillas 07 y 11 (suma de pagos fraccionados)",
       "minoracion": "Minoración por un ejercicio anterior bajo",
       "diferencia": "Diferencia tras la minoración",
       "negativosAnteriores": "Resultados negativos de trimestres anteriores",
       "deduccionVivienda": "Deducción por vivienda",
-      "total": "Total deducido",
+      "total": "Total cuota diferencial: casilla 14 menos 15 y 16 (total)",
       "resultado": "Importe a pagar (resultado)"
     },
     "year": {

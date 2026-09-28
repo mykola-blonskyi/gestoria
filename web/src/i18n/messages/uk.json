@@ -185,12 +185,12 @@
       "pagosAnteriores": "Попередні квартали року (pagos anteriores)",
       "retenciones": "Застосовані утримання (retenciones)",
       "pagoPrevio": "Авансовий платіж за квартал (pago previo)",
-      "sumaPagosPrevios": "Сума платежів за рік дотепер (suma de pagos previos)",
+      "sumaPagosPrevios": "Платіж цього кварталу, разом клітинки 07 і 11 (suma de pagos fraccionados)",
       "minoracion": "Знижка за низький попередній рік (minoración)",
       "diferencia": "Різниця після знижки (diferencia)",
       "negativosAnteriores": "Від'ємні результати попередніх кварталів (negativos anteriores)",
       "deduccionVivienda": "Відрахування за житло (deducción por vivienda)",
-      "total": "Загальна сума відрахувань (total)",
+      "total": "Загальна диференційна квота: клітинка 14 мінус 15 і 16 (total)",
       "resultado": "Сума до сплати (resultado)"
     },
     "year": {

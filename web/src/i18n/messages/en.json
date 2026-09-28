@@ -185,12 +185,12 @@
       "pagosAnteriores": "Earlier quarters of the year (pagos anteriores)",
       "retenciones": "Withholdings applied (retenciones)",
       "pagoPrevio": "Payment due for the quarter (pago previo)",
-      "sumaPagosPrevios": "Sum of this year's payments so far (suma de pagos previos)",
+      "sumaPagosPrevios": "This quarter's own payment, casillas 07 and 11 combined (suma de pagos fraccionados)",
       "minoracion": "Reduction for a small previous year (minoración)",
       "diferencia": "Difference after the reduction (diferencia)",
       "negativosAnteriores": "Negative results carried from earlier quarters (negativos anteriores)",
       "deduccionVivienda": "Housing deduction (deducción por vivienda)",
-      "total": "Total deducted (total)",
+      "total": "Total cuota diferencial: casilla 14 minus 15 and 16 (total)",
       "resultado": "Amount to pay (resultado)"
     },
     "year": {
