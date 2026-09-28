@@ -75,13 +75,7 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
         await AssertFixture("g12-restore-conflict.json", await client.Restore(changed.ToJsonString()), fixtureIds);
         await AssertFixture("g12-review-queue.json", await client.GetAsync($"/api/v1/profiles/{id}/review-queue"), fixtureIds);
 
-        var transfers = JsonNode.Parse(await (await client.GetAsync($"/api/v1/profiles/{id}/transactions?year=2025")).Content.ReadAsStringAsync())!.AsArray()
-            .Where(t => t!["description"]!.GetValue<string>().StartsWith("TRANSFERENCIA RECIBIDA CLIENTE", StringComparison.Ordinal));
-        foreach (var transfer in transfers)
-        {
-            await client.ClassifyAs(transfer!["id"]!.GetValue<string>(), "activityIncome");
-        }
-
+        await client.ClassifySyntheticQueue(id);
         await AssertFixture("g12-estimate-ledger.json", await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2"), fixtureIds);
     }
 

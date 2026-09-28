@@ -152,23 +152,24 @@ public class ClassificationEndpoint
         Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.ClassifyAs(Guid.NewGuid().ToString(), "personal")).StatusCode);
     }
 
-    // G12's 2025 profile, every quarter of which is closed today, with the three client transfers classified as activity income:
-    // its estimate is the estimate of the input file that states the same actuals and what is left of the projection, and its
-    // trace names each movement that entered by id and date.
+    // G12's 2025 profile, every quarter of which is closed today, with every movement of the review queue classified: the
+    // three client transfers as activity income, the software and the books as expenses. Its estimate is the estimate of the
+    // input file that states the same actuals and what is left of the projection, and its trace names each movement that
+    // entered by id and date. The expenses wait for an invoice.
     public static TheoryData<string, JsonArray, string, string, int, int> Actuals => new()
     {
-        { "Q2", new JsonArray(Actual("Q1", "2345.67", "87.61"), Actual("Q2", "4222.21", "87.61")), "15000.00", "600.00", 3, 4 },
+        { "Q2", new JsonArray(Actual("Q1", "2345.67", "87.61"), Actual("Q2", "4222.21", "87.61")), "15000.00", "600.00", 3, 1 },
         {
             "Q4",
             new JsonArray(Actual("Q1", "2345.67", "87.61"), Actual("Q2", "4222.21", "87.61"), Actual("Q3", "6567.88", "175.22"), Actual("Q4", "6567.88", "175.22")),
-            "0.00", "0.00", 5, 6
+            "0.00", "0.00", 5, 2
         },
     };
 
     [Theory]
     [MemberData(nameof(Actuals))]
     public async Task TheEstimateOfClassifiedMovementsIsTheEstimateOfAFileStatingTheSameActuals(
-        string asOf, JsonArray actuals, string ingresos, string gastos, int counted, int awaitingReview)
+        string asOf, JsonArray actuals, string ingresos, string gastos, int counted, int awaitingInvoice)
     {
         await using var api = await Api();
         var client = api.CreateClient();
@@ -180,12 +181,35 @@ public class ClassificationEndpoint
         var trace = fromProfile["trace"]!.AsArray();
         var ledgerSteps = trace.TakeWhile(step => step!["id"]!.GetValue<string>().StartsWith("ledger.", StringComparison.Ordinal)).ToList();
         Assert.True(JsonNode.DeepEquals(EngineOnly(fromFile, 0), EngineOnly(fromProfile, ledgerSteps.Count)), fromProfile.ToJsonString());
-        Assert.True(JsonNode.DeepEquals(Ledger(asOf, counted, awaitingReview, 0), fromProfile["ledger"]));
+        Assert.True(JsonNode.DeepEquals(Ledger(asOf, counted, 0, awaitingInvoice), fromProfile["ledger"]));
         var q1 = ledgerSteps[0]!["inputs"]!.AsArray().Select(input => (input!["name"]!.GetValue<string>(), input["value"]!.GetValue<string>()));
         Assert.Equal(
             [("activityIncome", $"{movements[0]} 2025-01-02"), ("socialSecurity", $"{movements[1]} 2025-01-03")],
             q1.Take(2));
         Assert.Equal("ledger.projection-remaining", ledgerSteps[^1]!["id"]!.GetValue<string>());
+    }
+
+    // Just imported, nothing reviewed: every closed quarter holds a movement whose class is not known, so none is actuals, the
+    // estimate is the projection's, as it was before the import, and the trace names what waits.
+    [Fact]
+    public async Task AnUnreviewedStatementLeavesTheEstimateOnTheProjection()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = await client.CreateProfile("G12");
+        await client.ImportStatement(id, RepoFiles.Statement);
+
+        var response = await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q4");
+        var input = RepoFiles.GoldenInput("G12");
+        input["asOf"] = "Q4";
+        var fromFile = await (await client.Estimate(2025, input)).Json();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var fromProfile = await response.Json();
+        Assert.Equal("ledger.pending-review", fromProfile["trace"]![0]!["id"]!.GetValue<string>());
+        Assert.Equal(Queue.Length, fromProfile["trace"]![0]!["inputs"]!.AsArray().Count);
+        Assert.True(JsonNode.DeepEquals(EngineOnly(fromFile, 0), EngineOnly(fromProfile, 1)), fromProfile.ToJsonString());
+        Assert.True(JsonNode.DeepEquals(new JsonObject { ["actualsThrough"] = null, ["counted"] = 0, ["awaitingReview"] = Queue.Length, ["awaitingInvoice"] = 0 }, fromProfile["ledger"]));
     }
 
     // 10 August 2025: Q1 and Q2 are closed, Q3 is not, so the actuals end with Q2 and the projection keeps six of its twelve months.
@@ -203,21 +227,17 @@ public class ClassificationEndpoint
         Assert.Equal(["ledger.Q1.movements", "ledger.Q2.movements", "ledger.projection-remaining"], trace.Take(3).Select(step => step!["id"]!.GetValue<string>()));
         Assert.Equal("30000.00 × 6 / 12 = 15000.00; 1200.00 × 6 / 12 = 600.00", trace[2]!["formula"]!.GetValue<string>());
         Assert.True(JsonNode.DeepEquals(EngineOnly(fromFile, 0), EngineOnly(fromProfile, 3)), fromProfile.ToJsonString());
-        Assert.True(JsonNode.DeepEquals(Ledger("Q2", 3, 4, 0), fromProfile["ledger"]));
+        Assert.True(JsonNode.DeepEquals(Ledger("Q2", 3, 0, 1), fromProfile["ledger"]));
     }
 
-    // The G12 profile with the synthetic statement imported and its three client transfers classified as activity income. The
-    // ids are of the first two movements in the list, the first transfer and the first TGSS cuota.
+    // The G12 profile with the synthetic statement imported and every movement of its review queue classified. The ids are of
+    // the first two movements in the list, the first transfer and the first TGSS cuota.
     private static async Task<(string Id, List<string> Movements)> ClassifiedG12(HttpClient client)
     {
         var id = await client.CreateProfile("G12");
         await client.ImportStatement(id, RepoFiles.Statement);
+        await client.ClassifySyntheticQueue(id);
         var movements = JsonNode.Parse(await client.GetStringAsync($"/api/v1/profiles/{id}/transactions?year=2025"))!.AsArray();
-        foreach (var transfer in movements.Where(t => t!["description"]!.GetValue<string>().StartsWith("TRANSFERENCIA RECIBIDA CLIENTE", StringComparison.Ordinal)))
-        {
-            await client.ClassifyAs(transfer!["id"]!.GetValue<string>(), "activityIncome");
-        }
-
         return (id, [.. movements.Take(2).Select(t => t!["id"]!.GetValue<string>())]);
     }
 

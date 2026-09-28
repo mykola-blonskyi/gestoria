@@ -27,19 +27,11 @@
           "value": "00000000-0000-0000-0072-000000000002 2025-01-03"
         },
         {
-          "name": "awaitingReview",
+          "name": "awaitingInvoice",
           "value": "00000000-0000-0000-0072-000000000005 2025-01-20"
-        },
-        {
-          "name": "awaitingReview",
-          "value": "00000000-0000-0000-0072-000000000006 2025-02-14"
-        },
-        {
-          "name": "awaitingReview",
-          "value": "00000000-0000-0000-0072-000000000007 2025-03-03"
         }
       ],
-      "formula": "ingresos: 1 movement = 2345.67; cuotas SS: 1 movement = 87.61; gastos = cuotas SS, no expense having a confirmed invoice yet; not counted: 3 await review, 0 await an invoice",
+      "formula": "ingresos: 1 movement = 2345.67; cuotas SS: 1 movement = 87.61; gastos = cuotas SS, no expense having a confirmed invoice yet; not counted: 1 awaits an invoice",
       "output": {
         "kind": "money",
         "value": "2345.67"
@@ -54,13 +46,9 @@
         {
           "name": "activityIncome",
           "value": "00000000-0000-0000-0072-000000000009 2025-04-07"
-        },
-        {
-          "name": "awaitingReview",
-          "value": "00000000-0000-0000-0072-000000000012 2025-06-30"
         }
       ],
-      "formula": "ingresos: 1 movement = 1876.54; cuotas SS: 0 movements = 0.00; gastos = cuotas SS, no expense having a confirmed invoice yet; not counted: 1 awaits review, 0 await an invoice",
+      "formula": "ingresos: 1 movement = 1876.54; cuotas SS: 0 movements = 0.00; gastos = cuotas SS, no expense having a confirmed invoice yet; not counted: 0 await an invoice",
       "output": {
         "kind": "money",
         "value": "1876.54"
@@ -1997,7 +1985,7 @@
   "ledger": {
     "actualsThrough": "Q2",
     "counted": 3,
-    "awaitingReview": 4,
-    "awaitingInvoice": 0
+    "awaitingReview": 0,
+    "awaitingInvoice": 1
   }
 }

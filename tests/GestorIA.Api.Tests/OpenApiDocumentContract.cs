@@ -130,12 +130,13 @@ public class OpenApiDocumentContract(ApiFactory api) : IClassFixture<ApiFactory>
         var wrongType = await (await ownClient.ImportStatement(id, RepoFiles.Statement, contentType: "application/json")).Json();
         var exportTooLarge = await (await ownClient.Restore($"\"{new string('x', Profiles.ProfileRestore.MaxBytes)}\"")).Json();
         var exportWrongType = await (await ownClient.Restore("{}", "text/plain")).Json();
-        var queue = await ownClient.ReviewQueue(id);
-        await ownClient.ClassifyAs(queue[0]!["id"]!.GetValue<string>(), "activityIncome");
+        await ownClient.ClassifySyntheticQueue(id);
         var suggested = await ownClient.ImportStatement(id, "Fecha;Fecha Valor;Concepto;Importe;Saldo\n03/02/2025;03/02/2025;GITHUB INC;-4,00;\n"u8.ToArray());
         var withSuggestion = await ownClient.ReviewQueue(id);
+        var pending = await (await ownClient.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+        await ownClient.ClassifyAs(withSuggestion[0]!["id"]!.GetValue<string>(), "deductibleExpense");
         var estimate = await (await ownClient.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
-        var badClass = await (await ownClient.ClassifyAs(queue[1]!["id"]!.GetValue<string>(), "unclear")).Json();
+        var badClass = await (await ownClient.ClassifyAs(withSuggestion[0]!["id"]!.GetValue<string>(), "unclear")).Json();
         var noLine = await (await ownClient.ClassifyAs(Guid.NewGuid().ToString(), "personal")).Json();
 
         AssertValid("BankStatementImport", imported);
@@ -150,6 +151,8 @@ public class OpenApiDocumentContract(ApiFactory api) : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.OK, suggested.StatusCode);
         Assert.Contains(withSuggestion, item => item!["suggestion"] is not null);
         Assert.All(withSuggestion, item => AssertValid("ReviewItem", item!));
+        Assert.Null(pending["ledger"]!["actualsThrough"]);
+        AssertValid("SetAsideEstimate", pending);
         Assert.NotNull(estimate["ledger"]!["actualsThrough"]);
         AssertValid("SetAsideEstimate", estimate);
         AssertValid("HttpValidationProblemDetails", badClass);

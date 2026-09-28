@@ -44,7 +44,7 @@
     "asOf": "Trimestre de la estimación",
     "basis": "Estimado a partir de tu perfil de {year}, sin trimestres cerrados registrados: la previsión cubre todo el año.",
     "ledgerBasis": "Estimado para {year} con datos reales hasta {quarter}, {counted, plural, one {# movimiento clasificado} other {# movimientos clasificados}}; la previsión cubre el resto del año.",
-    "awaitingReview": "{count, plural, one {# movimiento de esos trimestres espera revisión y no se cuenta.} other {# movimientos de esos trimestres esperan revisión y no se cuentan.}}",
+    "awaitingReview": "{count, plural, one {# movimiento de los trimestres cerrados espera revisión; hasta que se clasifique, la previsión cubre su trimestre y los siguientes.} other {# movimientos de los trimestres cerrados esperan revisión; hasta que se clasifiquen, la previsión cubre sus trimestres y los siguientes.}}",
     "review": "Revisarlos",
     "awaitingInvoice": "{count, plural, one {# gasto espera una factura y no se cuenta} other {# gastos esperan una factura y no se cuentan}}: un gasto deducible necesita una factura vinculada, y GestorIA aún no puede guardar facturas.",
     "calculating": "Calculando…",

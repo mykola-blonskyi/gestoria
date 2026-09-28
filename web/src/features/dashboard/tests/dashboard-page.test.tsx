@@ -254,7 +254,7 @@ describe("DashboardPage", () => {
       body: { ...g12Ledger, ledger: { ...g12Ledger.ledger, ...ledger } },
     });
 
-    it("says the estimate counts classified movements through the last closed quarter, and what awaits review", async () => {
+    it("says the estimate counts classified movements through the last closed quarter", async () => {
       stubApi({ estimate: { status: 200, body: g12Ledger } });
       renderDashboard();
 
@@ -264,7 +264,22 @@ describe("DashboardPage", () => {
         }),
       ).toBeInTheDocument();
       expect(screen.queryByText(fill(messages.basis, { year: 2025 }), { exact: false })).not.toBeInTheDocument();
-      expect(screen.getByText("4 movements of those quarters await review and are not counted.", { exact: false })).toBeInTheDocument();
+      expect(screen.getByText(/^1 expense awaits an invoice and is not counted/)).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: messages.review })).not.toBeInTheDocument();
+    });
+
+    it("says what awaits review keeps the closed quarters on the projection, with a link to them", async () => {
+      const ledger = { actualsThrough: null, counted: 0, awaitingReview: 9, awaitingInvoice: 0 };
+      stubApi({ estimate: { status: 200, body: { ...g12Ledger, ledger } } });
+      renderDashboard();
+
+      expect(
+        await screen.findByText(
+          "9 movements of the closed quarters await review; until they are classified, the projection covers their quarters and those after them.",
+          { exact: false },
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText(fill(messages.basis, { year: 2025 }), { exact: false })).toBeInTheDocument();
       expect(screen.getByRole("link", { name: messages.review })).toHaveAttribute("href", "/transactions");
       expect(screen.queryByText(/and GestorIA cannot store invoices yet/)).not.toBeInTheDocument();
     });

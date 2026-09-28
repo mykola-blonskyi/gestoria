@@ -68,30 +68,76 @@ public class LedgerActualsTests
     }
 
     [Fact]
-    public void OnlyConfirmedIncomeAndCuotasCountAndTheRestAwaitsReviewOrAnInvoice()
+    public void OnlyConfirmedIncomeAndCuotasCountAndAConfirmedExpenseAwaitsAnInvoice()
     {
         List<ClassifiedLine> lines =
         [
             Line(1, 2, 1000.00m, Income),
-            Line(1, 5, 500.00m, new Classification.Unclear()),
-            Line(1, 6, -40.00m, new Classification.Suggested(TransactionClass.DeductibleExpense, "vendors")),
             Line(1, 7, -30.00m, Confirmed(TransactionClass.DeductibleExpense)),
             Line(1, 8, -9.00m, Confirmed(TransactionClass.Personal)),
-            Line(1, 9, 700.00m, new Classification.Suggested(TransactionClass.ActivityIncome, "rule")),
-            Line(7, 1, 900.00m, new Classification.Unclear()),
+            Line(1, 9, 700.00m, new Classification.Confirmed(TransactionClass.SavingsIncome, "savings")),
         ];
 
         var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q1, AfterTheYear);
 
         Assert.Equal(new QuarterToDate(Quarter.Q1, new Money(1000.00m), new Money(0.00m), new Money(0.00m)), Assert.Single(ledger.Input.Activity.Actuals));
-        Assert.Equal(new LedgerCounts(Quarter.Q1, 1, 3, 1), ledger.Counts);
+        Assert.Equal(new LedgerCounts(Quarter.Q1, 1, 0, 1), ledger.Counts);
         var step = ledger.Steps[0];
         Assert.Equal("ledger.Q1.movements", step.Id);
-        Assert.Equal(["activityIncome", "awaitingReview", "awaitingReview", "awaitingReview", "awaitingInvoice"], step.Inputs.Select(input => input.Name));
+        Assert.Equal(["activityIncome", "awaitingInvoice"], step.Inputs.Select(input => input.Name));
         Assert.Equal(
-            "ingresos: 1 movement = 1000.00; cuotas SS: 0 movements = 0.00; gastos = cuotas SS, no expense having a confirmed invoice yet; not counted: 3 await review, 1 awaits an invoice",
+            "ingresos: 1 movement = 1000.00; cuotas SS: 0 movements = 0.00; gastos = cuotas SS, no expense having a confirmed invoice yet; not counted: 1 awaits an invoice",
             step.Formula);
         Assert.Equal(new TraceValue.Money(new Money(1000.00m)), step.Output);
+    }
+
+    // An unreviewed movement is unknown income, not zero: its quarter, and every one after it, stays projected.
+    [Fact]
+    public void AQuarterWithAMovementAwaitingReviewStopsTheActualsAndTheTraceNamesTheMovements()
+    {
+        List<ClassifiedLine> lines =
+        [
+            Line(1, 2, 1000.00m, Income),
+            Line(4, 5, 500.00m, new Classification.Unclear()),
+            Line(5, 6, 800.00m, Income),
+            Line(8, 6, -40.00m, new Classification.Suggested(TransactionClass.DeductibleExpense, "vendors")),
+            Line(11, 6, 900.00m, Income),
+        ];
+
+        var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q4, AfterTheYear);
+
+        Assert.Equal([Quarter.Q1], ledger.Input.Activity.Actuals.Select(actual => actual.Quarter));
+        Assert.Equal(new LedgerCounts(Quarter.Q1, 1, 2, 0), ledger.Counts);
+        Assert.Equal(["ledger.Q1.movements", "ledger.pending-review", "ledger.projection-remaining"], ledger.Steps.Select(step => step.Id));
+        var pending = ledger.Steps[1];
+        Assert.Equal([new TraceInput("awaitingReview", $"{lines[1].Id} 2025-04-05"), new TraceInput("awaitingReview", $"{lines[3].Id} 2025-08-06")], pending.Inputs);
+        Assert.StartsWith("2 movements of the closed quarters through Q4 await review (Q2 1, Q3 1); ", pending.Formula, StringComparison.Ordinal);
+        Assert.Equal(new TraceValue.Count(2), pending.Output);
+    }
+
+    // A statement just imported, nothing reviewed: the estimate is the projection's, as before the import, and it can be made.
+    [Fact]
+    public void AnImportNobodyHasReviewedLeavesTheWholeProjection()
+    {
+        List<ClassifiedLine> lines = [.. Enumerable.Range(0, 4).Select(q => Line(q * 3 + 1, 5, 1000.00m, new Classification.Unclear()))];
+
+        var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q4, AfterTheYear);
+
+        Assert.Empty(ledger.Input.Activity.Actuals);
+        Assert.Equal(January.Projection, ledger.Input.Activity.Projection);
+        Assert.Equal(new LedgerCounts(null, 0, 4, 0), ledger.Counts);
+        Assert.Equal("ledger.pending-review", Assert.Single(ledger.Steps).Id);
+        Assert.Equal(Quarter.Q4, SetAsideEstimator.Estimate(ledger.Input).NextPayment.Quarter);
+    }
+
+    [Fact]
+    public void OnlyTheClosedQuartersUpToAsOfHoldTheActualsBack()
+    {
+        List<ClassifiedLine> lines = [Line(2, 1, 100.00m, Income), Line(5, 1, 100.00m, new Classification.Unclear()), Line(8, 1, 100.00m, new Classification.Unclear())];
+
+        var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q2, new DateOnly(2025, 8, 10));
+
+        Assert.Equal(new LedgerCounts(Quarter.Q1, 1, 1, 0), ledger.Counts);
     }
 
     [Fact]
@@ -177,7 +223,7 @@ public class LedgerActualsTests
     [Fact]
     public void ATraceInputNamesALineByIdAndDateOnly()
     {
-        List<ClassifiedLine> lines = [Line(1, 2, 2345.67m, Income), Line(1, 3, -87.61m, Cuota), Line(1, 4, -23.79m, new Classification.Unclear())];
+        List<ClassifiedLine> lines = [Line(1, 2, 2345.67m, Income), Line(1, 3, -87.61m, Cuota), Line(1, 4, -23.79m, Confirmed(TransactionClass.DeductibleExpense))];
 
         var ledger = LedgerActuals.Of(January, lines, Config, Quarter.Q1, AfterTheYear);
 

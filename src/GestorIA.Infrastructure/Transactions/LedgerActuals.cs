@@ -10,8 +10,8 @@ namespace GestorIA.Infrastructure.Transactions;
 // A movement as the actuals read it. No description: nothing here can put one in a trace (SPEC-013).
 public sealed record ClassifiedLine(Guid Id, DateOnly BookingDate, Money Amount, Classification Classification);
 
-// ActualsThrough is the last quarter the movements cover, null when they cover none; the three counts are of the movements
-// in the covered quarters.
+// ActualsThrough is the last quarter the movements cover, null when they cover none. Counted and AwaitingInvoice are of the
+// movements in the covered quarters; AwaitingReview of those in every closed quarter up to asOf, which holds the rest back.
 public sealed record LedgerCounts(Quarter? ActualsThrough, int Counted, int AwaitingReview, int AwaitingInvoice);
 
 // The estimator's input from a stored profile and its movements, with the steps that explain the actuals, which go before
@@ -19,7 +19,8 @@ public sealed record LedgerCounts(Quarter? ActualsThrough, int Counted, int Awai
 public sealed record LedgerEstimate(SetAsideInput Input, IReadOnlyList<TraceStep> Steps, LedgerCounts Counts);
 
 // Pure: the actuals of a stored profile's tax year from its classified movements (#73). Only confirmed activity income and
-// RETA cuotas count (business rules 1 and 2), each in the quarter of its booking date.
+// RETA cuotas count (business rules 1 and 2), each in the quarter of its booking date, and only in a quarter none of whose
+// movements awaits review.
 public static class LedgerActuals
 {
     // The amounts are cents; a sum of none keeps two decimals, so the engine's trace shows "0.00" as it does for an input file.
@@ -33,48 +34,65 @@ public static class LedgerActuals
         var firstMonth = alta.Year == year ? alta.Month : 1;
         var monthsOfAlta = 13 - firstMonth;
         // A lookup is a dictionary whose values are lists: the lines of each quarter, none for a quarter no line is in.
-        var byQuarter = lines.ToLookup(line => (Quarter)((line.BookingDate.Month + 2) / 3));
+        var byQuarter = lines.ToLookup(line => QuarterOf(line.BookingDate));
         bool Closed(Quarter quarter) => today > new DateOnly(year, (int)quarter * 3, 1).AddMonths(1).AddDays(-1);
+        static bool AwaitsReview(ClassifiedLine line) => line.Classification is Classification.Unclear or Classification.Suggested;
 
-        // A quarter with no imported line has no evidence and would read as zero income, so it and the rest stay projected.
-        var firstQuarter = (Quarter)((firstMonth + 2) / 3);
-        var actual = new List<Quarter>();
-        for (var quarter = firstQuarter; quarter <= asOf && Closed(quarter) && byQuarter.Contains(quarter); quarter++)
+        // The quarters that could be actuals: from the first of activity, closed, and not after asOf, so an unbroken run.
+        var firstQuarter = QuarterOf(new DateOnly(year, firstMonth, 1));
+        var closed = Enum.GetValues<Quarter>().Where(quarter => quarter >= firstQuarter && quarter <= asOf && Closed(quarter)).ToList();
+        // A quarter with no imported line has no evidence, and one with a line awaiting review has income not known yet; either
+        // would read as zero income, so it and the rest stay projected.
+        var actual = closed.TakeWhile(quarter => byQuarter.Contains(quarter) && !byQuarter[quarter].Any(AwaitsReview)).ToList();
+        var waiting = closed.SelectMany(quarter => byQuarter[quarter]).Where(AwaitsReview).ToList();
+
+        var steps = new List<TraceStep>();
+        // The run stopped at a closed quarter holding no movement while a later closed one holds some.
+        List<Quarter> later = actual.Count < closed.Count && !byQuarter.Contains(closed[actual.Count]) ? [.. closed.Skip(actual.Count + 1).Where(byQuarter.Contains)] : [];
+        if (later.Count > 0)
         {
-            actual.Add(quarter);
+            var next = closed[actual.Count];
+            steps.Add(new TraceStep(
+                "ledger.coverage",
+                TraceSection.Actividad,
+                "Trimestre sin movimientos importados",
+                [new("quarter", Invariant($"{next}")), new("laterWithMovements", string.Join(", ", later))],
+                Invariant($"{next} is closed and holds no imported movement, so the actuals stop ")
+                    + (actual.Count == 0 ? "before it" : Invariant($"at {actual[^1]}"))
+                    + Invariant($"; the projection covers {next} and what follows, the movements of {string.Join(", ", later)} included"),
+                new TraceValue.Count(later.Count),
+                "#73: a quarter with no imported movement has no evidence and would read as zero income, so it stays projected"));
         }
 
-        var next = actual.Count == 0 ? firstQuarter : actual[^1] + 1;
-        // A closed quarter up to asOf after next means next is closed and up to asOf too, so the run stopped at next only
-        // because it holds no line.
-        var later = Enum.GetValues<Quarter>().Where(quarter => quarter > next && quarter <= asOf && Closed(quarter) && byQuarter.Contains(quarter)).ToList();
-        TraceStep? coverage = later.Count == 0 ? null : new TraceStep(
-            "ledger.coverage",
-            TraceSection.Actividad,
-            "Trimestre sin movimientos importados",
-            [new("quarter", Invariant($"{next}")), new("laterWithMovements", string.Join(", ", later))],
-            Invariant($"{next} is closed and holds no imported movement, so the actuals stop ")
-                + (actual.Count == 0 ? "before it" : Invariant($"at {actual[^1]}"))
-                + Invariant($"; the projection covers {next} and what follows, the movements of {string.Join(", ", later)} included"),
-            new TraceValue.Count(later.Count),
-            "#73: a quarter with no imported movement has no evidence and would read as zero income, so it stays projected");
+        if (waiting.Count > 0)
+        {
+            var quarters = waiting.GroupBy(line => QuarterOf(line.BookingDate)).Select(group => Invariant($"{group.Key} {group.Count()}"));
+            steps.Add(new TraceStep(
+                "ledger.pending-review",
+                TraceSection.Actividad,
+                "Movimientos pendientes de revisión",
+                [.. waiting.Select(line => new TraceInput("awaitingReview", Named(line)))],
+                Invariant($"{Movements(waiting.Count)} of the closed quarters through {asOf} {Await(waiting.Count)} review ({string.Join(", ", quarters)}); ")
+                    + "a quarter enters the actuals only once none of its movements awaits review, so the projection covers the first such quarter and what follows",
+                new TraceValue.Count(waiting.Count),
+                "Business rule 2: an unreviewed movement is unknown, not zero income, so its quarter stays projected until it is classified; #73"));
+        }
 
         var projection = profile.Projection;
         if (actual.Count == 0)
         {
-            return new LedgerEstimate(Input(profile, [], projection, config, asOf), coverage is null ? [] : [coverage], new LedgerCounts(null, 0, 0, 0));
+            return new LedgerEstimate(Input(profile, [], projection, config, asOf), steps, new LedgerCounts(null, 0, waiting.Count, 0));
         }
 
-        var steps = new List<TraceStep>();
+        var movementSteps = new List<TraceStep>();
         var toDate = new List<QuarterToDate>();
         var (ingresosYtd, cuotasYtd) = (NoEuros, NoEuros);
-        var (counted, awaitingReview, awaitingInvoice) = (0, 0, 0);
+        var (counted, awaitingInvoice) = (0, 0);
         foreach (var quarter in actual)
         {
             var movements = byQuarter[quarter].ToList();
             var income = movements.Where(line => line.Classification is Classification.Confirmed { Class: TransactionClass.ActivityIncome }).ToList();
             var cuotas = movements.Where(line => line.Classification is Classification.Confirmed { Class: TransactionClass.SocialSecurity }).ToList();
-            var review = movements.Where(line => line.Classification is Classification.Unclear or Classification.Suggested).ToList();
             var invoice = movements.Where(line => line.Classification is Classification.Confirmed { Class: TransactionClass.DeductibleExpense }).ToList();
 
             // Signed: a debit classified as activity income lowers it, and a TGSS refund lowers the cuotas.
@@ -84,30 +102,26 @@ public static class LedgerActuals
             // Gastos are the cuotas alone: a deductible expense counts only with a linked, confirmed invoice (business rule 1),
             // which GestorIA cannot hold yet.
             toDate.Add(new QuarterToDate(quarter, ingresosYtd, cuotasYtd, cuotasYtd));
-            (counted, awaitingReview, awaitingInvoice) = (counted + income.Count + cuotas.Count, awaitingReview + review.Count, awaitingInvoice + invoice.Count);
+            (counted, awaitingInvoice) = (counted + income.Count + cuotas.Count, awaitingInvoice + invoice.Count);
 
-            steps.Add(new TraceStep(
+            movementSteps.Add(new TraceStep(
                 Invariant($"ledger.{quarter}.movements"),
                 TraceSection.Actividad,
                 Invariant($"Movimientos clasificados, {quarter}"),
                 [
                     .. income.Select(line => new TraceInput(TransactionClass.ActivityIncome.Name(), Named(line))),
                     .. cuotas.Select(line => new TraceInput(TransactionClass.SocialSecurity.Name(), Named(line))),
-                    .. review.Select(line => new TraceInput("awaitingReview", Named(line))),
                     .. invoice.Select(line => new TraceInput("awaitingInvoice", Named(line))),
                 ],
                 Invariant($"ingresos: {Movements(income.Count)} = {Show(ingresos)}; cuotas SS: {Movements(cuotas.Count)} = {Show(cuotasSs)}; ")
-                    + Invariant($"gastos = cuotas SS, no expense having a confirmed invoice yet; not counted: {review.Count} {Await(review.Count)} review, {invoice.Count} {Await(invoice.Count)} an invoice"),
+                    + Invariant($"gastos = cuotas SS, no expense having a confirmed invoice yet; not counted: {invoice.Count} {Await(invoice.Count)} an invoice"),
                 new TraceValue.Money(ingresos),
                 "SPEC-004 §3; business rules 1 and 2: only confirmed movements count, a deductible expense only with a linked, confirmed invoice; "
                     + "business rule 3: the booking date puts a movement in its quarter, a cash approximation of devengo until invoices exist; #73"));
         }
 
         var last = actual[^1];
-        if (coverage is not null)
-        {
-            steps.Add(coverage);
-        }
+        steps.InsertRange(0, movementSteps);
 
         var projectedMonths = Enumerable.Range(firstMonth, monthsOfAlta).Count(month => month > (int)last * 3);
         Money Remaining(Money whole) => new Money(whole.Amount * projectedMonths / monthsOfAlta).Round2();
@@ -129,11 +143,13 @@ public static class LedgerActuals
         return new LedgerEstimate(
             Input(profile, toDate, remaining, config, asOf),
             steps,
-            new LedgerCounts(last, counted, awaitingReview, awaitingInvoice));
+            new LedgerCounts(last, counted, waiting.Count, awaitingInvoice));
     }
 
     private static SetAsideInput Input(Profile profile, IReadOnlyList<QuarterToDate> actuals, ActivityProjection projection, TaxYearConfig config, Quarter asOf) =>
         new(profile.Taxpayer, new ActivityPicture(actuals, projection, new Retenciones.ForeignPayersOnly()), config, asOf);
+
+    private static Quarter QuarterOf(DateOnly date) => (Quarter)((date.Month + 2) / 3);
 
     private static string Named(ClassifiedLine line) => Invariant($"{line.Id} {line.BookingDate:yyyy-MM-dd}");
 

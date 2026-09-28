@@ -36,6 +36,24 @@ internal static class Http
     internal static Task<HttpResponseMessage> ClassifyAs(this HttpClient client, string transactionId, string transactionClass) =>
         client.Classify(transactionId, new JsonObject { ["class"] = transactionClass }.ToJsonString());
 
+    // Every movement of the synthetic statement's review queue (tests/fixtures/bank) given the class its description says: the
+    // client transfers are activity income, the software and the books expenses, the transfer to an IBAN the user's own.
+    internal static async Task ClassifySyntheticQueue(this HttpClient client, string profileId)
+    {
+        foreach (var item in await client.ReviewQueue(profileId))
+        {
+            var description = item!["description"]!.GetValue<string>();
+            var transactionClass = description switch
+            {
+                _ when description.StartsWith("TRANSFERENCIA RECIBIDA CLIENTE", StringComparison.Ordinal) => "activityIncome",
+                "COMPRA SUSCRIPCION SOFTWARE EJEMPLO" or "LIBRERIA TECNICA INVENTADA" => "deductibleExpense",
+                _ when description.StartsWith("TRANSFERENCIA A ", StringComparison.Ordinal) => "ownTransfer",
+                _ => "personal",
+            };
+            (await client.ClassifyAs(item["id"]!.GetValue<string>(), transactionClass)).EnsureSuccessStatusCode();
+        }
+    }
+
     internal static async Task<JsonArray> ReviewQueue(this HttpClient client, string profileId) =>
         JsonNode.Parse(await client.GetStringAsync($"/api/v1/profiles/{profileId}/review-queue"))!.AsArray();
 
