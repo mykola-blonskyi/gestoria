@@ -207,8 +207,8 @@ describe("DashboardPage", () => {
     renderDashboard();
 
     const alert = await screen.findByRole("alert", {}, { timeout: 8_000 });
-    expect(alert).toHaveTextContent(MESSAGES.en.Dashboard.failure.database);
-    expect(alert).not.toHaveTextContent(MESSAGES.en.Dashboard.failure.network);
+    expect(alert).toHaveTextContent(MESSAGES.en.Failure.database);
+    expect(alert).not.toHaveTextContent(MESSAGES.en.Failure.network);
   });
 
   // An unreachable API is retried twice, a second and then two apart (data/query-provider.tsx), before the page says so.
