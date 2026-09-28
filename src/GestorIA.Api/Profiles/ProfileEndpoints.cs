@@ -1,4 +1,3 @@
-using System.Globalization;
 using GestorIA.Api.SetAside;
 using GestorIA.Engine;
 using GestorIA.Infrastructure.Persistence;
@@ -155,12 +154,9 @@ public static class ProfileEndpoints
             .OrderBy(t => t.BookingDate).ThenBy(t => t.ImportSequence).ThenBy(t => t.LineNumber)
             .ToListAsync(cancellationToken);
         var exportedAt = DateTimeOffset.UtcNow;
-        // No shared cache or browser cache may keep a copy of personal financial data (SPEC-013). The file name says what the
-        // file is and the day it was made where the user lives (ADR-0016's regions are all on Madrid time), and nothing about
-        // whose it is.
+        // No shared cache or browser cache may keep a copy of personal financial data (SPEC-013).
         response.Headers.CacheControl = "no-store";
-        var day = TimeZoneInfo.ConvertTime(exportedAt, TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid"));
-        response.Headers.ContentDisposition = string.Create(CultureInfo.InvariantCulture, $"attachment; filename=\"gestoria-export-{day:yyyy-MM-dd}.json\"");
+        response.Headers.ContentDisposition = $"attachment; filename=\"{ProfileExport.FileName(exportedAt)}\"";
         return TypedResults.Ok(ProfileExport.Of(View(row), transactions, exportedAt));
     }
 

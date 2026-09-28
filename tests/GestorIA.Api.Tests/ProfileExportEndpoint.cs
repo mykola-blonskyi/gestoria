@@ -56,10 +56,9 @@ public class ProfileExportEndpoint
         }
     }
 
-    // The file holds personal financial data: no cache may keep a copy, and its name says nothing about whose it is. Its date
-    // is the day in Madrid, where the user files.
+    // The file holds personal financial data: no cache may keep a copy, and its name says nothing about whose it is.
     [Fact]
-    public async Task TheExportIsNotCachedAndItsFileNameCarriesOnlyTheMadridDate()
+    public async Task TheExportIsNotCachedAndIsOfferedUnderItsDatedFileName()
     {
         await using var api = await Api();
         var client = api.CreateClient();
@@ -69,8 +68,19 @@ public class ProfileExportEndpoint
 
         Assert.True(response.Headers.CacheControl!.NoStore);
         var exportedAt = DateTimeOffset.Parse((await response.Json())["exportedAt"]!.GetValue<string>(), CultureInfo.InvariantCulture);
-        var day = TimeZoneInfo.ConvertTime(exportedAt, TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid")).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        Assert.Equal($"attachment; filename=\"gestoria-export-{day}.json\"", response.Content.Headers.GetValues("Content-Disposition").Single());
+        Assert.Equal($"attachment; filename=\"{Profiles.ProfileExport.FileName(exportedAt)}\"", response.Content.Headers.GetValues("Content-Disposition").Single());
+    }
+
+    // The file is dated by the day in Madrid, where the user files, at fixed instants either side of midnight there: 22:30 UTC
+    // is already tomorrow in summer (UTC+2) and still today in winter (UTC+1).
+    [Theory]
+    [InlineData("2026-09-27T22:30:00+00:00", "gestoria-export-2026-09-28.json")]
+    [InlineData("2026-09-27T21:59:59+00:00", "gestoria-export-2026-09-27.json")]
+    [InlineData("2026-01-15T22:30:00+00:00", "gestoria-export-2026-01-15.json")]
+    [InlineData("2026-01-15T23:00:00+00:00", "gestoria-export-2026-01-16.json")]
+    public void TheFileNameCarriesOnlyTheDayInMadrid(string exportedAt, string name)
+    {
+        Assert.Equal(name, Profiles.ProfileExport.FileName(DateTimeOffset.Parse(exportedAt, CultureInfo.InvariantCulture)));
     }
 
     [Fact]

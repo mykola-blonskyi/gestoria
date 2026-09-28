@@ -19,6 +19,13 @@ public sealed record ProfileExport(string Format, int FormatVersion, string Clas
     // The file is labelled as what it holds, so it is recognised as such wherever it ends up.
     public const string PersonalFinancialData = "personal-financial-data";
 
+    // The name the file is offered under: what it is and the day it was made where the user lives (ADR-0016's regions are all
+    // on Madrid time), and nothing about whose it is.
+    public static string FileName(DateTimeOffset exportedAt) =>
+        string.Create(CultureInfo.InvariantCulture, $"gestoria-export-{TimeZoneInfo.ConvertTime(exportedAt, Madrid):yyyy-MM-dd}.json");
+
+    private static readonly TimeZoneInfo Madrid = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
+
     public static ProfileExport Of(ProfileView profile, IEnumerable<BankTransactionRow> transactions, DateTimeOffset exportedAt) =>
         new(FormatName, CurrentVersion, PersonalFinancialData, exportedAt, new ExportedEntities([profile], [.. transactions.Select(ExportedBankTransaction.From)]));
 }
