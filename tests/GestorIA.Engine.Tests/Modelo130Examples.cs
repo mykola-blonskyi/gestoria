@@ -51,6 +51,9 @@ public class Modelo130Examples
         Assert.Equal(new Money(75m), result.Casillas["minoracion"]);
         Assert.Equal(new Money(19000m), result.Casillas["rendimientoNeto"]);
         Assert.Equal(new Money(3800m), result.Casillas["pagoBruto"]);
+        // AEAT instructions, casilla 17 = 14 − 15 − 16: casilla 16 (vivienda) and 18 (complementaria) are not modelled, so
+        // casilla 17 equals casilla 19 (resultado) here, whatever quarter or scenario — asserted for a negative casilla 14 too.
+        Assert.Equal(result.Resultado, result.Casillas["total"]);
     }
 
     [Fact]
@@ -70,6 +73,10 @@ public class Modelo130Examples
         Assert.Equal(new Money(-52.50m), result.Resultado);
         Assert.Equal(Money.Zero, result.AIngresar);
         Assert.Equal(new Modelo130Carry(new Money(47.50m), new Money(52.50m)), result.Carry);
+        // Casilla 17 keeps casilla 14's sign here (a negative casilla 15 deduction is not applied to an already-negative
+        // casilla 14, business rule 14), so it is not floored at zero: it equals the negative resultado, not AIngresar.
+        Assert.Equal(new Money(-52.50m), result.Casillas["total"]);
+        Assert.Equal(result.Resultado, result.Casillas["total"]);
     }
 
     [Fact]

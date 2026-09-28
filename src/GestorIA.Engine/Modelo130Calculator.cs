@@ -174,7 +174,10 @@ public static class Modelo130Calculator
             ["diferencia"] = casilla14,
             ["negativosAnteriores"] = negativosDeducidos,
             ["deduccionVivienda"] = Money.Zero,
-            ["total"] = minoracion + negativosDeducidos, // deducción vivienda is zero so it does not need to be added
+            // AEAT instructions, casilla 17: casilla 14 − casilla 15 − casilla 16, negative with its sign when 14 is negative
+            // (not floored at zero). Casilla 16 is zero here (not modelled), so this equals resultado exactly; casilla 18
+            // (complementary self-assessments) is not modelled either, so casilla 19 = casilla 17 − 0 = casilla 17 too.
+            ["total"] = casilla14 - negativosDeducidos,
             ["resultado"] = resultado,
         };
 
