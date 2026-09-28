@@ -49,10 +49,12 @@
       "holdBack": "Aparta el {share} de cada cobro que recibas.",
       "nextPayment": "Próximo Modelo 130, {quarter}",
       "due": "Se paga del {from} al {by}.",
+      "dueFiled": "Nada a ingresar. Se presenta igualmente del {from} al {by}: un resultado negativo, en el apartado A deducir; uno cero, como declaración negativa (Periodos indica cuál).",
       "localHolidays": "No se aplican los festivos locales, así que la fecha puede ser anterior, nunca posterior.",
       "cuota": "Cuota mensual de la TGSS este trimestre",
       "renta": "Renta además de los pagos del Modelo 130",
       "payableIn": "A pagar antes de que termine {month}.",
+      "rentaFiled": "No queda nada por pagar además de los pagos del Modelo 130. La Renta se presenta igualmente antes de que termine {month}.",
       "iva": "IVA a reservar",
       "config": "Ejercicio {year}, configuración sha256 {hash}"
     }
@@ -208,6 +210,8 @@
       "heading": "Modelo 130, {quarter}",
       "aIngresar": "Importe a ingresar",
       "due": "Se paga del {from} al {by}.",
+      "dueADeducir": "Nada a ingresar. Se presenta igualmente del {from} al {by}, en el apartado A deducir: el resultado negativo se deduce en los siguientes trimestres del año.",
+      "dueNegativa": "Nada a ingresar. Se presenta igualmente del {from} al {by}, como declaración negativa.",
       "localHolidays": "No se aplican los festivos locales, así que la fecha puede ser anterior, nunca posterior.",
       "basis": "Calculado a partir de la previsión del año: todavía no hay ningún trimestre cerrado registrado para este perfil (el #73 lo cambiará).",
       "casillasHeading": "Casillas del Modelo 130"
@@ -236,6 +240,7 @@
       "gap": "Diferencia más allá de los pagos del Modelo 130",
       "payableIn": "A pagar antes de que termine {month}.",
       "due": "Se paga del {from} al {by}.",
+      "dueNothingToPay": "No queda nada por pagar además de los pagos del Modelo 130. La Renta se presenta igualmente del {from} al {by}.",
       "liabilityOnActivity": "Cuota que añade la actividad a la declaración",
       "marginalRate": "Tipo marginal sobre los rendimientos del trabajo",
       "reduccionTrabajoLost": "Reducción por trabajo perdida por la actividad"

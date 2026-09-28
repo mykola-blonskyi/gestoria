@@ -24,6 +24,11 @@ export function formatMoney(amount: string, locale: Locale): string {
   }).format(amount);
 }
 
+// Compares the string, so an amount is never turned into a float to be checked (see formatMoney).
+export function isZeroMoney(amount: string): boolean {
+  return /^-?0+(\.0+)?$/.test(amount);
+}
+
 export function formatDate(isoDate: string, locale: Locale): string {
   const match = DATE_PATTERN.exec(isoDate);
   const date = match ? new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))) : null;

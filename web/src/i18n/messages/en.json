@@ -49,10 +49,12 @@
       "holdBack": "Hold back {share} of every payment you receive.",
       "nextPayment": "Next Modelo 130, {quarter}",
       "due": "Pay from {from} to {by}.",
+      "dueFiled": "Nothing to pay. File it anyway from {from} to {by}: a negative result is filed as a deducir, a zero one as negativa (Periods shows which).",
       "localHolidays": "Municipal holidays are not applied, so the date can be early but never late.",
       "cuota": "TGSS cuota per month this quarter",
       "renta": "Renta on top of the Modelo 130 advances",
       "payableIn": "Payable by the end of {month}.",
+      "rentaFiled": "Nothing to pay beyond the Modelo 130 advances. The Renta is still filed, by the end of {month}.",
       "iva": "IVA to set aside",
       "config": "Tax year {year}, configuration sha256 {hash}"
     }
@@ -208,6 +210,8 @@
       "heading": "Modelo 130, {quarter}",
       "aIngresar": "Amount to pay (a ingresar)",
       "due": "Pay from {from} to {by}.",
+      "dueADeducir": "Nothing to pay. File it anyway from {from} to {by}, as a negative result deducted in the year's later quarters (a deducir).",
+      "dueNegativa": "Nothing to pay. File it anyway from {from} to {by}, as a zero or negative return (negativa).",
       "localHolidays": "Municipal holidays are not applied, so the date can be early but never late.",
       "basis": "Based on the year's projection: no closed quarter is recorded yet for this profile (#73 will change this).",
       "casillasHeading": "Modelo 130 casillas"
@@ -236,6 +240,7 @@
       "gap": "Gap beyond the Modelo 130 advances",
       "payableIn": "Payable by the end of {month}.",
       "due": "Pay from {from} to {by}.",
+      "dueNothingToPay": "Nothing to pay beyond the Modelo 130 advances. The Renta is still filed from {from} to {by}.",
       "liabilityOnActivity": "Tax the activity adds to the return",
       "marginalRate": "Marginal rate on top of the employment income",
       "reduccionTrabajoLost": "Employment-income reduction lost to the activity"

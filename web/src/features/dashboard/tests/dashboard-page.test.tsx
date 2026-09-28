@@ -76,11 +76,38 @@ describe("DashboardPage", () => {
       screen.getByText(fill(estimate.due, { from: formatDate("2025-04-01", "en"), by: formatDate("2025-04-22", "en") }), { exact: false }),
     ).toBeInTheDocument();
     expect(screen.getByText(formatMoney("80.00", "en"))).toBeInTheDocument();
-    expect(screen.getByText(fill(estimate.payableIn, { month: formatMonth("2026-06", "en") }))).toBeInTheDocument();
+    // G12's advances cover the Renta: the gap is 0.00, so there is nothing to pay, only the return to file.
+    expect(screen.getByText(fill(estimate.rentaFiled, { month: formatMonth("2026-06", "en") }))).toBeInTheDocument();
+    expect(screen.queryByText(fill(estimate.payableIn, { month: formatMonth("2026-06", "en") }))).not.toBeInTheDocument();
     expect(screen.getAllByText(formatMoney("0.00", "en"))).toHaveLength(2);
     expect(screen.getByText(fill(estimate.config, { year: 2025, hash: g12Estimate.configHash }))).toBeInTheDocument();
     expect(screen.getByText(fill(MESSAGES.en.Dashboard.basis, { year: 2025 }), { exact: false })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: MESSAGES.en.Dashboard.profile.edit })).toHaveAttribute("href", "/settings");
+  });
+
+  it.each(LOCALES)("says in %s that a Modelo 130 and a Renta with nothing to pay are still filed", async (locale) => {
+    stubApi({ estimate: { status: 200, body: { ...g12Estimate, nextPayment: { ...g12Estimate.nextPayment, aIngresar: "0.00" } } } });
+    renderDashboard(locale);
+
+    const estimate = MESSAGES[locale].Dashboard.estimate;
+    await screen.findByRole("heading", { name: estimate.heading });
+
+    const window = { from: formatDate("2025-04-01", locale), by: formatDate("2025-04-22", locale) };
+    expect(screen.getByText(fill(estimate.dueFiled, window), { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText(fill(estimate.due, window), { exact: false })).not.toBeInTheDocument();
+    expect(screen.getByText(fill(estimate.rentaFiled, { month: formatMonth("2026-06", locale) }))).toBeInTheDocument();
+  });
+
+  it("says when a Renta gap beyond the advances is payable", async () => {
+    stubApi({ estimate: { status: 200, body: { ...g12Estimate, annualTrueUpGap: "512.40" } } });
+    renderDashboard();
+
+    const estimate = MESSAGES.en.Dashboard.estimate;
+    await screen.findByRole("heading", { name: estimate.heading });
+
+    expect(screen.getByText(estimate.renta).nextElementSibling).toHaveTextContent(formatMoney("512.40", "en"));
+    expect(screen.getByText(fill(estimate.payableIn, { month: formatMonth("2026-06", "en") }))).toBeInTheDocument();
+    expect(screen.queryByText(fill(estimate.rentaFiled, { month: formatMonth("2026-06", "en") }))).not.toBeInTheDocument();
   });
 
   it.each([

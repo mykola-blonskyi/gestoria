@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import g12AnnualTrueUp from "@tests/fixtures/g12-annual-true-up.json";
 import g12Profile from "@tests/fixtures/g12-profile.json";
 import g12Quarter from "@tests/fixtures/g12-quarter.json";
+import g12QuarterNegative from "@tests/fixtures/g12-quarter-negative.json";
 import taxYearsFixture from "@tests/fixtures/tax-years.json";
 import { MESSAGES, renderInApp } from "@tests/render";
 
@@ -93,6 +94,31 @@ describe("PeriodsPage", () => {
     expect(screen.getByText(fill(trace.section, { name: trace.sections.Modelo130, count: g12Quarter.trace.length }))).toBeInTheDocument();
   });
 
+  it.each(LOCALES)("says in %s that a Q1 with nothing to pay is still filed, a deducir, in the same window", async (locale) => {
+    stubApi({ quarter: { status: 200, body: g12QuarterNegative } });
+    renderPeriods(locale);
+
+    const quarter = MESSAGES[locale].Periods.quarter;
+    await screen.findByRole("heading", { name: fill(quarter.heading, { quarter: "Q1" }) });
+
+    expect(screen.getByText(quarter.aIngresar).nextElementSibling).toHaveTextContent(formatMoney("0.00", locale).replace(/\s+/g, " "));
+    const window = { from: formatDate("2025-04-01", locale), by: formatDate("2025-04-22", locale) };
+    expect(screen.getByText(fill(quarter.dueADeducir, window), { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText(fill(quarter.due, window), { exact: false })).not.toBeInTheDocument();
+  });
+
+  it("says a zero or negative Q4 is filed as negativa, since nothing is left to deduct from", async () => {
+    stubApi({ quarter: { status: 200, body: { ...g12QuarterNegative, quarter: "Q4" } } });
+    renderPeriods();
+
+    const quarter = MESSAGES.en.Periods.quarter;
+    await screen.findByRole("heading", { name: fill(quarter.heading, { quarter: "Q4" }) });
+
+    const window = { from: formatDate("2025-04-01", "en"), by: formatDate("2025-04-22", "en") };
+    expect(screen.getByText(fill(quarter.dueNegativa, window), { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText(fill(quarter.dueADeducir, window), { exact: false })).not.toBeInTheDocument();
+  });
+
   it("asks for another quarter's result when the quarter changes", async () => {
     const fetchStub = stubApi();
     const user = renderPeriods();
@@ -116,12 +142,43 @@ describe("PeriodsPage", () => {
     expect(banner).toBeVisible();
     expect(screen.getByRole("heading", { name: year.heading })).toBeInTheDocument();
     expect(screen.getByText(year.gap).nextElementSibling).toHaveTextContent(formatMoney("0.00", "en"));
-    expect(screen.getByText(fill(year.payableIn, { month: formatMonth("2026-06", "en") }), { exact: false })).toBeInTheDocument();
+    const window = { from: formatDate("2026-04-08", "en"), by: formatDate("2026-06-30", "en") };
+    expect(screen.getByText(fill(year.dueNothingToPay, window))).toBeInTheDocument();
+    expect(screen.queryByText(fill(year.payableIn, { month: formatMonth("2026-06", "en") }), { exact: false })).not.toBeInTheDocument();
     expect(screen.getByText(formatMoney("3365.93", "en"))).toBeInTheDocument();
     expect(screen.getByText(formatShare("0.27", "en"))).toBeInTheDocument();
 
     expect(urlsMatching(fetchStub, "/calculations/annual-true-up")).toEqual([ANNUAL_URL]);
     expect(fetchStub.mock.calls.find(([url]) => url === ANNUAL_URL)?.[1]?.method).toBe("POST");
+  });
+
+  it("says when a gap beyond the advances is payable and in which window", async () => {
+    stubApi({ annual: { status: 200, body: { ...g12AnnualTrueUp, gap: "512.40" } } });
+    const user = renderPeriods();
+    await screen.findByRole("heading", { name: fill(MESSAGES.en.Periods.quarter.heading, { quarter: "Q1" }) });
+
+    await user.click(screen.getByRole("button", { name: MESSAGES.en.Periods.toggle.year }));
+
+    const year = MESSAGES.en.Periods.year;
+    expect(await screen.findByText(year.gap)).toBeInTheDocument();
+    expect(screen.getByText(year.gap).nextElementSibling).toHaveTextContent(formatMoney("512.40", "en"));
+    expect(screen.getByText(fill(year.payableIn, { month: formatMonth("2026-06", "en") }), { exact: false })).toBeInTheDocument();
+    expect(
+      screen.getByText(fill(year.due, { from: formatDate("2026-04-08", "en"), by: formatDate("2026-06-30", "en") }), { exact: false }),
+    ).toBeInTheDocument();
+  });
+
+  it.each(LOCALES)("says in %s that a zero gap leaves nothing to pay but the Renta to file", async (locale) => {
+    stubApi();
+    const user = renderPeriods(locale);
+    await screen.findByRole("heading", { name: fill(MESSAGES[locale].Periods.quarter.heading, { quarter: "Q1" }) });
+
+    await user.click(screen.getByRole("button", { name: MESSAGES[locale].Periods.toggle.year }));
+
+    const year = MESSAGES[locale].Periods.year;
+    const window = { from: formatDate("2026-04-08", locale), by: formatDate("2026-06-30", locale) };
+    expect(await screen.findByText(fill(year.dueNothingToPay, window))).toBeInTheDocument();
+    expect(screen.queryByText(fill(year.due, window), { exact: false })).not.toBeInTheDocument();
   });
 
   it("sends to settings when there is no profile yet, and asks for no calculation", async () => {

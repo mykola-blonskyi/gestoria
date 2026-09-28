@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDate, formatMoney, formatMonth, formatShare } from "@/shared/lib/format";
+import { formatDate, formatMoney, formatMonth, formatShare, isZeroMoney } from "@/shared/lib/format";
 
 const NBSP = " ";
 
@@ -52,6 +52,16 @@ describe("formatMoney", () => {
       );
     },
   );
+});
+
+describe("isZeroMoney", () => {
+  it.each(["0.00", "-0.00", "0", "000.0"])("reads %s as zero", (amount) => {
+    expect(isZeroMoney(amount)).toBe(true);
+  });
+
+  it.each(["0.01", "-0.01", "100.00", "10.00", "", "abc"])("reads %s as not zero", (amount) => {
+    expect(isZeroMoney(amount)).toBe(false);
+  });
 });
 
 describe("formatDate", () => {
