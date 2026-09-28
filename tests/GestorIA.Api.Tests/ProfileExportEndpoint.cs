@@ -95,7 +95,7 @@ public class ProfileExportEndpoint
     }
 
     // The entities member a table is exported under: its name with a lower-case first letter, as the API writes JSON names.
-    private static string Member(string table) => char.ToLowerInvariant(table[0]) + table[1..];
+    internal static string Member(string table) => char.ToLowerInvariant(table[0]) + table[1..];
 
     private static async Task<ApiFactory> Api()
     {

@@ -42,6 +42,8 @@ public sealed class DatabaseOutage : IAsyncLifetime
         var created = await client.PostProfile(RepoFiles.GoldenProfile("G12"));
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         var id = (await created.Json())["id"]!.GetValue<string>();
+        // A valid file, so the restore reaches the database: its checks before that need none.
+        var export = await client.GetStringAsync($"/api/v1/profiles/{id}/export");
 
         var before = api.Lines.Count;
         await container.StopAsync();
@@ -59,6 +61,7 @@ public sealed class DatabaseOutage : IAsyncLifetime
             await client.GetAsync($"/api/v1/profiles/{id}/transactions?year=2025"),
             await client.GetAsync($"/api/v1/profiles/{id}/export"),
             await client.DeleteAsync($"/api/v1/profiles/{id}"),
+            await client.Restore(export),
         };
 
         foreach (var answer in answers)

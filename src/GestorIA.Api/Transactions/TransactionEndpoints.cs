@@ -78,7 +78,7 @@ public static class TransactionEndpoints
             return Problems.NoProfile(id);
         }
 
-        if (await StatementFile.ReadAsync(request) is not { } bytes)
+        if (await RequestBody.ReadAtMostAsync(request, StatementFile.MaxBytes) is not { } bytes)
         {
             return Problems.TooLarge(StatementFile.MaxBytes);
         }

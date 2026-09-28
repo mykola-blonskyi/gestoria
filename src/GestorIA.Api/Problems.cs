@@ -1,4 +1,6 @@
+using GestorIA.Api.Profiles;
 using Microsoft.AspNetCore.Http.HttpResults;
+using static System.FormattableString;
 
 namespace GestorIA.Api;
 
@@ -17,6 +19,9 @@ public static class Problems
     public const string ProfileExists = Base + "profile-exists";
     public const string StatementTooLarge = Base + "statement-too-large";
     public const string StatementMediaType = Base + "statement-media-type";
+    public const string ExportTooLarge = Base + "export-too-large";
+    public const string ExportMediaType = Base + "export-media-type";
+    public const string InstallationNotEmpty = Base + "installation-not-empty";
     public const string DatabaseUnavailable = Base + "database-unavailable";
     public const string NoUpcomingObligations = Base + "no-upcoming-obligations";
 
@@ -58,6 +63,32 @@ public static class Problems
             statusCode: StatusCodes.Status415UnsupportedMediaType,
             title: "The statement is not sent as a CSV file",
             type: StatementMediaType);
+
+    // 413: an export to restore over the limit, refused before any of it is read as JSON.
+    public static ProblemHttpResult TooLargeExport(int maxBytes) =>
+        TypedResults.Problem(
+            $"An export to restore may be at most {maxBytes} bytes.",
+            statusCode: StatusCodes.Status413PayloadTooLarge,
+            title: "The export is too large",
+            type: ExportTooLarge);
+
+    // 415: an export to restore sent as something other than JSON, such as a form upload.
+    public static ProblemHttpResult UnsupportedExportType() =>
+        TypedResults.Problem(
+            "Send the export file itself as the body, with Content-Type application/json.",
+            statusCode: StatusCodes.Status415UnsupportedMediaType,
+            title: "The export is not sent as JSON",
+            type: ExportMediaType);
+
+    // 409: a restore into an installation that holds something other than the file (SPEC-009 §2.2). The extensions say what
+    // is there by id, tax year and count, none of them a personal amount.
+    public static ProblemHttpResult InstallationHolds(Guid profileId, int taxYear, EntityCounts entities) =>
+        TypedResults.Problem(
+            Invariant($"This installation already holds profile {profileId}, for tax year {taxYear}, with {entities.BankTransactions} bank movements. A restore needs an empty installation: download a copy of what is there on Backup, delete it in Settings, then restore."),
+            statusCode: StatusCodes.Status409Conflict,
+            title: "The installation already holds data",
+            type: InstallationNotEmpty,
+            extensions: new Dictionary<string, object?> { ["profileId"] = profileId, ["taxYear"] = taxYear, ["entities"] = entities });
 
     // 422: a tax year, a region or a value the configuration does not carry, or declares not published yet (SPEC-007 §3).
     public static ProblemHttpResult Gap(string reason) =>

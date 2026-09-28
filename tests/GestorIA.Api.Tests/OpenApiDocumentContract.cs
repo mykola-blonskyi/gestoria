@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using GestorIA.Api.Transactions;
@@ -92,6 +93,12 @@ public class OpenApiDocumentContract(ApiFactory api) : IClassFixture<ApiFactory>
         var invalid = await (await client.PutProfile(id, new JsonObject { ["taxYear"] = 2025 })).Json();
         var export = await (await client.GetAsync($"/api/v1/profiles/{id}/export")).Json();
         var noDelete = await (await client.DeleteAsync($"/api/v1/profiles/{Guid.NewGuid()}")).Json();
+        var same = await client.Restore(export.ToJsonString());
+        var changed = export.DeepClone();
+        changed["entities"]!["profiles"]![0]!["projection"]!["gastos"] = "1.00";
+        var notEmpty = await client.Restore(changed.ToJsonString());
+        changed["entities"]!["profiles"]![0]!["projection"]!["gastos"] = "1.001";
+        var refused = await (await client.Restore(changed.ToJsonString())).Json();
 
         AssertValid("ProfileView", profile);
         Assert.All(list, item => AssertValid("ProfileView", item!));
@@ -101,6 +108,10 @@ public class OpenApiDocumentContract(ApiFactory api) : IClassFixture<ApiFactory>
         AssertValid("HttpValidationProblemDetails", invalid);
         AssertValid("ProfileExport", export);
         AssertValid("ProblemDetails", noDelete);
+        Assert.Equal((HttpStatusCode.OK, HttpStatusCode.Conflict), (same.StatusCode, notEmpty.StatusCode));
+        AssertValid("RestoredExport", await same.Json());
+        AssertValid("ProblemDetails", await notEmpty.Json());
+        AssertValid("HttpValidationProblemDetails", refused);
     }
 
     [Fact]
@@ -117,6 +128,8 @@ public class OpenApiDocumentContract(ApiFactory api) : IClassFixture<ApiFactory>
         var badFilter = await (await ownClient.GetAsync($"/api/v1/profiles/{id}/transactions?quarter=Q1")).Json();
         var tooLarge = await (await ownClient.ImportStatement(id, new byte[StatementFile.MaxBytes + 1])).Json();
         var wrongType = await (await ownClient.ImportStatement(id, RepoFiles.Statement, contentType: "application/json")).Json();
+        var exportTooLarge = await (await ownClient.Restore($"\"{new string('x', Profiles.ProfileRestore.MaxBytes)}\"")).Json();
+        var exportWrongType = await (await ownClient.Restore("{}", "text/plain")).Json();
 
         AssertValid("BankStatementImport", imported);
         Assert.NotEmpty(movements);
@@ -125,6 +138,8 @@ public class OpenApiDocumentContract(ApiFactory api) : IClassFixture<ApiFactory>
         AssertValid("HttpValidationProblemDetails", badFilter);
         AssertValid("ProblemDetails", tooLarge);
         AssertValid("ProblemDetails", wrongType);
+        AssertValid("ProblemDetails", exportTooLarge);
+        AssertValid("ProblemDetails", exportWrongType);
     }
 
     [Fact]

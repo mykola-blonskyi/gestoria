@@ -1,10 +1,12 @@
+using System.Net;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace GestorIA.Api.Tests;
 
 // SPEC-013 §2: nothing about the profile reaches a log. Every category is captured at Trace, EF Core's SQL included, while a
-// profile is created, refused, read, replaced, estimated, exported and deleted. No line may hold one of its amounts, and none may look like a NIF
-// or an IBAN, the identifiers the ledger will add.
+// profile is created, refused, read, replaced, estimated, exported, deleted and restored. No line may hold one of its amounts, and none may look
+// like a NIF or an IBAN, the identifiers the ledger will add.
 public partial class ProfileNotLogged
 {
     // The profile's own figures, chosen to appear nowhere else: G15's shape with amounts of their own.
@@ -32,7 +34,15 @@ public partial class ProfileNotLogged
         await client.GetAsync($"/api/v1/profiles/{id}");
         await client.GetAsync("/api/v1/profiles");
         await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q3");
-        await client.GetAsync($"/api/v1/profiles/{id}/export");
+        var export = await client.GetStringAsync($"/api/v1/profiles/{id}/export");
+        await client.DeleteAsync($"/api/v1/profiles/{id}");
+        Assert.Equal(HttpStatusCode.Created, (await client.Restore(export)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.Restore(export)).StatusCode);
+        var tampered = JsonNode.Parse(export)!;
+        tampered["entities"]!["profiles"]![0]!["projection"]!["gastos"] = Figures[3];
+        Assert.Equal(HttpStatusCode.Conflict, (await client.Restore(tampered.ToJsonString())).StatusCode);
+        tampered["entities"]!["profiles"]![0]!["projection"]!["gastos"] = Figures[4] + "1";
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.Restore(tampered.ToJsonString())).StatusCode);
         await client.DeleteAsync($"/api/v1/profiles/{id}");
 
         Assert.NotEmpty(api.Lines);

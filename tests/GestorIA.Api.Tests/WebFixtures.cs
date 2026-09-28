@@ -64,7 +64,15 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
         var fixtureIds = ids.Select((movement, index) => (movement, $"00000000-0000-0000-0072-{index + 1:D12}")).Append((id, FixtureId)).ToList();
         await AssertFixture("g12-transactions-2025.json", year, fixtureIds);
         await AssertFixture("g12-transactions-2025-q1.json", await client.GetAsync($"/api/v1/profiles/{id}/transactions?year=2025&quarter=Q1"), fixtureIds);
-        await AssertFixture("g12-export.json", await client.GetAsync($"/api/v1/profiles/{id}/export"), fixtureIds);
+        var export = await client.GetAsync($"/api/v1/profiles/{id}/export");
+        var file = await export.Content.ReadAsStringAsync();
+        await AssertFixture("g12-export.json", export, fixtureIds);
+
+        await client.DeleteAsync($"/api/v1/profiles/{id}");
+        await AssertFixture("g12-restore.json", await client.Restore(file), fixtureIds);
+        var changed = JsonNode.Parse(file)!;
+        changed["entities"]!["profiles"]![0]!["projection"]!["gastos"] = "1.00";
+        await AssertFixture("g12-restore-conflict.json", await client.Restore(changed.ToJsonString()), fixtureIds);
     }
 
     [Fact]
@@ -81,6 +89,9 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
         {
             export["exportedAt"] = FixtureExportedAt;
         }
+
+        // A problem's traceId is new on every request.
+        (answer as JsonObject)?.Remove("traceId");
 
         AssertFixture(name, answer);
     }
