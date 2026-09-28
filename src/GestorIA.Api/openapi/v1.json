@@ -1675,6 +1675,13 @@
           }
         }
       },
+      "Modelo130FilingView": {
+        "enum": [
+          "ingreso",
+          "aDeducir",
+          "negativa"
+        ]
+      },
       "NewActivityChoice": {
         "required": [
           "kind"
@@ -1764,7 +1771,8 @@
           "quarter",
           "aIngresar",
           "dueFrom",
-          "dueBy"
+          "dueBy",
+          "filing"
         ],
         "type": "object",
         "properties": {
@@ -1782,6 +1790,9 @@
           "dueBy": {
             "type": "string",
             "format": "date"
+          },
+          "filing": {
+            "$ref": "#/components/schemas/Modelo130FilingView"
           }
         }
       },
@@ -2244,6 +2255,7 @@
           "aIngresar",
           "dueFrom",
           "dueBy",
+          "filing",
           "casillas",
           "trace"
         ],
@@ -2269,6 +2281,9 @@
           "dueBy": {
             "type": "string",
             "format": "date"
+          },
+          "filing": {
+            "$ref": "#/components/schemas/Modelo130FilingView"
           },
           "casillas": {
             "type": "array",
@@ -2377,6 +2392,8 @@
           "monthlyCuotaSs",
           "annualTrueUpGap",
           "annualTrueUpPayableIn",
+          "annualTrueUpDueFrom",
+          "annualTrueUpDueBy",
           "ivaToSetAside",
           "trace",
           "notices"
@@ -2406,6 +2423,14 @@
           },
           "annualTrueUpPayableIn": {
             "type": "string"
+          },
+          "annualTrueUpDueFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "annualTrueUpDueBy": {
+            "type": "string",
+            "format": "date"
           },
           "ivaToSetAside": {
             "pattern": "^-?\\d+\\.\\d{2}$",

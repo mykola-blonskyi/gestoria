@@ -5,6 +5,7 @@
   "aIngresar": "1228.99",
   "dueFrom": "2025-04-01",
   "dueBy": "2025-04-22",
+  "filing": "ingreso",
   "casillas": [
     {
       "key": "ingresos",

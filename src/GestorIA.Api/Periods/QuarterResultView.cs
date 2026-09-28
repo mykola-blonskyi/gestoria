@@ -14,6 +14,7 @@ public sealed record QuarterResultView(
     string AIngresar,
     DateOnly DueFrom,
     DateOnly DueBy,
+    Modelo130FilingView Filing,
     IReadOnlyList<CasillaView> Casillas,
     IReadOnlyList<TraceStepView> Trace)
 {
@@ -24,6 +25,7 @@ public sealed record QuarterResultView(
         SetAsideEstimate.Euros(result.AIngresar),
         result.DueWindow.Start,
         result.DueWindow.End,
+        SetAsideEstimate.Filing(result.Filing),
         [.. result.Casillas.Select(kv => new CasillaView(kv.Key, SetAsideEstimate.Euros(kv.Value)))],
         [.. result.Trace.Steps.Select(TraceStepView.From)]);
 }

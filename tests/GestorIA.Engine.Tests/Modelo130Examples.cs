@@ -201,6 +201,44 @@ public class Modelo130Examples
         Assert.Equal(new DueWindow(DateOnly.Parse(start, CultureInfo.InvariantCulture), DateOnly.Parse(end, CultureInfo.InvariantCulture)), window);
     }
 
+    // AEAT, instrucciones del modelo 130, casilla 19.
+    [Fact]
+    public void AZeroResultInQ1IsFiledNegativa()
+    {
+        // Default previousYear (AboveEveryBand) keeps minoracion at zero, so a zero base gives a zero resultado exactly.
+        var result = Run(ingresos: 0m, gastos: 0m);
+
+        Assert.Equal(Money.Zero, result.Resultado);
+        Assert.Equal(Modelo130Filing.Negativa, result.Filing);
+    }
+
+    [Fact]
+    public void ANegativeResultInQ4IsFiledNegativa()
+    {
+        var result = Run(ingresos: 0m, gastos: 100m, quarter: Quarter.Q4, previousYear: new PreviousYear.NoActivity());
+
+        Assert.True(result.Resultado < Money.Zero);
+        Assert.Equal(Modelo130Filing.Negativa, result.Filing);
+    }
+
+    [Fact]
+    public void ANegativeResultInAnEarlierQuarterIsFiledADeducir()
+    {
+        var result = Run(ingresos: 0m, gastos: 100m, quarter: Quarter.Q2, previousYear: new PreviousYear.NoActivity());
+
+        Assert.True(result.Resultado < Money.Zero);
+        Assert.Equal(Modelo130Filing.ADeducir, result.Filing);
+    }
+
+    [Fact]
+    public void APositiveResultIsFiledIngreso()
+    {
+        var result = Run(ingresos: 30000m, gastos: 10000m);
+
+        Assert.True(result.Resultado > Money.Zero);
+        Assert.Equal(Modelo130Filing.Ingreso, result.Filing);
+    }
+
     [Fact]
     public void SameInputTwice_GivesTheSameResultAndTrace()
     {
