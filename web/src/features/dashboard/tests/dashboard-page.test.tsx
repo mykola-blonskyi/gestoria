@@ -77,7 +77,9 @@ describe("DashboardPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(formatMoney("80.00", "en"))).toBeInTheDocument();
     // G12's advances cover the Renta: the gap is 0.00, so there is nothing to pay, only the return to file.
-    expect(screen.getByText(fill(estimate.rentaFiled, { month: formatMonth("2026-06", "en") }))).toBeInTheDocument();
+    expect(
+      screen.getByText(fill(estimate.rentaFiled, { from: formatDate(g12Estimate.annualTrueUpDueFrom, "en"), by: formatDate(g12Estimate.annualTrueUpDueBy, "en") })),
+    ).toBeInTheDocument();
     expect(screen.queryByText(fill(estimate.payableIn, { month: formatMonth("2026-06", "en") }))).not.toBeInTheDocument();
     expect(screen.getAllByText(formatMoney("0.00", "en"))).toHaveLength(2);
     expect(screen.getByText(fill(estimate.config, { year: 2025, hash: g12Estimate.configHash }))).toBeInTheDocument();
@@ -85,17 +87,40 @@ describe("DashboardPage", () => {
     expect(screen.getByRole("link", { name: MESSAGES.en.Dashboard.profile.edit })).toHaveAttribute("href", "/settings");
   });
 
-  it.each(LOCALES)("says in %s that a Modelo 130 and a Renta with nothing to pay are still filed", async (locale) => {
-    stubApi({ estimate: { status: 200, body: { ...g12Estimate, nextPayment: { ...g12Estimate.nextPayment, aIngresar: "0.00" } } } });
+  it.each(LOCALES)("says in %s that a next payment with filing aDeducir is filed a deducir", async (locale) => {
+    stubApi({ estimate: { status: 200, body: { ...g12Estimate, nextPayment: { ...g12Estimate.nextPayment, aIngresar: "0.00", filing: "aDeducir" } } } });
     renderDashboard(locale);
 
     const estimate = MESSAGES[locale].Dashboard.estimate;
     await screen.findByRole("heading", { name: estimate.heading });
 
     const window = { from: formatDate("2025-04-01", locale), by: formatDate("2025-04-22", locale) };
-    expect(screen.getByText(fill(estimate.dueFiled, window), { exact: false })).toBeInTheDocument();
+    expect(screen.getByText(fill(estimate.dueADeducir, window), { exact: false })).toBeInTheDocument();
     expect(screen.queryByText(fill(estimate.due, window), { exact: false })).not.toBeInTheDocument();
-    expect(screen.getByText(fill(estimate.rentaFiled, { month: formatMonth("2026-06", locale) }))).toBeInTheDocument();
+  });
+
+  it("says a next payment with filing negativa is filed as negativa", async () => {
+    stubApi({ estimate: { status: 200, body: { ...g12Estimate, nextPayment: { ...g12Estimate.nextPayment, aIngresar: "0.00", filing: "negativa" } } } });
+    renderDashboard();
+
+    const estimate = MESSAGES.en.Dashboard.estimate;
+    await screen.findByRole("heading", { name: estimate.heading });
+
+    const window = { from: formatDate("2025-04-01", "en"), by: formatDate("2025-04-22", "en") };
+    expect(screen.getByText(fill(estimate.dueNegativa, window), { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText(fill(estimate.due, window), { exact: false })).not.toBeInTheDocument();
+  });
+
+  it.each(LOCALES)("says in %s that a zero Renta gap leaves nothing to pay but the Renta to file, in the true-up's window", async (locale) => {
+    stubApi();
+    renderDashboard(locale);
+
+    const estimate = MESSAGES[locale].Dashboard.estimate;
+    await screen.findByRole("heading", { name: estimate.heading });
+
+    const window = { from: formatDate(g12Estimate.annualTrueUpDueFrom, locale), by: formatDate(g12Estimate.annualTrueUpDueBy, locale) };
+    expect(screen.getByText(fill(estimate.rentaFiled, window))).toBeInTheDocument();
+    expect(screen.queryByText(fill(estimate.payableIn, { month: formatMonth(g12Estimate.annualTrueUpPayableIn, locale) }))).not.toBeInTheDocument();
   });
 
   it("says when a Renta gap beyond the advances is payable", async () => {
@@ -105,9 +130,10 @@ describe("DashboardPage", () => {
     const estimate = MESSAGES.en.Dashboard.estimate;
     await screen.findByRole("heading", { name: estimate.heading });
 
+    const window = { from: formatDate(g12Estimate.annualTrueUpDueFrom, "en"), by: formatDate(g12Estimate.annualTrueUpDueBy, "en") };
     expect(screen.getByText(estimate.renta).nextElementSibling).toHaveTextContent(formatMoney("512.40", "en"));
     expect(screen.getByText(fill(estimate.payableIn, { month: formatMonth("2026-06", "en") }))).toBeInTheDocument();
-    expect(screen.queryByText(fill(estimate.rentaFiled, { month: formatMonth("2026-06", "en") }))).not.toBeInTheDocument();
+    expect(screen.queryByText(fill(estimate.rentaFiled, window))).not.toBeInTheDocument();
   });
 
   it.each([

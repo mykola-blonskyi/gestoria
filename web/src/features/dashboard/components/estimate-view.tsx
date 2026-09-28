@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import type { SetAsideEstimate } from "@/data/set-aside";
+import { DUE_MESSAGE_KEY } from "@/shared/lib/filing";
 import { formatDate, formatMoney, formatMonth, formatShare, isZeroMoney } from "@/shared/lib/format";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Notices } from "@/shared/ui/notices-view";
@@ -26,12 +27,13 @@ export function EstimateView({ estimate }: { estimate: SetAsideEstimate }) {
           <p className="text-lg font-medium">{t("holdBack", { share: formatShare(estimate.holdBackShare, locale) })}</p>
           <dl className="grid gap-4 sm:grid-cols-2">
             <Figure label={t("nextPayment", { quarter: next.quarter })} value={formatMoney(next.aIngresar, locale)}>
-              {t(isZeroMoney(next.aIngresar) ? "dueFiled" : "due", { from: formatDate(next.dueFrom, locale), by: formatDate(next.dueBy, locale) })}{" "}
-              {t("localHolidays")}
+              {t(DUE_MESSAGE_KEY[next.filing], { from: formatDate(next.dueFrom, locale), by: formatDate(next.dueBy, locale) })} {t("localHolidays")}
             </Figure>
             <Figure label={t("cuota")} value={formatMoney(estimate.monthlyCuotaSs, locale)} />
             <Figure label={t("renta")} value={formatMoney(estimate.annualTrueUpGap, locale)}>
-              {t(isZeroMoney(estimate.annualTrueUpGap) ? "rentaFiled" : "payableIn", { month: formatMonth(estimate.annualTrueUpPayableIn, locale) })}
+              {isZeroMoney(estimate.annualTrueUpGap)
+                ? t("rentaFiled", { from: formatDate(estimate.annualTrueUpDueFrom, locale), by: formatDate(estimate.annualTrueUpDueBy, locale) })
+                : t("payableIn", { month: formatMonth(estimate.annualTrueUpPayableIn, locale) })}
             </Figure>
             <Figure label={t("iva")} value={formatMoney(estimate.ivaToSetAside, locale)} />
           </dl>
