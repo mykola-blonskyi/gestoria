@@ -10,7 +10,7 @@ import { annualTrueUpQuery, quarterResultQuery, type AnnualTrueUp, type QuarterR
 import type { Profile } from "@/data/profiles";
 import type { Quarter } from "@/data/set-aside";
 import { taxYearsQuery } from "@/data/tax-years";
-import { formatDate, formatMoney, formatMonth, formatShare } from "@/shared/lib/format";
+import { formatDate, formatMoney, formatMonth, formatShare, isZeroMoney } from "@/shared/lib/format";
 import { QUARTERS, defaultQuarter } from "@/shared/lib/quarters";
 import { ApiFailure } from "@/shared/ui/api-failure";
 import { Button } from "@/shared/ui/button";
@@ -140,13 +140,10 @@ function QuarterResultCard({ result, modelo130Lines }: { result: QuarterResult; 
   );
 }
 
-// Amounts arrive as decimal strings and are never turned into floats (README, "Money and dates").
-const isZero = (amount: string) => /^-?0+(\.0+)?$/.test(amount);
-
 // A return with nothing to pay is still filed in the same window. AEAT's instructions for casilla 19: a negative result in
 // Q1–Q3 is filed "a deducir" and carried to the year's later quarters; a zero result, or a negative one in Q4, "negativa".
 function dueMessage(result: QuarterResult) {
-  if (!isZero(result.aIngresar)) return "due";
+  if (!isZeroMoney(result.aIngresar)) return "due";
   const resultado = result.casillas.find((casilla) => casilla.key === "resultado")?.amount ?? "0.00";
   return resultado.startsWith("-") && result.quarter !== "Q4" ? "dueADeducir" : "dueNegativa";
 }
@@ -180,7 +177,7 @@ function AnnualTrueUpCard({ result }: { result: AnnualTrueUp }) {
         <CardContent className="grid gap-4">
           <dl>
             <Figure label={t("gap")} value={formatMoney(result.gap, locale)}>
-              {isZero(result.gap) ? (
+              {isZeroMoney(result.gap) ? (
                 t("dueNothingToPay", { from: formatDate(result.dueFrom, locale), by: formatDate(result.dueBy, locale) })
               ) : (
                 <>

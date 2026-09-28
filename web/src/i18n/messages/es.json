@@ -49,10 +49,12 @@
       "holdBack": "Aparta el {share} de cada cobro que recibas.",
       "nextPayment": "Próximo Modelo 130, {quarter}",
       "due": "Se paga del {from} al {by}.",
+      "dueFiled": "Nada a ingresar. Se presenta igualmente del {from} al {by}: un resultado negativo, en el apartado A deducir; uno cero, como declaración negativa (Periodos indica cuál).",
       "localHolidays": "No se aplican los festivos locales, así que la fecha puede ser anterior, nunca posterior.",
       "cuota": "Cuota mensual de la TGSS este trimestre",
       "renta": "Renta además de los pagos del Modelo 130",
       "payableIn": "A pagar antes de que termine {month}.",
+      "rentaFiled": "No queda nada por pagar además de los pagos del Modelo 130. La Renta se presenta igualmente antes de que termine {month}.",
       "iva": "IVA a reservar",
       "config": "Ejercicio {year}, configuración sha256 {hash}"
     }
