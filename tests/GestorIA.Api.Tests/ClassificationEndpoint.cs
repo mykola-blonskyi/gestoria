@@ -292,35 +292,82 @@ public class ClassificationEndpoint
         Assert.Equal(before["holdBackShare"]!.GetValue<string>(), reviewed["holdBackShare"]!.GetValue<string>());
     }
 
-    // A statement exported on 22 April: Q1 reviewed, and two lines of Q2 that rules confirm and nobody is asked about. Q2 holds
-    // lines but the statement does not reach past it, so it stays projected; movements after 30 June make it actuals.
+    // A statement exported on 22 April: Q1 and three weeks of Q2, whose two lines rules confirm and nobody is asked about. Q2
+    // holds lines but the statement does not span it, so it stays projected; a later statement meeting it and reaching past
+    // 30 June makes it actuals.
     [Fact]
-    public async Task AQuarterTheStatementDoesNotReachPastStaysProjected()
+    public async Task AQuarterTheStatementDoesNotSpanStaysProjected()
     {
         await using var api = await Api();
         var client = api.CreateClient();
         var id = await client.CreateProfile("G12");
-        var firstQuarter = Encoding.UTF8.GetString(RepoFiles.Statement).ReplaceLineEndings("\n").Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Where(line => line.StartsWith("Fecha", StringComparison.Ordinal) || line[3..5] is "01" or "02" or "03");
-        var text = string.Join("\n", firstQuarter) + "\n";
-        await client.ImportStatement(id, Encoding.UTF8.GetBytes(text));
+        var april = SyntheticLines(line => line[3..5] is "01" or "02" or "03") + "20/04/2025;20/04/2025;PAGO MODELO 130 1T AEAT;-312,88;\n22/04/2025;22/04/2025;MERCADONA;-35,10;\n";
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes(april));
         await client.ClassifySyntheticQueue(id);
-        await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n20/04/2025;20/04/2025;PAGO MODELO 130 1T AEAT;-312,88;\n22/04/2025;22/04/2025;MERCADONA;-35,10;\n"));
         Assert.Empty(await client.ReviewQueue(id));
 
-        var april = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+        var estimate = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
         var fromFile = await (await client.Estimate(2025, File("Q2", new JsonArray(Actual("Q1", "2345.67", "87.61")), "22500.00", "900.00"))).Json();
 
-        var ledgerSteps = april["trace"]!.AsArray().Count(step => step!["id"]!.GetValue<string>().StartsWith("ledger.", StringComparison.Ordinal));
-        Assert.True(JsonNode.DeepEquals(EngineOnly(fromFile, 0), EngineOnly(april, ledgerSteps)), april.ToJsonString());
-        Assert.Equal("Q1", april["ledger"]!["actualsThrough"]!.GetValue<string>());
-        var coverage = april["trace"]!.AsArray().Single(step => step!["id"]!.GetValue<string>() == "ledger.coverage")!;
-        Assert.Equal("movements imported through 2025-04-22; Q2 needs movements after 2025-06-30, so the projection covers Q2 and what follows", coverage["formula"]!.GetValue<string>());
+        var ledgerSteps = estimate["trace"]!.AsArray().Count(step => step!["id"]!.GetValue<string>().StartsWith("ledger.", StringComparison.Ordinal));
+        Assert.True(JsonNode.DeepEquals(EngineOnly(fromFile, 0), EngineOnly(estimate, ledgerSteps)), estimate.ToJsonString());
+        Assert.Equal("Q1", estimate["ledger"]!["actualsThrough"]!.GetValue<string>());
+        Assert.Equal(
+            "no movements imported from 2025-04-23 on; Q2 needs movements from 2025-04-01 through 2025-07-01, so the projection covers Q2 and what follows",
+            Coverage(estimate));
 
-        await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n15/07/2025;15/07/2025;MERCADONA;-20,00;\n"));
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n23/04/2025;23/04/2025;MERCADONA;-20,00;\n15/07/2025;15/07/2025;MERCADONA;-20,00;\n"));
         var july = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
         Assert.Equal("Q2", july["ledger"]!["actualsThrough"]!.GetValue<string>());
     }
+
+    // The export carries each movement's import and class, so a restored installation spans the same days and counts the same
+    // actuals: the estimate is the one before, the partial April import's coverage step included.
+    [Fact]
+    public async Task ARestoredExportGivesTheSameEstimate()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = await client.CreateProfile("G12");
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes(SyntheticLines(line => line[3..5] is "01" or "02" or "03") + "20/04/2025;20/04/2025;MERCADONA;-35,10;\n"));
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n10/06/2025;10/06/2025;MERCADONA;-20,00;\n15/07/2025;15/07/2025;MERCADONA;-20,00;\n"));
+        await client.ClassifySyntheticQueue(id);
+        var before = await client.GetStringAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2");
+        var export = await client.GetStringAsync($"/api/v1/profiles/{id}/export");
+
+        (await client.DeleteAsync($"/api/v1/profiles/{id}")).EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.Created, (await client.Restore(export)).StatusCode);
+
+        var after = await client.GetStringAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2");
+        Assert.Equal(before, after);
+        Assert.Contains("no movements imported between 2025-04-21 and 2025-06-09", before, StringComparison.Ordinal);
+    }
+
+    // A first statement starting on 15 February lacks the first month of alta: Q1 stays projected, and the trace names the days.
+    [Fact]
+    public async Task AFirstStatementStartingAfterTheQuarterBeginsLeavesItProjected()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = await client.CreateProfile("G12");
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes(SyntheticLines(line => line[3..5] != "01")));
+        await client.ClassifySyntheticQueue(id);
+
+        var estimate = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+
+        Assert.Null(estimate["ledger"]!["actualsThrough"]);
+        Assert.Equal(
+            "no movements imported between 2025-01-15 and 2025-02-13; Q1 needs movements from 2025-01-15 through 2025-04-01, so the projection covers Q1 and what follows",
+            Coverage(estimate));
+    }
+
+    // The synthetic statement's header and the lines the filter keeps.
+    private static string SyntheticLines(Func<string, bool> keep) =>
+        string.Join("\n", Encoding.UTF8.GetString(RepoFiles.Statement).ReplaceLineEndings("\n").Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Where(line => line.StartsWith("Fecha", StringComparison.Ordinal) || keep(line))) + "\n";
+
+    private static string Coverage(JsonObject estimate) =>
+        estimate["trace"]!.AsArray().Single(step => step!["id"]!.GetValue<string>() == "ledger.coverage")!["formula"]!.GetValue<string>();
 
     // 10 August 2025: Q1 and Q2 are closed, Q3 is not, so the actuals end with Q2 and the projection keeps six of its twelve months.
     [Fact]

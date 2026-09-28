@@ -57,10 +57,11 @@ internal static class Http
         }
     }
 
-    // A statement of early January of the next year: the synthetic 2025 statement ends on 31 December, and only movements after
-    // a quarter's last day show a statement covered it, so this lets Q4 be actuals. Its line belongs to 2026, outside the queue.
+    // A statement of 1 January of the next year: the synthetic 2025 statement ends on 31 December, and only imports reaching past
+    // a quarter's last day show it covered, so this one, meeting it, lets Q4 be actuals. Its line belongs to 2026, outside the
+    // queue.
     internal static async Task ImportNextJanuary(this HttpClient client, string profileId) =>
-        (await client.ImportStatement(profileId, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n02/01/2026;02/01/2026;CAFETERIA LA PRUEBA;-1,85;\n"))).EnsureSuccessStatusCode();
+        (await client.ImportStatement(profileId, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n01/01/2026;01/01/2026;CAFETERIA LA PRUEBA;-1,85;\n"))).EnsureSuccessStatusCode();
 
     internal static async Task<JsonArray> ReviewQueue(this HttpClient client, string profileId) =>
         JsonNode.Parse(await client.GetStringAsync($"/api/v1/profiles/{profileId}/review-queue"))!.AsArray();
