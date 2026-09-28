@@ -1,5 +1,8 @@
 using System.Net;
 using System.Text.Json.Nodes;
+using GestorIA.Api.Profiles;
+using GestorIA.Domain.ValueObjects;
+using GestorIA.Engine;
 
 namespace GestorIA.Api.Tests;
 
@@ -169,9 +172,58 @@ public class PaymentsCalendarEndpoint
         var client = api.CreateClient();
         var id = (await (await client.PostProfile(RepoFiles.GoldenProfile("G12"))).Json())["id"]!.GetValue<string>();
 
-        var ics = await (await client.GetAsync($"/api/v1/profiles/{id}/calendar.ics?amounts=true")).Content.ReadAsStringAsync();
+        var without = Unfolded(await (await client.GetAsync($"/api/v1/profiles/{id}/calendar.ics")).Content.ReadAsStringAsync());
+        var with = Unfolded(await (await client.GetAsync($"/api/v1/profiles/{id}/calendar.ics?amounts=true")).Content.ReadAsStringAsync());
 
-        Assert.Matches(@"\d+\.\d{2}", ics);
+        Assert.DoesNotContain("€", SummaryLines(without));
+        Assert.Contains("SUMMARY:TGSS cuota 2025-02 — €80.00", with.Split("\r\n"));
+    }
+
+    // G12's February cuota is 80.00; each locale writes it its own way, as the payments page does. RFC 5545 §3.3.11 escapes
+    // the decimal comma as "\,", and the space before the euro sign is a no-break one, hence \s.
+    [Theory]
+    [InlineData("es", @"^SUMMARY:Cuota TGSS 2025-02 — 80\\,00\s€$")]
+    [InlineData("uk", @"^SUMMARY:Cuota до TGSS 2025-02 — 80\\,00\s€$")]
+    [InlineData("ru", @"^SUMMARY:Cuota в TGSS 2025-02 — 80\\,00\s€$")]
+    public async Task TheIcsAmountsAreWrittenTheLocalesWay(string lang, string summary)
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = (await (await client.PostProfile(RepoFiles.GoldenProfile("G12"))).Json())["id"]!.GetValue<string>();
+
+        var ics = Unfolded(await (await client.GetAsync($"/api/v1/profiles/{id}/calendar.ics?amounts=true&lang={lang}")).Content.ReadAsStringAsync());
+
+        Assert.Single(ics.Split("\r\n"), line => System.Text.RegularExpressions.Regex.IsMatch(line, summary));
+    }
+
+    // 22:30 UTC on 22 April 2025 is already 23 April in Madrid (CEST), the day after Q1's Modelo 130 was due, so it is past;
+    // the UTC date would still call it upcoming.
+    [Fact]
+    public async Task TheIcsExportsTodayIsMadridsDateNotUtcs()
+    {
+        await using var api = await Api(now: new DateTimeOffset(2025, 4, 22, 22, 30, 0, TimeSpan.Zero));
+        var client = api.CreateClient();
+        var id = (await (await client.PostProfile(RepoFiles.GoldenProfile("G12"))).Json())["id"]!.GetValue<string>();
+
+        var ics = await (await client.GetAsync($"/api/v1/profiles/{id}/calendar.ics")).Content.ReadAsStringAsync();
+
+        Assert.DoesNotContain(UidLines(ics), uid => uid.StartsWith("UID:Modelo130-Q1-2025@", StringComparison.Ordinal));
+        Assert.Contains(UidLines(ics), uid => uid.StartsWith("UID:Modelo130-Q2-2025@", StringComparison.Ordinal));
+    }
+
+    // RFC 5545 §3.4: a VCALENDAR needs at least one component, so a year entirely in the past is a problem, not an empty file
+    // a calendar app would import nothing from.
+    [Fact]
+    public async Task AnExportWithNothingStillToComeIsANoUpcomingObligationsProblem()
+    {
+        await using var api = await Api(now: new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));
+        var client = api.CreateClient();
+        var id = (await (await client.PostProfile(RepoFiles.GoldenProfile("G12"))).Json())["id"]!.GetValue<string>();
+
+        var response = await client.GetAsync($"/api/v1/profiles/{id}/calendar.ics");
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("https://gestoria.local/problems/no-upcoming-obligations", (await response.Json())["type"]!.GetValue<string>());
     }
 
     [Fact]
@@ -251,21 +303,30 @@ public class PaymentsCalendarEndpoint
         Assert.NotEmpty(UidLines(first));
     }
 
-    // Modelo130-Q1@gestoria.local repeated for both 2025 and a later tax year; the tax year makes it unique.
+    // The same profile's Modelo 130 Q1 in two tax years: without the year in the UID, importing the later export would
+    // overwrite the earlier year's event. No 2026 calendar can be built through the API yet (its Q4 deadline is unpublished),
+    // so the export is written directly.
     [Fact]
-    public async Task TheIcsUidsCarryTheTaxYearSoTheyDoNotCollideAcrossYears()
+    public void TheIcsUidsCarryTheTaxYearSoTheyDoNotCollideAcrossYears()
     {
-        await using var api = await Api();
-        var client = api.CreateClient();
-        var id = (await (await client.PostProfile(RepoFiles.GoldenProfile("G12"))).Json())["id"]!.GetValue<string>();
+        var profile = Guid.NewGuid();
+        PaymentObligation Q1(int year) => new(
+            ObligationKind.Modelo130, "Q1", new DueWindow(new DateOnly(year, 4, 1), new DateOnly(year, 4, 20)), new ObligationAmount.Known(new Money(1m)));
 
-        var ics = await (await client.GetAsync($"/api/v1/profiles/{id}/calendar.ics")).Content.ReadAsStringAsync();
+        var uid2025 = Assert.Single(UidLines(PaymentsCalendarIcs.Write([Q1(2025)], 2025, profile, includeAmounts: false, "en")));
+        var uid2026 = Assert.Single(UidLines(PaymentsCalendarIcs.Write([Q1(2026)], 2026, profile, includeAmounts: false, "en")));
 
-        Assert.Contains("UID:Modelo130-Q1-2025@", ics, StringComparison.Ordinal);
+        Assert.NotEqual(uid2025, uid2026);
     }
 
-    private static IEnumerable<string> UidLines(string ics) =>
-        ics.Split("\r\n").Where(line => line.StartsWith("UID:", StringComparison.Ordinal));
+    // RFC 5545 §3.1: a long line is folded by a CRLF followed by one space or tab; unfolding removes both.
+    private static string Unfolded(string ics) => ics.Replace("\r\n ", "", StringComparison.Ordinal).Replace("\r\n\t", "", StringComparison.Ordinal);
+
+    private static List<string> UidLines(string ics) =>
+        [.. Unfolded(ics).Split("\r\n").Where(line => line.StartsWith("UID:", StringComparison.Ordinal))];
+
+    private static string SummaryLines(string ics) =>
+        string.Join("\n", ics.Split("\r\n").Where(line => line.StartsWith("SUMMARY:", StringComparison.Ordinal)));
 
     private static void AssertSingle(JsonArray obligations, string kind, string period) =>
         Assert.Single(obligations, o => o!["kind"]!.GetValue<string>() == kind && o["period"]!.GetValue<string>() == period);

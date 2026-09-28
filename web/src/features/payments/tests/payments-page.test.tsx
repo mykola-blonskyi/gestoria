@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import databaseUnavailable from "@tests/fixtures/database-unavailable.json";
 import g12Calendar from "@tests/fixtures/g12-calendar.json";
@@ -20,9 +20,10 @@ const problem = (status: number, body: Record<string, unknown>): Answer => ({ st
 function stubApi({
   profiles = { status: 200, body: [g12Profile] },
   calendar = { status: 200, body: g12Calendar },
-}: { profiles?: Answer; calendar?: Answer } = {}) {
+  ics = { status: 200, body: "BEGIN:VCALENDAR" },
+}: { profiles?: Answer; calendar?: Answer; ics?: Answer } = {}) {
   const fetchStub = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async (url) => {
-    const answer = url.includes("/calendar") ? calendar : profiles;
+    const answer = url.includes("/calendar.ics") ? ics : url.includes("/calendar") ? calendar : profiles;
     if (answer === "unreachable") throw new TypeError("fetch failed");
     const contentType = answer.status >= 400 ? "application/problem+json" : "application/json";
     return new Response(JSON.stringify(answer.body), { status: answer.status, headers: { "Content-Type": contentType } });
@@ -37,7 +38,15 @@ function renderPayments(locale: Locale = "en") {
   return user;
 }
 
+// G12's tax year is 2025: a day inside it, so its later obligations are still to come. Only Date is faked, so React Query's
+// own timers and retries run as usual.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2025-03-15T10:00:00Z"));
+});
+
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -118,7 +127,42 @@ describe("PaymentsPage", () => {
     await screen.findByRole("table");
     const checkbox = screen.getByLabelText(MESSAGES.en.Payments.export.includeAmounts);
     expect(checkbox).not.toBeChecked();
-    expect(screen.getByRole("button", { name: MESSAGES.en.Payments.export.button })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: MESSAGES.en.Payments.export.button })).toBeEnabled();
+    expect(screen.queryByText(MESSAGES.en.Payments.export.nothingUpcoming)).not.toBeInTheDocument();
+  });
+
+  it("says nothing is still to come and offers no export once every obligation's due date has passed", async () => {
+    vi.setSystemTime(new Date("2026-09-28T10:00:00Z"));
+    stubApi();
+    renderPayments("uk");
+
+    await screen.findByRole("table");
+    expect(screen.getByText(MESSAGES.uk.Payments.export.nothingUpcoming)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: MESSAGES.uk.Payments.export.button })).toBeDisabled();
+  });
+
+  // 22:30 UTC on the last due date is already the next day in Madrid, the day the API counts from.
+  it("counts today by Madrid's date, not UTC's", async () => {
+    const lastDue = g12Calendar.obligations.map((o) => o.dueBy).sort().at(-1)!;
+    vi.setSystemTime(new Date(`${lastDue}T22:30:00Z`));
+    stubApi();
+    renderPayments();
+
+    await screen.findByRole("table");
+    expect(screen.getByRole("button", { name: MESSAGES.en.Payments.export.button })).toBeDisabled();
+  });
+
+  it("says nothing is still to come when the API answers so on export", async () => {
+    stubApi({
+      ics: problem(422, { type: "https://gestoria.local/problems/no-upcoming-obligations", title: "No obligation is still to come", detail: "…" }),
+    });
+    const user = renderPayments("es");
+
+    await screen.findByRole("table");
+    await user.click(screen.getByRole("button", { name: MESSAGES.es.Payments.export.button }));
+
+    expect(await screen.findByText(MESSAGES.es.Payments.export.nothingUpcoming)).toBeInTheDocument();
+    expect(screen.queryByText(MESSAGES.es.Payments.export.failed)).not.toBeInTheDocument();
   });
 
   it("sends to settings when there is no profile yet, and asks for no calendar", async () => {

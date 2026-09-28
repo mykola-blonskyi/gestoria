@@ -68,7 +68,7 @@ Supplying services to EU businesses under reverse charge triggers the recapitula
 
 Content: per EU client, the VIES VAT number and the total base for the period under clave S (services supplied); and per EU supplier, clave I for services acquired, which Orden EHA/769/2010 art. 2.d also requires. US clients and suppliers do not appear; 349 is intra-community only. The claves are `config.modelo349.claves`.
 
-Filing period is quarterly by default. It becomes monthly when intra-community supplies exceed `config.modelo349.quarterlyFilingCap` (50,000 €) in the quarter or in any of the four before it (Orden EHA/769/2010 art. 10.2, as worded by Orden HAC/174/2020). The cap is per quarter, not per year.
+Filing period is quarterly by default. It becomes monthly when the entregas de bienes and prestaciones de servicios to be declared on the 349, IVA excluded, exceed `config.modelo349.quarterlyFilingCap` (50,000 €) in the quarter or in any of the four before it (Orden EHA/769/2010 art. 10.2, BOE-A-2010-5098, in its original wording; Orden HAC/174/2020 deleted 10.3 and left 10.2 as it was). The cap is per quarter, not per year.
 
 v1.0 produces the form, not just the totals (2026-09-18). Output mirrors 130 and 303: `Modelo349Result { Quarter, Lines, Trace, DueWindow }`. `config.modelo349.lines` holds the positions of the tipo-2 record fields (#58). A quarter with no intra-EU operations produces no filing, and saying so is part of the output.
 

@@ -1,4 +1,3 @@
-using System.Globalization;
 using GestorIA.Engine;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
@@ -45,7 +44,7 @@ public static class PaymentsCalendarIcs
     {
         var title = Invariant($"{PaymentsCalendarIcsText.Title(obligation.Kind, locale)} {obligation.Period}");
         return includeAmounts && obligation.Amount is ObligationAmount.Known known
-            ? Invariant($"{title} — {Euros(known)}")
+            ? Invariant($"{title} — {PaymentsCalendarIcsText.Euros(known.Value, locale)}")
             : title;
     }
 
@@ -55,6 +54,4 @@ public static class PaymentsCalendarIcs
         var reason = obligation.Amount is ObligationAmount.NotYetKnown ? PaymentsCalendarIcsText.NotYetKnownReason(obligation.Kind, locale) + " " : "";
         return window + " " + reason + PaymentsCalendarIcsText.LocalHolidaysNote(obligation.Kind, locale);
     }
-
-    private static string Euros(ObligationAmount.Known known) => known.Value.Round2().Amount.ToString("0.00", CultureInfo.InvariantCulture) + " €";
 }

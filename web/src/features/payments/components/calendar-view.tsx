@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 
 import type { Obligation } from "@/data/payments";
-import { formatDate, formatMoney } from "@/shared/lib/format";
+import { formatDate, formatMoney, madridDay } from "@/shared/lib/format";
 
 import { usePaymentsCalendar } from "../hooks/use-payments-calendar";
 import { ApiFailure } from "./api-failure";
@@ -34,7 +34,7 @@ export function CalendarView({ profileId }: { profileId: string }) {
         <p className="text-sm text-muted-foreground">{t("localHolidays.cuota")}</p>
       </div>
       <p className="text-sm break-all text-muted-foreground">{t("config", { year: calendar.data.taxYear, hash: calendar.data.configHash })}</p>
-      <ExportCalendar profileId={profileId} />
+      <ExportCalendar profileId={profileId} anyUpcoming={anyUpcoming(calendar.data.obligations)} />
     </div>
   );
 }
@@ -75,4 +75,11 @@ function ObligationsTable({ obligations }: { obligations: readonly Obligation[] 
       </tbody>
     </table>
   );
+}
+
+// The export holds only what is due today or later, by Madrid's date as the API counts it (SPEC-009); with nothing left the
+// API refuses rather than send an empty calendar, so the page says so before anyone asks. ISO dates compare as strings.
+function anyUpcoming(obligations: readonly Obligation[]): boolean {
+  const today = madridDay(new Date());
+  return obligations.some((obligation) => obligation.dueBy >= today);
 }

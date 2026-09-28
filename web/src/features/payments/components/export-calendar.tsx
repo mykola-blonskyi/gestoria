@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useId, useState } from "react";
 
+import { ApiError, PROBLEM_TYPES } from "@/data/api-error";
 import type { Locale } from "@/shared/constants/locales";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -11,7 +12,7 @@ import { useExportIcs } from "../hooks/use-export-ics";
 
 // Downloads the calendar as an RFC 5545 file for the taxpayer's own calendar app (#70). Amounts stay out of event titles
 // unless this opt-in is checked (SPEC-013): nothing here defaults to sharing a figure with whatever the file syncs to.
-export function ExportCalendar({ profileId }: { profileId: string }) {
+export function ExportCalendar({ profileId, anyUpcoming }: { profileId: string; anyUpcoming: boolean }) {
   const t = useTranslations("Payments.export");
   const locale = useLocale() as Locale;
   const checkboxId = useId();
@@ -53,12 +54,21 @@ export function ExportCalendar({ profileId }: { profileId: string }) {
           {t("includeAmounts")}
         </label>
         <div>
-          <Button onClick={download} disabled={exportIcs.isPending}>
+          <Button onClick={download} disabled={!anyUpcoming || exportIcs.isPending}>
             {t("button")}
           </Button>
         </div>
-        {exportIcs.isError && <p className="text-sm text-destructive">{t("failed")}</p>}
+        {!anyUpcoming || isNoUpcoming(exportIcs.error) ? (
+          <p className="text-sm text-muted-foreground">{t("nothingUpcoming")}</p>
+        ) : (
+          exportIcs.isError && <p className="text-sm text-destructive">{t("failed")}</p>
+        )}
       </CardContent>
     </Card>
   );
+}
+
+// The day can turn between loading the page and pressing the button; the API's own answer then says the same.
+function isNoUpcoming(error: Error | null): boolean {
+  return error instanceof ApiError && error.failure.kind === "problem" && error.failure.problem.type === PROBLEM_TYPES.noUpcomingObligations;
 }

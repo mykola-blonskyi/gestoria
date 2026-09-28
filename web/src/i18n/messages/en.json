@@ -118,7 +118,7 @@
     },
     "notes": {
       "modelo349": "only if you had intra-EU operations this quarter",
-      "modelo349Monthly": "Modelo 349 dates are the quarterly filer's. Above {cap} of intra-EU operations in a quarter, or in any of the four before it, Modelo 349 is filed monthly instead, and these dates no longer apply."
+      "modelo349Monthly": "Modelo 349 dates are the quarterly filer's. When the entregas de bienes and prestaciones de servicios you declare on Modelo 349, IVA excluded, go above {cap} in a quarter, or in any of the four before it, Modelo 349 is filed monthly instead, and these dates no longer apply."
     },
     "period": {
       "taxYear": "Tax year {year}"
@@ -137,7 +137,8 @@
       "lead": "Downloads an .ics file of the dates still to come, for your own calendar app. Past dates stay on this page.",
       "includeAmounts": "Include amounts in event titles",
       "button": "Download .ics",
-      "failed": "The export could not be downloaded. Try again."
+      "failed": "The export could not be downloaded. Try again.",
+      "nothingUpcoming": "Nothing is still to come in this tax year, so there is no date to export."
     },
     "failure": {
       "network": "The GestorIA API is not answering. Start it and try again.",

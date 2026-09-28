@@ -274,8 +274,13 @@ public static class ProfileEndpoints
             var obligations = PaymentCalendar.Build(profile.SetAsideInput(config, Quarter.Q4));
             // The export holds what is still upcoming, not the profile's whole tax year (#70 AC): a calendar app is for what
             // comes next, and past obligations already show on the page.
-            var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+            var today = MadridDay.Of(clock.GetUtcNow());
             var upcoming = obligations.Where(o => o.DueWindow.End >= today).ToList();
+            if (upcoming.Count == 0)
+            {
+                return Problems.NoUpcoming(config.TaxYear, today);
+            }
+
             return TypedResults.Text(PaymentsCalendarIcs.Write(upcoming, config.TaxYear, id, includeAmounts, locale), "text/calendar");
         }
         catch (ConfigNotFoundException e)
