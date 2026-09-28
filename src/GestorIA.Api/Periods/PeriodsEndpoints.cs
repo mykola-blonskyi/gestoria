@@ -1,16 +1,17 @@
 using GestorIA.Api.SetAside;
 using GestorIA.Engine;
 using GestorIA.Infrastructure.Persistence;
-using GestorIA.Infrastructure.Profiles;
 using GestorIA.Infrastructure.SetAside;
 using GestorIA.Infrastructure.TaxYears;
+using GestorIA.Infrastructure.Transactions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace GestorIA.Api.Periods;
 
 // Opening a quarter or the annual true-up of a stored profile's tax year (#71): each runs the same set-aside estimator as
-// GET /profiles/{id}/set-aside/estimate and returns one period's own casillas, due window and trace.
+// GET /profiles/{id}/set-aside/estimate, on the same actuals from the classified movements (#73), and returns one period's own
+// casillas, due window and trace, the ledger's steps first.
 public static class PeriodsEndpoints
 {
     public static void MapPeriods(this IEndpointRouteBuilder api)
@@ -31,7 +32,7 @@ public static class PeriodsEndpoints
     }
 
     private static async Task<Results<Ok<QuarterResultView>, ValidationProblem, ProblemHttpResult>> QuarterCalculation(
-        Guid id, string? quarter, GestoriaDbContext db, TaxYearConfigLoader loader, CancellationToken cancellationToken)
+        Guid id, string? quarter, GestoriaDbContext db, TaxYearConfigLoader loader, TransactionRules rules, TimeProvider time, CancellationToken cancellationToken)
     {
         if (QuarterParameter.Parse(quarter) is not { } parsedQuarter)
         {
@@ -43,12 +44,12 @@ public static class PeriodsEndpoints
             return Problems.NoProfile(id);
         }
 
-        var profile = row.ToProfile();
         try
         {
-            var config = loader.Load(profile.TaxYear);
-            var result = SetAsideEstimator.Estimate(profile.SetAsideInput(config, parsedQuarter));
-            return TypedResults.Ok(QuarterResultView.From(result.Quarters.Single(q => q.Quarter == parsedQuarter), config.TaxYear, config.ConfigHash));
+            var config = loader.Load(row.TaxYear);
+            var ledger = await db.SetAsideInputAsync(rules, row, config, parsedQuarter, Today(time), cancellationToken);
+            var result = SetAsideEstimator.Estimate(ledger.Input);
+            return TypedResults.Ok(QuarterResultView.From(result.Quarters.Single(q => q.Quarter == parsedQuarter), config.TaxYear, config.ConfigHash, ledger.Steps));
         }
         catch (ConfigNotFoundException e)
         {
@@ -61,20 +62,20 @@ public static class PeriodsEndpoints
     }
 
     private static async Task<Results<Ok<AnnualTrueUpView>, ProblemHttpResult>> AnnualTrueUp(
-        Guid id, GestoriaDbContext db, TaxYearConfigLoader loader, CancellationToken cancellationToken)
+        Guid id, GestoriaDbContext db, TaxYearConfigLoader loader, TransactionRules rules, TimeProvider time, CancellationToken cancellationToken)
     {
         if (await db.Profiles.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken) is not { } row)
         {
             return Problems.NoProfile(id);
         }
 
-        var profile = row.ToProfile();
         try
         {
-            var config = loader.Load(profile.TaxYear);
-            // Q4 is an arbitrary valid choice: the annual true-up does not depend on asOf.
-            var result = SetAsideEstimator.Estimate(profile.SetAsideInput(config, Quarter.Q4));
-            return TypedResults.Ok(AnnualTrueUpView.From(result.TrueUp, config.TaxYear, config.ConfigHash));
+            var config = loader.Load(row.TaxYear);
+            // Q4, so every closed quarter of the year can give its actuals; the engine's true-up itself does not depend on asOf.
+            var ledger = await db.SetAsideInputAsync(rules, row, config, Quarter.Q4, Today(time), cancellationToken);
+            var result = SetAsideEstimator.Estimate(ledger.Input);
+            return TypedResults.Ok(AnnualTrueUpView.From(result.TrueUp, config.TaxYear, config.ConfigHash, ledger.Steps));
         }
         catch (ConfigNotFoundException e)
         {
@@ -85,4 +86,6 @@ public static class PeriodsEndpoints
             return Problems.Refused(EngineRefusal.Reason(e));
         }
     }
+
+    private static DateOnly Today(TimeProvider time) => DateOnly.FromDateTime(time.GetLocalNow().DateTime);
 }

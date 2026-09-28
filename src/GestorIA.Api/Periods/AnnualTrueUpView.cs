@@ -18,7 +18,7 @@ public sealed record AnnualTrueUpView(
     IReadOnlyList<TraceStepView> Trace,
     IReadOnlyList<NoticeView> Notices)
 {
-    public static AnnualTrueUpView From(AnnualTrueUpResult result, int taxYear, string configHash) => new(
+    public static AnnualTrueUpView From(AnnualTrueUpResult result, int taxYear, string configHash, IReadOnlyList<TraceStep> ledgerSteps) => new(
         taxYear,
         configHash,
         SetAsideEstimate.Euros(result.LiabilityOnActivity),
@@ -28,6 +28,6 @@ public sealed record AnnualTrueUpView(
         result.DueWindow.Start,
         result.DueWindow.End,
         result.PayableIn.ToString(),
-        [.. result.Trace.Steps.Select(TraceStepView.From)],
+        [.. ledgerSteps.Concat(result.Trace.Steps).Select(TraceStepView.From)],
         [.. result.Warnings.Select(w => new NoticeView(w.Code, w.Severity, w.Text))]);
 }

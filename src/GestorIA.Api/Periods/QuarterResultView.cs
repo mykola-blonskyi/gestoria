@@ -17,7 +17,7 @@ public sealed record QuarterResultView(
     IReadOnlyList<CasillaView> Casillas,
     IReadOnlyList<TraceStepView> Trace)
 {
-    public static QuarterResultView From(Modelo130Result result, int taxYear, string configHash) => new(
+    public static QuarterResultView From(Modelo130Result result, int taxYear, string configHash, IReadOnlyList<TraceStep> ledgerSteps) => new(
         taxYear,
         configHash,
         result.Quarter,
@@ -25,5 +25,5 @@ public sealed record QuarterResultView(
         result.DueWindow.Start,
         result.DueWindow.End,
         [.. result.Casillas.Select(kv => new CasillaView(kv.Key, SetAsideEstimate.Euros(kv.Value)))],
-        [.. result.Trace.Steps.Select(TraceStepView.From)]);
+        [.. ledgerSteps.Concat(result.Trace.Steps).Select(TraceStepView.From)]);
 }

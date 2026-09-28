@@ -51,6 +51,43 @@ public class PeriodsEndpoint
         Assert.NotEmpty(trueUp["trace"]!.AsArray());
     }
 
+    // A period runs on the actuals the estimate runs on (#73): with the synthetic statement imported and nothing reviewed every
+    // closed quarter stays projected, and once it is reviewed the classified movements are Q1's and Q2's actuals. Either way the
+    // quarter's Modelo 130 is the estimate's next payment for that quarter, the true-up is the estimate's, and both traces start
+    // with the ledger's steps.
+    [Fact]
+    public async Task APeriodRunsOnTheClassifiedMovementsAsTheEstimateDoes()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = await client.CreateProfile("G12");
+        await client.ImportStatement(id, RepoFiles.Statement);
+
+        var unreviewed = await Periods(client, id);
+        Assert.Equal(["ledger.pending-review"], LedgerSteps(unreviewed.Quarter));
+        Assert.Equal(["ledger.pending-review"], LedgerSteps(unreviewed.TrueUp));
+
+        await client.ClassifySyntheticQueue(id);
+        var reviewed = await Periods(client, id);
+        Assert.Equal(["ledger.Q1.movements", "ledger.Q2.movements", "ledger.projection-remaining"], LedgerSteps(reviewed.Quarter));
+        Assert.Equal(["ledger.Q1.movements", "ledger.Q2.movements", "ledger.Q3.movements", "ledger.Q4.movements", "ledger.projection-remaining"], LedgerSteps(reviewed.TrueUp));
+        Assert.NotEqual(unreviewed.Quarter["aIngresar"]!.GetValue<string>(), reviewed.Quarter["aIngresar"]!.GetValue<string>());
+    }
+
+    private static async Task<(JsonObject Quarter, JsonObject TrueUp)> Periods(HttpClient client, string id)
+    {
+        var quarter = await (await client.PostAsync($"/api/v1/profiles/{id}/calculations/quarter?quarter=Q2", null)).Json();
+        var trueUp = await (await client.PostAsync($"/api/v1/profiles/{id}/calculations/annual-true-up", null)).Json();
+        var q2 = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+        var q4 = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q4")).Json();
+        Assert.Equal(q2["nextPayment"]!["aIngresar"]!.GetValue<string>(), quarter["aIngresar"]!.GetValue<string>());
+        Assert.Equal(q4["annualTrueUpGap"]!.GetValue<string>(), trueUp["gap"]!.GetValue<string>());
+        return (quarter, trueUp);
+    }
+
+    private static List<string> LedgerSteps(JsonObject period) =>
+        [.. period["trace"]!.AsArray().Select(step => step!["id"]!.GetValue<string>()).TakeWhile(id => id.StartsWith("ledger.", StringComparison.Ordinal))];
+
     [Theory]
     [InlineData("/calculations/quarter?quarter=Q1")]
     [InlineData("/calculations/annual-true-up")]

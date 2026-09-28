@@ -279,6 +279,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/profiles/{id}/calculations/quarter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Runs the set-aside estimator on a stored profile and returns one quarter's Modelo 130, its casillas and trace. */
+        post: operations["calculateQuarter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/{id}/calculations/annual-true-up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Runs the set-aside estimator on a stored profile and returns the annual true-up gap, due window and trace. */
+        post: operations["calculateAnnualTrueUp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -288,6 +322,22 @@ export interface components {
             actuals: components["schemas"]["QuarterToDateDocument"][];
             projection: components["schemas"]["ProjectionDocument"];
         };
+        AnnualTrueUpView: {
+            /** Format: int32 */
+            taxYear: number;
+            configHash: string;
+            liabilityOnActivity: string;
+            marginalRate: string;
+            reduccionTrabajoLost: string;
+            gap: string;
+            /** Format: date */
+            dueFrom: string;
+            /** Format: date */
+            dueBy: string;
+            payableIn: string;
+            trace: components["schemas"]["TraceStepView"][];
+            notices: components["schemas"]["NoticeView"][];
+        };
         BankStatementImport: {
             bank: string;
             /** Format: int32 */
@@ -296,6 +346,10 @@ export interface components {
             imported: number;
             /** Format: int32 */
             alreadyImported: number;
+        };
+        CasillaView: {
+            key: string;
+            amount: string;
         };
         DeclaredGap: {
             entry: string;
@@ -485,6 +539,19 @@ export interface components {
         };
         /** @enum {unknown} */
         Quarter: "Q1" | "Q2" | "Q3" | "Q4";
+        QuarterResultView: {
+            /** Format: int32 */
+            taxYear: number;
+            configHash: string;
+            quarter: components["schemas"]["Quarter"];
+            aIngresar: string;
+            /** Format: date */
+            dueFrom: string;
+            /** Format: date */
+            dueBy: string;
+            casillas: components["schemas"]["CasillaView"][];
+            trace: components["schemas"]["TraceStepView"][];
+        };
         QuarterToDateDocument: {
             quarter: components["schemas"]["Quarter"];
             ingresosYtd: string;
@@ -551,6 +618,9 @@ export interface components {
             configHash: string;
             regions: components["schemas"]["RegionView"][];
             gaps: components["schemas"]["DeclaredGap"][];
+            modelo130Lines: {
+                [key: string]: string;
+            };
         };
         TraceInputView: {
             name: string;
@@ -1604,6 +1674,115 @@ export interface operations {
             };
             /** @description Service Unavailable */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    calculateQuarter: {
+        parameters: {
+            query?: {
+                quarter?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuarterResultView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    calculateAnnualTrueUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnualTrueUpView"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

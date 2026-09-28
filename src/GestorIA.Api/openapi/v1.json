@@ -1377,6 +1377,157 @@
           }
         ]
       }
+    },
+    "/api/v1/profiles/{id}/calculations/quarter": {
+      "post": {
+        "tags": [
+          "periods"
+        ],
+        "summary": "Runs the set-aside estimator on a stored profile and returns one quarter's Modelo 130, its casillas and trace.",
+        "operationId": "calculateQuarter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "quarter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuarterResultView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
+    "/api/v1/profiles/{id}/calculations/annual-true-up": {
+      "post": {
+        "tags": [
+          "periods"
+        ],
+        "summary": "Runs the set-aside estimator on a stored profile and returns the annual true-up gap, due window and trace.",
+        "operationId": "calculateAnnualTrueUp",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnualTrueUpView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1404,6 +1555,66 @@
         },
         "additionalProperties": false
       },
+      "AnnualTrueUpView": {
+        "required": [
+          "taxYear",
+          "configHash",
+          "liabilityOnActivity",
+          "marginalRate",
+          "reduccionTrabajoLost",
+          "gap",
+          "dueFrom",
+          "dueBy",
+          "payableIn",
+          "trace",
+          "notices"
+        ],
+        "type": "object",
+        "properties": {
+          "taxYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "configHash": {
+            "type": "string"
+          },
+          "liabilityOnActivity": {
+            "type": "string"
+          },
+          "marginalRate": {
+            "type": "string"
+          },
+          "reduccionTrabajoLost": {
+            "type": "string"
+          },
+          "gap": {
+            "type": "string"
+          },
+          "dueFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "dueBy": {
+            "type": "string",
+            "format": "date"
+          },
+          "payableIn": {
+            "type": "string"
+          },
+          "trace": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TraceStepView"
+            }
+          },
+          "notices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoticeView"
+            }
+          }
+        }
+      },
       "BankStatementImport": {
         "required": [
           "bank",
@@ -1427,6 +1638,21 @@
           "alreadyImported": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "CasillaView": {
+        "required": [
+          "key",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
           }
         }
       },
@@ -2204,6 +2430,54 @@
           "Q4"
         ]
       },
+      "QuarterResultView": {
+        "required": [
+          "taxYear",
+          "configHash",
+          "quarter",
+          "aIngresar",
+          "dueFrom",
+          "dueBy",
+          "casillas",
+          "trace"
+        ],
+        "type": "object",
+        "properties": {
+          "taxYear": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "configHash": {
+            "type": "string"
+          },
+          "quarter": {
+            "$ref": "#/components/schemas/Quarter"
+          },
+          "aIngresar": {
+            "type": "string"
+          },
+          "dueFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "dueBy": {
+            "type": "string",
+            "format": "date"
+          },
+          "casillas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CasillaView"
+            }
+          },
+          "trace": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TraceStepView"
+            }
+          }
+        }
+      },
       "QuarterToDateDocument": {
         "required": [
           "quarter",
@@ -2445,7 +2719,8 @@
           "taxYear",
           "configHash",
           "regions",
-          "gaps"
+          "gaps",
+          "modelo130Lines"
         ],
         "type": "object",
         "properties": {
@@ -2466,6 +2741,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DeclaredGap"
+            }
+          },
+          "modelo130Lines": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
             }
           }
         }
@@ -2655,6 +2936,9 @@
     },
     {
       "name": "profiles"
+    },
+    {
+      "name": "periods"
     }
   ]
 }
