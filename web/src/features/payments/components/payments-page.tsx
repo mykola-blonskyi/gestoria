@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { PageHeader } from "@/shared/ui/page-header";
 
 import { useProfile } from "../hooks/use-profile";
-import { ApiFailure } from "./api-failure";
+import { ApiFailure } from "@/shared/ui/api-failure";
 import { CalendarView } from "./calendar-view";
 
 const SETTINGS = "/settings";

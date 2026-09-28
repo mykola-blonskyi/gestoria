@@ -183,9 +183,9 @@ describe("PaymentsPage", () => {
     renderPayments();
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent(MESSAGES.en.Payments.failure.gap);
+    expect(alert).toHaveTextContent(MESSAGES.en.Failure.gap);
     expect(alert).toHaveTextContent(detail);
-    expect(within(alert).getByRole("link", { name: MESSAGES.en.Payments.failure.gapSettings })).toHaveAttribute("href", "/settings");
+    expect(within(alert).getByRole("link", { name: MESSAGES.en.Failure.gapSettings })).toHaveAttribute("href", "/settings");
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
@@ -193,7 +193,7 @@ describe("PaymentsPage", () => {
     stubApi({ calendar: "unreachable" });
     renderPayments();
 
-    expect(await screen.findByRole("alert", {}, { timeout: 8_000 })).toHaveTextContent(MESSAGES.en.Payments.failure.network);
+    expect(await screen.findByRole("alert", {}, { timeout: 8_000 })).toHaveTextContent(MESSAGES.en.Failure.network);
   });
 
   // A 503 is retried like an unreachable API before the page says so.
@@ -202,8 +202,8 @@ describe("PaymentsPage", () => {
     renderPayments();
 
     const alert = await screen.findByRole("alert", {}, { timeout: 8_000 });
-    expect(alert).toHaveTextContent(MESSAGES.en.Payments.failure.database);
-    expect(alert).not.toHaveTextContent(MESSAGES.en.Payments.failure.network);
+    expect(alert).toHaveTextContent(MESSAGES.en.Failure.database);
+    expect(alert).not.toHaveTextContent(MESSAGES.en.Failure.network);
   });
 
   it.each(LOCALES)("shows the calendar's labels in %s", async (locale) => {

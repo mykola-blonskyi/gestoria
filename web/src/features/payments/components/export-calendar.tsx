@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useId, useState } from "react";
 
-import { ApiError, PROBLEM_TYPES } from "@/data/api-error";
+import { ApiError, PROBLEM_TYPES } from "@/shared/lib/api-error";
 import type { Locale } from "@/shared/constants/locales";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";

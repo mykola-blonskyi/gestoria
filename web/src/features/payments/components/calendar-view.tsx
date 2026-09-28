@@ -6,7 +6,7 @@ import type { Obligation } from "@/data/payments";
 import { formatDate, formatMoney, madridDay } from "@/shared/lib/format";
 
 import { usePaymentsCalendar } from "../hooks/use-payments-calendar";
-import { ApiFailure } from "./api-failure";
+import { ApiFailure } from "@/shared/ui/api-failure";
 import { ExportCalendar } from "./export-calendar";
 import { formatPeriod } from "./format-period";
 

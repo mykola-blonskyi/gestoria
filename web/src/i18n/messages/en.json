@@ -89,8 +89,8 @@
     "network": "The GestorIA API is not answering. Start it and try again.",
     "database": "The GestorIA database is not answering. Start it with docker compose up -d postgres and try again.",
     "gap": "Not published yet",
-    "gapLead": "The tax-year configuration lacks a value this estimate needs, so the engine refuses rather than guess. The engine says:",
-    "refused": "The engine cannot estimate these figures",
+    "gapLead": "The tax-year configuration lacks a value this calculation needs, so the engine refuses rather than guess. The engine says:",
+    "refused": "The engine cannot calculate these figures",
     "other": "The API answered with an error ({status}). Try again.",
     "gapSettings": "Choose another tax year in Settings"
   },
@@ -139,15 +139,6 @@
       "button": "Download .ics",
       "failed": "The export could not be downloaded. Try again.",
       "nothingUpcoming": "Nothing is still to come in this tax year, so there is no date to export."
-    },
-    "failure": {
-      "network": "The GestorIA API is not answering. Start it and try again.",
-      "gap": "Not published yet",
-      "gapLead": "The tax-year configuration lacks a value this calendar needs, so the engine refuses rather than guess. The engine says:",
-      "refused": "The engine cannot build this calendar",
-      "other": "The API answered with an error ({status}). Try again.",
-      "gapSettings": "Choose another tax year in Settings",
-      "database": "The GestorIA database is not answering. Start it with docker compose up -d postgres and try again."
     }
   },
   "Transactions": {
