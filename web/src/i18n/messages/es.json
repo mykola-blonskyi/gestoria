@@ -208,6 +208,8 @@
       "heading": "Modelo 130, {quarter}",
       "aIngresar": "Importe a ingresar",
       "due": "Se paga del {from} al {by}.",
+      "dueADeducir": "Nada a ingresar. Se presenta igualmente del {from} al {by}, en el apartado A deducir: el resultado negativo se deduce en los siguientes trimestres del año.",
+      "dueNegativa": "Nada a ingresar. Se presenta igualmente del {from} al {by}, como declaración negativa.",
       "localHolidays": "No se aplican los festivos locales, así que la fecha puede ser anterior, nunca posterior.",
       "basis": "Calculado a partir de la previsión del año: todavía no hay ningún trimestre cerrado registrado para este perfil (el #73 lo cambiará).",
       "casillasHeading": "Casillas del Modelo 130"

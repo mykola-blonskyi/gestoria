@@ -120,7 +120,7 @@ function QuarterResultCard({ result, modelo130Lines }: { result: QuarterResult; 
             <Figure label={t("aIngresar")} value={formatMoney(result.aIngresar, locale)} />
           </dl>
           <p className="text-sm text-muted-foreground">
-            {t("due", { from: formatDate(result.dueFrom, locale), by: formatDate(result.dueBy, locale) })} {t("localHolidays")}
+            {t(dueMessage(result), { from: formatDate(result.dueFrom, locale), by: formatDate(result.dueBy, locale) })} {t("localHolidays")}
           </p>
           <p className="text-sm text-muted-foreground">{t("basis")}</p>
         </CardContent>
@@ -138,6 +138,14 @@ function QuarterResultCard({ result, modelo130Lines }: { result: QuarterResult; 
       <Trace steps={result.trace} locale={locale} />
     </section>
   );
+}
+
+// A return with nothing to pay is still filed in the same window. AEAT's instructions for casilla 19: a negative result in
+// Q1–Q3 is filed "a deducir" and carried to the year's later quarters; a zero result, or a negative one in Q4, "negativa".
+function dueMessage(result: QuarterResult) {
+  if (!/^0+(\.0+)?$/.test(result.aIngresar)) return "due";
+  const resultado = result.casillas.find((casilla) => casilla.key === "resultado")?.amount ?? "0.00";
+  return resultado.startsWith("-") && result.quarter !== "Q4" ? "dueADeducir" : "dueNegativa";
 }
 
 function YearMode({ profile }: { profile: Profile }) {
