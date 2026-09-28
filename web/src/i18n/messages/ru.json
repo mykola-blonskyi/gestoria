@@ -190,8 +190,8 @@
       "diferencia": "Разница после скидки (diferencia)",
       "negativosAnteriores": "Отрицательные результаты предыдущих кварталов (negativos anteriores)",
       "deduccionVivienda": "Вычет за жильё (deducción por vivienda)",
-      "total": "Итоговая дифференциальная квота: клетка 14 минус 15 и 16 (total)",
-      "resultado": "Сумма к оплате (resultado)"
+      "total": "Total: клетка 14 минус 15 и 16 (total)",
+      "resultado": "Результат самостоятельного расчёта (resultado)"
     },
     "year": {
       "calculating": "Считаем…",

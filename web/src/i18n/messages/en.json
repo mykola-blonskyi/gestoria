@@ -184,14 +184,14 @@
       "pagoBruto": "20% of the net income (pago bruto)",
       "pagosAnteriores": "Earlier quarters of the year (pagos anteriores)",
       "retenciones": "Withholdings applied (retenciones)",
-      "pagoPrevio": "Payment due for the quarter (pago previo)",
+      "pagoPrevio": "This quarter's payment before deductions (pago previo)",
       "sumaPagosPrevios": "This quarter's own payment, casillas 07 and 11 combined (suma de pagos fraccionados)",
       "minoracion": "Reduction for a small previous year (minoración)",
       "diferencia": "Difference after the reduction (diferencia)",
       "negativosAnteriores": "Negative results carried from earlier quarters (negativos anteriores)",
       "deduccionVivienda": "Housing deduction (deducción por vivienda)",
-      "total": "Total cuota diferencial: casilla 14 minus 15 and 16 (total)",
-      "resultado": "Amount to pay (resultado)"
+      "total": "Total: casilla 14 minus 15 and 16 (total)",
+      "resultado": "Result of the self-assessment (resultado)"
     },
     "year": {
       "calculating": "Calculating…",
