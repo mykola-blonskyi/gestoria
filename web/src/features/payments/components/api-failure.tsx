@@ -27,6 +27,8 @@ export function ApiFailure({ error, settings }: { error: Error; settings?: strin
       );
     case PROBLEM_TYPES.estimateRefused:
       return <Alert title={t("refused")} detail={problem.detail} />;
+    case PROBLEM_TYPES.databaseUnavailable:
+      return <Alert title={t("database")} />;
     default:
       return <Alert title={t("other", { status: problem.status })} />;
   }

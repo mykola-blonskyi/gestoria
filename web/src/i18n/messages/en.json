@@ -117,7 +117,8 @@
       "RentaTrueUp": "Renta true-up"
     },
     "notes": {
-      "modelo349": "only if you had intra-EU operations this quarter"
+      "modelo349": "only if you had intra-EU operations this quarter",
+      "modelo349Monthly": "Modelo 349 dates are the quarterly filer's. Above {cap} of intra-EU operations in a quarter, or in any of the four before it, Modelo 349 is filed monthly instead, and these dates no longer apply."
     },
     "period": {
       "taxYear": "Tax year {year}"
@@ -144,7 +145,8 @@
       "gapLead": "The tax-year configuration lacks a value this calendar needs, so the engine refuses rather than guess. The engine says:",
       "refused": "The engine cannot build this calendar",
       "other": "The API answered with an error ({status}). Try again.",
-      "gapSettings": "Choose another tax year in Settings"
+      "gapSettings": "Choose another tax year in Settings",
+      "database": "The GestorIA database is not answering. Start it with docker compose up -d postgres and try again."
     }
   },
   "Transactions": {

@@ -14,6 +14,7 @@ const SETTINGS = "/settings";
 
 export function CalendarView({ profileId }: { profileId: string }) {
   const t = useTranslations("Payments");
+  const locale = useLocale();
   const calendar = usePaymentsCalendar(profileId);
 
   if (calendar.isPending) {
@@ -28,6 +29,7 @@ export function CalendarView({ profileId }: { profileId: string }) {
     <div className="grid gap-6">
       <ObligationsTable obligations={calendar.data.obligations} />
       <div className="grid gap-1">
+        <p className="text-sm text-muted-foreground">{t("notes.modelo349Monthly", { cap: formatMoney(calendar.data.modelo349QuarterlyFilingCap, locale) })}</p>
         <p className="text-sm text-muted-foreground">{t("localHolidays.filing")}</p>
         <p className="text-sm text-muted-foreground">{t("localHolidays.cuota")}</p>
       </div>

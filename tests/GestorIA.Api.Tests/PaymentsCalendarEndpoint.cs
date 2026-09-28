@@ -71,6 +71,23 @@ public class PaymentsCalendarEndpoint
         Assert.Contains("intra-EU", modelo349["amount"]!["reason"]!.GetValue<string>(), StringComparison.Ordinal);
     }
 
+    // Orden EHA/769/2010 art. 10.2: above this, 349 is monthly and the calendar's quarterly dates stop applying. The page says
+    // so with the year's own figure, so the answer carries the configuration's value, not one written into the API or web.
+    [Fact]
+    public async Task TheModelo349MonthlyThresholdIsTheYearsConfiguredValue()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = (await (await client.PostProfile(RepoFiles.GoldenProfile("G12"))).Json())["id"]!.GetValue<string>();
+
+        var body = await (await client.GetAsync($"/api/v1/profiles/{id}/calendar")).Json();
+        var config = JsonNode.Parse(await File.ReadAllTextAsync(Path.Combine(RepoFiles.ConfigDirectory, "2025.json")))!;
+
+        Assert.Equal(
+            config["modelo349"]!["quarterlyFilingCap"]!.GetValue<decimal>().ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+            body["modelo349QuarterlyFilingCap"]!.GetValue<string>());
+    }
+
     [Fact]
     public async Task EveryMonthOfAltaCarriesAKnownTgssCuota()
     {
@@ -204,7 +221,7 @@ public class PaymentsCalendarEndpoint
     }
 
     // A local holiday moves a filing deadline forward, never late; it moves a RETA cuota's own deadline backward, so the
-    // shown date can already be late (Ley 39/2015 art. 30.6; RD 1415/2004 art. 56.1 and 8).
+    // shown date can already be late (Ley 39/2015 art. 30.6; RD 1415/2004 art. 56.1.b).1.º and 8.b)).
     [Fact]
     public async Task TheIcsDescriptionWordsTheLocalHolidaysCaveatByDirection()
     {

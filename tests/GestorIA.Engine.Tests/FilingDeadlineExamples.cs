@@ -95,8 +95,8 @@ public class FilingDeadlineExamples
         Assert.Equal(modelo130, shared);
     }
 
-    // RD 1415/2004 art. 56.1: due within the same month. Unlike a filing (ALastDayThatIsNotAWorkingDayMovesToTheNextOne),
-    // art. 8 moves a non-working last day backwards, never past the month it corresponds to.
+    // RD 1415/2004 art. 56.1.b).1.º: due within the same month. Unlike a filing (ALastDayThatIsNotAWorkingDayMovesToTheNextOne),
+    // art. 8.b) moves a non-working last day backwards, never past the month it corresponds to.
     [Theory]
     [InlineData(1, "2025-01-01", "2025-01-31")] // Friday, already a working day
     [InlineData(5, "2025-05-01", "2025-05-30")] // last day Saturday 31 → the Friday before

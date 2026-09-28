@@ -12,9 +12,8 @@ public static class FilingDeadline
     public const string LocalHolidaysNotApplied =
         "municipal holidays where the taxpayer lives are not applied, so the date shown can be early but never late";
 
-    // MonthlyCuotaSs moves the opposite way (backward): a local holiday the engine does not know about can bring the true
-    // last working day a day earlier than the one shown, never later, so a taxpayer relying on the shown date could pay a
-    // day late (Ley 39/2015 art. 30.6 is the same rule; only the direction the deadline moves differs from a filing).
+    // MonthlyCuotaSs moves the opposite way (backward, RD 1415/2004 art. 8.b)): a municipal holiday the engine does not know
+    // about (Ley 39/2015 art. 30.6) can make the real last day one working day earlier than the one shown, never later.
     public const string LocalHolidaysNotAppliedBackward =
         "municipal holidays where the taxpayer lives are not applied, so the date shown may already be a working day late: pay a day earlier to be safe";
 
@@ -46,10 +45,10 @@ public static class FilingDeadline
             "calendar.renta");
 
     // Modelo 303 (IVA) shares calendar.modelo130's windows: Reglamento del IVA (RD 1624/1992) art. 71.4 sets the same 1–20
-    // (1–30 for the fourth period) days after the quarter. Modelo 349, while filed quarterly (below the 50.000 € threshold
-    // this engine does not track transactions to test yet), follows the identical plazo — both the threshold and the
-    // quarterly window sit in the same paragraph, Orden EHA/769/2010 art. 10.2 (art. 10.1 is the monthly-filer default that
-    // does not apply here). Neither 303 nor 349 has a calculator (#70), so only the window is asked for here.
+    // (1–30 for the fourth period) days after the quarter. Modelo 349 filed quarterly has the same plazo, Orden EHA/769/2010
+    // art. 10.2; above modelo349.quarterlyFilingCap it is monthly (art. 10.1), which needs intra-EU volumes the engine does
+    // not have yet, so only the quarterly case is computed. Neither 303 nor 349 has a calculator (#70), so only the window is
+    // asked for here.
     public static (DueWindow Window, TraceStep Step) SharedQuarterlyWindow(Quarter quarter, string region, TaxYearConfig config) =>
         Resolve(
             config.Calendar.Modelo130[(int)quarter - 1],
@@ -61,9 +60,9 @@ public static class FilingDeadline
             "calendar.modelo130",
             Invariant($"calendar.modelo130 {quarter}"));
 
-    // RD 1415/2004 (Reglamento General de Recaudación de la Seguridad Social) art. 56.1: a RETA cuota is due within the same
-    // month it corresponds to. Art. 8: when the last day of a plazo fixed by natural months is inhábil, it ends the previous
-    // working day instead — the opposite direction from a tax filing's deadline, which moves forward.
+    // RD 1415/2004 (Reglamento General de Recaudación de la Seguridad Social) art. 56.1.b).1.º: a RETA cuota is due within the
+    // same month it corresponds to. Art. 8.b): when the last day of that plazo is inhábil, it ends the previous working day
+    // instead, the opposite direction from a tax filing's deadline, which moves forward.
     public static DueWindow MonthlyCuotaSs(YearMonth month, string region, TaxYearConfig config)
     {
         var holidays = Holidays(region, config);

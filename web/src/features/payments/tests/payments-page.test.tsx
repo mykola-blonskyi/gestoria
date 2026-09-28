@@ -2,6 +2,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import databaseUnavailable from "@tests/fixtures/database-unavailable.json";
 import g12Calendar from "@tests/fixtures/g12-calendar.json";
 import g12Profile from "@tests/fixtures/g12-profile.json";
 import { MESSAGES, renderInApp } from "@tests/render";
@@ -99,6 +100,17 @@ describe("PaymentsPage", () => {
     expect(screen.getAllByText(MESSAGES.en.Payments.notes.modelo349).length).toBeGreaterThan(0);
   });
 
+  it("says above which amount Modelo 349 turns monthly, with the year's own figure from the API", async () => {
+    stubApi();
+    renderPayments("es");
+
+    await screen.findByRole("table");
+    const cap = formatMoney(g12Calendar.modelo349QuarterlyFilingCap, "es");
+    const note = MESSAGES.es.Payments.notes.modelo349Monthly.replace("{cap}", cap);
+    // A function matcher: getByText's default normalizer turns the amount's no-break space into a plain one on the page side only.
+    expect(screen.getByText((_, element) => element?.tagName === "P" && element.textContent === note)).toBeInTheDocument();
+  });
+
   it("offers to export the calendar, with amounts opt in rather than on by default", async () => {
     stubApi();
     renderPayments();
@@ -138,6 +150,16 @@ describe("PaymentsPage", () => {
     renderPayments();
 
     expect(await screen.findByRole("alert", {}, { timeout: 8_000 })).toHaveTextContent(MESSAGES.en.Payments.failure.network);
+  });
+
+  // A 503 is retried like an unreachable API before the page says so.
+  it("says the database is not answering when the API cannot reach it", { timeout: 10_000 }, async () => {
+    stubApi({ calendar: { status: 503, body: databaseUnavailable } });
+    renderPayments();
+
+    const alert = await screen.findByRole("alert", {}, { timeout: 8_000 });
+    expect(alert).toHaveTextContent(MESSAGES.en.Payments.failure.database);
+    expect(alert).not.toHaveTextContent(MESSAGES.en.Payments.failure.network);
   });
 
   it.each(LOCALES)("shows the calendar's labels in %s", async (locale) => {

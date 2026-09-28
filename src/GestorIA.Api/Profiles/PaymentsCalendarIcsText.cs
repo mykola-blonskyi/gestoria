@@ -26,7 +26,7 @@ public static class PaymentsCalendarIcsText
         _ => throw new UnreachableException("Only Modelo 303 and 349 are ever NotYetKnown (GestorIA.Engine.PaymentCalendar)."),
     };
 
-    // RD 1415/2004 art. 56.1 and 8 move the TGSS cuota's own deadline backward, the opposite direction from every filing
+    // RD 1415/2004 art. 56.1.b).1.º and 8.b) move the TGSS cuota's own deadline backward, the opposite direction from every filing
     // deadline here (FilingDeadline.LocalHolidaysNotApplied vs LocalHolidaysNotAppliedBackward): the caveat reads differently.
     public static string LocalHolidaysNote(ObligationKind kind, string locale) =>
         kind == ObligationKind.SeguridadSocial ? Locales[locale].LocalHolidaysBackward : Locales[locale].LocalHolidaysForward;

@@ -1,6 +1,7 @@
 {
   "taxYear": 2025,
   "configHash": "4046cf06162bb6073a73449142e7e3a5278e523b284fa31aab99a6cc17b15e63",
+  "modelo349QuarterlyFilingCap": "50000.00",
   "obligations": [
     {
       "kind": "SeguridadSocial",

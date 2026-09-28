@@ -160,6 +160,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/profiles/{id}/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every obligation of the profile's tax year, in due-date order: Modelo 130, 303 and 349, the monthly TGSS cuota and the Renta true-up. */
+        get: operations["calendarForProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/{id}/calendar.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The upcoming calendar as an RFC 5545 export; amounts=true adds each obligation's known amount to its title, lang picks the event text's language. */
+        get: operations["calendarForProfileAsIcs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/profiles/{id}/bank-statements": {
         parameters: {
             query?: never;
@@ -333,6 +367,35 @@ export interface components {
             code: string;
             severity: components["schemas"]["WarningSeverity"];
             text: string;
+        };
+        ObligationAmountView: components["schemas"]["ObligationAmountViewKnownAmount"] | components["schemas"]["ObligationAmountViewNotYetKnownAmount"];
+        ObligationAmountViewKnownAmount: {
+            /** @enum {string} */
+            kind?: "known";
+            euros: string;
+        };
+        ObligationAmountViewNotYetKnownAmount: {
+            /** @enum {string} */
+            kind?: "notYetKnown";
+            reason: string;
+        };
+        /** @enum {unknown} */
+        ObligationKind: "Modelo130" | "Modelo303" | "Modelo349" | "SeguridadSocial" | "RentaTrueUp";
+        ObligationView: {
+            kind: components["schemas"]["ObligationKind"];
+            period: string;
+            /** Format: date */
+            dueFrom: string;
+            /** Format: date */
+            dueBy: string;
+            amount: components["schemas"]["ObligationAmountView"];
+        };
+        PaymentsCalendarView: {
+            /** Format: int32 */
+            taxYear: number;
+            configHash: string;
+            modelo349QuarterlyFilingCap: string;
+            obligations: components["schemas"]["ObligationView"][];
         };
         PreviousYearChoice: components["schemas"]["PreviousYearChoiceNoActivityLastYear"] | components["schemas"]["PreviousYearChoicePreviousYearNet"];
         PreviousYearChoiceNoActivityLastYear: {
@@ -1006,6 +1069,134 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SetAsideEstimate"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    calendarForProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentsCalendarView"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    calendarForProfileAsIcs: {
+        parameters: {
+            query?: {
+                amounts?: boolean;
+                lang?: "uk" | "es" | "en" | "ru";
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": string;
                 };
             };
             /** @description Bad Request */
