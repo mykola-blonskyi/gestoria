@@ -337,6 +337,7 @@ export interface components {
             payableIn: string;
             trace: components["schemas"]["TraceStepView"][];
             notices: components["schemas"]["NoticeView"][];
+            ledger: components["schemas"]["LedgerView"];
         };
         BankStatementImport: {
             bank: string;
@@ -551,6 +552,7 @@ export interface components {
             dueBy: string;
             casillas: components["schemas"]["CasillaView"][];
             trace: components["schemas"]["TraceStepView"][];
+            ledger: components["schemas"]["LedgerView"];
         };
         QuarterToDateDocument: {
             quarter: components["schemas"]["Quarter"];

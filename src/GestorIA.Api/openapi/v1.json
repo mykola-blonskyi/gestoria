@@ -1567,7 +1567,8 @@
           "dueBy",
           "payableIn",
           "trace",
-          "notices"
+          "notices",
+          "ledger"
         ],
         "type": "object",
         "properties": {
@@ -1612,6 +1613,9 @@
             "items": {
               "$ref": "#/components/schemas/NoticeView"
             }
+          },
+          "ledger": {
+            "$ref": "#/components/schemas/LedgerView"
           }
         }
       },
@@ -2439,7 +2443,8 @@
           "dueFrom",
           "dueBy",
           "casillas",
-          "trace"
+          "trace",
+          "ledger"
         ],
         "type": "object",
         "properties": {
@@ -2475,6 +2480,9 @@
             "items": {
               "$ref": "#/components/schemas/TraceStepView"
             }
+          },
+          "ledger": {
+            "$ref": "#/components/schemas/LedgerView"
           }
         }
       },

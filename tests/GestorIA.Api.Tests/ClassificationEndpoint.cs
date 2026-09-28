@@ -14,18 +14,21 @@ public class ClassificationEndpoint
 {
     private const string InvalidInput = "https://gestoria.local/problems/invalid-input";
 
-    // The synthetic statement's lines no certain rule classifies (tests/fixtures/bank), in the transactions list's order.
+    // The synthetic statement's lines no certain rule classifies (tests/fixtures/bank), in the transactions list's order. The
+    // interest is money coming in, so its rule only suggests.
     private static readonly string[] Queue =
     [
         "TRANSFERENCIA RECIBIDA CLIENTE SINTETICO UNO",
         "COMPRA SUSCRIPCION SOFTWARE EJEMPLO",
         "RECIBO LUZ; FEBRERO",
         "TRANSFERENCIA A ES12 9999 0000 1111 2222 3333",
+        "ABONO INTERESES CUENTA",
         "TRANSFERENCIA RECIBIDA CLIENTE SINTETICO DOS",
         "COMISION MANTENIMIENTO",
         "TRANSFERENCIA RECIBIDA CLIENTE SINTETICO UNO",
         "LIBRERIA TECNICA INVENTADA",
         "DEVOLUCION COMPRA",
+        "ABONO INTERESES CUENTA",
     ];
 
     [Fact]
@@ -42,7 +45,9 @@ public class ClassificationEndpoint
         var first = queue[0]!.AsObject();
         Assert.Equal(["id", "bookingDate", "valueDate", "description", "amount", "suggestion"], first.Select(member => member.Key));
         Assert.Equal(("2025-01-02", "2025-01-02", "2345.67"), (first["bookingDate"]!.GetValue<string>(), first["valueDate"]!.GetValue<string>(), first["amount"]!.GetValue<string>()));
-        Assert.All(queue, item => Assert.Null(item!["suggestion"]));
+        var interest = new JsonObject { ["class"] = "savingsIncome", ["ruleId"] = "savings" };
+        Assert.All(queue, item => Assert.True(
+            item!["description"]!.GetValue<string>() == "ABONO INTERESES CUENTA" ? JsonNode.DeepEquals(interest, item["suggestion"]) : item["suggestion"] is null));
     }
 
     [Fact]
@@ -233,6 +238,28 @@ public class ClassificationEndpoint
         var reviewed = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q4")).Json();
         var actuals = new JsonArray(Actual("Q1", "2345.67", "87.61"), Actual("Q2", "4222.21", "87.61"), Actual("Q3", "6567.88", "175.22"), Actual("Q4", "6567.88", "175.22"));
         var fromFile = await (await client.Estimate(2025, File("Q4", actuals, "0.00", "0.00"))).Json();
+        var ledgerSteps = reviewed["trace"]!.AsArray().Count(step => step!["id"]!.GetValue<string>().StartsWith("ledger.", StringComparison.Ordinal));
+        Assert.True(JsonNode.DeepEquals(EngineOnly(fromFile, 0), EngineOnly(reviewed, ledgerSteps)), reviewed.ToJsonString());
+    }
+
+    // A client whose name reads like the tax office is still a client: its payment is only suggested as an AEAT line, waits in
+    // the queue and holds Q2 on the projection. Classified as activity income, it adds to Q2's ingresos.
+    [Fact]
+    public async Task ACreditNamedLikeTheAeatWaitsForReview()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var (id, _) = await ClassifiedG12(client);
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n12/05/2025;12/05/2025;TRANSF HACIENDA LOS OLIVOS SL FRA 12;1.200,00;\n"));
+
+        var payment = Assert.Single(await client.ReviewQueue(id))!;
+        Assert.True(JsonNode.DeepEquals(new JsonObject { ["class"] = "aeatPayment", ["ruleId"] = "aeat-credit" }, payment["suggestion"]));
+        var waiting = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+        Assert.Equal("Q1", waiting["ledger"]!["actualsThrough"]!.GetValue<string>());
+
+        await client.ClassifyAs(payment["id"]!.GetValue<string>(), "activityIncome");
+        var reviewed = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+        var fromFile = await (await client.Estimate(2025, File("Q2", new JsonArray(Actual("Q1", "2345.67", "87.61"), Actual("Q2", "5422.21", "87.61")), "15000.00", "600.00"))).Json();
         var ledgerSteps = reviewed["trace"]!.AsArray().Count(step => step!["id"]!.GetValue<string>().StartsWith("ledger.", StringComparison.Ordinal));
         Assert.True(JsonNode.DeepEquals(EngineOnly(fromFile, 0), EngineOnly(reviewed, ledgerSteps)), reviewed.ToJsonString());
     }

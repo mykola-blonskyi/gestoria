@@ -66,11 +66,15 @@ public class PeriodsEndpoint
         var unreviewed = await Periods(client, id);
         Assert.Equal(["ledger.pending-review"], LedgerSteps(unreviewed.Quarter));
         Assert.Equal(["ledger.pending-review"], LedgerSteps(unreviewed.TrueUp));
+        Assert.Null(unreviewed.Quarter["ledger"]!["actualsThrough"]);
+        Assert.Equal(11, unreviewed.TrueUp["ledger"]!["awaitingReview"]!.GetValue<int>());
 
         await client.ClassifySyntheticQueue(id);
         var reviewed = await Periods(client, id);
         Assert.Equal(["ledger.Q1.movements", "ledger.Q2.movements", "ledger.projection-remaining"], LedgerSteps(reviewed.Quarter));
         Assert.Equal(["ledger.Q1.movements", "ledger.Q2.movements", "ledger.Q3.movements", "ledger.Q4.movements", "ledger.projection-remaining"], LedgerSteps(reviewed.TrueUp));
+        Assert.Equal("Q2", reviewed.Quarter["ledger"]!["actualsThrough"]!.GetValue<string>());
+        Assert.Equal("Q4", reviewed.TrueUp["ledger"]!["actualsThrough"]!.GetValue<string>());
         Assert.NotEqual(unreviewed.Quarter["aIngresar"]!.GetValue<string>(), reviewed.Quarter["aIngresar"]!.GetValue<string>());
     }
 

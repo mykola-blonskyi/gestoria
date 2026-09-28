@@ -10,24 +10,32 @@
   {
     "id": "aeat",
     "class": "aeatPayment",
-    "direction": "any",
+    "direction": "debit",
     "certain": true,
-    "patterns": ["AEAT", "AGENCIA TRIBUTARIA", "HACIENDA", "MODELO 130", "MODELO 303", "MOD.130"],
+    "patterns": ["AEAT ", "AGENCIA TRIBUTARIA", "HACIENDA ", "MODELO 130", "MODELO 303", "MOD 130", "MOD 303"],
+    "source": "SPEC-004 §3.3"
+  },
+  {
+    "id": "aeat-credit",
+    "class": "aeatPayment",
+    "direction": "credit",
+    "certain": false,
+    "patterns": ["AEAT ", "AGENCIA TRIBUTARIA", "HACIENDA ", "MODELO 130", "MODELO 303", "MOD 130", "MOD 303"],
     "source": "SPEC-004 §3.3"
   },
   {
     "id": "nomina",
     "class": "employmentIncome",
     "direction": "credit",
-    "certain": true,
-    "patterns": ["NOMINA", "SALARIO"],
+    "certain": false,
+    "patterns": ["NOMINA ", "NOMINAS ", "SALARIO ", "SALARIOS "],
     "source": "SPEC-004 §3.4"
   },
   {
     "id": "savings",
     "class": "savingsIncome",
     "direction": "credit",
-    "certain": true,
+    "certain": false,
     "patterns": ["INTERESES", "DIVIDEND", "CUPON"],
     "source": "SPEC-004 §3.5"
   },

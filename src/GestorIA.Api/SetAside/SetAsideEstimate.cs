@@ -36,7 +36,7 @@ public sealed record SetAsideEstimate(
         Euros(result.IvaToSetAside),
         [.. (ledger?.Steps ?? []).Concat(result.Trace.Steps).Select(TraceStepView.From)],
         [.. result.Warnings.Select(w => new NoticeView(w.Code, w.Severity, w.Text))],
-        ledger is null ? null : new LedgerView(ledger.Counts.ActualsThrough, ledger.Counts.Counted, ledger.Counts.AwaitingReview, ledger.Counts.AwaitingInvoice));
+        ledger is null ? null : LedgerView.From(ledger.Counts));
 
     // Rounded half away from zero to the cent, as TraceValue.Money.Display() and the console show it (SPEC-002 §5).
     internal static string Euros(DomainMoney money) => money.Round2().Amount.ToString("0.00", CultureInfo.InvariantCulture);
@@ -48,7 +48,10 @@ public sealed record NextModelo130(Quarter Quarter, [property: RegularExpression
 
 // What the profile's movements contribute: the last quarter they cover as actuals (null: none, the projection covers the
 // year), how many of those quarters' movements entered the estimate, and how many wait for a review or for an invoice.
-public sealed record LedgerView(Quarter? ActualsThrough, int Counted, int AwaitingReview, int AwaitingInvoice);
+public sealed record LedgerView(Quarter? ActualsThrough, int Counted, int AwaitingReview, int AwaitingInvoice)
+{
+    public static LedgerView From(LedgerCounts counts) => new(counts.ActualsThrough, counts.Counted, counts.AwaitingReview, counts.AwaitingInvoice);
+}
 
 public sealed record NoticeView(string Code, WarningSeverity Severity, string Text);
 

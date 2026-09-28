@@ -5,12 +5,15 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import g12Estimate from "@tests/fixtures/g12-estimate.json";
 import g12Ledger from "@tests/fixtures/g12-estimate-ledger.json";
 import g12Profile from "@tests/fixtures/g12-profile.json";
-import g12Queue from "@tests/fixtures/g12-review-queue.json";
+import g12QueueFixture from "@tests/fixtures/g12-review-queue.json";
 import g12Year from "@tests/fixtures/g12-transactions-2025.json";
 import { renderInApp } from "@tests/render";
 
 import { DashboardPage } from "@/features/dashboard";
+import type { ReviewItem } from "@/data/transactions";
 import { TransactionsPage } from "@/features/transactions";
+
+const g12Queue = g12QueueFixture as ReviewItem[];
 
 // The overview and the transactions page share one query cache in the app, so this renders both in one tree. The API's
 // estimate before and after classifying come from tests/GestorIA.Api.Tests/WebFixtures.cs.
@@ -60,10 +63,10 @@ it("resolving a movement in the review queue updates the overview's estimate", a
   );
   const estimateCalls = () => fetchStub.mock.calls.filter(([url]) => url.includes("/set-aside/estimate"));
   await screen.findByText(/with no closed quarter recorded/);
-  await screen.findByRole("heading", { name: "9 movements to review" });
+  await screen.findByRole("heading", { name: "11 movements to review" });
   expect(estimateCalls()).toHaveLength(1);
 
-  const [first] = within(screen.getByRole("list", { name: "9 movements to review" })).getAllByRole("listitem");
+  const [first] = within(screen.getByRole("list", { name: "11 movements to review" })).getAllByRole("listitem");
   await user.click(within(first!).getByRole("button", { name: "Income from my activity" }));
 
   expect(

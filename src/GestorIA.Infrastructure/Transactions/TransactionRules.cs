@@ -19,7 +19,7 @@ public enum RuleDirection
 public sealed record TransactionRule(string Id, TransactionClass Class, RuleDirection Direction, bool Certain, IReadOnlyList<string> Patterns, string Source);
 
 // The classifier's rules (SPEC-004 §3), read from config/transaction-rules.json once as the API starts. The first rule that
-// matches a line decides it; a certain rule confirms its class, any other only suggests it.
+// matches a line decides it; a certain rule confirms its class, any other only suggests it. Only a debit rule can be certain.
 public sealed class TransactionRules
 {
     public IReadOnlyList<TransactionRule> Rules { get; }
@@ -74,6 +74,12 @@ public sealed class TransactionRules
             if (direction is null)
             {
                 failures.Add($"{name}: direction \"{document.Direction}\" is not one of credit, debit, any.");
+            }
+
+            // Business rule 2: money coming in could be activity income, so no rule confirms a credit without the user.
+            if (document.Certain && direction is RuleDirection.Credit or RuleDirection.Any)
+            {
+                failures.Add($"{name} is certain for money coming in; a certain rule must be a debit rule, and a rule for credits may only suggest.");
             }
 
             if (document.Patterns.Count == 0 || document.Patterns.Any(pattern => Normalize(pattern).Trim().Length == 0))

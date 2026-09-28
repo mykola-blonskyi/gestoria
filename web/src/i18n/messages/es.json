@@ -65,7 +65,7 @@
   },
   "Trace": {
     "heading": "Cómo se ha calculado",
-    "lead": "{count, plural, one {# paso} other {# pasos}} en el orden del motor, agrupados por sección. Los títulos, las fórmulas y las fuentes son los del motor.",
+    "lead": "{count, plural, one {# paso} other {# pasos}} en el orden en que se calcularon, agrupados por sección. Los títulos, las fórmulas y las fuentes son los de la API: primero los pasos que nombran los movimientos detrás de los datos reales, luego los del motor.",
     "section": "{name} ({count})",
     "inputs": "Datos",
     "formula": "Fórmula",
@@ -241,7 +241,6 @@
       "dueADeducir": "Nada a ingresar. Se presenta igualmente del {from} al {by}, en el apartado A deducir: el resultado negativo se deduce en los siguientes trimestres del año.",
       "dueNegativa": "Nada a ingresar. Se presenta igualmente del {from} al {by}, como declaración negativa.",
       "localHolidays": "No se aplican los festivos locales, así que la fecha puede ser anterior, nunca posterior.",
-      "basis": "Calculado a partir de la previsión del año: todavía no hay ningún trimestre cerrado registrado para este perfil (el #73 lo cambiará).",
       "casillasHeading": "Casillas del Modelo 130"
     },
     "casillas": {
@@ -272,6 +271,13 @@
       "liabilityOnActivity": "Cuota que añade la actividad a la declaración",
       "marginalRate": "Tipo marginal sobre los rendimientos del trabajo",
       "reduccionTrabajoLost": "Reducción por trabajo perdida por la actividad"
+    },
+    "basis": {
+      "projection": "Calculado a partir de la previsión del año: ningún trimestre cerrado hasta este tiene aún sus movimientos importados y revisados.",
+      "actuals": "Calculado con datos reales hasta {quarter}, {counted, plural, one {# movimiento clasificado} other {# movimientos clasificados}}{quarter, select, Q4 {, que cubren todo el año.} other {; la previsión cubre el resto del año.}}",
+      "awaitingReview": "{count, plural, one {# movimiento de los trimestres cerrados espera revisión; hasta que se clasifique, la previsión cubre su trimestre y los siguientes.} other {# movimientos de los trimestres cerrados esperan revisión; hasta que se clasifiquen, la previsión cubre sus trimestres y los siguientes.}}",
+      "review": "Revisarlos",
+      "awaitingInvoice": "{count, plural, one {# gasto espera una factura y no se cuenta} other {# gastos esperan una factura y no se cuentan}}: un gasto deducible necesita una factura vinculada, y GestorIA aún no puede guardar facturas."
     }
   },
   "Settings": {

@@ -49,7 +49,7 @@ public static class PeriodsEndpoints
             var config = loader.Load(row.TaxYear);
             var ledger = await db.SetAsideInputAsync(rules, row, config, parsedQuarter, Today(time), cancellationToken);
             var result = SetAsideEstimator.Estimate(ledger.Input);
-            return TypedResults.Ok(QuarterResultView.From(result.Quarters.Single(q => q.Quarter == parsedQuarter), config.TaxYear, config.ConfigHash, ledger.Steps));
+            return TypedResults.Ok(QuarterResultView.From(result.Quarters.Single(q => q.Quarter == parsedQuarter), config.TaxYear, config.ConfigHash, ledger));
         }
         catch (ConfigNotFoundException e)
         {
@@ -75,7 +75,7 @@ public static class PeriodsEndpoints
             // Q4, so every closed quarter of the year can give its actuals; the engine's true-up itself does not depend on asOf.
             var ledger = await db.SetAsideInputAsync(rules, row, config, Quarter.Q4, Today(time), cancellationToken);
             var result = SetAsideEstimator.Estimate(ledger.Input);
-            return TypedResults.Ok(AnnualTrueUpView.From(result.TrueUp, config.TaxYear, config.ConfigHash, ledger.Steps));
+            return TypedResults.Ok(AnnualTrueUpView.From(result.TrueUp, config.TaxYear, config.ConfigHash, ledger));
         }
         catch (ConfigNotFoundException e)
         {

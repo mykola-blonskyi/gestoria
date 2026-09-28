@@ -32,6 +32,17 @@
     "suggestion": null
   },
   {
+    "id": "00000000-0000-0000-0072-000000000008",
+    "bookingDate": "2025-03-31",
+    "valueDate": "2025-04-01",
+    "description": "ABONO INTERESES CUENTA",
+    "amount": "0.43",
+    "suggestion": {
+      "class": "savingsIncome",
+      "ruleId": "savings"
+    }
+  },
+  {
     "id": "00000000-0000-0000-0072-000000000009",
     "bookingDate": "2025-04-07",
     "valueDate": "2025-04-07",
@@ -70,5 +81,16 @@
     "description": "DEVOLUCION COMPRA",
     "amount": "12.99",
     "suggestion": null
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000018",
+    "bookingDate": "2025-12-31",
+    "valueDate": "2025-12-31",
+    "description": "ABONO INTERESES CUENTA",
+    "amount": "0.51",
+    "suggestion": {
+      "class": "savingsIncome",
+      "ruleId": "savings"
+    }
   }
 ]
