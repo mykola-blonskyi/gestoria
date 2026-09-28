@@ -617,6 +617,113 @@
         ]
       }
     },
+    "/api/v1/profiles/restore": {
+      "post": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Restores an export (SPEC-009 §2.1) into an empty installation. The same file again changes nothing; anything else stored is a 409.",
+        "operationId": "restoreProfile",
+        "requestBody": {
+          "description": "An export file (SPEC-009 §2.1), at most 16777216 bytes.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileExport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoredExport"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoredExport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/profiles/{id}/set-aside/estimate": {
       "get": {
         "tags": [
@@ -1432,6 +1539,23 @@
         },
         "additionalProperties": false
       },
+      "EntityCounts": {
+        "required": [
+          "profiles",
+          "bankTransactions"
+        ],
+        "type": "object",
+        "properties": {
+          "profiles": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bankTransactions": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "ExportedBankTransaction": {
         "required": [
           "id",
@@ -2222,6 +2346,22 @@
           }
         },
         "additionalProperties": false
+      },
+      "RestoredExport": {
+        "required": [
+          "profileId",
+          "entities"
+        ],
+        "type": "object",
+        "properties": {
+          "profileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entities": {
+            "$ref": "#/components/schemas/EntityCounts"
+          }
+        }
       },
       "RetencionesDocument": {
         "enum": [

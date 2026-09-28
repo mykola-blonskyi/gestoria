@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using GestorIA.Api.SetAside;
 using GestorIA.Engine;
@@ -53,6 +54,28 @@ public static class ProfileEndpoints
             .WithName("exportProfile")
             .WithSummary("Everything stored for the profile, in one versioned document (SPEC-009 §2.1). Personal financial data: sent with Cache-Control: no-store.")
             .ProducesProblem(StatusCodes.Status404NotFound);
+
+        profiles.MapPost("/restore", Restore)
+            .WithName("restoreProfile")
+            .WithSummary("Restores an export (SPEC-009 §2.1) into an empty installation. The same file again changes nothing; anything else stored is a 409.")
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status413PayloadTooLarge)
+            .ProducesProblem(StatusCodes.Status415UnsupportedMediaType)
+            .AddOpenApiOperationTransformer((operation, context, _) =>
+            {
+                // Declared here and not with Accepts, which has routing answer any other Content-Type with a bare 415 before
+                // the handler can answer export-media-type.
+                operation.RequestBody = new OpenApiRequestBody
+                {
+                    Required = true,
+                    Description = $"An export file (SPEC-009 §2.1), at most {ProfileRestore.MaxBytes} bytes.",
+                    Content = new Dictionary<string, OpenApiMediaType>
+                    {
+                        ["application/json"] = new() { Schema = new OpenApiSchemaReference(nameof(ProfileExport), context.Document) },
+                    },
+                };
+                return Task.CompletedTask;
+            });
 
         profiles.MapGet("/{id:guid}/set-aside/estimate", Estimate)
             .WithName("estimateSetAsideForProfile")
@@ -171,20 +194,88 @@ public static class ProfileEndpoints
     private static async Task<Results<Ok<ProfileExport>, ProblemHttpResult>> Export(
         Guid id, HttpResponse response, GestoriaDbContext db, CancellationToken cancellationToken)
     {
-        if (await db.Profiles.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken) is not { } row)
+        if (await Stored(id, db, cancellationToken) is not { } export)
         {
             return Problems.NoProfile(id);
+        }
+
+        // No shared cache or browser cache may keep a copy of personal financial data (SPEC-013).
+        response.Headers.CacheControl = "no-store";
+        response.Headers.ContentDisposition = $"attachment; filename=\"{ProfileExport.FileName(export.ExportedAt)}\"";
+        return TypedResults.Ok(export);
+    }
+
+    // Local mode keeps one profile per installation, so a restore fills an empty one, or answers for what is already there:
+    // the file's own contents are a 200 that writes nothing, so a retry is safe, and anything else a 409 (SPEC-009 §2.2).
+    private static async Task<Results<Created<RestoredExport>, Ok<RestoredExport>, ValidationProblem, ProblemHttpResult>> Restore(
+        HttpRequest request, GestoriaDbContext db, TaxYearConfigLoader loader, IOptions<JsonOptions> json, CancellationToken cancellationToken)
+    {
+        if (!ProfileRestore.IsJson(request.ContentType))
+        {
+            return Problems.UnsupportedExportType();
+        }
+
+        if (await RequestBody.ReadAtMostAsync(request, ProfileRestore.MaxBytes) is not { } body)
+        {
+            return Problems.TooLargeExport(ProfileRestore.MaxBytes);
+        }
+
+        Restored file;
+        try
+        {
+            file = ProfileRestore.Read(body, json.Value.SerializerOptions, loader);
+        }
+        catch (InvalidExportException e)
+        {
+            return Problems.Invalid(e.Errors);
+        }
+
+        // A second pass only after a concurrent restore stored its profile first: the unique index on Singleton refused this
+        // one, and the installation is no longer empty.
+        for (var pass = 1; ; pass++)
+        {
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            // FOR SHARE holds off a delete until this answer is made, so the stored profile and its movements are read as one.
+            var held = await db.Profiles.FromSql($"SELECT * FROM \"Profiles\" FOR SHARE").AsNoTracking().ToListAsync(cancellationToken);
+            if (held is [var profile])
+            {
+                var stored = (await Stored(profile.Id, db, cancellationToken))!.Entities;
+                var counts = EntityCounts.Of(stored);
+                var options = json.Value.SerializerOptions;
+                return JsonSerializer.Serialize(stored, options) == JsonSerializer.Serialize(file.Entities, options)
+                    ? TypedResults.Ok(new RestoredExport(profile.Id, counts))
+                    : Problems.InstallationHolds(profile.Id, profile.TaxYear, counts);
+            }
+
+            db.Profiles.Add(file.Profile);
+            db.BankTransactions.AddRange(file.BankTransactions);
+            try
+            {
+                await db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return TypedResults.Created($"/api/v1/profiles/{file.Profile.Id}", new RestoredExport(file.Profile.Id, EntityCounts.Of(file.Entities)));
+            }
+            catch (DbUpdateException e) when (pass == 1 && e.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                db.ChangeTracker.Clear();
+            }
+        }
+    }
+
+    // What is stored for a profile, as the export writes it. The restore compares a file with the same answer.
+    private static async Task<ProfileExport?> Stored(Guid id, GestoriaDbContext db, CancellationToken cancellationToken)
+    {
+        if (await db.Profiles.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken) is not { } row)
+        {
+            return null;
         }
 
         var transactions = await db.BankTransactions.AsNoTracking()
             .Where(t => t.ProfileId == id)
             .OrderBy(t => t.BookingDate).ThenBy(t => t.ImportSequence).ThenBy(t => t.LineNumber)
             .ToListAsync(cancellationToken);
-        var exportedAt = DateTimeOffset.UtcNow;
-        // No shared cache or browser cache may keep a copy of personal financial data (SPEC-013).
-        response.Headers.CacheControl = "no-store";
-        response.Headers.ContentDisposition = $"attachment; filename=\"{ProfileExport.FileName(exportedAt)}\"";
-        return TypedResults.Ok(ProfileExport.Of(View(row), transactions, exportedAt));
+        return ProfileExport.Of(View(row), transactions, DateTimeOffset.UtcNow);
     }
 
     private static async Task<Results<Ok<SetAsideEstimate>, ValidationProblem, ProblemHttpResult>> Estimate(

@@ -27,6 +27,9 @@ internal static class Http
         return client.PostAsync($"/api/v1/profiles/{profileId}/bank-statements?bank={bank}", content);
     }
 
+    internal static Task<HttpResponseMessage> Restore(this HttpClient client, string json, string contentType = "application/json") =>
+        client.PostAsync("/api/v1/profiles/restore", new StringContent(json, Encoding.UTF8, contentType));
+
     internal static async Task<string> CreateProfile(this HttpClient client, string golden = "G12") =>
         (await (await client.PostProfile(RepoFiles.GoldenProfile(golden))).Json())["id"]!.GetValue<string>();
 

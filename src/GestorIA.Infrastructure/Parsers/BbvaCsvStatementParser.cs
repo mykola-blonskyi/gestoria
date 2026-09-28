@@ -91,6 +91,10 @@ public sealed class BbvaCsvStatementParser : IStatementParser
         var value = Date(fields[1], "Fecha Valor", reasons);
         var amount = Amount(fields[3], "Importe", reasons);
         var balance = fields[4].Length == 0 ? null : Amount(fields[4], "Saldo", reasons);
+        if (!StatementDescription.IsValid(fields[2]))
+        {
+            reasons.Add($"Concepto must be text that {StatementDescription.Rule}.");
+        }
 
         if (reasons.Count == 0)
         {

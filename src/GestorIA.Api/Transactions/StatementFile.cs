@@ -23,25 +23,6 @@ public static class StatementFile
     // Windows-1252 is not built into .NET; its provider ships with the runtime and is registered once, here.
     private static readonly Encoding Windows1252 = CodePages();
 
-    // Reads at most MaxBytes + 1 bytes: one more than the limit is enough to know the file is over it. Null when it is.
-    public static async Task<byte[]?> ReadAsync(HttpRequest request)
-    {
-        if (request.ContentLength > MaxBytes)
-        {
-            return null;
-        }
-
-        var buffer = new byte[MaxBytes + 1];
-        var length = 0;
-        int read;
-        while (length < buffer.Length && (read = await request.Body.ReadAsync(buffer.AsMemory(length), request.HttpContext.RequestAborted)) > 0)
-        {
-            length += read;
-        }
-
-        return length > MaxBytes ? null : buffer[..length];
-    }
-
     // UTF-8, with or without its byte-order mark, else Windows-1252, the code page of Spanish bank exports that are not UTF-8.
     public static string Decode(byte[] bytes)
     {

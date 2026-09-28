@@ -36,7 +36,8 @@ public static class ProfileInput
         }
     }
 
-    public static Profile Parse(ProfileInputDocument document, TaxYearConfigLoader loader)
+    // at is the JSON path of the profile in its document: "$" for a request body, deeper inside an export being restored.
+    public static Profile Parse(ProfileInputDocument document, TaxYearConfigLoader loader, string at = "$")
     {
         var errors = new Dictionary<string, string[]>();
         var (employment, registration, projection) = (document.Employment, document.Activity, document.Projection);
@@ -59,26 +60,26 @@ public static class ProfileInput
         var config = loader.Years().Contains(document.TaxYear) ? loader.Load(document.TaxYear) : null;
         if (config is null)
         {
-            errors["$.taxYear"] = [Invariant($"$.taxYear is {document.TaxYear}; the API holds a configuration for {string.Join(", ", loader.Years())} only.")];
+            errors[$"{at}.taxYear"] = [Invariant($"{at}.taxYear is {document.TaxYear}; the API holds a configuration for {string.Join(", ", loader.Years())} only.")];
         }
         else if (!config.Regions.Usable.ContainsKey(document.Region))
         {
-            errors["$.region"] = [Invariant($"$.region is \"{document.Region}\"; {document.TaxYear} covers {string.Join(", ", config.Regions.Usable.Keys.Order(StringComparer.Ordinal))}.")];
+            errors[$"{at}.region"] = [Invariant($"{at}.region is \"{document.Region}\"; {document.TaxYear} covers {string.Join(", ", config.Regions.Usable.Keys.Order(StringComparer.Ordinal))}.")];
         }
 
-        var ingresos = Euros("$.employment.ingresos", employment.Ingresos);
-        var seguridadSocial = Euros("$.employment.seguridadSocial", employment.SeguridadSocial);
+        var ingresos = Euros($"{at}.employment.ingresos", employment.Ingresos);
+        var seguridadSocial = Euros($"{at}.employment.seguridadSocial", employment.SeguridadSocial);
 
         // An alta after the tax year leaves no month of activity in it, and the engine refuses every quarter of such a year.
         if (registration.Alta.Year > document.TaxYear)
         {
-            errors["$.activity.alta"] = [Invariant($"$.activity.alta is {registration.Alta:yyyy-MM-dd}, after {document.TaxYear}; it must be in {document.TaxYear} or before.")];
+            errors[$"{at}.activity.alta"] = [Invariant($"{at}.activity.alta is {registration.Alta:yyyy-MM-dd}, after {document.TaxYear}; it must be in {document.TaxYear} or before.")];
         }
 
         PreviousYear previousYear = registration.PreviousYear switch
         {
             PreviousYearNet known => new PreviousYear.RendimientoNeto(Amount(
-                "$.activity.previousYear.rendimientoNeto",
+                $"{at}.activity.previousYear.rendimientoNeto",
                 known.RendimientoNeto,
                 Signed,
                 "an amount in euros with at most two decimals, negative after a loss, like \"-1234.56\"")),
@@ -89,19 +90,19 @@ public static class ProfileInput
         {
             NewActivityStarted started => new NewActivity.Started(
                 started.Period == StartedPeriod.First ? NewActivityPeriod.First : NewActivityPeriod.Following,
-                Euros("$.activity.newActivity.ingresosFromFormerEmployer", started.IngresosFromFormerEmployer)),
+                Euros($"{at}.activity.newActivity.ingresosFromFormerEmployer", started.IngresosFromFormerEmployer)),
             _ => new NewActivity.Established(),
         };
 
-        var baseCotizacion = Euros("$.projection.baseCotizacion", projection.BaseCotizacion);
-        if (config is not null && !errors.ContainsKey("$.projection.baseCotizacion"))
+        var baseCotizacion = Euros($"{at}.projection.baseCotizacion", projection.BaseCotizacion);
+        if (config is not null && !errors.ContainsKey($"{at}.projection.baseCotizacion"))
         {
             var tramos = config.SeguridadSocial.Tramos;
             if (baseCotizacion < tramos.LowestBase || baseCotizacion > tramos.HighestBase)
             {
-                errors["$.projection.baseCotizacion"] =
+                errors[$"{at}.projection.baseCotizacion"] =
                 [
-                    Invariant($"$.projection.baseCotizacion is \"{projection.BaseCotizacion}\"; it must be a base of the {document.TaxYear} tables, from {tramos.LowestBase.Amount} to {tramos.HighestBase.Amount} (LGSS art. 308.1.a 3.ª)."),
+                    Invariant($"{at}.projection.baseCotizacion is \"{projection.BaseCotizacion}\"; it must be a base of the {document.TaxYear} tables, from {tramos.LowestBase.Amount} to {tramos.HighestBase.Amount} (LGSS art. 308.1.a 3.ª)."),
                 ];
             }
         }
@@ -109,7 +110,7 @@ public static class ProfileInput
         var profile = new Profile(
             document.TaxYear,
             new TaxpayerProfile(document.Region, new EmploymentIncome(ingresos, seguridadSocial), new AutonomoRegistration(registration.Alta, previousYear, newActivity)),
-            new ActivityProjection(Euros("$.projection.ingresos", projection.Ingresos), Euros("$.projection.gastos", projection.Gastos), baseCotizacion));
+            new ActivityProjection(Euros($"{at}.projection.ingresos", projection.Ingresos), Euros($"{at}.projection.gastos", projection.Gastos), baseCotizacion));
 
         return errors.Count == 0 ? profile : throw new InvalidProfileException(errors);
     }

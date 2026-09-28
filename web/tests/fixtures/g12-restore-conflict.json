@@ -1,0 +1,12 @@
+{
+  "type": "https://gestoria.local/problems/installation-not-empty",
+  "title": "The installation already holds data",
+  "status": 409,
+  "detail": "This installation already holds profile 00000000-0000-0000-0000-000000000069, for tax year 2025, with 18 bank movements. A restore needs an empty installation: download a copy of what is there on Backup, delete it in Settings, then restore.",
+  "profileId": "00000000-0000-0000-0000-000000000069",
+  "taxYear": 2025,
+  "entities": {
+    "profiles": 1,
+    "bankTransactions": 18
+  }
+}

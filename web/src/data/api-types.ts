@@ -143,6 +143,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/profiles/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restores an export (SPEC-009 §2.1) into an empty installation. The same file again changes nothing; anything else stored is a 409. */
+        post: operations["restoreProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/profiles/{id}/set-aside/estimate": {
         parameters: {
             query?: never;
@@ -307,6 +324,12 @@ export interface components {
         EmploymentDocument: {
             ingresos: string;
             seguridadSocial: string;
+        };
+        EntityCounts: {
+            /** Format: int32 */
+            profiles: number;
+            /** Format: int32 */
+            bankTransactions: number;
         };
         ExportedBankTransaction: {
             /** Format: uuid */
@@ -500,6 +523,11 @@ export interface components {
             alta: string;
             previousYear: components["schemas"]["PreviousYearDocument"];
             newActivity: components["schemas"]["NewActivityDocument"];
+        };
+        RestoredExport: {
+            /** Format: uuid */
+            profileId: string;
+            entities: components["schemas"]["EntityCounts"];
         };
         /** @enum {unknown} */
         RetencionesDocument: "foreignPayersOnly";
@@ -1031,6 +1059,94 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    restoreProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description An export file (SPEC-009 §2.1), at most 16777216 bytes. */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileExport"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoredExport"];
+                };
+            };
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoredExport"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Payload Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
                 headers: {
                     [name: string]: unknown;
                 };

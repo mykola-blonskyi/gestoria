@@ -10,6 +10,10 @@ export type Profile = components["schemas"]["ProfileView"];
 export type ProfileInput = components["schemas"]["ProfileInputDocument"];
 // Everything stored for the profile, in the versioned format #75's restore reads (SPEC-009 §2.1).
 export type ProfileExport = components["schemas"]["ProfileExport"];
+export type RestoredExport = components["schemas"]["RestoredExport"];
+
+// The API refuses a larger export file (ProfileRestore.MaxBytes in GestorIA.Api); checking first saves reading and sending it.
+export const EXPORT_MAX_BYTES = 16 * 1024 * 1024;
 
 export const profileKeys = {
   all: ["profiles"] as const,
@@ -51,6 +55,17 @@ export const exportProfileMutation = () =>
     mutationKey: ["profiles", "export"],
     mutationFn: (id: string) => apiFetch<ProfileExport>(`/profiles/${id}/export`, { cache: "no-store" }),
     // The mutation cache would otherwise keep the whole document, as the mutation's data, for five minutes after the download.
+    gcTime: 0,
+  });
+
+// Stores an export file into an empty installation (SPEC-009 §2.2). The body is the file's text exactly as it was read, never
+// re-serialised: the API validates the file the user chose, not the browser's reading of it.
+export const restoreProfileMutation = () =>
+  mutationOptions({
+    mutationKey: ["profiles", "restore"],
+    mutationFn: (text: string) =>
+      apiFetch<RestoredExport>("/profiles/restore", { method: "POST", headers: { "Content-Type": "application/json" }, body: text }),
+    // The mutation's variables are the whole file: the mutation cache would otherwise keep it for five minutes.
     gcTime: 0,
   });
 
