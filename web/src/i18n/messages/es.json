@@ -238,6 +238,7 @@
       "gap": "Diferencia más allá de los pagos del Modelo 130",
       "payableIn": "A pagar antes de que termine {month}.",
       "due": "Se paga del {from} al {by}.",
+      "dueNothingToPay": "No queda nada por pagar además de los pagos del Modelo 130. La Renta se presenta igualmente del {from} al {by}.",
       "liabilityOnActivity": "Cuota que añade la actividad a la declaración",
       "marginalRate": "Tipo marginal sobre los rendimientos del trabajo",
       "reduccionTrabajoLost": "Reducción por trabajo perdida por la actividad"

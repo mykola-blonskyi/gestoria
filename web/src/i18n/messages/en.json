@@ -238,6 +238,7 @@
       "gap": "Gap beyond the Modelo 130 advances",
       "payableIn": "Payable by the end of {month}.",
       "due": "Pay from {from} to {by}.",
+      "dueNothingToPay": "Nothing to pay beyond the Modelo 130 advances. The Renta is still filed from {from} to {by}.",
       "liabilityOnActivity": "Tax the activity adds to the return",
       "marginalRate": "Marginal rate on top of the employment income",
       "reduccionTrabajoLost": "Employment-income reduction lost to the activity"
