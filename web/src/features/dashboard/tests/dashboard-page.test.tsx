@@ -268,6 +268,16 @@ describe("DashboardPage", () => {
       expect(screen.queryByRole("link", { name: messages.review })).not.toBeInTheDocument();
     });
 
+    it("does not leave any of the year to the projection once the actuals run through Q4", async () => {
+      stubApi({ estimate: withLedger({ actualsThrough: "Q4", counted: 5 }) });
+      renderDashboard();
+
+      expect(
+        await screen.findByText("Estimated for 2025 from actuals through Q4, 5 classified movements, which cover the whole year.", { exact: false }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/the projection covers the rest of the year/)).not.toBeInTheDocument();
+    });
+
     it("says what awaits review keeps the closed quarters on the projection, with a link to them", async () => {
       const ledger = { actualsThrough: null, counted: 0, awaitingReview: 9, awaitingInvoice: 0 };
       stubApi({ estimate: { status: 200, body: { ...g12Ledger, ledger } } });

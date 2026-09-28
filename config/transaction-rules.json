@@ -2,7 +2,7 @@
   {
     "id": "tgss",
     "class": "socialSecurity",
-    "direction": "any",
+    "direction": "debit",
     "certain": true,
     "patterns": ["TGSS", "SEGURIDAD SOCIAL", "CUOTA AUTONOM"],
     "source": "SPEC-004 §3.2"
@@ -28,7 +28,7 @@
     "class": "savingsIncome",
     "direction": "credit",
     "certain": true,
-    "patterns": ["INTERESES", "DIVIDENDO", "CUPON"],
+    "patterns": ["INTERESES", "DIVIDEND", "CUPON"],
     "source": "SPEC-004 §3.5"
   },
   {

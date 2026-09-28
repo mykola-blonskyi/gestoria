@@ -372,6 +372,30 @@ describe("TransactionsPage", () => {
       await waitFor(() => expect(queueItems()[7]).toHaveFocus());
     });
 
+    it("leaves focus where the user moved it while a classification was on its way", async () => {
+      const fetchStub = stubApi();
+      const answer = fetchStub.getMockImplementation()!;
+      let release = () => {};
+      const held = new Promise<void>((resolve) => (release = resolve));
+      fetchStub.mockImplementation(async (url, init) => {
+        if (url.endsWith("/classify")) await held;
+        return answer(url, init);
+      });
+      const user = renderPage();
+      await screen.findByRole("heading", { name: "9 movements to review" });
+
+      await user.click(queueItems()[0]!);
+      await user.keyboard("1");
+      await user.keyboard("{End}");
+      expect(queueItems()[8]).toHaveFocus();
+      release();
+
+      await screen.findByText(fill(review.classified, { name: review.classes.activityIncome }));
+      await screen.findByRole("heading", { name: "8 movements to review" });
+      expect(queueItems()[7]).toHaveTextContent(g12Queue[8]!.description);
+      expect(queueItems()[7]).toHaveFocus();
+    });
+
     it("says when nothing waits, and focuses the heading once the last movement is resolved", async () => {
       stubApi({ queue: g12Queue.slice(0, 1) });
       const user = renderPage();

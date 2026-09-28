@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using GestorIA.Domain.Models;
 using GestorIA.Domain.ValueObjects;
 
@@ -14,7 +15,7 @@ public enum RuleDirection
     Any,
 }
 
-// One rule of config/transaction-rules.json. Patterns are held as Normalize leaves them.
+// One rule of config/transaction-rules.json. Patterns are held as Normalize leaves them, without a leading space.
 public sealed record TransactionRule(string Id, TransactionClass Class, RuleDirection Direction, bool Certain, IReadOnlyList<string> Patterns, string Source);
 
 // The classifier's rules (SPEC-004 §3), read from config/transaction-rules.json once as the API starts. The first rule that
@@ -75,14 +76,14 @@ public sealed class TransactionRules
                 failures.Add($"{name}: direction \"{document.Direction}\" is not one of credit, debit, any.");
             }
 
-            if (document.Patterns.Count == 0 || document.Patterns.Any(string.IsNullOrWhiteSpace))
+            if (document.Patterns.Count == 0 || document.Patterns.Any(pattern => Normalize(pattern).Trim().Length == 0))
             {
-                failures.Add($"{name}: patterns must be a non-empty list of non-blank texts.");
+                failures.Add($"{name}: patterns must be a non-empty list of texts that each hold a letter or a digit.");
             }
 
             if (failures.Count == before)
             {
-                rules.Add(new TransactionRule(document.Id, transactionClass, direction!.Value, document.Certain, [.. document.Patterns.Select(Normalize)], document.Source));
+                rules.Add(new TransactionRule(document.Id, transactionClass, direction!.Value, document.Certain, [.. document.Patterns.Select(pattern => Normalize(pattern).TrimStart())], document.Source));
             }
         }
 
@@ -97,7 +98,7 @@ public sealed class TransactionRules
             return new Classification.Confirmed(chosen, null);
         }
 
-        var text = Normalize(description);
+        var text = Normalize(description).Trim() + " ";
         return Rules.FirstOrDefault(rule => Applies(rule.Direction, amount) && rule.Patterns.Any(pattern => StartsAWord(text, pattern))) switch
         {
             null => new Classification.Unclear(),
@@ -113,12 +114,13 @@ public sealed class TransactionRules
         _ => true,
     };
 
-    // A pattern matches where it begins a word: "AGUA" matches "RECIBO AGUA" and not "PARAGUAS".
+    // A pattern matches where it begins a word: "AGUA" matches "RECIBO AGUA" and not "PARAGUAS". The text ends with a space, so a
+    // pattern ending in one ("DIA ") matches only a whole word, at the end of the description too, and not "DIARIO".
     private static bool StartsAWord(string text, string pattern)
     {
         for (var at = text.IndexOf(pattern, StringComparison.Ordinal); at >= 0; at = text.IndexOf(pattern, at + 1, StringComparison.Ordinal))
         {
-            if (at == 0 || !char.IsLetterOrDigit(text[at - 1]))
+            if (at == 0 || text[at - 1] == ' ')
             {
                 return true;
             }
@@ -127,10 +129,18 @@ public sealed class TransactionRules
         return false;
     }
 
-    // Upper case without diacritics, so "Nómina" and "NOMINA" read the same. FormD splits "Ó" into "O" and a combining accent,
-    // which is then dropped.
-    private static string Normalize(string text) =>
-        string.Concat(text.Normalize(NormalizationForm.FormD).Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)).ToUpperInvariant();
+    // Upper case without diacritics, so "Nómina" and "NOMINA" read the same, and every run of what is not a letter or a digit
+    // one space, so "MOD.130" matches "MOD 130" and "BAR," ends a word as "BAR " does. FormD splits "Ó" into "O" and a combining
+    // accent, which is then dropped.
+    private static string Normalize(string text)
+    {
+        var letters = text.Normalize(NormalizationForm.FormD)
+            .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+            .Select(c => char.IsLetterOrDigit(c) ? char.ToUpperInvariant(c) : ' ');
+        return Spaces.Replace(string.Concat(letters), " ");
+    }
+
+    private static readonly Regex Spaces = new(" {2,}", RegexOptions.Compiled);
 
     private static readonly JsonSerializerOptions Strict = new(JsonSerializerDefaults.Web)
     {

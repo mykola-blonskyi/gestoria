@@ -16,13 +16,19 @@ public class TransactionRulesTests
 
     [Theory]
     [InlineData("CUOTA AUTONOMOS TGSS", -87.61, TransactionClass.SocialSecurity, "tgss")]
-    [InlineData("DEVOLUCION TGSS", 20.00, TransactionClass.SocialSecurity, "tgss")]
+    [InlineData("RECIBO SEGURIDAD SOCIAL REG.ESP.AUTONOMOS", -87.61, TransactionClass.SocialSecurity, "tgss")]
     [InlineData("PAGO MODELO 130 1T AEAT", -312.88, TransactionClass.AeatPayment, "aeat")]
     [InlineData("Nómina marzo", 1500.00, TransactionClass.EmploymentIncome, "nomina")]
     [InlineData("ABONO INTERESES CUENTA", 0.43, TransactionClass.SavingsIncome, "savings")]
     [InlineData("SUPERMERCADO FICTICIO", -47.16, TransactionClass.Personal, "personal")]
     [InlineData("COMPRA DIA SUPER", -12.00, TransactionClass.Personal, "personal")]
     [InlineData("café bar el rincón", -3.10, TransactionClass.Personal, "personal")]
+    [InlineData("COMPRA SUPER DIA", -12.00, TransactionClass.Personal, "personal")]
+    [InlineData("CAFE BAR", -3.10, TransactionClass.Personal, "personal")]
+    [InlineData("BAR,LA ESQUINA", -3.10, TransactionClass.Personal, "personal")]
+    [InlineData("ABONO DIVIDENDO ACCIONES", 12.30, TransactionClass.SavingsIncome, "savings")]
+    [InlineData("ABONO DIVIDEND ETF", 12.30, TransactionClass.SavingsIncome, "savings")]
+    [InlineData("PAGO MOD.130 2T", -200.00, TransactionClass.AeatPayment, "aeat")]
     public void ACertainRuleConfirmsItsClass(string description, decimal amount, TransactionClass expected, string rule)
     {
         Assert.Equal(new Classification.Confirmed(expected, rule), Classify(description, amount));
@@ -37,11 +43,23 @@ public class TransactionRulesTests
     [Theory]
     [InlineData("PARAGUAS Y DIARIOS", -9.99)]
     [InlineData("VIAJE BARCELONA", -60.00)]
+    [InlineData("SUSCRIPCION DIARIO", -9.99)]
+    [InlineData("BARRA DE PAN", -1.20)]
     [InlineData("SUBTGSS", -1.00)]
     [InlineData("NOMINA", -1500.00)]
     [InlineData("DEVOLUCION GITHUB", 4.00)]
     [InlineData("TRANSFERENCIA RECIBIDA CLIENTE", 2345.67)]
     public void NoRuleMatchesInsideAWordOrAgainstItsDirection(string description, decimal amount)
+    {
+        Assert.Equal(new Classification.Unclear(), Classify(description, amount));
+    }
+
+    // SPEC-004 §6 holds the TGSS rule to its precision for what TGSS charges. Money TGSS pays is a benefit (incapacidad
+    // temporal, cese de actividad) or a refund, and which one only the user knows, so it waits for review.
+    [Theory]
+    [InlineData("PRESTACION SEGURIDAD SOCIAL INCAPACIDAD TEMPORAL", 900.00)]
+    [InlineData("DEVOLUCION TGSS", 20.00)]
+    public void MoneyFromTheTgssIsNotConfirmedAsACuota(string description, decimal amount)
     {
         Assert.Equal(new Classification.Unclear(), Classify(description, amount));
     }
@@ -95,6 +113,7 @@ public class TransactionRulesTests
         { Rule("r", direction: "in"), "rule \"r\": direction \"in\"" },
         { Rule("r", patterns: "[]"), "rule \"r\": patterns" },
         { Rule("r", patterns: "[\" \"]"), "rule \"r\": patterns" },
+        { Rule("r", patterns: "[\"..\"]"), "rule \"r\": patterns" },
         { Rule(""), "rule 1 has no id" },
     };
 

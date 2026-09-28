@@ -46,6 +46,10 @@ export function ReviewQueue({ profileId }: { profileId: string }) {
       {
         onSuccess: () => {
           setAnnouncement(t("classified", { name: label(transactionClass) }));
+          // While the class was on its way the user may have moved on (End, Home, Tab): focus stays where they put it.
+          const focused = document.activeElement;
+          const movedOn = focused !== null && focused !== document.body && !itemRefs.current.get(item.id)?.contains(focused);
+          if (movedOn) return;
           const remaining = items.filter((other) => other.id !== item.id);
           focusItem(remaining[Math.min(index, remaining.length - 1)]);
         },

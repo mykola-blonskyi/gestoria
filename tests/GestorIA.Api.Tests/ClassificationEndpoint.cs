@@ -212,6 +212,31 @@ public class ClassificationEndpoint
         Assert.True(JsonNode.DeepEquals(new JsonObject { ["actualsThrough"] = null, ["counted"] = 0, ["awaitingReview"] = Queue.Length, ["awaitingInvoice"] = 0 }, fromProfile["ledger"]));
     }
 
+    // Money the TGSS pays, here a sick-leave benefit, is no cuota: no rule confirms it, so it waits in the queue and holds its
+    // quarter on the projection. Once the user calls it salary (LIRPF art. 17.2.a), the cuotas are the charges alone and the
+    // estimate is that of the reviewed statement without it.
+    [Fact]
+    public async Task ATgssCreditWaitsForReviewAndNeverLowersTheCuotas()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var (id, _) = await ClassifiedG12(client);
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n15/05/2025;15/05/2025;PRESTACION SEGURIDAD SOCIAL INCAPACIDAD TEMPORAL;900,00;\n"));
+
+        var benefit = Assert.Single(await client.ReviewQueue(id))!;
+        Assert.Equal("PRESTACION SEGURIDAD SOCIAL INCAPACIDAD TEMPORAL", benefit["description"]!.GetValue<string>());
+        Assert.Null(benefit["suggestion"]);
+        var waiting = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q4")).Json();
+        Assert.True(JsonNode.DeepEquals(Ledger("Q1", 2, 1, 1), waiting["ledger"]));
+
+        await client.ClassifyAs(benefit["id"]!.GetValue<string>(), "employmentIncome");
+        var reviewed = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q4")).Json();
+        var actuals = new JsonArray(Actual("Q1", "2345.67", "87.61"), Actual("Q2", "4222.21", "87.61"), Actual("Q3", "6567.88", "175.22"), Actual("Q4", "6567.88", "175.22"));
+        var fromFile = await (await client.Estimate(2025, File("Q4", actuals, "0.00", "0.00"))).Json();
+        var ledgerSteps = reviewed["trace"]!.AsArray().Count(step => step!["id"]!.GetValue<string>().StartsWith("ledger.", StringComparison.Ordinal));
+        Assert.True(JsonNode.DeepEquals(EngineOnly(fromFile, 0), EngineOnly(reviewed, ledgerSteps)), reviewed.ToJsonString());
+    }
+
     // 10 August 2025: Q1 and Q2 are closed, Q3 is not, so the actuals end with Q2 and the projection keeps six of its twelve months.
     [Fact]
     public async Task AQuarterStillOpenStaysProjected()
