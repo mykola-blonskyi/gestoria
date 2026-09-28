@@ -248,7 +248,8 @@ public class ProfilesEndpoint
     }
 
     // The estimate of a stored profile is the console's estimate of the same facts: for a golden that states no closed
-    // quarter, the stored profile and the golden's quarter give the golden's own answer, to the cent and step by step.
+    // quarter, the stored profile and the golden's quarter give the golden's own answer, to the cent and step by step. Only
+    // the profile's answer says what its movements add, here nothing.
     [Theory]
     [MemberData(nameof(Goldens))]
     public async Task AStoredProfilesEstimateIsTheEstimateOfTheSameInputFile(string golden)
@@ -263,6 +264,11 @@ public class ProfilesEndpoint
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var fromProfile = await response.Json();
         var fromFile = await (await client.Estimate(2025, input)).Json();
+        var noMovements = new JsonObject { ["actualsThrough"] = null, ["counted"] = 0, ["awaitingReview"] = 0, ["awaitingInvoice"] = 0 };
+        Assert.True(JsonNode.DeepEquals(noMovements, fromProfile["ledger"]));
+        Assert.Null(fromFile["ledger"]);
+        fromProfile.Remove("ledger");
+        fromFile.Remove("ledger");
         Assert.True(JsonNode.DeepEquals(fromFile, fromProfile), fromProfile.ToJsonString());
         Assert.Equal(RepoFiles.Golden(golden)["expected"]!["holdBackShare"]!.GetValue<string>(), fromProfile["holdBackShare"]!.GetValue<string>());
     }

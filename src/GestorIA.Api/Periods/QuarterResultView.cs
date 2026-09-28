@@ -1,5 +1,6 @@
 using GestorIA.Api.SetAside;
 using GestorIA.Engine;
+using GestorIA.Infrastructure.Transactions;
 
 namespace GestorIA.Api.Periods;
 
@@ -16,9 +17,10 @@ public sealed record QuarterResultView(
     DateOnly DueBy,
     Modelo130FilingView Filing,
     IReadOnlyList<CasillaView> Casillas,
-    IReadOnlyList<TraceStepView> Trace)
+    IReadOnlyList<TraceStepView> Trace,
+    LedgerView Ledger)
 {
-    public static QuarterResultView From(Modelo130Result result, int taxYear, string configHash) => new(
+    public static QuarterResultView From(Modelo130Result result, int taxYear, string configHash, LedgerEstimate ledger) => new(
         taxYear,
         configHash,
         result.Quarter,
@@ -27,5 +29,6 @@ public sealed record QuarterResultView(
         result.DueWindow.End,
         SetAsideEstimate.Filing(result.Filing),
         [.. result.Casillas.Select(kv => new CasillaView(kv.Key, SetAsideEstimate.Euros(kv.Value)))],
-        [.. result.Trace.Steps.Select(TraceStepView.From)]);
+        [.. ledger.Steps.Concat(result.Trace.Steps).Select(TraceStepView.From)],
+        LedgerView.From(ledger.Counts));
 }

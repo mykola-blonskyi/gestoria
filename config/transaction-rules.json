@@ -1,0 +1,90 @@
+[
+  {
+    "id": "tgss",
+    "class": "socialSecurity",
+    "direction": "debit",
+    "certain": false,
+    "patterns": ["TGSS", "SEGURIDAD SOCIAL", "CUOTA AUTONOMO ", "CUOTA AUTONOMOS ", "CUOTA AUTONOMA ", "CUOTA AUTONOMAS "],
+    "source": "SPEC-004 §3.2"
+  },
+  {
+    "id": "aeat",
+    "class": "aeatPayment",
+    "direction": "debit",
+    "certain": true,
+    "patterns": ["AEAT ", "AGENCIA TRIBUTARIA", "HACIENDA ", "MODELO 130", "MODELO 303", "MOD 130", "MOD 303"],
+    "source": "SPEC-004 §3.3"
+  },
+  {
+    "id": "aeat-credit",
+    "class": "aeatPayment",
+    "direction": "credit",
+    "certain": false,
+    "patterns": ["AEAT ", "AGENCIA TRIBUTARIA", "HACIENDA ", "MODELO 130", "MODELO 303", "MOD 130", "MOD 303"],
+    "source": "SPEC-004 §3.3"
+  },
+  {
+    "id": "nomina",
+    "class": "employmentIncome",
+    "direction": "credit",
+    "certain": false,
+    "patterns": ["NOMINA ", "NOMINAS ", "SALARIO ", "SALARIOS "],
+    "source": "SPEC-004 §3.4"
+  },
+  {
+    "id": "savings",
+    "class": "savingsIncome",
+    "direction": "credit",
+    "certain": false,
+    "patterns": ["INTERESES", "DIVIDEND", "CUPON"],
+    "source": "SPEC-004 §3.5"
+  },
+  {
+    "id": "vendors",
+    "class": "deductibleExpense",
+    "direction": "debit",
+    "certain": false,
+    "patterns": [
+      "GOOGLE",
+      "ADOBE",
+      "GITHUB",
+      "OPENAI",
+      "ANTHROPIC",
+      "AMAZON BUSINESS",
+      "JETBRAINS",
+      "HETZNER",
+      "DIGITALOCEAN",
+      "AMAZON WEB SERVICES",
+      "AWS EMEA",
+      "MICROSOFT",
+      "NOTION",
+      "FIGMA"
+    ],
+    "source": "SPEC-004 §3.7"
+  },
+  {
+    "id": "personal",
+    "class": "personal",
+    "direction": "debit",
+    "certain": true,
+    "patterns": [
+      "SUPERMERCADO",
+      "MERCADONA",
+      "CARREFOUR",
+      "LIDL",
+      "ALDI",
+      "DIA ",
+      "CONSUM",
+      "EROSKI",
+      "RESTAURANTE",
+      "CAFETERIA",
+      "BAR ",
+      "GIMNASIO",
+      "NETFLIX",
+      "SPOTIFY",
+      "ZARA",
+      "PRIMARK"
+    ],
+    "source": "SPEC-004 §3.9"
+  }
+]

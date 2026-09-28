@@ -296,5 +296,11 @@
       },
       "reference": "config calendar.modelo130, calendar.holidays, regions.VC.holidays; a last day that is a Saturday, a Sunday or a national or regional holiday moves to the next working day (Orden EHA/672/2007 art. 7 for Modelo 130; Ley 39/2015 art. 30.2, 30.5 and 30.6, supletoria under its DA 1ª.2.a and LGT art. 97.b); municipal holidays where the taxpayer lives are not applied, so the date shown can be early but never late"
     }
-  ]
+  ],
+  "ledger": {
+    "actualsThrough": null,
+    "counted": 0,
+    "awaitingReview": 0,
+    "awaitingInvoice": 0
+  }
 }

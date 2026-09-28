@@ -9,6 +9,7 @@ import g12QuarterNegative from "@tests/fixtures/g12-quarter-negative.json";
 import taxYearsFixture from "@tests/fixtures/tax-years.json";
 import { MESSAGES, renderInApp } from "@tests/render";
 
+import type { QuarterResult } from "@/data/periods";
 import { PeriodsPage } from "@/features/periods";
 import { LOCALES, type Locale } from "@/shared/constants/locales";
 import { formatDate, formatMoney, formatMonth, formatShare } from "@/shared/lib/format";
@@ -245,5 +246,45 @@ describe("PeriodsPage", () => {
 
     expect(await screen.findByRole("heading", { name: MESSAGES[locale].Periods.profile.missing })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: MESSAGES[locale].Periods.profile.enter })).toBeInTheDocument();
+  });
+
+  describe("the basis of a period", () => {
+    const basis = MESSAGES.en.Periods.basis;
+    const withLedger = (fixture: typeof g12Quarter | typeof g12AnnualTrueUp, ledger: Partial<QuarterResult["ledger"]>) => ({
+      status: 200,
+      body: { ...fixture, ledger: { ...fixture.ledger, ...ledger } },
+    });
+
+    it("says the quarter rests on the projection when no closed quarter's movements are reviewed", async () => {
+      stubApi();
+      renderPeriods();
+
+      expect(await screen.findByText(basis.projection)).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: basis.review })).not.toBeInTheDocument();
+    });
+
+    it("says through which quarter the actuals run, and what awaits review or an invoice", async () => {
+      stubApi({ quarter: withLedger(g12Quarter, { actualsThrough: "Q1", counted: 2, awaitingReview: 3, awaitingInvoice: 1 }) });
+      renderPeriods();
+
+      expect(
+        await screen.findByText("Based on actuals through Q1, 2 classified movements; the projection covers the rest of the year."),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(basis.projection)).not.toBeInTheDocument();
+      expect(screen.getByText(/^3 movements of the closed quarters await review;/)).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: basis.review })).toHaveAttribute("href", "/transactions");
+      expect(screen.getByText(/^1 expense awaits an invoice and is not counted/)).toBeInTheDocument();
+    });
+
+    it("says the year's actuals cover it all once they run through Q4", async () => {
+      stubApi({ annual: withLedger(g12AnnualTrueUp, { actualsThrough: "Q4", counted: 5 }) });
+      const user = renderPeriods();
+      await screen.findByRole("heading", { name: fill(MESSAGES.en.Periods.quarter.heading, { quarter: "Q1" }) });
+
+      await user.click(screen.getByRole("button", { name: MESSAGES.en.Periods.toggle.year }));
+
+      expect(await screen.findByText("Based on actuals through Q4, 5 classified movements, which cover the whole year.")).toBeInTheDocument();
+      expect(screen.queryByText(/the projection covers the rest of the year/)).not.toBeInTheDocument();
+    });
   });
 });

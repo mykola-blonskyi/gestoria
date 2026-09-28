@@ -43,6 +43,10 @@
     },
     "asOf": "Trimestre de la estimación",
     "basis": "Estimado a partir de tu perfil de {year}, sin trimestres cerrados registrados: la previsión cubre todo el año.",
+    "ledgerBasis": "Estimado para {year} con datos reales hasta {quarter}, {counted, plural, one {# movimiento clasificado} other {# movimientos clasificados}}{quarter, select, Q4 {, que cubren todo el año.} other {; la previsión cubre el resto del año.}}",
+    "awaitingReview": "{count, plural, one {# movimiento de los trimestres cerrados espera revisión; hasta que se clasifique, la previsión cubre su trimestre y los siguientes.} other {# movimientos de los trimestres cerrados esperan revisión; hasta que se clasifiquen, la previsión cubre sus trimestres y los siguientes.}}",
+    "review": "Revisarlos",
+    "awaitingInvoice": "{count, plural, one {# gasto espera una factura y no se cuenta} other {# gastos esperan una factura y no se cuentan}}: un gasto deducible necesita una factura vinculada, y GestorIA aún no puede guardar facturas.",
     "calculating": "Calculando…",
     "estimate": {
       "heading": "Estimación",
@@ -62,7 +66,7 @@
   },
   "Trace": {
     "heading": "Cómo se ha calculado",
-    "lead": "{count, plural, one {# paso} other {# pasos}} en el orden del motor, agrupados por sección. Los títulos, las fórmulas y las fuentes son los del motor.",
+    "lead": "{count, plural, one {# paso} other {# pasos}} en el orden en que se calcularon, agrupados por sección. Los títulos, las fórmulas y las fuentes son los de la API: primero los pasos que nombran los movimientos detrás de los datos reales, luego los del motor.",
     "section": "{name} ({count})",
     "inputs": "Datos",
     "formula": "Fórmula",
@@ -189,6 +193,30 @@
       "refused": "El extracto no se ha importado, no se ha guardado nada:",
       "tooLarge": "El archivo supera los 2 MB. Exporta un periodo más corto.",
       "other": "La API ha respondido con un error ({status})."
+    },
+    "review": {
+      "title": "Movimientos por revisar",
+      "heading": "{count, plural, =0 {Ningún movimiento por revisar} one {# movimiento por revisar} other {# movimientos por revisar}}",
+      "loading": "Cargando los movimientos por revisar…",
+      "empty": "Todos los movimientos importados tienen clase. Una nueva importación deja aquí los que ninguna regla tiene claros.",
+      "hint": "Las flechas, Inicio y Fin pasan de un movimiento a otro. En un movimiento, el número de un botón elige esa clase; Tab llega a los botones.",
+      "shortcut": "Tecla {key}",
+      "question": {
+        "in": "Entrada de dinero: ¿qué es?",
+        "out": "Salida de dinero: ¿qué es?"
+      },
+      "suggestion": "Una regla sugiere: {name}",
+      "classified": "Clasificado como {name}.",
+      "classes": {
+        "activityIncome": "Ingreso de mi actividad",
+        "deductibleExpense": "Gasto de mi actividad",
+        "socialSecurity": "Cuota a la TGSS (RETA)",
+        "aeatPayment": "Pago a la AEAT",
+        "employmentIncome": "Nómina de un empleo",
+        "savingsIncome": "Intereses o dividendos",
+        "ownTransfer": "Traspaso entre mis cuentas",
+        "personal": "Personal, fuera de la actividad"
+      }
     }
   },
   "Periods": {
@@ -214,7 +242,6 @@
       "dueADeducir": "Nada a ingresar. Se presenta igualmente del {from} al {by}, en el apartado A deducir: el resultado negativo se deduce en los siguientes trimestres del año.",
       "dueNegativa": "Nada a ingresar. Se presenta igualmente del {from} al {by}, como declaración negativa.",
       "localHolidays": "No se aplican los festivos locales, así que la fecha puede ser anterior, nunca posterior.",
-      "basis": "Calculado a partir de la previsión del año: todavía no hay ningún trimestre cerrado registrado para este perfil (el #73 lo cambiará).",
       "casillasHeading": "Casillas del Modelo 130"
     },
     "casillas": {
@@ -245,6 +272,13 @@
       "liabilityOnActivity": "Cuota que añade la actividad a la declaración",
       "marginalRate": "Tipo marginal sobre los rendimientos del trabajo",
       "reduccionTrabajoLost": "Reducción por trabajo perdida por la actividad"
+    },
+    "basis": {
+      "projection": "Calculado a partir de la previsión del año: ningún trimestre cerrado hasta este tiene aún sus movimientos importados y revisados.",
+      "actuals": "Calculado con datos reales hasta {quarter}, {counted, plural, one {# movimiento clasificado} other {# movimientos clasificados}}{quarter, select, Q4 {, que cubren todo el año.} other {; la previsión cubre el resto del año.}}",
+      "awaitingReview": "{count, plural, one {# movimiento de los trimestres cerrados espera revisión; hasta que se clasifique, la previsión cubre su trimestre y los siguientes.} other {# movimientos de los trimestres cerrados esperan revisión; hasta que se clasifiquen, la previsión cubre sus trimestres y los siguientes.}}",
+      "review": "Revisarlos",
+      "awaitingInvoice": "{count, plural, one {# gasto espera una factura y no se cuenta} other {# gastos esperan una factura y no se cuentan}}: un gasto deducible necesita una factura vinculada, y GestorIA aún no puede guardar facturas."
     }
   },
   "Settings": {
@@ -274,7 +308,7 @@
       "ingresosFromFormerEmployer": "Ingresos del empleador del año anterior",
       "retenciones": "Clientes: solo empresas de la UE y clientes de EE. UU., que no practican retención ni pagan IVA.",
       "projection": "La actividad del ejercicio",
-      "projectionHint": "Lo que se espera facturar y gastar en los meses de alta del ejercicio. Aún no hay trimestres cerrados registrados, así que cubre todo el año.",
+      "projectionHint": "Lo que se espera facturar y gastar en los meses de alta del ejercicio, para todo el año. Cuando los movimientos de un trimestre cerrado están importados y revisados, sus datos reales sustituyen la parte de sus meses.",
       "projectionIngresos": "Ingresos previstos",
       "projectionGastos": "Gastos previstos, sin la cuota RETA",
       "baseCotizacion": "Base de cotización mensual que pagas",

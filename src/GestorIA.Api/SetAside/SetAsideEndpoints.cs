@@ -45,7 +45,7 @@ public static class SetAsideEndpoints
         {
             var config = loader.Load(year);
             var input = SetAsideInputFile.Parse(body, config);
-            return TypedResults.Ok(SetAsideEstimate.From(SetAsideEstimator.Estimate(input), config.TaxYear));
+            return TypedResults.Ok(SetAsideEstimate.From(SetAsideEstimator.Estimate(input), config.TaxYear, ledger: null));
         }
         catch (InvalidInputFileException e)
         {

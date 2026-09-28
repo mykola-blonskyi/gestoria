@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using GestorIA.Api.SetAside;
+using GestorIA.Domain.Models;
 using GestorIA.Infrastructure.Transactions;
 
 namespace GestorIA.Api.Profiles;
@@ -33,7 +34,8 @@ public sealed record ProfileExport(string Format, int FormatVersion, string Clas
 public sealed record ExportedEntities(IReadOnlyList<ProfileView> Profiles, IReadOnlyList<ExportedBankTransaction> BankTransactions);
 
 // A stored statement line as the list answers it (TransactionView), plus what a restore needs to store it again exactly: its
-// place in the day's order and the key that keeps a later import of the same statement from storing it twice.
+// place in the day's order, the key that keeps a later import of the same statement from storing it twice, and the class the
+// user gave it (#73), null until they decide. What the rules make of a line is computed on read, so it is not exported.
 public sealed record ExportedBankTransaction(
     Guid Id,
     DateOnly BookingDate,
@@ -43,7 +45,9 @@ public sealed record ExportedBankTransaction(
     [property: RegularExpression(Amounts.Cents)] string? Balance,
     int ImportSequence,
     int LineNumber,
-    string LineKey)
+    string LineKey,
+    // Optional within version 1: a file exported before #73 has none, and its movements restore undecided (SPEC-009 §2.1).
+    TransactionClass? Class = null)
 {
     public static ExportedBankTransaction From(BankTransactionRow row)
     {
@@ -57,7 +61,8 @@ public sealed record ExportedBankTransaction(
             line.Balance is { } balance ? Euros(balance.Amount) : null,
             row.ImportSequence,
             row.LineNumber,
-            row.LineKey);
+            row.LineKey,
+            row.Class);
     }
 
     private static string Euros(decimal amount) => amount.ToString("0.00", CultureInfo.InvariantCulture);

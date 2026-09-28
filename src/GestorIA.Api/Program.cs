@@ -7,6 +7,7 @@ using GestorIA.Api.TaxYears;
 using GestorIA.Api.Transactions;
 using GestorIA.Infrastructure.Persistence;
 using GestorIA.Infrastructure.TaxYears;
+using GestorIA.Infrastructure.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -41,7 +42,11 @@ builder.Services.AddOpenApi("v1", options =>
 var taxYears = builder.Configuration["TaxYears:Directory"] ?? Path.Combine(AppContext.BaseDirectory, "config", "tax-years");
 builder.Services.AddSingleton(new TaxYearConfigLoader(taxYears));
 
-// "Today" for the payments calendar's ICS export (#70): the system clock, so tests can substitute a fixed one.
+// Read and checked here, so a malformed rules file stops the API as it starts, naming the rule.
+builder.Services.AddSingleton(TransactionRules.Load(Path.Combine(AppContext.BaseDirectory, "config", "transaction-rules.json")));
+
+// "Today": which quarters are closed (#73) and which dates the ICS export still holds (#70). The system clock, so tests can
+// substitute a fixed one.
 builder.Services.AddSingleton(TimeProvider.System);
 
 // PostgreSQL (ADR-0006), started locally by compose.yaml (ADR-0010). The connection string holds a password, so it comes from

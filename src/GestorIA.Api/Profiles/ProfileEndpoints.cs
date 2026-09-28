@@ -6,6 +6,7 @@ using GestorIA.Infrastructure.Persistence;
 using GestorIA.Infrastructure.Profiles;
 using GestorIA.Infrastructure.SetAside;
 using GestorIA.Infrastructure.TaxYears;
+using GestorIA.Infrastructure.Transactions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
@@ -79,7 +80,7 @@ public static class ProfileEndpoints
 
         profiles.MapGet("/{id:guid}/set-aside/estimate", Estimate)
             .WithName("estimateSetAsideForProfile")
-            .WithSummary("Runs the set-aside estimator on a stored profile for a quarter of its tax year, with no closed quarter stated.")
+            .WithSummary("Runs the set-aside estimator on a stored profile for a quarter of its tax year, its classified movements giving the actuals of the closed quarters.")
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
             .AddOpenApiOperationTransformer((operation, context, _) =>
@@ -279,7 +280,7 @@ public static class ProfileEndpoints
     }
 
     private static async Task<Results<Ok<SetAsideEstimate>, ValidationProblem, ProblemHttpResult>> Estimate(
-        Guid id, string? asOf, GestoriaDbContext db, TaxYearConfigLoader loader, CancellationToken cancellationToken)
+        Guid id, string? asOf, GestoriaDbContext db, TaxYearConfigLoader loader, TransactionRules rules, TimeProvider time, CancellationToken cancellationToken)
     {
         if (QuarterParameter.Parse(asOf) is not { } quarter)
         {
@@ -291,11 +292,11 @@ public static class ProfileEndpoints
             return Problems.NoProfile(id);
         }
 
-        var profile = row.ToProfile();
         try
         {
-            var config = loader.Load(profile.TaxYear);
-            return TypedResults.Ok(SetAsideEstimate.From(SetAsideEstimator.Estimate(profile.SetAsideInput(config, quarter)), config.TaxYear));
+            var config = loader.Load(row.TaxYear);
+            var ledger = await db.SetAsideInputAsync(rules, row, config, quarter, MadridDay.Of(time.GetUtcNow()), cancellationToken);
+            return TypedResults.Ok(SetAsideEstimate.From(SetAsideEstimator.Estimate(ledger.Input), config.TaxYear, ledger));
         }
         catch (ConfigNotFoundException e)
         {
@@ -307,18 +308,18 @@ public static class ProfileEndpoints
         }
     }
 
-    private static async Task<Results<Ok<PaymentsCalendarView>, ProblemHttpResult>> Calendar(Guid id, GestoriaDbContext db, TaxYearConfigLoader loader, CancellationToken cancellationToken)
+    private static async Task<Results<Ok<PaymentsCalendarView>, ProblemHttpResult>> Calendar(
+        Guid id, GestoriaDbContext db, TaxYearConfigLoader loader, TransactionRules rules, TimeProvider clock, CancellationToken cancellationToken)
     {
         if (await db.Profiles.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken) is not { } row)
         {
             return Problems.NoProfile(id);
         }
 
-        var profile = row.ToProfile();
         try
         {
-            var config = loader.Load(profile.TaxYear);
-            var obligations = PaymentCalendar.Build(profile.SetAsideInput(config, Quarter.Q4));
+            var config = loader.Load(row.TaxYear);
+            var obligations = await Obligations(db, rules, row, config, MadridDay.Of(clock.GetUtcNow()), cancellationToken);
             return TypedResults.Ok(PaymentsCalendarView.From(obligations, config));
         }
         catch (ConfigNotFoundException e)
@@ -332,7 +333,7 @@ public static class ProfileEndpoints
     }
 
     private static async Task<Results<ContentHttpResult, ValidationProblem, ProblemHttpResult>> CalendarIcs(
-        Guid id, string? amounts, string? lang, GestoriaDbContext db, TaxYearConfigLoader loader, TimeProvider clock, CancellationToken cancellationToken)
+        Guid id, string? amounts, string? lang, GestoriaDbContext db, TaxYearConfigLoader loader, TransactionRules rules, TimeProvider clock, CancellationToken cancellationToken)
     {
         var errors = new Dictionary<string, string[]>();
 
@@ -358,14 +359,13 @@ public static class ProfileEndpoints
             return Problems.NoProfile(id);
         }
 
-        var profile = row.ToProfile();
         try
         {
-            var config = loader.Load(profile.TaxYear);
-            var obligations = PaymentCalendar.Build(profile.SetAsideInput(config, Quarter.Q4));
+            var config = loader.Load(row.TaxYear);
+            var today = MadridDay.Of(clock.GetUtcNow());
+            var obligations = await Obligations(db, rules, row, config, today, cancellationToken);
             // The export holds what is still upcoming, not the profile's whole tax year (#70 AC): a calendar app is for what
             // comes next, and past obligations already show on the page.
-            var today = MadridDay.Of(clock.GetUtcNow());
             var upcoming = obligations.Where(o => o.DueWindow.End >= today).ToList();
             if (upcoming.Count == 0)
             {
@@ -383,6 +383,13 @@ public static class ProfileEndpoints
             return Problems.Refused(EngineRefusal.Reason(e));
         }
     }
+
+    // The whole year's obligations, at asOf Q4 so every closed quarter can give its actuals (#73). A quarter's Modelo 130 is
+    // the one POST /calculations/quarter answers for it: the actuals up to that quarter are the same run of closed, reviewed
+    // quarters whichever asOf reads them, and a quarter's payment depends only on the figures up to it.
+    private static async Task<IReadOnlyList<PaymentObligation>> Obligations(
+        GestoriaDbContext db, TransactionRules rules, ProfileRow row, TaxYearConfig config, DateOnly today, CancellationToken cancellationToken) =>
+        PaymentCalendar.Build((await db.SetAsideInputAsync(rules, row, config, Quarter.Q4, today, cancellationToken)).Input);
 
     private static ProfileView View(ProfileRow row) => ProfileView.From(row.Id, row.ToProfile());
 }

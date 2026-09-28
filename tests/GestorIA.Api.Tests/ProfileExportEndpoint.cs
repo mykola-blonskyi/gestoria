@@ -44,13 +44,16 @@ public class ProfileExportEndpoint
         Assert.True(DateTimeOffset.UtcNow - DateTimeOffset.Parse(export["exportedAt"]!.GetValue<string>(), CultureInfo.InvariantCulture) < TimeSpan.FromMinutes(1));
         Assert.True(JsonNode.DeepEquals(new JsonArray(profile.DeepClone()), export["entities"]!["profiles"]), export.ToJsonString());
 
-        // Each movement is the list's answer, in the list's order, plus what a restore needs to store it again exactly.
+        // Each movement is the list's answer, in the list's order, plus what a restore needs to store it again exactly, the
+        // user's class among it: the seed classified the review queue's movements, and only those.
         var exported = export["entities"]!["bankTransactions"]!.AsArray();
         Assert.Equal(movements.Count, exported.Count);
+        Assert.Equal("activityIncome", exported[0]!["class"]!.GetValue<string>());
+        Assert.Equal(13, exported.Count(stored => stored!["class"] is not null));
         foreach (var (listed, stored) in movements.Zip(exported))
         {
             var withoutRestoreFields = stored!.DeepClone().AsObject();
-            Assert.True(withoutRestoreFields.Remove("importSequence") && withoutRestoreFields.Remove("lineNumber") && withoutRestoreFields.Remove("lineKey"));
+            Assert.True(withoutRestoreFields.Remove("importSequence") && withoutRestoreFields.Remove("lineNumber") && withoutRestoreFields.Remove("lineKey") && withoutRestoreFields.Remove("class"));
             Assert.True(JsonNode.DeepEquals(listed, withoutRestoreFields), stored.ToJsonString());
             Assert.Matches("^[0-9a-f]{64}$", stored["lineKey"]!.GetValue<string>());
         }

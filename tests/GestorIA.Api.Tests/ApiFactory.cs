@@ -78,6 +78,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         client.DefaultRequestHeaders.Add(ApiKey.Header, Key);
     }
 
+
     // A client with no key, for the requests the key must not be needed for, or must be refused without.
     internal HttpClient CreateClientWithoutKey()
     {

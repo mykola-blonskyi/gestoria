@@ -14,6 +14,7 @@ import { useTransactions } from "../hooks/use-transactions";
 import { Failure } from "./failure";
 import { ImportForm } from "./import-form";
 import { KINDS, kindOf, type Kind } from "./kind";
+import { ReviewQueue } from "./review-queue";
 import { TransactionList } from "./transaction-list";
 
 const QUARTERS = ["Q1", "Q2", "Q3", "Q4"] as const satisfies readonly Quarter[];
@@ -42,6 +43,7 @@ export function TransactionsPage() {
         ) : (
           <>
             <ImportForm profileId={profile.data.id} />
+            <ReviewQueue profileId={profile.data.id} />
             <Movements profile={profile.data} />
           </>
         )}

@@ -217,6 +217,86 @@
         ]
       }
     },
+    "/api/v1/transactions/{id}/classify": {
+      "post": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Stores the user's class for a movement. A later call replaces an earlier one.",
+        "operationId": "classifyTransaction",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransactionClassification"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/profiles": {
       "get": {
         "tags": [
@@ -729,7 +809,7 @@
         "tags": [
           "profiles"
         ],
-        "summary": "Runs the set-aside estimator on a stored profile for a quarter of its tax year, with no closed quarter stated.",
+        "summary": "Runs the set-aside estimator on a stored profile for a quarter of its tax year, its classified movements giving the actuals of the closed quarters.",
         "operationId": "estimateSetAsideForProfile",
         "parameters": [
           {
@@ -1228,6 +1308,76 @@
         ]
       }
     },
+    "/api/v1/profiles/{id}/review-queue": {
+      "get": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "The movements of the profile's tax year waiting for the user's class, unclear or with a rule's suggestion, in the transactions list's order.",
+        "operationId": "getReviewQueue",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewItem"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/profiles/{id}/calculations/quarter": {
       "post": {
         "tags": [
@@ -1417,7 +1567,8 @@
           "dueBy",
           "payableIn",
           "trace",
-          "notices"
+          "notices",
+          "ledger"
         ],
         "type": "object",
         "properties": {
@@ -1462,6 +1613,9 @@
             "items": {
               "$ref": "#/components/schemas/NoticeView"
             }
+          },
+          "ledger": {
+            "$ref": "#/components/schemas/LedgerView"
           }
         }
       },
@@ -1606,6 +1760,16 @@
           },
           "lineKey": {
             "type": "string"
+          },
+          "class": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TransactionClass"
+              }
+            ]
           }
         }
       },
@@ -1672,6 +1836,39 @@
                 "type": "string"
               }
             }
+          }
+        }
+      },
+      "LedgerView": {
+        "required": [
+          "actualsThrough",
+          "counted",
+          "awaitingReview",
+          "awaitingInvoice"
+        ],
+        "type": "object",
+        "properties": {
+          "actualsThrough": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Quarter"
+              }
+            ]
+          },
+          "counted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "awaitingReview": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "awaitingInvoice": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -2257,7 +2454,8 @@
           "dueBy",
           "filing",
           "casillas",
-          "trace"
+          "trace",
+          "ledger"
         ],
         "type": "object",
         "properties": {
@@ -2296,6 +2494,9 @@
             "items": {
               "$ref": "#/components/schemas/TraceStepView"
             }
+          },
+          "ledger": {
+            "$ref": "#/components/schemas/LedgerView"
           }
         }
       },
@@ -2383,6 +2584,63 @@
           "foreignPayersOnly"
         ]
       },
+      "ReviewItem": {
+        "required": [
+          "id",
+          "bookingDate",
+          "valueDate",
+          "description",
+          "amount",
+          "suggestion"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bookingDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "valueDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "pattern": "^-?\\d+\\.\\d{2}$",
+            "type": "string"
+          },
+          "suggestion": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReviewSuggestion"
+              }
+            ]
+          }
+        }
+      },
+      "ReviewSuggestion": {
+        "required": [
+          "class",
+          "ruleId"
+        ],
+        "type": "object",
+        "properties": {
+          "class": {
+            "$ref": "#/components/schemas/TransactionClass"
+          },
+          "ruleId": {
+            "type": "string"
+          }
+        }
+      },
       "SetAsideEstimate": {
         "required": [
           "taxYear",
@@ -2396,7 +2654,8 @@
           "annualTrueUpDueBy",
           "ivaToSetAside",
           "trace",
-          "notices"
+          "notices",
+          "ledger"
         ],
         "type": "object",
         "properties": {
@@ -2447,6 +2706,16 @@
             "items": {
               "$ref": "#/components/schemas/NoticeView"
             }
+          },
+          "ledger": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LedgerView"
+              }
+            ]
           }
         }
       },
@@ -2605,6 +2874,29 @@
           "date"
         ]
       },
+      "TransactionClass": {
+        "enum": [
+          "activityIncome",
+          "deductibleExpense",
+          "socialSecurity",
+          "aeatPayment",
+          "employmentIncome",
+          "savingsIncome",
+          "ownTransfer",
+          "personal"
+        ]
+      },
+      "TransactionClassification": {
+        "required": [
+          "class"
+        ],
+        "type": "object",
+        "properties": {
+          "class": {
+            "$ref": "#/components/schemas/TransactionClass"
+          }
+        }
+      },
       "TransactionView": {
         "required": [
           "id",
@@ -2672,10 +2964,10 @@
       "name": "set-aside"
     },
     {
-      "name": "profiles"
+      "name": "transactions"
     },
     {
-      "name": "transactions"
+      "name": "profiles"
     },
     {
       "name": "periods"
