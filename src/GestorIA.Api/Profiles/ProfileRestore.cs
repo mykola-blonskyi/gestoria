@@ -30,10 +30,6 @@ public static class ProfileRestore
 
     private static readonly Regex Signed = new(ProfileAmounts.Signed, RegexOptions.CultureInvariant);
 
-    // The characters string.ReplaceLineEndings treats as a line break, and \v. The statement parser splits its lines on them,
-    // so no stored description holds one.
-    private static readonly char[] LineBreaks = ['\r', '\n', '\u0085', '\u2028', '\u2029', '\f', '\v'];
-
     // A member written twice would otherwise be read as one of its two values, and the other dropped.
     private static readonly JsonDocumentOptions Document = new() { AllowDuplicateProperties = false };
 
@@ -47,6 +43,23 @@ public static class ProfileRestore
         && parsed.MediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase);
 
     public static Restored Read(byte[] body, JsonSerializerOptions apiOptions, TaxYearConfigLoader loader)
+    {
+        ProfileExport export;
+        try
+        {
+            export = Parse(body, apiOptions);
+        }
+        catch (InvalidOperationException)
+        {
+            // What System.Text.Json throws when a string it reads holds half of a character, such as a lone "\ud800": the
+            // escape is valid JSON, the text it stands for is not. Any string of the file may hold one, the format included.
+            throw Refused("$", "The file holds text that is not whole Unicode characters.");
+        }
+
+        return Check(export, loader);
+    }
+
+    private static ProfileExport Parse(byte[] body, JsonSerializerOptions apiOptions)
     {
         var options = Strict.GetValue(apiOptions, api => new JsonSerializerOptions(api)
         {
@@ -122,7 +135,7 @@ public static class ProfileRestore
             throw Refused("$", e.Message);
         }
 
-        return Check(export, loader);
+        return export;
     }
 
     private static Restored Check(ProfileExport export, TaxYearConfigLoader loader)
@@ -134,7 +147,18 @@ public static class ProfileRestore
         }
 
         ProfileRow? profile = null;
-        if (export.Entities.Profiles is [var view])
+        // A Guid.Empty id would be replaced by one EF Core generates, so what is stored would no longer be what the file holds,
+        // and restoring the same file again would find other data.
+        const string EmptyId = "is 00000000-0000-0000-0000-000000000000, which no stored row has";
+        if (export.Entities.Profiles is [null])
+        {
+            errors["$.entities.profiles[0]"] = ["$.entities.profiles[0] is null; it must be the profile."];
+        }
+        else if (export.Entities.Profiles is [{ Id: var empty }] && empty == Guid.Empty)
+        {
+            errors["$.entities.profiles[0].id"] = [$"$.entities.profiles[0].id {EmptyId}."];
+        }
+        else if (export.Entities.Profiles is [var view])
         {
             try
             {
@@ -155,8 +179,8 @@ public static class ProfileRestore
         }
 
         var movements = export.Entities.BankTransactions;
-        var refused = new SortedDictionary<int, List<(string Field, string Reason)>>();
-        void Refuse(int index, string field, string reason)
+        var refused = new SortedDictionary<int, List<(string? Field, string Reason)>>();
+        void Refuse(int index, string? field, string reason)
         {
             if (!refused.TryGetValue(index, out var reasons))
             {
@@ -171,7 +195,17 @@ public static class ProfileRestore
         var places = new Dictionary<(int ImportSequence, int LineNumber), int>();
         for (var i = 0; i < movements.Count; i++)
         {
-            var movement = movements[i];
+            if (movements[i] is not { } movement)
+            {
+                Refuse(i, null, "is null; it must be a movement");
+                continue;
+            }
+
+            if (movement.Id == Guid.Empty)
+            {
+                Refuse(i, "id", EmptyId);
+            }
+
             var amount = Euros(movement.Amount);
             if (amount is null)
             {
@@ -184,10 +218,10 @@ public static class ProfileRestore
                 Refuse(i, "balance", "is not an amount in euros with at most two decimals, like \"1987.50\"");
             }
 
-            var plainDescription = movement.Description.IndexOfAny(LineBreaks) < 0 && movement.Description == movement.Description.Trim();
+            var plainDescription = StatementDescription.IsValid(movement.Description);
             if (!plainDescription)
             {
-                Refuse(i, "description", "holds a line break or a leading or trailing space, which no statement line has");
+                Refuse(i, "description", $"must be text that {StatementDescription.Rule}, as every imported statement line is");
             }
 
             if (movement.LineNumber < 1)
@@ -252,7 +286,7 @@ public static class ProfileRestore
         {
             foreach (var field in reasons.GroupBy(reason => reason.Field, reason => reason.Reason))
             {
-                var path = Invariant($"{Movements}[{index}].{field.Key}");
+                var path = field.Key is null ? Invariant($"{Movements}[{index}]") : Invariant($"{Movements}[{index}].{field.Key}");
                 errors[path] = [.. field.Select(reason => $"{path} {reason}.")];
             }
         }

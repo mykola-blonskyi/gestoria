@@ -2,6 +2,10 @@ using System.Diagnostics;
 using System.Net;
 using System.Text.Json.Nodes;
 using GestorIA.Api.Profiles;
+using GestorIA.Domain.Interfaces;
+using GestorIA.Domain.Models;
+using GestorIA.Domain.ValueObjects;
+using GestorIA.Infrastructure.Transactions;
 using Npgsql;
 
 namespace GestorIA.Api.Tests;
@@ -184,6 +188,12 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
         { "a repeated id", "$.entities.bankTransactions[1].id" },
         { "a repeated line of an import", "$.entities.bankTransactions[1].lineNumber" },
         { "a movement stored twice", "$.entities.bankTransactions[18].lineKey" },
+        { "a null profile", "$.entities.profiles[0]" },
+        { "a profile id of zeros", "$.entities.profiles[0].id" },
+        { "a null movement", "$.entities.bankTransactions[0]" },
+        { "a movement id of zeros", "$.entities.bankTransactions[0].id" },
+        { "a NUL in a description, with the key it gives", "$.entities.bankTransactions[0].description" },
+        { "half a character in a description", "$" },
         { "a line key with one digit changed", "$.entities.bankTransactions[0].lineKey" },
     };
 
@@ -224,13 +234,74 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
                 twin["lineNumber"] = movements.Max(movement => movement!["lineNumber"]!.GetValue<int>()) + 1;
                 movements.Add(twin);
                 break;
+            case "a null profile": file["entities"]!["profiles"]![0] = null; break;
+            case "a profile id of zeros": file["entities"]!["profiles"]![0]!["id"] = Guid.Empty.ToString(); break;
+            case "a null movement": movements[0] = null; break;
+            case "a movement id of zeros": first["id"] = Guid.Empty.ToString(); break;
+            case "a NUL in a description, with the key it gives":
+                first["description"] = first["description"]!.GetValue<string>() + "\0X";
+                first["lineKey"] = KeyOf(first);
+                break;
+            case "half a character in a description": first["description"] = HalfACharacter; break;
             case "a line key with one digit changed":
                 var key = first["lineKey"]!.GetValue<string>();
                 first["lineKey"] = (key[0] == '0' ? "1" : "0") + key[1..];
                 break;
         }
 
-        await AssertRefused(file.ToJsonString(), path);
+        await AssertRefused(WithHalfACharacter(file.ToJsonString()), path);
+    }
+
+    // Whatever a file holds, a restore refuses it with nothing written or stores it whole; a 500 on any of these fails here rather than
+    // waiting for someone to craft the file. Every node of a real export, down to each field of a movement, is given each
+    // value of the wrong kind, and each member of an object is also left out.
+    [Fact]
+    public async Task NoFileIsAnsweredWithA500OrWrittenInPart()
+    {
+        var export = JsonNode.Parse(deleted.Export)!.AsObject();
+        var movements = export["entities"]!["bankTransactions"]!.AsArray();
+        while (movements.Count > 2)
+        {
+            movements.RemoveAt(movements.Count - 1);
+        }
+
+        JsonNode?[] wrong = [null, 0, -1, 2147483648, 1.5, "", "x", " ", "\0", HalfACharacter, true, new JsonArray(), new JsonObject(), new JsonArray(null, 1, "x")];
+        var bodies = new List<(string What, string Body)>();
+        foreach (var (path, node) in Nodes(export, "$"))
+        {
+            foreach (var value in wrong)
+            {
+                bodies.Add(($"{path} = {value?.ToJsonString() ?? "null"}", WithHalfACharacter(Replace(export, path, value?.DeepClone()))));
+            }
+
+            if (node?.Parent is JsonObject)
+            {
+                bodies.Add(($"{path} left out", Replace(export, path, null, remove: true)));
+            }
+        }
+
+        bodies.Add(("a member given twice", deleted.Export.Replace("\"format\":", "\"format\":\"gestoria.export\",\"format\":", StringComparison.Ordinal)));
+        bodies.Add(("a union without its kind", deleted.Export.Replace("\"kind\":", "\"other\":", StringComparison.Ordinal)));
+
+        var failures = new List<string>();
+        var client = deleted.Api.CreateClient();
+        foreach (var (what, body) in bodies)
+        {
+            var status = (int)(await client.Restore(body)).StatusCode;
+            var stored = JsonNode.Parse(await client.GetStringAsync("/api/v1/profiles"))!.AsArray();
+            if (status is >= 200 and < 300)
+            {
+                // Still a file the installation can store, such as one whose balance is left out: stored whole, then emptied.
+                (await client.DeleteAsync($"/api/v1/profiles/{stored.Single()!["id"]!.GetValue<string>()}")).EnsureSuccessStatusCode();
+            }
+            else if (status is < 400 or >= 500 || stored.Count > 0)
+            {
+                failures.Add($"{what}: {status}, {stored.Count} profile(s) stored");
+            }
+        }
+
+        Assert.Empty(failures);
+        await AssertEmpty();
     }
 
     // A key moved to another movement is a key that no longer fits either.
@@ -337,6 +408,73 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
 
         await AssertEmpty();
         return errors;
+    }
+
+    // System.Text.Json writes a lone surrogate as U+FFFD, so the escape a crafted file can hold is put into the text instead.
+    private const string HalfACharacter = "HALF-A-CHARACTER";
+
+    private static string WithHalfACharacter(string body) => body.Replace(HalfACharacter, "\\ud800", StringComparison.Ordinal);
+
+    // Every node under root with its JSON path, the root itself left out.
+    private static IEnumerable<(string Path, JsonNode? Node)> Nodes(JsonNode root, string path)
+    {
+        var children = root switch
+        {
+            JsonObject members => members.Select(member => ($"{path}.{member.Key}", member.Value)),
+            JsonArray items => items.Select((item, index) => ($"{path}[{index}]", item)),
+            _ => [],
+        };
+        foreach (var (childPath, child) in children.ToList())
+        {
+            yield return (childPath, child);
+            if (child is not null)
+            {
+                foreach (var descendant in Nodes(child, childPath))
+                {
+                    yield return descendant;
+                }
+            }
+        }
+    }
+
+    // A copy of root with the node at path replaced by value, or left out.
+    private static string Replace(JsonObject root, string path, JsonNode? value, bool remove = false)
+    {
+        var copy = root.DeepClone();
+        var last = path[(path.LastIndexOfAny(['.', '[']) + 1)..].TrimEnd(']');
+        switch (ParentOf(copy, path))
+        {
+            case JsonObject members when remove:
+                members.Remove(last);
+                break;
+            case JsonObject members:
+                members[last] = value;
+                break;
+            case JsonArray items:
+                items[int.Parse(last, System.Globalization.CultureInfo.InvariantCulture)] = value;
+                break;
+        }
+
+        return copy.ToJsonString();
+    }
+
+    // Looked up by path: a null node cannot say whose child it is.
+    private static JsonNode ParentOf(JsonNode root, string path)
+    {
+        var parentPath = path[..path.LastIndexOfAny(['.', '['])];
+        return parentPath == "$" ? root : Nodes(root, "$").Single(node => node.Path == parentPath).Node!;
+    }
+
+    // The key an import would give a movement that is the only one of its kind in its file.
+    private static string KeyOf(JsonNode movement)
+    {
+        var line = new BankTransaction(
+            DateOnly.Parse(movement["bookingDate"]!.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture),
+            DateOnly.Parse(movement["valueDate"]!.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture),
+            movement["description"]!.GetValue<string>(),
+            new Money(decimal.Parse(movement["amount"]!.GetValue<string>(), System.Globalization.CultureInfo.InvariantCulture)),
+            null);
+        return LineKeys.Of([new StatementLine(1, line)])[0].Key;
     }
 
     private static async Task<int> Execute(NpgsqlConnection connection, string sql)
