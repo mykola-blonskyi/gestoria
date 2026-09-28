@@ -80,7 +80,7 @@ Versioned (`/api/v1`), JSON, OpenAPI 3.1 generated from code, problem+json error
     "profiles": [ { "id": "…", "taxYear": 2025, "region": "VC", "employment": { … }, "activity": { … }, "projection": { … } } ],
     "bankTransactions": [
       { "id": "…", "bookingDate": "2025-01-02", "valueDate": "2025-01-02", "description": "…", "amount": "-12.50", "balance": "1987.50",
-        "importSequence": 1, "lineNumber": 7, "lineKey": "<64 hex digits>" }
+        "importSequence": 1, "lineNumber": 7, "lineKey": "<64 hex digits>", "class": "personal" }
     ]
   }
 }
@@ -92,7 +92,7 @@ Versioned (`/api/v1`), JSON, OpenAPI 3.1 generated from code, problem+json error
 - `exportedAt` is the moment of the export, ISO-8601 with its offset, in UTC. The file name the API gives it (`Content-Disposition`, `ProfileExport.FileName`, tested at fixed instants either side of midnight in Madrid) and the web app's download both carry the day of that moment in Madrid (`Europe/Madrid`; ADR-0016's regions are on peninsular time).
 - `entities` has one member per table of the database, named after it (`Profiles` is `profiles`, `BankTransactions` is `bankTransactions`), each the list of that table's rows that belong to the profile. `ProfileExportEndpoint.EveryTableOfTheModelIsExportedWithAllItsRows` reads the tables from the EF Core model and fails when a table has no member or a member has fewer rows than the table, so a table added later cannot be left out of the export unnoticed.
   - `profiles` holds the one `ProfileView` (§1.1), with its `id`.
-  - `bankTransactions` (#72) holds the profile's statement lines in the list's order (booking date, then `importSequence`, then `lineNumber`), each the `TransactionView` of `GET /transactions` plus what a restore needs to store it again exactly: `importSequence` and `lineNumber`, which order a day's lines, and `lineKey`, the SHA-256 that keeps a later import of the same statement from storing a line twice (§1.1). With the key restored, importing the statement again after a restore adds nothing.
+  - `bankTransactions` (#72) holds the profile's statement lines in the list's order (booking date, then `importSequence`, then `lineNumber`), each the `TransactionView` of `GET /transactions` plus what a restore needs to store it again exactly: `importSequence` and `lineNumber`, which order a day's lines, and `lineKey`, the SHA-256 that keeps a later import of the same statement from storing a line twice (§1.1). With the key restored, importing the statement again after a restore adds nothing. `class` (#73) is the class the user gave the line, or `null` while they have not decided; what the rules make of a line is computed on every read, so it is not in the file.
   - Money stays a two-decimal string and dates ISO-8601, as everywhere in the API.
   - **A known kind missing from a version 1 file reads as zero rows.** A file exported before #72 has no `bankTransactions` and is still a valid version 1 export: its profile had no stored movements. What a restore refuses is a kind, a field or a version it does not know, never a known kind that is absent.
 - The export holds only what the user entered or uploaded, plus the ids, order and line keys the API gave it, and nothing computed: estimates and traces are recomputed from it.

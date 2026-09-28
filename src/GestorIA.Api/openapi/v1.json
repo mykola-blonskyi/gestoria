@@ -1490,7 +1490,8 @@
           "balance",
           "importSequence",
           "lineNumber",
-          "lineKey"
+          "lineKey",
+          "class"
         ],
         "type": "object",
         "properties": {
@@ -1530,6 +1531,16 @@
           },
           "lineKey": {
             "type": "string"
+          },
+          "class": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TransactionClass"
+              }
+            ]
           }
         }
       },
