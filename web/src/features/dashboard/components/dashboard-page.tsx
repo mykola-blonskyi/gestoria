@@ -16,6 +16,7 @@ import { useSetAsideEstimate } from "../hooks/use-set-aside-estimate";
 import { EstimateView } from "./estimate-view";
 
 const SETTINGS = "/settings";
+const TRANSACTIONS = "/transactions";
 
 export function DashboardPage() {
   const t = useTranslations("Dashboard");
@@ -49,6 +50,7 @@ function Estimate({ profile }: { profile: Profile }) {
   const t = useTranslations("Dashboard");
   const [asOf, setAsOf] = useState<Quarter>(() => defaultQuarter(profile.taxYear, profile.activity.alta, new Date()));
   const estimate = useSetAsideEstimate(profile.id, asOf);
+  const ledger = estimate.data?.ledger ?? null;
 
   return (
     <>
@@ -65,12 +67,25 @@ function Estimate({ profile }: { profile: Profile }) {
             ))}
           </NativeSelect>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {t("basis", { year: profile.taxYear })}{" "}
-          <Link href={SETTINGS} className="font-medium underline underline-offset-4">
-            {t("profile.edit")}
-          </Link>
-        </p>
+        <div className="grid gap-1 text-sm text-muted-foreground">
+          <p>
+            {ledger === null || ledger.actualsThrough === null
+              ? t("basis", { year: profile.taxYear })
+              : t("ledgerBasis", { year: profile.taxYear, quarter: ledger.actualsThrough, counted: ledger.counted })}{" "}
+            <Link href={SETTINGS} className="font-medium underline underline-offset-4">
+              {t("profile.edit")}
+            </Link>
+          </p>
+          {ledger !== null && ledger.awaitingReview > 0 && (
+            <p>
+              {t("awaitingReview", { count: ledger.awaitingReview })}{" "}
+              <Link href={TRANSACTIONS} className="font-medium underline underline-offset-4">
+                {t("review")}
+              </Link>
+            </p>
+          )}
+          {ledger !== null && ledger.awaitingInvoice > 0 && <p>{t("awaitingInvoice", { count: ledger.awaitingInvoice })}</p>}
+        </div>
       </div>
       {estimate.isPending ? (
         <p role="status">{t("calculating")}</p>

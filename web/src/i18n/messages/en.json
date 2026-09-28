@@ -43,6 +43,10 @@
     },
     "asOf": "Quarter of the estimate",
     "basis": "Estimated from your profile for {year}, with no closed quarter recorded: the projection covers the whole year.",
+    "ledgerBasis": "Estimated for {year} from actuals through {quarter}, {counted, plural, one {# classified movement} other {# classified movements}}; the projection covers the rest of the year.",
+    "awaitingReview": "{count, plural, one {# movement of those quarters awaits review and is not counted.} other {# movements of those quarters await review and are not counted.}}",
+    "review": "Review them",
+    "awaitingInvoice": "{count, plural, one {# expense awaits an invoice and is not counted} other {# expenses await an invoice and are not counted}}: a deductible expense needs a linked invoice, and GestorIA cannot store invoices yet.",
     "calculating": "Calculating…",
     "estimate": {
       "heading": "Estimate",
@@ -188,6 +192,30 @@
       "refused": "The statement was not imported, nothing was stored:",
       "tooLarge": "The file is larger than 2 MB. Export a shorter period.",
       "other": "The API answered with an error ({status})."
+    },
+    "review": {
+      "title": "Movements to review",
+      "heading": "{count, plural, =0 {No movements to review} one {# movement to review} other {# movements to review}}",
+      "loading": "Loading the movements to review…",
+      "empty": "Every imported movement has a class. A new import puts here the ones no rule is sure about.",
+      "hint": "Arrow keys, Home and End move between movements. On a movement, the number on a button picks that class; Tab reaches the buttons.",
+      "shortcut": "Key {key}",
+      "question": {
+        "in": "Money in: what is it?",
+        "out": "Money out: what is it?"
+      },
+      "suggestion": "A rule suggests: {name}",
+      "classified": "Classified as {name}.",
+      "classes": {
+        "activityIncome": "Income from my activity",
+        "deductibleExpense": "Expense of my activity",
+        "socialSecurity": "Cuota to the TGSS (RETA)",
+        "aeatPayment": "Payment to the AEAT",
+        "employmentIncome": "Salary from employment",
+        "savingsIncome": "Interest or dividends",
+        "ownTransfer": "Transfer between my accounts",
+        "personal": "Personal, not the activity"
+      }
     }
   },
   "Periods": {
@@ -273,7 +301,7 @@
       "ingresosFromFormerEmployer": "Ingresos from last year's employer",
       "retenciones": "Clients: EU businesses and US clients only, who withhold no retención and pay no IVA.",
       "projection": "The tax year's activity",
-      "projectionHint": "What the months of alta in the tax year are expected to invoice and spend. No closed quarter is recorded yet, so this covers the whole year.",
+      "projectionHint": "What the months of alta in the tax year are expected to invoice and spend, for the whole year. Once a closed quarter's movements are imported, its actuals replace its months' share of this.",
       "projectionIngresos": "Expected ingresos",
       "projectionGastos": "Expected gastos, without the RETA cuota",
       "baseCotizacion": "Monthly base de cotización you pay",
