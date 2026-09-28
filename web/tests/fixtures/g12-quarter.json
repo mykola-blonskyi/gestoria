@@ -1,0 +1,299 @@
+{
+  "taxYear": 2025,
+  "configHash": "4046cf06162bb6073a73449142e7e3a5278e523b284fa31aab99a6cc17b15e63",
+  "quarter": "Q1",
+  "aIngresar": "1228.99",
+  "dueFrom": "2025-04-01",
+  "dueBy": "2025-04-22",
+  "casillas": [
+    {
+      "key": "ingresos",
+      "amount": "7500.00"
+    },
+    {
+      "key": "gastos",
+      "amount": "855.06"
+    },
+    {
+      "key": "rendimientoNeto",
+      "amount": "6644.94"
+    },
+    {
+      "key": "pagoBruto",
+      "amount": "1328.99"
+    },
+    {
+      "key": "pagosAnteriores",
+      "amount": "0.00"
+    },
+    {
+      "key": "retenciones",
+      "amount": "0.00"
+    },
+    {
+      "key": "pagoPrevio",
+      "amount": "1328.99"
+    },
+    {
+      "key": "sumaPagosPrevios",
+      "amount": "1328.99"
+    },
+    {
+      "key": "minoracion",
+      "amount": "100.00"
+    },
+    {
+      "key": "diferencia",
+      "amount": "1228.99"
+    },
+    {
+      "key": "negativosAnteriores",
+      "amount": "0.00"
+    },
+    {
+      "key": "deduccionVivienda",
+      "amount": "0.00"
+    },
+    {
+      "key": "total",
+      "amount": "1228.99"
+    },
+    {
+      "key": "resultado",
+      "amount": "1228.99"
+    }
+  ],
+  "trace": [
+    {
+      "id": "m130.dificil-justificacion",
+      "section": "Modelo130",
+      "title": "Gastos de difícil justificación desde el 1 de enero (en casilla 02)",
+      "inputs": [
+        {
+          "name": "rendimientoNetoPrevio",
+          "value": "6994.67"
+        },
+        {
+          "name": "pct",
+          "value": "0.05"
+        },
+        {
+          "name": "max",
+          "value": "2000"
+        }
+      ],
+      "formula": "min(0.05 × max(0, 6994.67), 2000) = 349.7335",
+      "output": {
+        "kind": "money",
+        "value": "349.73"
+      },
+      "reference": "RD 439/2007 art. 30.2ª: a percentage of the positive net before it, at most an annual amount; art. 110.1.a: the pago fraccionado is a percentage of that rendimiento neto under estimación directa in any modality; AEAT, instrucciones del modelo 130, casilla 02: under estimación directa simplificada it includes the difícil justificación of the period from 1 January; config irpf.actividad.dificilJustificacion; business rule 7"
+    },
+    {
+      "id": "m130.rendimiento-neto",
+      "section": "Modelo130",
+      "title": "Rendimiento neto desde el 1 de enero (casilla 03)",
+      "inputs": [
+        {
+          "name": "ingresosYtd",
+          "value": "7500.00"
+        },
+        {
+          "name": "gastosYtd",
+          "value": "505.33"
+        },
+        {
+          "name": "dificilJustificacion",
+          "value": "349.7335"
+        }
+      ],
+      "formula": "7500.00 − (505.33 + 349.7335) = 6644.94",
+      "output": {
+        "kind": "money",
+        "value": "6644.94"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 01–03"
+    },
+    {
+      "id": "m130.pago-bruto",
+      "section": "Modelo130",
+      "title": "Porcentaje sobre el rendimiento neto positivo (casilla 04)",
+      "inputs": [
+        {
+          "name": "rendimientoNeto",
+          "value": "6644.94"
+        },
+        {
+          "name": "rate",
+          "value": "0.20"
+        }
+      ],
+      "formula": "0.20 × max(0, 6644.94) = 1328.99",
+      "output": {
+        "kind": "money",
+        "value": "1328.99"
+      },
+      "reference": "config modelo130.rate; AEAT, instrucciones del modelo 130, casilla 04: a negative casilla 03 counts as zero"
+    },
+    {
+      "id": "m130.pagos-anteriores",
+      "section": "Modelo130",
+      "title": "Pagos fraccionados de trimestres anteriores (casilla 05)",
+      "inputs": [
+        {
+          "name": "quarter",
+          "value": "Q1"
+        }
+      ],
+      "formula": "Σ positive casilla 07 of earlier quarters this year = 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 05: negative casilla 07 amounts are not summed"
+    },
+    {
+      "id": "m130.retenciones",
+      "section": "Modelo130",
+      "title": "Retenciones soportadas: cero, los pagadores son extranjeros",
+      "inputs": [
+        {
+          "name": "payers",
+          "value": "EU and US only"
+        }
+      ],
+      "formula": "no payer is Spanish, so none withholds → 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "SPEC-003 §0, business rule 3b: EU and US payers have no Spanish withholding obligation; RetencionRate is never defaulted from the profile"
+    },
+    {
+      "id": "m130.casilla-07",
+      "section": "Modelo130",
+      "title": "Pago fraccionado previo (casilla 07)",
+      "inputs": [
+        {
+          "name": "casilla04",
+          "value": "1328.99"
+        },
+        {
+          "name": "casilla05",
+          "value": "0"
+        },
+        {
+          "name": "casilla06",
+          "value": "0"
+        }
+      ],
+      "formula": "1328.99 − 0 − 0 = 1328.99",
+      "output": {
+        "kind": "money",
+        "value": "1328.99"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 07"
+    },
+    {
+      "id": "m130.casilla-12",
+      "section": "Modelo130",
+      "title": "Suma de pagos fraccionados previos (casilla 12)",
+      "inputs": [
+        {
+          "name": "casilla07",
+          "value": "1328.99"
+        }
+      ],
+      "formula": "max(0, 1328.99) = 1328.99",
+      "output": {
+        "kind": "money",
+        "value": "1328.99"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casilla 12: 07 + 11, a negative sum is entered as zero; casilla 11 (agricultural activities in estimación objetiva) does not apply"
+    },
+    {
+      "id": "m130.minoracion",
+      "section": "Modelo130",
+      "title": "Minoración por rendimientos bajos del ejercicio anterior (casilla 13)",
+      "inputs": [
+        {
+          "name": "previousYearNet",
+          "value": "0"
+        }
+      ],
+      "formula": "0 <= 9000 → 100 this quarter",
+      "output": {
+        "kind": "money",
+        "value": "100.00"
+      },
+      "reference": "config modelo130.minoracion; RD 439/2007 art. 110.3.c; AEAT, instrucciones del modelo 130, casilla 13; no activity in the previous year, which the AEAT instructions count as a rendimiento neto of zero"
+    },
+    {
+      "id": "m130.negativos-anteriores",
+      "section": "Modelo130",
+      "title": "Resultados negativos de trimestres anteriores (casilla 15)",
+      "inputs": [
+        {
+          "name": "casilla14",
+          "value": "1228.99"
+        },
+        {
+          "name": "negativosPendientes",
+          "value": "0"
+        }
+      ],
+      "formula": "casilla 14 = 1328.99 − 100 = 1228.99; deducted = 0, at most a positive casilla 14",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 14–15; business rule 14"
+    },
+    {
+      "id": "m130.resultado",
+      "section": "Modelo130",
+      "title": "Resultado a ingresar (casilla 19)",
+      "inputs": [
+        {
+          "name": "casilla14",
+          "value": "1228.99"
+        },
+        {
+          "name": "casilla15",
+          "value": "0"
+        }
+      ],
+      "formula": "1228.99 − 0 = 1228.99; negatives still pending for later quarters = 0",
+      "output": {
+        "kind": "money",
+        "value": "1228.99"
+      },
+      "reference": "AEAT, instrucciones del modelo 130, casillas 17 and 19; RD 439/2007 art. 110.3.c: only a minoración above casilla 12 leaves a negative result, which pays zero and is deducted in later quarters of the same year"
+    },
+    {
+      "id": "m130.due-date",
+      "section": "Modelo130",
+      "title": "Último día para presentar el Modelo 130 del Q1",
+      "inputs": [
+        {
+          "name": "start",
+          "value": "2025-04-01"
+        },
+        {
+          "name": "configuredEnd",
+          "value": "2025-04-20"
+        },
+        {
+          "name": "region",
+          "value": "VC"
+        }
+      ],
+      "formula": "2025-04-20 Sunday; 2025-04-21 Monday, holiday → 2025-04-22",
+      "output": {
+        "kind": "date",
+        "value": "2025-04-22"
+      },
+      "reference": "config calendar.modelo130, calendar.holidays, regions.VC.holidays; a last day that is a Saturday, a Sunday or a national or regional holiday moves to the next working day (Orden EHA/672/2007 art. 7 for Modelo 130; Ley 39/2015 art. 30.2, 30.5 and 30.6, supletoria under its DA 1ª.2.a and LGT art. 97.b); municipal holidays where the taxpayer lives are not applied, so the date shown can be early but never late"
+    }
+  ]
+}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 
-import { ApiError, isDatabaseUnavailable } from "@/data/api-error";
+import { ApiError, isDatabaseUnavailable } from "@/shared/lib/api-error";
 import type { Profile } from "@/data/profiles";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";

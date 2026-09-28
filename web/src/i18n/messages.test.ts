@@ -32,7 +32,7 @@ describe("message files", () => {
 
 describe("a count agrees with its number", () => {
   const lead = (locale: Locale, count: number) =>
-    createTranslator({ locale, messages: MESSAGES[locale], namespace: "Dashboard.trace" })("lead", { count }).split(" ").slice(0, 2).join(" ");
+    createTranslator({ locale, messages: MESSAGES[locale], namespace: "Trace" })("lead", { count }).split(" ").slice(0, 2).join(" ");
 
   it.each([
     ["uk", 1, "1 крок"],

@@ -13,7 +13,13 @@ import { LOCALES, type Locale } from "@/shared/constants/locales";
 
 const KEY = "a-made-up-key-for-these-tests";
 const taxYears = [
-  { taxYear: 2025, configHash: "0".repeat(64), regions: [{ code: "VC", name: "Comunitat Valenciana" }], gaps: [] },
+  {
+    taxYear: 2025,
+    configHash: "0".repeat(64),
+    regions: [{ code: "VC", name: "Comunitat Valenciana" }],
+    gaps: [],
+    modelo130Lines: {},
+  },
 ] satisfies TaxYear[];
 const HEADER = "X-Api-Key";
 

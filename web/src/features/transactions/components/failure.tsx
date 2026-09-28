@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 
-import { ApiError, PROBLEM_TYPES } from "@/data/api-error";
+import { ApiError, PROBLEM_TYPES } from "@/shared/lib/api-error";
 
 // What went wrong, on the page and never rethrown or logged (SPEC-013). A refused statement lists each reason the API
 // gave, keyed "file" or "line N"; those never quote the file.

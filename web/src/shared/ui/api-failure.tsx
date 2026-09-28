@@ -2,12 +2,12 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
-import { ApiError, PROBLEM_TYPES } from "@/data/api-error";
+import { ApiError, PROBLEM_TYPES } from "@/shared/lib/api-error";
 
 // What went wrong, in words, on the page. Never rethrown or logged: detail can quote an amount (SPEC-013). A gap is the one
 // failure the profile can route around, by choosing another tax year, so it links to settings when given where they are.
 export function ApiFailure({ error, settings }: { error: Error; settings?: string }) {
-  const t = useTranslations("Dashboard.failure");
+  const t = useTranslations("Failure");
   const failure = error instanceof ApiError ? error.failure : null;
 
   if (failure?.kind === "network") return <Alert title={t("network")} />;

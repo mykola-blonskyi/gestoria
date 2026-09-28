@@ -9,12 +9,19 @@ const ROW_HEIGHT = 40;
 type Row = { id: string; label: string };
 const rows: Row[] = Array.from({ length: 10_000 }, (_, index) => ({ id: `row-${index}`, label: `Row ${index}` }));
 
-// jsdom does no layout: give every element the viewport's size so the virtualizer can measure.
+// jsdom does no layout: give the scroll container the viewport's size, and every row its estimated height (uniform here,
+// so this measures the same as the old fixed-height row and every existing assertion below still holds), so the
+// virtualizer can measure both. TanStack Virtual's default measureElement reads offsetHeight, not getBoundingClientRect,
+// so both must agree per-element or every row measures as the container's height instead of its own.
+// trace-view.test.tsx varies a row's height instead, to prove real measurement is used.
 beforeEach(() => {
-  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(
-    DOMRect.fromRect({ width: 600, height: VIEWPORT_HEIGHT }),
-  );
-  vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(VIEWPORT_HEIGHT);
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+    const height = this.hasAttribute("data-index") ? ROW_HEIGHT : VIEWPORT_HEIGHT;
+    return DOMRect.fromRect({ width: 600, height });
+  });
+  vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(function (this: HTMLElement) {
+    return this.hasAttribute("data-index") ? ROW_HEIGHT : VIEWPORT_HEIGHT;
+  });
   vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(600);
 });
 

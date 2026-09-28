@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using GestorIA.Api;
+using GestorIA.Api.Periods;
 using GestorIA.Api.Profiles;
 using GestorIA.Api.SetAside;
 using GestorIA.Api.TaxYears;
@@ -100,6 +101,7 @@ locked.MapTaxYears();
 locked.MapSetAside();
 locked.MapProfiles();
 locked.MapTransactions();
+locked.MapPeriods();
 
 app.Run();
 

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-import { ApiError, isDatabaseUnavailable } from "@/data/api-error";
+import { ApiError, isDatabaseUnavailable } from "@/shared/lib/api-error";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 
 import { useProfile, useSaveProfile } from "../hooks/use-profile";

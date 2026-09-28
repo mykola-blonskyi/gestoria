@@ -25,6 +25,27 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
 
         await AssertFixture("g12-profile.json", await client.GetAsync($"/api/v1/profiles/{id}"), [(id, FixtureId)]);
         await AssertFixture("g12-estimate.json", await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q1"));
+        await AssertFixture("g12-quarter.json", await client.PostAsync($"/api/v1/profiles/{id}/calculations/quarter?quarter=Q1", null));
+        await AssertFixture("g12-annual-true-up.json", await client.PostAsync($"/api/v1/profiles/{id}/calculations/annual-true-up", null));
+    }
+
+    // G12 with its projection's ingresos and gastos swapped: a quarter with far more spent than earned, so casilla 19
+    // (resultado) comes out negative. A negative casilla 19 is never paid; it carries to later quarters instead
+    // (Modelo130Carry.NegativosPendientes), so the web app must never call it due (#71 fix-forward).
+    [Fact]
+    public async Task ANegativeQuarterIsTheApisAnswer()
+    {
+        await using var own = new ApiFactory();
+        await own.InitializeAsync();
+        var client = own.CreateClient();
+
+        var negative = RepoFiles.GoldenProfile("G12").DeepClone().AsObject();
+        negative["projection"]!["ingresos"] = "5000.00";
+        negative["projection"]!["gastos"] = "40000.00";
+        var created = await client.PostProfile(negative);
+        var id = (await created.Content.ReadFromJsonAsync<JsonObject>())!["id"]!.GetValue<string>();
+
+        await AssertFixture("g12-quarter-negative.json", await client.PostAsync($"/api/v1/profiles/{id}/calculations/quarter?quarter=Q1", null));
     }
 
     // A new database per run gives each movement a new id; the fixture numbers them in order instead.

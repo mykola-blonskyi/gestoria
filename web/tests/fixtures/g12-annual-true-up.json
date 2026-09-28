@@ -1,0 +1,407 @@
+{
+  "taxYear": 2025,
+  "configHash": "4046cf06162bb6073a73449142e7e3a5278e523b284fa31aab99a6cc17b15e63",
+  "liabilityOnActivity": "3365.93",
+  "marginalRate": "0.27",
+  "reduccionTrabajoLost": "0.00",
+  "gap": "0.00",
+  "dueFrom": "2026-04-08",
+  "dueBy": "2026-06-30",
+  "payableIn": "2026-06",
+  "trace": [
+    {
+      "id": "renta.trabajo.rendimiento-neto-previo",
+      "section": "Trabajo",
+      "title": "Rendimiento neto del trabajo antes de otros gastos",
+      "inputs": [
+        {
+          "name": "ingresos",
+          "value": "0.00"
+        },
+        {
+          "name": "seguridadSocial",
+          "value": "0.00"
+        }
+      ],
+      "formula": "0.00 − 0.00 = 0.00",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 19.2.a. Art. 20 measures the reducción on this figure, before the art. 19.2.f otros gastos"
+    },
+    {
+      "id": "renta.trabajo.rendimiento-neto",
+      "section": "Trabajo",
+      "title": "Rendimiento neto del trabajo",
+      "inputs": [
+        {
+          "name": "rendimientoNetoPrevio",
+          "value": "0.00"
+        },
+        {
+          "name": "otrosGastos",
+          "value": "2000"
+        }
+      ],
+      "formula": "0.00 − min(2000, max(0, 0.00)) = 0.00",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "config irpf.trabajo.otrosGastos; Ley 35/2006 (LIRPF) art. 19.2.f, limited to the rendimiento íntegro less the other deductible expenses"
+    },
+    {
+      "id": "renta.actividad.rendimiento-neto",
+      "section": "Actividad",
+      "title": "Rendimiento neto de la actividad",
+      "inputs": [
+        {
+          "name": "ingresos",
+          "value": "30000.00"
+        },
+        {
+          "name": "gastos",
+          "value": "2125.33"
+        },
+        {
+          "name": "pct",
+          "value": "0.05"
+        },
+        {
+          "name": "max",
+          "value": "2000"
+        }
+      ],
+      "formula": "previo = 30000.00 − 2125.33 = 27874.67; 27874.67 − min(0.05 × max(0, 27874.67), 2000) = 26480.9365",
+      "output": {
+        "kind": "money",
+        "value": "26480.94"
+      },
+      "reference": "SPEC-002 step 2, business rule 7; config irpf.actividad.dificilJustificacion. Gastos include the RETA cuota, a deductible expense of the titular (AEAT Manual práctico Renta 2025, cap. 7)"
+    },
+    {
+      "id": "renta.actividad.reduccion-inicio",
+      "section": "Actividad",
+      "title": "Reducción por inicio de una actividad económica",
+      "inputs": [
+        {
+          "name": "rendimientoNeto",
+          "value": "26480.9365"
+        },
+        {
+          "name": "ingresos",
+          "value": "30000.00"
+        },
+        {
+          "name": "ingresosFromFormerEmployer",
+          "value": "0.00"
+        },
+        {
+          "name": "pct",
+          "value": "0.20"
+        },
+        {
+          "name": "maxRendimiento",
+          "value": "100000"
+        },
+        {
+          "name": "formerEmployerShare",
+          "value": "0.50"
+        }
+      ],
+      "formula": "0.20 × min(max(0, 26480.9365), 100000) = 5296.187300; rendimiento neto reducido = 26480.9365 − 5296.187300 = 21184.749200",
+      "output": {
+        "kind": "money",
+        "value": "5296.19"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 32.3, first period with a positive net (primer período impositivo en que sea positivo); config irpf.actividad.inicioActividad; AEAT Manual práctico Renta 2025, cap. 7, fase 3. Art. 32.2.1º is ruled out for this profile (SPEC-003 §0): it requires every sale to go to one client or the taxpayer to be a TRADE (2.º b), at least 70 % of ingresos under retención, which foreign payers never withhold (2.º f), and no employment income (2.º e). Art. 32.2.3º, for rentas no exentas below 12,000 including the activity's, is not applied, and art. 32.1 (irregular income) has no input here; leaving either out can only overstate the net"
+    },
+    {
+      "id": "renta.trabajo.reduccion.solo",
+      "section": "Trabajo",
+      "title": "Reducción por trabajo, trabajo solo",
+      "inputs": [
+        {
+          "name": "rendimientoNetoArt20",
+          "value": "0.00"
+        },
+        {
+          "name": "otrasRentas",
+          "value": "0"
+        },
+        {
+          "name": "otherIncomeCap",
+          "value": "6500"
+        }
+      ],
+      "formula": "0.00 <= 14852 → 7302; limited to max(0, 0.00) = 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "config irpf.trabajo.reduccion; Ley 35/2006 (LIRPF) art. 20, where the third band starts from the second band's value at t2; business rule 6. Otras rentas are the activity's rendimiento neto before its art. 32.3 reduction (AEAT Manual práctico Renta 2025, cap. 3, fase 3), the only income other than employment this calculation is given"
+    },
+    {
+      "id": "renta.trabajo.reduccion.stacked",
+      "section": "Trabajo",
+      "title": "Reducción por trabajo, con la actividad",
+      "inputs": [
+        {
+          "name": "rendimientoNetoArt20",
+          "value": "0.00"
+        },
+        {
+          "name": "otrasRentas",
+          "value": "26480.9365"
+        },
+        {
+          "name": "otherIncomeCap",
+          "value": "6500"
+        }
+      ],
+      "formula": "otras rentas 26480.9365 > 6500 → 0; limited to max(0, 0.00) = 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "config irpf.trabajo.reduccion; Ley 35/2006 (LIRPF) art. 20, where the third band starts from the second band's value at t2; business rule 6. Otras rentas are the activity's rendimiento neto before its art. 32.3 reduction (AEAT Manual práctico Renta 2025, cap. 3, fase 3), the only income other than employment this calculation is given"
+    },
+    {
+      "id": "renta.solo.base-liquidable",
+      "section": "Bases",
+      "title": "Base liquidable general, trabajo solo",
+      "inputs": [
+        {
+          "name": "rendimientoTrabajoReducido",
+          "value": "0.00"
+        },
+        {
+          "name": "rendimientoActividad",
+          "value": "0"
+        }
+      ],
+      "formula": "max(0, 0.00 + 0) = 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 48 and 50: a negative balance is not taxed"
+    },
+    {
+      "id": "renta.solo.cuota-estatal",
+      "section": "Cuota",
+      "title": "Cuota íntegra estatal, trabajo solo",
+      "inputs": [
+        {
+          "name": "baseLiquidable",
+          "value": "0"
+        },
+        {
+          "name": "minimo",
+          "value": "0"
+        }
+      ],
+      "formula": "scale(0) − scale(0) = 0 − 0 = 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 56.2 and 63.1; config irpf.escalaEstatal, irpf.minimos.contribuyente"
+    },
+    {
+      "id": "renta.solo.cuota-autonomica",
+      "section": "Cuota",
+      "title": "Cuota íntegra autonómica (VC), trabajo solo",
+      "inputs": [
+        {
+          "name": "baseLiquidable",
+          "value": "0"
+        },
+        {
+          "name": "minimo",
+          "value": "0"
+        }
+      ],
+      "formula": "scale(0) − scale(0) = 0 − 0 = 0",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 56.3 and 74.1, business rule 9; config regions.VC. The mínimo is the region's own (minimosOverride), or the state's where the region approved none"
+    },
+    {
+      "id": "renta.stacked.base-liquidable",
+      "section": "Bases",
+      "title": "Base liquidable general, trabajo más actividad",
+      "inputs": [
+        {
+          "name": "rendimientoTrabajoReducido",
+          "value": "0.00"
+        },
+        {
+          "name": "rendimientoActividad",
+          "value": "21184.749200"
+        }
+      ],
+      "formula": "max(0, 0.00 + 21184.749200) = 21184.749200",
+      "output": {
+        "kind": "money",
+        "value": "21184.75"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 48 and 50: a negative balance is not taxed"
+    },
+    {
+      "id": "renta.stacked.cuota-estatal",
+      "section": "Cuota",
+      "title": "Cuota íntegra estatal, trabajo más actividad",
+      "inputs": [
+        {
+          "name": "baseLiquidable",
+          "value": "21184.749200"
+        },
+        {
+          "name": "minimo",
+          "value": "5550"
+        }
+      ],
+      "formula": "scale(21184.749200) − scale(5550) = 2260.46238000 − 527.250 = 1733.21238000",
+      "output": {
+        "kind": "money",
+        "value": "1733.21"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 56.2 and 63.1; config irpf.escalaEstatal, irpf.minimos.contribuyente"
+    },
+    {
+      "id": "renta.stacked.cuota-autonomica",
+      "section": "Cuota",
+      "title": "Cuota íntegra autonómica (VC), trabajo más actividad",
+      "inputs": [
+        {
+          "name": "baseLiquidable",
+          "value": "21184.749200"
+        },
+        {
+          "name": "minimo",
+          "value": "6105"
+        }
+      ],
+      "formula": "scale(21184.749200) − scale(6105) = 2182.16990400 − 549.45 = 1632.71990400",
+      "output": {
+        "kind": "money",
+        "value": "1632.72"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 56.3 and 74.1, business rule 9; config regions.VC. The mínimo is the region's own (minimosOverride), or the state's where the region approved none"
+    },
+    {
+      "id": "renta.liability-on-activity",
+      "section": "Resultado",
+      "title": "Cuota íntegra que añade la actividad",
+      "inputs": [
+        {
+          "name": "cuotaStacked",
+          "value": "3365.93228400"
+        },
+        {
+          "name": "cuotaSolo",
+          "value": "0"
+        }
+      ],
+      "formula": "3365.93228400 − 0 = 3365.93228400",
+      "output": {
+        "kind": "money",
+        "value": "3365.93"
+      },
+      "reference": "Set-aside estimator spec (#2), marginal rate: the activity income is taxed at the rates it reaches on top of the employment income, including any reducción por trabajo it destroys"
+    },
+    {
+      "id": "renta.marginal-rate",
+      "section": "Cuota",
+      "title": "Tipo marginal en la base con la actividad",
+      "inputs": [
+        {
+          "name": "baseLiquidable",
+          "value": "21184.749200"
+        },
+        {
+          "name": "region",
+          "value": "VC"
+        }
+      ],
+      "formula": "0.15 estatal + 0.12 autonómico = 0.27",
+      "output": {
+        "kind": "rate",
+        "value": "0.27"
+      },
+      "reference": "Ley 35/2006 (LIRPF) art. 63.1 and 74.1: the rate of the tranche of each scale that the next euro of base falls in"
+    },
+    {
+      "id": "renta.modelo130-advances",
+      "section": "Resultado",
+      "title": "Pagos fraccionados del Modelo 130 del ejercicio",
+      "inputs": [
+        {
+          "name": "modelo130Advances",
+          "value": "4896.19"
+        }
+      ],
+      "formula": "Σ Modelo 130 a ingresar over the year = 4896.19",
+      "output": {
+        "kind": "money",
+        "value": "4896.19"
+      },
+      "reference": "Modelo130Calculator at config modelo130.rate. Retenciones on activity invoices are not credited here; they are zero for foreign payers (SPEC-003 §0)"
+    },
+    {
+      "id": "renta.due-date",
+      "section": "Resultado",
+      "title": "Último día para presentar la declaración anual",
+      "inputs": [
+        {
+          "name": "start",
+          "value": "2026-04-08"
+        },
+        {
+          "name": "configuredEnd",
+          "value": "2026-06-30"
+        },
+        {
+          "name": "region",
+          "value": "VC"
+        }
+      ],
+      "formula": "2026-06-30 Tuesday, a working day → 2026-06-30",
+      "output": {
+        "kind": "date",
+        "value": "2026-06-30"
+      },
+      "reference": "config calendar.renta, calendar.holidays, regions.VC.holidays; a last day that is a Saturday, a Sunday or a national or regional holiday moves to the next working day (Orden EHA/672/2007 art. 7 for Modelo 130; Ley 39/2015 art. 30.2, 30.5 and 30.6, supletoria under its DA 1ª.2.a and LGT art. 97.b); municipal holidays where the taxpayer lives are not applied, so the date shown can be early but never late"
+    },
+    {
+      "id": "renta.gap",
+      "section": "Resultado",
+      "title": "Lo que la declaración anual pedirá además del Modelo 130",
+      "inputs": [
+        {
+          "name": "liabilityOnActivity",
+          "value": "3365.93228400"
+        },
+        {
+          "name": "modelo130Advances",
+          "value": "4896.19"
+        },
+        {
+          "name": "renta",
+          "value": "2026-04-08 … 2026-06-30"
+        }
+      ],
+      "formula": "max(0, 3365.93228400 − 4896.19) = 0, due 2026-04-08 … 2026-06-30, so by the end of 2026-06",
+      "output": {
+        "kind": "money",
+        "value": "0.00"
+      },
+      "reference": "Assumes the employer's retenciones settle the tax on the employment income alone, so only the activity's share is left. Conservative (#2): a refund is not counted on, no deducciones (SPEC-006) are applied, and the LIRPF art. 32.2.3º reduction of the activity net is not applied"
+    }
+  ],
+  "notices": []
+}

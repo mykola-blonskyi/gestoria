@@ -37,10 +37,12 @@ export function VirtualList<T>({ items, label, rowHeight, getKey, renderRow, cla
         {virtualizer.getVirtualItems().map((row) => (
           <li
             key={row.key}
+            data-index={row.index}
+            ref={virtualizer.measureElement}
             aria-setsize={items.length}
             aria-posinset={row.index + 1}
             className="absolute top-0 left-0 w-full"
-            style={{ height: row.size, transform: `translateY(${row.start}px)` }}
+            style={{ transform: `translateY(${row.start}px)` }}
           >
             {renderRow(items[row.index]!)}
           </li>

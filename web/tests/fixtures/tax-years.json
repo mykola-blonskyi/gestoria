@@ -12,7 +12,23 @@
         "name": "Comunitat Valenciana"
       }
     ],
-    "gaps": []
+    "gaps": [],
+    "modelo130Lines": {
+      "ingresos": "01",
+      "gastos": "02",
+      "rendimientoNeto": "03",
+      "pagoBruto": "04",
+      "pagosAnteriores": "05",
+      "retenciones": "06",
+      "pagoPrevio": "07",
+      "sumaPagosPrevios": "12",
+      "minoracion": "13",
+      "diferencia": "14",
+      "negativosAnteriores": "15",
+      "deduccionVivienda": "16",
+      "total": "17",
+      "resultado": "19"
+    }
   },
   {
     "taxYear": 2026,
@@ -36,6 +52,22 @@
         "entry": "calendar",
         "note": "unpublished as of 2026-09-27: the renta window for tax year 2026 (the Orden HAC approving Modelo 100, expected March 2027) and the 2027 días inhábiles (the Secretaría de Estado de Función Pública resolución, expected November–December 2026)"
       }
-    ]
+    ],
+    "modelo130Lines": {
+      "ingresos": "01",
+      "gastos": "02",
+      "rendimientoNeto": "03",
+      "pagoBruto": "04",
+      "pagosAnteriores": "05",
+      "retenciones": "06",
+      "pagoPrevio": "07",
+      "sumaPagosPrevios": "12",
+      "minoracion": "13",
+      "diferencia": "14",
+      "negativosAnteriores": "15",
+      "deduccionVivienda": "16",
+      "total": "17",
+      "resultado": "19"
+    }
   }
 ]
