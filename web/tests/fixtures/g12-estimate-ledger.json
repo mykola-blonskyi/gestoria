@@ -6,11 +6,14 @@
     "quarter": "Q2",
     "aIngresar": "256.54",
     "dueFrom": "2025-07-01",
-    "dueBy": "2025-07-21"
+    "dueBy": "2025-07-21",
+    "filing": "ingreso"
   },
   "monthlyCuotaSs": "80.00",
   "annualTrueUpGap": "0.00",
   "annualTrueUpPayableIn": "2026-06",
+  "annualTrueUpDueFrom": "2026-04-08",
+  "annualTrueUpDueBy": "2026-06-30",
   "ivaToSetAside": "0.00",
   "trace": [
     {

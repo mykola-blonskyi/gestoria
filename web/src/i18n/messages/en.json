@@ -53,12 +53,13 @@
       "holdBack": "Hold back {share} of every payment you receive.",
       "nextPayment": "Next Modelo 130, {quarter}",
       "due": "Pay from {from} to {by}.",
-      "dueFiled": "Nothing to pay. File it anyway from {from} to {by}: a negative result is filed as a deducir, a zero one as negativa (Periods shows which).",
+      "dueADeducir": "Nothing to pay. File it anyway from {from} to {by}, as a negative result deducted in the year's later quarters (a deducir).",
+      "dueNegativa": "Nothing to pay. File it anyway from {from} to {by}, as a zero or negative return (negativa).",
       "localHolidays": "Municipal holidays are not applied, so the date can be early but never late.",
       "cuota": "TGSS cuota per month this quarter",
       "renta": "Renta on top of the Modelo 130 advances",
       "payableIn": "Payable by the end of {month}.",
-      "rentaFiled": "Nothing to pay beyond the Modelo 130 advances. The Renta is still filed, by the end of {month}.",
+      "rentaFiled": "Nothing to pay beyond the Modelo 130 advances. The Renta is still filed from {from} to {by}.",
       "iva": "IVA to set aside",
       "config": "Tax year {year}, configuration sha256 {hash}"
     }

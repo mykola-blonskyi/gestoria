@@ -28,17 +28,19 @@ public sealed record ActivityPicture(IReadOnlyList<QuarterToDate> Actuals, Activ
 
 public sealed record SetAsideInput(TaxpayerProfile Profile, ActivityPicture Activity, TaxYearConfig Config, Quarter AsOf);
 
-public sealed record Modelo130Projection(Quarter Quarter, Money AIngresar, DueWindow DueWindow);
+public sealed record Modelo130Projection(Quarter Quarter, Money AIngresar, DueWindow DueWindow, Modelo130Filing Filing);
 
 // #2, #10: the seam the whole set-aside feature is built around. HoldBackShare is a share of the year's gross receipts, actual
 // and projected; the rest are the components it is built from, each reported even when zero so a zero always carries its
-// reason in Warnings. AnnualTrueUpGap is payable with the annual return, by the end of AnnualTrueUpPayableIn.
+// reason in Warnings. AnnualTrueUpGap is payable with the annual return, by the end of AnnualTrueUpPayableIn, within
+// AnnualTrueUpDueWindow (the same window AnnualTrueUpResult.DueWindow computes).
 public sealed record SetAsideResult(
     Rate HoldBackShare,
     Modelo130Projection NextPayment,
     Money MonthlyCuotaSs,
     Money AnnualTrueUpGap,
     YearMonth AnnualTrueUpPayableIn,
+    DueWindow AnnualTrueUpDueWindow,
     Money IvaToSetAside,
     CalculationTrace Trace,
     IReadOnlyList<Warning> Warnings,
@@ -422,10 +424,11 @@ public static class SetAsideEstimator
 
         return new SetAsideResult(
             new Rate(share),
-            new Modelo130Projection(next.Quarter, next.AIngresar, next.DueWindow),
+            new Modelo130Projection(next.Quarter, next.AIngresar, next.DueWindow, next.Filing),
             new Money(chosen.Result.FullMonthCuota),
             trueUp.Gap,
             trueUp.PayableIn,
+            trueUp.DueWindow,
             Money.Zero,
             new CalculationTrace(steps),
             warnings,

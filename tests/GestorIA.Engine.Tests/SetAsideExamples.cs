@@ -367,8 +367,10 @@ public class SetAsideExamples
 
         Assert.Equal([Quarter.Q2, Quarter.Q3, Quarter.Q4], result.Quarters.Select(q => q.Quarter));
         Assert.Equal(result.NextPayment.AIngresar, result.Quarters.Single(q => q.Quarter == Quarter.Q2).Resultado);
+        Assert.Equal(result.Quarters.Single(q => q.Quarter == Quarter.Q2).Filing, result.NextPayment.Filing);
         Assert.Equal(result.AnnualTrueUpGap, result.TrueUp.Gap);
         Assert.Equal(result.AnnualTrueUpPayableIn, result.TrueUp.PayableIn);
+        Assert.Equal(result.TrueUp.DueWindow, result.AnnualTrueUpDueWindow);
     }
 
     // Alta 1 August: five months of alta, two by the end of Q3. Ingresos 12,000; gastos 480 + 160 = 640; difícil justificación

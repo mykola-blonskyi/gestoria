@@ -5,6 +5,7 @@
   "aIngresar": "0.00",
   "dueFrom": "2025-04-01",
   "dueBy": "2025-04-22",
+  "filing": "aDeducir",
   "casillas": [
     {
       "key": "ingresos",

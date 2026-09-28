@@ -61,6 +61,14 @@ public sealed record Modelo130Carry(Money PagosAnteriores, Money NegativosPendie
     public static readonly Modelo130Carry StartOfYear = new(Money.Zero, Money.Zero);
 }
 
+// AEAT, instrucciones del modelo 130, casilla 19: the three sections a quarter's result is filed under.
+public enum Modelo130Filing
+{
+    Ingreso,
+    ADeducir,
+    Negativa,
+}
+
 public sealed record Modelo130Result(
     Quarter Quarter,
     Money Resultado,
@@ -70,6 +78,13 @@ public sealed record Modelo130Result(
     IReadOnlyDictionary<string, Money> Casillas)
 {
     public Money AIngresar => Resultado > Money.Zero ? Resultado : Money.Zero;
+
+    // AEAT, instrucciones del modelo 130, casilla 19: a positive result is ingreso; a negative one is a deducir in Q1-Q3
+    // (carried to later quarters) and negativa in Q4 (nothing left to carry); a zero result is always negativa.
+    public Modelo130Filing Filing =>
+        Resultado > Money.Zero ? Modelo130Filing.Ingreso
+        : Resultado < Money.Zero && Quarter != Quarter.Q4 ? Modelo130Filing.ADeducir
+        : Modelo130Filing.Negativa;
 }
 
 // SPEC-003 §1, Theory §7.3. Casilla numbers and rules follow the AEAT modelo 130 instructions.

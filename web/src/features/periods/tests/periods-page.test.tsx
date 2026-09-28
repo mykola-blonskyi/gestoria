@@ -108,8 +108,8 @@ describe("PeriodsPage", () => {
     expect(screen.queryByText(fill(quarter.due, window), { exact: false })).not.toBeInTheDocument();
   });
 
-  it("says a zero or negative Q4 is filed as negativa, since nothing is left to deduct from", async () => {
-    stubApi({ quarter: { status: 200, body: { ...g12QuarterNegative, quarter: "Q4" } } });
+  it("says a Q4 with filing negativa is filed as negativa, since nothing is left to deduct from", async () => {
+    stubApi({ quarter: { status: 200, body: { ...g12QuarterNegative, quarter: "Q4", filing: "negativa" } } });
     renderPeriods();
 
     const quarter = MESSAGES.en.Periods.quarter;

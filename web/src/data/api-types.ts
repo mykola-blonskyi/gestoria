@@ -407,6 +407,8 @@ export interface components {
             /** Format: int32 */
             awaitingInvoice: number;
         };
+        /** @enum {unknown} */
+        Modelo130FilingView: "ingreso" | "aDeducir" | "negativa";
         NewActivityChoice: components["schemas"]["NewActivityChoiceEstablishedActivity"] | components["schemas"]["NewActivityChoiceNewActivityStarted"];
         NewActivityChoiceEstablishedActivity: {
             /** @enum {string} */
@@ -430,6 +432,7 @@ export interface components {
             dueFrom: string;
             /** Format: date */
             dueBy: string;
+            filing: components["schemas"]["Modelo130FilingView"];
         };
         NoticeView: {
             code: string;
@@ -550,6 +553,7 @@ export interface components {
             dueFrom: string;
             /** Format: date */
             dueBy: string;
+            filing: components["schemas"]["Modelo130FilingView"];
             casillas: components["schemas"]["CasillaView"][];
             trace: components["schemas"]["TraceStepView"][];
             ledger: components["schemas"]["LedgerView"];
@@ -601,6 +605,10 @@ export interface components {
             monthlyCuotaSs: string;
             annualTrueUpGap: string;
             annualTrueUpPayableIn: string;
+            /** Format: date */
+            annualTrueUpDueFrom: string;
+            /** Format: date */
+            annualTrueUpDueBy: string;
             ivaToSetAside: string;
             trace: components["schemas"]["TraceStepView"][];
             notices: components["schemas"]["NoticeView"][];
