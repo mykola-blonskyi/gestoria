@@ -87,7 +87,7 @@ Invariants
 - Savings: payment date per broker/bank report.
 
 ## 7. Migration from the prototype
-`IrpfTaxCalculator` and `IrpfCalculationResult` were deleted on 2026-09-18. `Transaction` was replaced by `BankTransaction` on 2026-09-28 (#72), when bank statements started being stored: `BankTransaction(BookingDate, ValueDate, Description, Amount, Balance?)` in `src/GestorIA.Domain/Models` is what `BbvaCsvStatementParser` produces. `AccountId`, `Counterparty`, `BankCategory`, `Classification` and `LinkedDocumentId` arrive with the classifier (SPEC-004); until then a line is only what the bank printed.
+`IrpfTaxCalculator` and `IrpfCalculationResult` were deleted on 2026-09-18. `Transaction` was replaced by `BankTransaction` on 2026-09-28 (#72), when bank statements started being stored: `BankTransaction(BookingDate, ValueDate, Description, Amount, Balance?)` in `src/GestorIA.Domain/Models` is what `BbvaCsvStatementParser` produces. `Classification` arrived with #73 (SPEC-004 §3.1): the user's decision is stored as `Class`, and the rules' answer is computed on every read. `AccountId`, `Counterparty`, `BankCategory` and `LinkedDocumentId` are not built yet.
 
 - `Transaction.Type` derived from the sign of `Amount` → replaced by explicit `Classification` (SPEC-004).
 - `Transaction.IsDeductible` → replaced by a link to a confirmed `FacturaRecibida` with `DeductibleShare`.

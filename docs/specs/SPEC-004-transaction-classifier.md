@@ -25,6 +25,15 @@ Each classification carries `Confidence (0–1)`, `RuleId`, `Evidence[]` and, wh
 
 The "no expense without invoice" rule is enforced structurally: `DEDUCTIBLE_EXPENSE`/`HOME_EXPENSE` contribute to the ledger only when `LinkedDocumentId != null` and the document is `Confirmed`.
 
+### 3.1 Built so far (#73)
+
+- The classes a line can be given are `ActivityIncome`, `DeductibleExpense`, `SocialSecurity`, `AeatPayment`, `EmploymentIncome`, `SavingsIncome`, `OwnTransfer` and `Personal` (`TransactionClass`, `src/GestorIA.Domain/Models`). An unclear line has no class. `HOME_EXPENSE` waits for the home-office share.
+- The rules are data: `config/transaction-rules.json`, in this section's order, first match wins. Each rule has an id, a class, a direction (`credit`, `debit` or `any`), whether it is `certain`, and its patterns. A pattern matches at the start of a word of the description, case- and accent-insensitively, so `CUOTA AUTONOM` matches `CUOTA AUTONOMOS` and `AGUA` does not match `PARAGUAS`. Built: steps 2 (TGSS), 3 (AEAT, without `FormHint`), 4 by wording only (`NOMINA|SALARIO`, no employer CIF or nómina cross-check), 5, 7 and 9. Step 1 waits for `FacturaEmitida`, step 6 for accounts, step 8 for `HOME_EXPENSE`. The API loads and checks the file as it starts, and refuses to start when the file is malformed.
+- A line's classification is `Confirmed(class)`, `Suggested(class, rule)` or `Unclear`. The user's decision always wins. Without one, a `certain` rule confirms, any other rule suggests, and no match leaves the line unclear. Only the user's decision is stored (`BankTransactions.Class`); the rules run on every read (`docs/decisions.md`). The certain rules are TGSS, AEAT and every class outside the activity. The vendor rule (step 7) only suggests.
+- The review queue holds the tax year's suggested and unclear lines. The web app asks each one's question, "money in / money out: what is it?", with the rule's suggestion first when there is one.
+- A confirmed `DEDUCTIBLE_EXPENSE` counts only once an invoice is linked. No document can be stored yet, so none counts (business rule 1). The estimate names each such line, and the overview says how many there are.
+- `Confidence`, `Evidence[]`, `FormHint`, `LinkedDocumentId` and learning from confirmations (§4) are not built.
+
 ## 4. Learning from confirmations
 User corrections are stored as `ClassificationFeedback { pattern, class }` and become per-user rules evaluated before step 7. No ML in v1.
 
