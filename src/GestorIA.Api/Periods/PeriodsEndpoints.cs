@@ -87,5 +87,5 @@ public static class PeriodsEndpoints
         }
     }
 
-    private static DateOnly Today(TimeProvider time) => DateOnly.FromDateTime(time.GetLocalNow().DateTime);
+    private static DateOnly Today(TimeProvider time) => MadridDay.Of(time.GetUtcNow());
 }

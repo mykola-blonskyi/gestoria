@@ -74,6 +74,43 @@ public class PeriodsEndpoint
         Assert.NotEqual(unreviewed.Quarter["aIngresar"]!.GetValue<string>(), reviewed.Quarter["aIngresar"]!.GetValue<string>());
     }
 
+    // The payments calendar reads the whole year at asOf Q4, a quarter's page at asOf Qn. Each quarter's Modelo 130 is the same
+    // in both, with no movements, with every movement reviewed, and with only Q1's reviewed (Q2 holding the rest back).
+    [Theory]
+    [InlineData("none")]
+    [InlineData("reviewed")]
+    [InlineData("q1Reviewed")]
+    public async Task TheCalendarsModelo130IsEachQuartersOwn(string ledger)
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = await client.CreateProfile("G12");
+        if (ledger != "none")
+        {
+            await client.ImportStatement(id, RepoFiles.Statement);
+        }
+
+        if (ledger == "reviewed")
+        {
+            await client.ClassifySyntheticQueue(id);
+        }
+        else if (ledger == "q1Reviewed")
+        {
+            foreach (var item in (await client.ReviewQueue(id)).Where(item => item!["bookingDate"]!.GetValue<string>().CompareTo("2025-04-01") < 0))
+            {
+                await client.ClassifyAs(item!["id"]!.GetValue<string>(), item["amount"]!.GetValue<string>().StartsWith('-') ? "personal" : "activityIncome");
+            }
+        }
+
+        var calendar = (await (await client.GetAsync($"/api/v1/profiles/{id}/calendar")).Json())["obligations"]!.AsArray();
+        foreach (var quarter in new[] { "Q1", "Q2", "Q3", "Q4" })
+        {
+            var own = await (await client.PostAsync($"/api/v1/profiles/{id}/calculations/quarter?quarter={quarter}", null)).Json();
+            var listed = calendar.Single(o => o!["kind"]!.GetValue<string>() == "Modelo130" && o["period"]!.GetValue<string>() == quarter)!;
+            Assert.Equal(own["aIngresar"]!.GetValue<string>(), listed["amount"]!["euros"]!.GetValue<string>());
+        }
+    }
+
     private static async Task<(JsonObject Quarter, JsonObject TrueUp)> Periods(HttpClient client, string id)
     {
         var quarter = await (await client.PostAsync($"/api/v1/profiles/{id}/calculations/quarter?quarter=Q2", null)).Json();

@@ -2,7 +2,7 @@ using GestorIA.Domain.ValueObjects;
 
 namespace GestorIA.Engine.Tests;
 
-// #70: the payments calendar built from the same picture the set-aside estimate reads, for G12's shape (alta 15 January
+// #70: the payments calendar built from the SetAsideResult the set-aside estimate answers, for G12's shape (alta 15 January
 // 2025, a new activity, 30,000 ingresos and 1,200 gastos projected at a base of 1,274.51).
 public class PaymentCalendarExamples
 {
