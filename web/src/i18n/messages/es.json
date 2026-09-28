@@ -339,10 +339,6 @@
   "Backup": {
     "title": "Copia de seguridad",
     "lead": "Una copia de tus datos que se guarda fuera de este equipo.",
-    "points": {
-      "restore": "Restaurar tus datos desde ese archivo, para que un portátil perdido no se lleve tu historial fiscal."
-    },
-    "pending": "La restauración necesita su propio recurso de la API, que aún no existe.",
     "export": {
       "heading": "Descargar todos mis datos",
       "lead": "Todo lo que GestorIA guarda en este equipo, en un archivo JSON que puedes guardar en otro sitio.",
@@ -353,13 +349,45 @@
       "enter": "Introduce tu perfil en ajustes",
       "download": "Descargar mis datos (datos financieros personales)",
       "downloading": "Preparando el archivo…",
-      "format": "Un archivo JSON con la fecha de hoy en el nombre. La restauración desde él llegará con la función de restaurar.",
+      "format": "Un archivo JSON con la fecha de hoy en el nombre. Para volver a cargarlo, usa la tarjeta de restauración de abajo.",
       "done": "El archivo se entregó a tu navegador como descarga.",
       "failure": {
         "network": "La API de GestorIA no responde. Iníciala y vuelve a intentarlo.",
         "gone": "El perfil ya no está guardado, así que no hay nada que descargar.",
         "other": "La API respondió con un error ({status}). Vuelve a intentarlo.",
         "database": "La base de datos de GestorIA no responde. Iníciala con docker compose up -d postgres y vuelve a intentarlo."
+      }
+    },
+    "restore": {
+      "heading": "Restaurar mis datos desde una copia",
+      "lead": "Vuelve a cargar en GestorIA un archivo descargado arriba, por ejemplo en un portátil nuevo. Ves lo que contiene antes de que se guarde nada.",
+      "file": "Archivo de la copia (JSON)",
+      "notJson": "Este archivo no es JSON, así que no es una copia de GestorIA. No se ha enviado nada.",
+      "notExport": "Este archivo no es una copia de GestorIA. No se ha enviado nada.",
+      "unsupportedVersion": "Esta copia tiene la versión de formato {version}, que esta versión de GestorIA no sabe leer. No se ha enviado nada.",
+      "noProfile": "Esta copia no contiene exactamente un perfil de contribuyente, así que no se puede restaurar. No se ha enviado nada.",
+      "holds": "El archivo contiene:",
+      "profile": "tu perfil de contribuyente de {year} ({region})",
+      "movements": "{count, plural, one {# movimiento bancario} other {# movimientos bancarios}}, del {first} al {last}",
+      "movementsUndated": "{count, plural, one {# movimiento bancario} other {# movimientos bancarios}}",
+      "noMovements": "ningún movimiento bancario",
+      "exported": "Exportado el {date}.",
+      "where": "Restaurar guarda esto en la base de datos de GestorIA en este equipo. Solo funciona en una instalación sin nada guardado: para sustituir lo que hay, descarga antes una copia arriba, bórralo en Ajustes y restaura después.",
+      "confirm": "Restaurar",
+      "restoring": "Restaurando…",
+      "cancel": "Elegir otro archivo",
+      "done": "Restaurado: tu perfil de {year} y {count, plural, one {# movimiento bancario} other {# movimientos bancarios}}.",
+      "overview": "Abrir el resumen",
+      "failure": {
+        "notEmpty": "No se ha restaurado nada: esta instalación ya guarda un perfil de {year} y {count, plural, one {# movimiento bancario} other {# movimientos bancarios}}.",
+        "notEmptyUnknown": "No se ha restaurado nada: esta instalación ya guarda datos.",
+        "replace": "Una restauración necesita una instalación vacía. Para sustituir lo que hay, descarga antes una copia arriba y luego bórralo en",
+        "settings": "Ajustes",
+        "refused": "El archivo no se puede restaurar, no se ha guardado nada:",
+        "tooLarge": "El archivo supera los 16 MB, así que no se puede restaurar. No se ha guardado nada.",
+        "network": "La API de GestorIA no responde. No se ha guardado nada. Iníciala y vuelve a intentarlo.",
+        "database": "La base de datos de GestorIA no responde. No se ha guardado nada. Iníciala con docker compose up -d postgres y vuelve a intentarlo.",
+        "other": "La API respondió con un error ({status}). No se ha guardado nada. Vuelve a intentarlo."
       }
     }
   },

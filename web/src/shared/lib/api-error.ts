@@ -19,6 +19,9 @@ export const PROBLEM_TYPES = {
   noUpcomingObligations: "https://gestoria.local/problems/no-upcoming-obligations",
   profileNotFound: "https://gestoria.local/problems/profile-not-found",
   profileExists: "https://gestoria.local/problems/profile-exists",
+  installationNotEmpty: "https://gestoria.local/problems/installation-not-empty",
+  exportTooLarge: "https://gestoria.local/problems/export-too-large",
+  exportMediaType: "https://gestoria.local/problems/export-media-type",
 } as const;
 
 // The API runs but PostgreSQL does not answer it: a 503 from /health/ready or from any endpoint that reads the database.

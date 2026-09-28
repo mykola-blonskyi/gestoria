@@ -339,10 +339,6 @@
   "Backup": {
     "title": "Backup",
     "lead": "A copy of your data that lives outside this machine.",
-    "points": {
-      "restore": "Restoring your data from that file, so a lost laptop does not lose your tax history."
-    },
-    "pending": "Restore needs its own API resource, which is not built yet.",
     "export": {
       "heading": "Download all my data",
       "lead": "Everything GestorIA stores on this machine, in one JSON file you can keep elsewhere.",
@@ -353,13 +349,45 @@
       "enter": "Enter your profile in settings",
       "download": "Download my data (personal financial data)",
       "downloading": "Preparing the file…",
-      "format": "A JSON file named after today's date. Restoring from it arrives with the restore feature.",
+      "format": "A JSON file named after today's date. To load it back, use the restore card below.",
       "done": "The file was handed to your browser as a download.",
       "failure": {
         "network": "The GestorIA API is not answering. Start it and try again.",
         "gone": "The profile is no longer stored, so there is nothing to download.",
         "other": "The API answered with an error ({status}). Try again.",
         "database": "The GestorIA database is not answering. Start it with docker compose up -d postgres and try again."
+      }
+    },
+    "restore": {
+      "heading": "Restore my data from an export",
+      "lead": "Load a file downloaded above back into GestorIA, for example on a new laptop. You see what it holds before anything is stored.",
+      "file": "Export file (JSON)",
+      "notJson": "This file is not JSON, so it is not a GestorIA export. Nothing was sent.",
+      "notExport": "This file is not a GestorIA export. Nothing was sent.",
+      "unsupportedVersion": "This export is format version {version}, which this version of GestorIA cannot read. Nothing was sent.",
+      "noProfile": "This export does not hold exactly one taxpayer profile, so it cannot be restored. Nothing was sent.",
+      "holds": "The file holds:",
+      "profile": "your taxpayer profile for {year} ({region})",
+      "movements": "{count, plural, one {# bank movement} other {# bank movements}}, booked from {first} to {last}",
+      "movementsUndated": "{count, plural, one {# bank movement} other {# bank movements}}",
+      "noMovements": "no bank movements",
+      "exported": "Exported on {date}.",
+      "where": "Restoring stores this in the GestorIA database on this machine. It works only on an installation with nothing stored: to replace what is stored, download a copy above, delete it in Settings, then restore.",
+      "confirm": "Restore",
+      "restoring": "Restoring…",
+      "cancel": "Choose another file",
+      "done": "Restored: your profile for {year} and {count, plural, one {# bank movement} other {# bank movements}}.",
+      "overview": "Open the overview",
+      "failure": {
+        "notEmpty": "Nothing was restored: this installation already holds a profile for {year} and {count, plural, one {# bank movement} other {# bank movements}}.",
+        "notEmptyUnknown": "Nothing was restored: this installation already holds data.",
+        "replace": "A restore needs an empty installation. To replace what is stored, download a copy above, then delete it in",
+        "settings": "Settings",
+        "refused": "The file cannot be restored, nothing was stored:",
+        "tooLarge": "The file is larger than 16 MB, so it cannot be restored. Nothing was stored.",
+        "network": "The GestorIA API is not answering. Nothing was stored. Start it and try again.",
+        "database": "The GestorIA database is not answering. Nothing was stored. Start it with docker compose up -d postgres and try again.",
+        "other": "The API answered with an error ({status}). Nothing was stored. Try again."
       }
     }
   },
