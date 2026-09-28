@@ -8,22 +8,25 @@ import { formatDate, formatMoney, formatShare } from "@/shared/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { VirtualList } from "@/shared/ui/virtual-list";
 
-// The section names of a TraceStepView (GestorIA.Api's TraceSection), kept as a local literal union — not imported from
-// data/set-aside — so this shared component never imports the data layer (web/README.md's layer rules). The literal set
-// matches the API's exactly, and messages/*.json's Trace.sections.* is checked against it (tests/structure.test.ts /
-// messages.test.ts's key-parity check), so a mismatch would be caught by a locale, not silently swallowed.
-export type TraceSection =
-  | "Trabajo"
-  | "Actividad"
-  | "Ahorro"
-  | "Inmuebles"
-  | "Bases"
-  | "Minimo"
-  | "Cuota"
-  | "Deducciones"
-  | "Resultado"
-  | "SeguridadSocial"
-  | "Modelo130";
+// The section names of a TraceStepView (GestorIA.Api's TraceSection), kept as a local literal tuple — not imported from
+// data/api-types — so this shared component never imports the data layer (web/README.md's layer rules). data/trace-section
+// .test.ts type-checks this against the generated components["schemas"]["TraceSection"], so a drift fails `pnpm typecheck`
+// rather than surfacing only as a runtime mismatch; messages/*.json's Trace.sections.* is a separate, human-facing key set.
+export const TRACE_SECTIONS = [
+  "Trabajo",
+  "Actividad",
+  "Ahorro",
+  "Inmuebles",
+  "Bases",
+  "Minimo",
+  "Cuota",
+  "Deducciones",
+  "Resultado",
+  "SeguridadSocial",
+  "Modelo130",
+] as const;
+
+export type TraceSection = (typeof TRACE_SECTIONS)[number];
 
 // The shape of a TraceStepView (GestorIA.Api), kept structural here so this shared component never imports the data layer:
 // a feature's own TraceStepView value satisfies this without conversion.
