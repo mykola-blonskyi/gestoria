@@ -235,9 +235,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** The imported statements, each with the period it covers, in the order of their periods. */
+        get: operations["listBankStatements"];
         put?: never;
-        /** Imports a bank statement, the file itself as the body. A line an earlier import stored is not stored again. */
+        /** Imports a bank statement, the file itself as the body, for the period from and to state or else its lines' first to last date. A line an earlier import stored is not stored again. */
         post: operations["importBankStatement"];
         delete?: never;
         options?: never;
@@ -347,6 +348,10 @@ export interface components {
             imported: number;
             /** Format: int32 */
             alreadyImported: number;
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
         };
         CasillaView: {
             key: string;
@@ -363,6 +368,8 @@ export interface components {
         EntityCounts: {
             /** Format: int32 */
             profiles: number;
+            /** Format: int32 */
+            statementImports: number;
             /** Format: int32 */
             bankTransactions: number;
         };
@@ -385,7 +392,16 @@ export interface components {
         };
         ExportedEntities: {
             profiles: components["schemas"]["ProfileView"][];
+            statementImports: components["schemas"]["ExportedStatementImport"][];
             bankTransactions: components["schemas"]["ExportedBankTransaction"][];
+        };
+        ExportedStatementImport: {
+            /** Format: int32 */
+            sequence: number;
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
         };
         HttpValidationProblemDetails: {
             type?: null | string;
@@ -622,6 +638,14 @@ export interface components {
         };
         /** @enum {unknown} */
         StartedPeriod: "first" | "following";
+        StatementImportView: {
+            /** Format: int32 */
+            sequence: number;
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+        };
         TaxYearView: {
             /** Format: int32 */
             taxYear: number;
@@ -1497,10 +1521,63 @@ export interface operations {
             };
         };
     };
+    listBankStatements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatementImportView"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     importBankStatement: {
         parameters: {
             query: {
                 bank: "bbva";
+                /** @description The statement period's first day; the first line's booking date when left out. */
+                from?: string;
+                /** @description The statement period's last day; the last line's booking date when left out. */
+                to?: string;
             };
             header?: never;
             path: {

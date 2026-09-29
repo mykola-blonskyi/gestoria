@@ -164,7 +164,17 @@
       "bank": "Banco",
       "submit": "Importar",
       "importing": "Importando…",
-      "done": "{lines, plural, one {# movimiento leído} other {# movimientos leídos}}: {imported, plural, one {# nuevo} other {# nuevos}}, {already, plural, one {# ya importado} other {# ya importados}}."
+      "done": "{lines, plural, one {# movimiento leído} other {# movimientos leídos}}: {imported, plural, one {# nuevo} other {# nuevos}}, {already, plural, one {# ya importado} other {# ya importados}}.",
+      "donePeriod": "Periodo del extracto: {from} – {to}.",
+      "from": "Periodo del extracto: desde",
+      "to": "Periodo del extracto: hasta",
+      "periodHint": "Al elegir el archivo se rellenan las fechas de su primer y último movimiento. Amplíalas a todo el periodo que cubre el extracto, por ejemplo hasta el día en que lo exportaste: los días sin movimientos solo cuentan como cubiertos dentro del periodo de un extracto."
+    },
+    "statements": {
+      "heading": "Extractos importados",
+      "loading": "Cargando los extractos importados…",
+      "empty": "Todavía no se ha importado ningún extracto.",
+      "item": "Extracto {sequence}: {from} – {to}"
     },
     "filters": {
       "quarter": "Periodo",

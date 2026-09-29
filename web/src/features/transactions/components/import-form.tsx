@@ -1,32 +1,50 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { useId, useState, type FormEvent } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useId, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 
 import { BANKS, STATEMENT_MAX_BYTES, type Bank } from "@/data/transactions";
+import type { Locale } from "@/shared/constants/locales";
+import { formatDate } from "@/shared/lib/format";
 import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
 
 import { useImportStatement } from "../hooks/use-transactions";
 import { Alert, Failure } from "./failure";
+import { statementPeriod } from "./statement-period";
 
 const BANK_NAMES: Record<Bank, string> = { bbva: "BBVA" };
 
 export function ImportForm({ profileId }: { profileId: string }) {
   const t = useTranslations("Transactions.import");
   const tFailure = useTranslations("Transactions.failure");
+  const locale = useLocale() as Locale;
   const id = useId();
+  const chosen = useRef<File | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [bank, setBank] = useState<Bank>("bbva");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [tooLarge, setTooLarge] = useState(false);
   const importing = useImportStatement(profileId);
+
+  async function choose(event: ChangeEvent<HTMLInputElement>) {
+    const next = event.target.files?.[0] ?? null;
+    chosen.current = next;
+    setFile(next);
+    const period = next === null || next.size > STATEMENT_MAX_BYTES ? null : statementPeriod(await next.text());
+    if (chosen.current !== next) return;
+    setFrom(period?.from ?? "");
+    setTo(period?.to ?? "");
+  }
 
   function submit(event: FormEvent) {
     event.preventDefault();
     if (file === null) return;
     importing.reset();
     setTooLarge(file.size > STATEMENT_MAX_BYTES);
-    if (file.size <= STATEMENT_MAX_BYTES) importing.mutate({ profileId, bank, file });
+    if (file.size <= STATEMENT_MAX_BYTES) importing.mutate({ profileId, bank, file, from, to });
   }
 
   return (
@@ -43,7 +61,7 @@ export function ImportForm({ profileId }: { profileId: string }) {
             type="file"
             accept=".csv,text/csv"
             className="text-sm"
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            onChange={choose}
           />
         </div>
         <div className="grid gap-1.5">
@@ -62,15 +80,35 @@ export function ImportForm({ profileId }: { profileId: string }) {
           {importing.isPending ? t("importing") : t("submit")}
         </Button>
       </div>
+      <p className="text-sm text-muted-foreground">{t("periodHint")}</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-1.5">
+          <label htmlFor={`${id}-from`} className="text-sm font-medium">
+            {t("from")}
+          </label>
+          <Input id={`${id}-from`} type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
+        </div>
+        <div className="grid gap-1.5">
+          <label htmlFor={`${id}-to`} className="text-sm font-medium">
+            {t("to")}
+          </label>
+          <Input id={`${id}-to`} type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+        </div>
+      </div>
       {tooLarge && <Alert title={tFailure("tooLarge")} />}
       {importing.isError && <Failure error={importing.error} />}
       {importing.isSuccess && (
         <p role="status" className="text-sm font-medium">
-          {t("done", {
-            lines: importing.data.lines,
-            imported: importing.data.imported,
-            already: importing.data.alreadyImported,
-          })}
+          <span>
+            {t("done", {
+              lines: importing.data.lines,
+              imported: importing.data.imported,
+              already: importing.data.alreadyImported,
+            })}
+          </span>{" "}
+          <span>
+            {t("donePeriod", { from: formatDate(importing.data.from, locale), to: formatDate(importing.data.to, locale) })}
+          </span>
         </p>
       )}
     </form>

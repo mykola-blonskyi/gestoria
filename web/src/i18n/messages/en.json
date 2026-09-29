@@ -164,7 +164,17 @@
       "bank": "Bank",
       "submit": "Import",
       "importing": "Importing…",
-      "done": "{lines, plural, one {# movement read} other {# movements read}}: {imported} new, {already} already imported."
+      "done": "{lines, plural, one {# movement read} other {# movements read}}: {imported} new, {already} already imported.",
+      "donePeriod": "Statement period: {from} – {to}.",
+      "from": "Statement period from",
+      "to": "Statement period to",
+      "periodHint": "Choosing a file fills in the dates of its first and last movement. Widen them to the whole period the statement covers, for example through the day you exported it: days without movements count as covered only inside a statement's period."
+    },
+    "statements": {
+      "heading": "Imported statements",
+      "loading": "Loading the imported statements…",
+      "empty": "No statement imported yet.",
+      "item": "Statement {sequence}: {from} – {to}"
     },
     "filters": {
       "quarter": "Period",

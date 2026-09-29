@@ -4,6 +4,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import g12Estimate from "@tests/fixtures/g12-estimate.json";
 import g12Ledger from "@tests/fixtures/g12-estimate-ledger.json";
+import g12Statements from "@tests/fixtures/g12-bank-statements.json";
 import g12Profile from "@tests/fixtures/g12-profile.json";
 import g12QueueFixture from "@tests/fixtures/g12-review-queue.json";
 import g12Year from "@tests/fixtures/g12-transactions-2025.json";
@@ -30,9 +31,11 @@ function stubApi() {
         : g12Estimate
       : url.endsWith("/review-queue")
         ? g12Queue
-        : url.includes("/transactions")
-          ? g12Year
-          : [g12Profile];
+        : url.endsWith("/bank-statements")
+          ? g12Statements
+          : url.includes("/transactions")
+            ? g12Year
+            : [g12Profile];
     return new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
   });
   vi.stubGlobal("fetch", fetchStub);
