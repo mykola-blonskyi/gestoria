@@ -114,7 +114,7 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
         Assert.Equal("https://gestoria.local/problems/installation-not-empty", problem["type"]!.GetValue<string>());
         Assert.Equal(id, problem["profileId"]!.GetValue<string>());
         Assert.Equal(2025, problem["taxYear"]!.GetValue<int>());
-        Assert.True(JsonNode.DeepEquals(new JsonObject { ["profiles"] = 1, ["bankTransactions"] = movements }, problem["entities"]), problem.ToJsonString());
+        Assert.True(JsonNode.DeepEquals(new JsonObject { ["profiles"] = 1, ["statementImports"] = 1, ["bankTransactions"] = movements }, problem["entities"]), problem.ToJsonString());
         AssertSameExport(stored, await client.GetStringAsync($"/api/v1/profiles/{id}/export"));
     }
 
@@ -150,7 +150,8 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
         Assert.Equal(18, import["alreadyImported"]!.GetValue<int>());
     }
 
-    // SPEC-009 §2.1: a known kind missing from a version 1 file reads as zero rows, as in a file exported before #72.
+    // SPEC-009 §2.1: a known kind missing from a version 1 file reads as zero rows, as in a file exported before #72, which
+    // holds neither movements nor statement imports.
     [Fact]
     public async Task AVersion1FileWithoutBankTransactionsRestoresTheProfileAlone()
     {
@@ -158,12 +159,87 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
         var client = api.CreateClient();
         var file = JsonNode.Parse(deleted.Export)!;
         Assert.True(file["entities"]!.AsObject().Remove("bankTransactions"));
+        Assert.True(file["entities"]!.AsObject().Remove("statementImports"));
 
         var response = await client.Restore(file.ToJsonString());
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        Assert.True(JsonNode.DeepEquals(new JsonObject { ["profiles"] = 1, ["bankTransactions"] = 0 }, (await response.Json())["entities"]));
+        Assert.True(JsonNode.DeepEquals(new JsonObject { ["profiles"] = 1, ["statementImports"] = 0, ["bankTransactions"] = 0 }, (await response.Json())["entities"]));
         Assert.Contains(("BankTransactions", 0), await StoredData.RowsPerTable(api));
+        Assert.Contains(("StatementImports", 0), await StoredData.RowsPerTable(api));
+    }
+
+    // SPEC-009 §2.1: a file exported before #88 holds no statement imports. Its movements' imports come back with the period
+    // #73 read from them, each import's first to last booking date, so the restored estimate is the one the file was made
+    // with.
+    [Fact]
+    public async Task AVersion1FileWithoutStatementImportsGetsOnePerImportOfItsMovements()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var file = JsonNode.Parse(deleted.Export)!;
+        Assert.True(file["entities"]!.AsObject().Remove("statementImports"));
+        foreach (var movement in file["entities"]!["bankTransactions"]!.AsArray().Where(movement => string.CompareOrdinal(movement!["bookingDate"]!.GetValue<string>(), "2025-07-01") >= 0))
+        {
+            movement!["importSequence"] = 2;
+        }
+
+        var response = await client.Restore(file.ToJsonString());
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var id = (await response.Json())["profileId"]!.GetValue<string>();
+        var export = JsonNode.Parse(await client.GetStringAsync($"/api/v1/profiles/{id}/export"))!;
+        Assert.True(JsonNode.DeepEquals(
+            JsonNode.Parse("""[{"sequence":1,"from":"2025-01-02","to":"2025-06-30"},{"sequence":2,"from":"2025-07-01","to":"2025-12-31"}]"""),
+            export["entities"]!["statementImports"]));
+    }
+
+    // An import that stored nothing new has no movement of its own in the file; its statement's movements are the file's
+    // inside its period, which bound it as they bound the import. 31 days past them is restored, as the import took it.
+    [Fact]
+    public async Task AnImportOfOnlyDuplicatesIsBoundedByTheFilesMovementsInItsPeriod()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var file = JsonNode.Parse(deleted.Export)!;
+        file["entities"]!["statementImports"]!.AsArray().Add(new JsonObject { ["sequence"] = 2, ["from"] = "2024-12-02", ["to"] = "2026-01-31" });
+
+        var response = await client.Restore(file.ToJsonString());
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(2, (await response.Json())["entities"]!["statementImports"]!.GetValue<int>());
+    }
+
+    // An installation before #88 kept a number only for an import that stored a line, so its file may skip one. The restore
+    // numbers the imports 1 to n in their order, and the next export restores again.
+    [Fact]
+    public async Task AVersion1FileWhoseImportsSkipANumberRestoresAndRoundTrips()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var file = JsonNode.Parse(deleted.Export)!;
+        Assert.True(file["entities"]!.AsObject().Remove("statementImports"));
+        foreach (var movement in file["entities"]!["bankTransactions"]!.AsArray().Where(movement => string.CompareOrdinal(movement!["bookingDate"]!.GetValue<string>(), "2025-07-01") >= 0))
+        {
+            movement!["importSequence"] = 3;
+        }
+
+        var restored = await client.Restore(file.ToJsonString());
+        Assert.Equal(HttpStatusCode.Created, restored.StatusCode);
+        var id = (await restored.Json())["profileId"]!.GetValue<string>();
+        var export = await client.GetStringAsync($"/api/v1/profiles/{id}/export");
+        Assert.Equal(HttpStatusCode.OK, (await client.Restore(file.ToJsonString())).StatusCode);
+        (await client.DeleteAsync($"/api/v1/profiles/{id}")).EnsureSuccessStatusCode();
+
+        var again = await client.Restore(export);
+
+        Assert.Equal(HttpStatusCode.Created, again.StatusCode);
+        var entities = JsonNode.Parse(export)!["entities"]!;
+        Assert.True(JsonNode.DeepEquals(
+            JsonNode.Parse("""[{"sequence":1,"from":"2025-01-02","to":"2025-06-30"},{"sequence":2,"from":"2025-07-01","to":"2025-12-31"}]"""),
+            entities["statementImports"]));
+        Assert.Equal([1, 2], entities["bankTransactions"]!.AsArray().Select(movement => movement!["importSequence"]!.GetValue<int>()).Distinct().Order());
+        AssertSameExport(export, await client.GetStringAsync($"/api/v1/profiles/{id}/export"));
     }
 
     // SPEC-009 §2.1: a movement without class, as in every file exported before #73, restores undecided; the classes the file
@@ -223,6 +299,16 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
         { "a class as a number", "$.entities.bankTransactions[0].class" },
         { "two classes joined by a comma", "$.entities.bankTransactions[0].class" },
         { "a class under a capitalised name", "$.entities.bankTransactions[0].Class" },
+        { "a null statement import", "$.entities.statementImports[0]" },
+        { "a statement import numbered 0", "$.entities.statementImports[0].sequence" },
+        { "two statement imports with one number", "$.entities.statementImports[1].sequence" },
+        { "a movement of no statement import", "$.entities.bankTransactions[0].importSequence" },
+        { "a period starting after its first movement", "$.entities.statementImports[0].from" },
+        { "a period ending before its last movement", "$.entities.statementImports[0].to" },
+        { "a period running into days to come", "$.entities.statementImports[0].to" },
+        { "a statement import holding no movement", "$.entities.statementImports[1]" },
+        { "a period starting 32 days before its first movement", "$.entities.statementImports[0].from" },
+        { "a period ending 32 days after its last movement", "$.entities.statementImports[0].to" },
     };
 
     [Theory]
@@ -231,6 +317,7 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
     {
         var file = JsonNode.Parse(deleted.Export)!.AsObject();
         var movements = file["entities"]!["bankTransactions"]!.AsArray();
+        var imports = file["entities"]!["statementImports"]!.AsArray();
         var first = movements[0]!;
         switch (change)
         {
@@ -283,6 +370,18 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
                 first.AsObject().Remove("class");
                 first["Class"] = "ActivityIncome";
                 break;
+            case "a null statement import": imports[0] = null; break;
+            case "a statement import numbered 0": imports[0]!["sequence"] = 0; break;
+            case "two statement imports with one number": imports.Add(imports[0]!.DeepClone()); break;
+            case "a movement of no statement import": first["importSequence"] = 2; break;
+            case "a period starting after its first movement": imports[0]!["from"] = "2025-01-03"; break;
+            case "a period ending before its last movement": imports[0]!["to"] = "2025-12-30"; break;
+            case "a period running into days to come": imports[0]!["to"] = "2999-12-31"; break;
+            case "a statement import holding no movement":
+                imports.Add(new JsonObject { ["sequence"] = 2, ["from"] = "2025-05-06", ["to"] = "2025-06-29" });
+                break;
+            case "a period starting 32 days before its first movement": imports[0]!["from"] = "2024-12-01"; break;
+            case "a period ending 32 days after its last movement": imports[0]!["to"] = "2026-02-01"; break;
         }
 
         await AssertRefused(WithHalfACharacter(file.ToJsonString()), path);

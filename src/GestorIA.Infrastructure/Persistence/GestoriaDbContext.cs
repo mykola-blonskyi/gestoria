@@ -11,6 +11,8 @@ public sealed class GestoriaDbContext(DbContextOptions<GestoriaDbContext> option
 {
     public DbSet<ProfileRow> Profiles => Set<ProfileRow>();
 
+    public DbSet<StatementImportRow> StatementImports => Set<StatementImportRow>();
+
     public DbSet<BankTransactionRow> BankTransactions => Set<BankTransactionRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -27,6 +29,14 @@ public sealed class GestoriaDbContext(DbContextOptions<GestoriaDbContext> option
             profile.Property(p => p.NewActivityPeriod).HasConversion<string>().HasMaxLength(9);
         });
 
+        modelBuilder.Entity<StatementImportRow>(import =>
+        {
+            import.ToTable("StatementImports", table => table.HasCheckConstraint("CK_StatementImports_Period", "\"From\" <= \"To\""));
+            import.HasKey(i => new { i.ProfileId, i.Sequence });
+            import.Ignore(i => i.Period);
+            import.HasOne<ProfileRow>().WithMany().HasForeignKey(i => i.ProfileId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<BankTransactionRow>(line =>
         {
             var classes = Enum.GetNames<TransactionClass>();
@@ -39,6 +49,8 @@ public sealed class GestoriaDbContext(DbContextOptions<GestoriaDbContext> option
             line.Property(t => t.LineKey).HasMaxLength(64).IsFixedLength();
             line.Property(t => t.Class).HasConversion<string>().HasMaxLength(classes.Max(name => name.Length));
             line.HasOne<ProfileRow>().WithMany().HasForeignKey(t => t.ProfileId).OnDelete(DeleteBehavior.Cascade);
+            // Every movement was stored by an import of its profile, which the database holds too.
+            line.HasOne<StatementImportRow>().WithMany().HasForeignKey(t => new { t.ProfileId, t.ImportSequence }).OnDelete(DeleteBehavior.Cascade);
         });
     }
 

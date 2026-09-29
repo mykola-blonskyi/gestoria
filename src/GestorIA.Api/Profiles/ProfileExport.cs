@@ -25,13 +25,32 @@ public sealed record ProfileExport(string Format, int FormatVersion, string Clas
     public static string FileName(DateTimeOffset exportedAt) =>
         string.Create(CultureInfo.InvariantCulture, $"gestoria-export-{MadridDay.Of(exportedAt):yyyy-MM-dd}.json");
 
-    public static ProfileExport Of(ProfileView profile, IEnumerable<BankTransactionRow> transactions, DateTimeOffset exportedAt) =>
-        new(FormatName, CurrentVersion, PersonalFinancialData, exportedAt, new ExportedEntities([profile], [.. transactions.Select(ExportedBankTransaction.From)]));
+    // The imports in their order and the movements in the list's.
+    public static ProfileExport Of(ProfileView profile, IEnumerable<StatementImportRow> imports, IEnumerable<BankTransactionRow> transactions, DateTimeOffset exportedAt) =>
+        new(
+            FormatName,
+            CurrentVersion,
+            PersonalFinancialData,
+            exportedAt,
+            new ExportedEntities(
+                [profile],
+                [.. transactions.OrderBy(t => t.BookingDate).ThenBy(t => t.ImportSequence).ThenBy(t => t.LineNumber).Select(ExportedBankTransaction.From)],
+                [.. imports.OrderBy(i => i.Sequence).Select(i => new ExportedStatementImport(i.Sequence, i.From, i.To))]));
 }
 
-// One member per table of the database, named after it (ProfileExportEndpoint holds the two together), each holding the rows
+// One member per table of the database, named after it (ProfileExportEndpoint holds them together), each holding the rows
 // that belong to the exported profile.
-public sealed record ExportedEntities(IReadOnlyList<ProfileView> Profiles, IReadOnlyList<ExportedBankTransaction> BankTransactions);
+public sealed record ExportedEntities(
+    IReadOnlyList<ProfileView> Profiles,
+    IReadOnlyList<ExportedBankTransaction> BankTransactions,
+    // Optional in the OpenAPI document, which a parameter with a default is: a file from before #88 has none. The restore
+    // reads an absent kind as an empty list (ProfileRestore.Parse), so it is never null once read.
+    IReadOnlyList<ExportedStatementImport> StatementImports = null!);
+
+// An imported statement (#88): the import's number, which its movements' importSequence names, and the period it covers.
+// Optional within version 1: a file exported before #88 has none, and a restore gives it one per importSequence of its
+// movements, from the first to the last booking date (SPEC-009 §2.1).
+public sealed record ExportedStatementImport(int Sequence, DateOnly From, DateOnly To);
 
 // A stored statement line as the list answers it (TransactionView), plus what a restore needs to store it again exactly: its
 // place in the day's order, the key that keeps a later import of the same statement from storing it twice, and the class the

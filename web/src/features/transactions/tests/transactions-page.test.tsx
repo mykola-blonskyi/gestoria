@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import databaseUnavailable from "@tests/fixtures/database-unavailable.json";
 import g12Profile from "@tests/fixtures/g12-profile.json";
 import g12QueueFixture from "@tests/fixtures/g12-review-queue.json";
+import g12Statements from "@tests/fixtures/g12-bank-statements.json";
 import g12Import from "@tests/fixtures/g12-statement-import.json";
 import g12Q1 from "@tests/fixtures/g12-transactions-2025-q1.json";
 import g12Year from "@tests/fixtures/g12-transactions-2025.json";
@@ -34,23 +35,24 @@ function stubApi({
   year = { status: 200, body: g12Year },
   q1 = { status: 200, body: g12Q1 },
   imported = { status: 200, body: g12Import },
+  statements = { status: 200, body: g12Statements },
   queue = g12Queue,
   classified = { status: 204, body: null },
-}: { profiles?: Answer; year?: Answer; q1?: Answer; imported?: Answer; queue?: ReviewItem[]; classified?: Answer } = {}) {
+}: { profiles?: Answer; year?: Answer; q1?: Answer; imported?: Answer; statements?: Answer; queue?: ReviewItem[]; classified?: Answer } = {}) {
   const resolved = new Set<string>();
-  const answerTo = (url: string): Answer => {
+  const answerTo = (url: string, method: string): Answer => {
     const classify = url.match(/\/transactions\/([^/]+)\/classify$/);
     if (classify !== null) {
       if (classified !== "unreachable" && classified.status === 204) resolved.add(classify[1]!);
       return classified;
     }
     if (url.endsWith("/review-queue")) return { status: 200, body: queue.filter((item) => !resolved.has(item.id)) };
-    if (url.includes("/bank-statements")) return imported;
+    if (url.includes("/bank-statements")) return method === "POST" ? imported : statements;
     if (url.includes("quarter=Q1")) return q1;
     return url.includes("/transactions") ? year : profiles;
   };
-  const fetchStub = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async (url) => {
-    const answer = answerTo(url);
+  const fetchStub = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async (url, init) => {
+    const answer = answerTo(url, init?.method ?? "GET");
     if (answer === "unreachable") throw new TypeError("fetch failed");
     if (answer.status === 204) return new Response(null, { status: 204 });
     const contentType = answer.status >= 400 ? "application/problem+json" : "application/json";
@@ -79,6 +81,13 @@ function renderPage(locale: Locale = "en") {
 }
 
 const statement = (size = 64) => new File(["x".repeat(size)], "bbva.csv", { type: "text/csv" });
+
+const CSV_HEADER = "Fecha;Fecha Valor;Concepto;Importe;Saldo";
+const csv = (...dates: string[]) =>
+  new File([[CSV_HEADER, ...dates.map((date) => `${date};${date};X;-1,00;`)].join("\r\n")], "bbva.csv", { type: "text/csv" });
+
+const posts = (fetchStub: ReturnType<typeof stubApi>) =>
+  fetchStub.mock.calls.filter(([, init]) => init?.method === "POST").map(([url]) => url);
 
 // jsdom does no layout: give every element a viewport's size so the virtualizer can measure.
 beforeEach(() => {
@@ -150,6 +159,98 @@ describe("TransactionsPage", () => {
     expect(fetchStub.mock.calls.length).toBe(calls);
   });
 
+  it("lists the imported statements with their periods", async () => {
+    const fetchStub = stubApi();
+    renderPage("en");
+
+    const section = await screen.findByRole("region", { name: en.statements.heading });
+    expect(await within(section).findByText(fill(en.statements.item, { sequence: 1, from: formatDate("2025-01-02", "en"), to: formatDate("2025-12-31", "en") }))).toBeInTheDocument();
+    expect(urls(fetchStub, "/bank-statements")).toEqual([`${PROFILE}/bank-statements`]);
+  });
+
+  it("lists the imported statements in Ukrainian", async () => {
+    stubApi();
+    renderPage("uk");
+    const messages = MESSAGES.uk.Transactions;
+
+    const section = await screen.findByRole("region", { name: messages.statements.heading });
+    expect(
+      await within(section).findByText(fill(messages.statements.item, { sequence: 1, from: formatDate("2025-01-02", "uk"), to: formatDate("2025-12-31", "uk") })),
+    ).toBeInTheDocument();
+  });
+
+  it("says when no statement was imported yet", async () => {
+    stubApi({ statements: { status: 200, body: [] } });
+    renderPage();
+
+    expect(await screen.findByText(en.statements.empty)).toBeInTheDocument();
+  });
+
+  it("fills the period from the first and last dates of the chosen file, whatever their order", async () => {
+    const fetchStub = stubApi();
+    const user = renderPage();
+    await screen.findByText(fill(en.list.count, { count: g12Year.length }));
+
+    await user.upload(screen.getByLabelText(en.import.file), csv("15/03/2025", "02/01/2025", "30/06/2025", "not a date"));
+
+    await waitFor(() => expect(screen.getByLabelText(en.import.from)).toHaveValue("2025-01-02"));
+    expect(screen.getByLabelText(en.import.to)).toHaveValue("2025-06-30");
+
+    await user.click(screen.getByRole("button", { name: en.import.submit }));
+    await screen.findByText(fill(en.import.donePeriod, { from: formatDate("2025-01-02", "en"), to: formatDate("2025-12-31", "en") }));
+    expect(posts(fetchStub)).toEqual([`${PROFILE}/bank-statements?bank=bbva&from=2025-01-02&to=2025-06-30`]);
+  });
+
+  it("clears the period when the chosen file holds no date, and leaves it out of the request when cleared", async () => {
+    const fetchStub = stubApi();
+    const user = renderPage();
+    await screen.findByText(fill(en.list.count, { count: g12Year.length }));
+
+    await user.upload(screen.getByLabelText(en.import.file), csv("15/03/2025"));
+    await waitFor(() => expect(screen.getByLabelText(en.import.from)).toHaveValue("2025-03-15"));
+    await user.upload(screen.getByLabelText(en.import.file), statement());
+    await waitFor(() => expect(screen.getByLabelText(en.import.from)).toHaveValue(""));
+    expect(screen.getByLabelText(en.import.to)).toHaveValue("");
+
+    await user.click(screen.getByRole("button", { name: en.import.submit }));
+    await screen.findByText(fill(en.import.donePeriod, { from: formatDate("2025-01-02", "en"), to: formatDate("2025-12-31", "en") }));
+    expect(posts(fetchStub)).toEqual([`${PROFILE}/bank-statements?bank=bbva`]);
+  });
+
+  it("sends the period the user widened it to", async () => {
+    const fetchStub = stubApi();
+    const user = renderPage();
+    await screen.findByText(fill(en.list.count, { count: g12Year.length }));
+
+    await user.upload(screen.getByLabelText(en.import.file), csv("15/03/2025"));
+    await waitFor(() => expect(screen.getByLabelText(en.import.to)).toHaveValue("2025-03-15"));
+    await user.clear(screen.getByLabelText(en.import.to));
+    await user.type(screen.getByLabelText(en.import.to), "2025-03-31");
+    await user.click(screen.getByRole("button", { name: en.import.submit }));
+
+    await waitFor(() => expect(posts(fetchStub)).toHaveLength(1));
+    expect(posts(fetchStub)).toEqual([`${PROFILE}/bank-statements?bank=bbva&from=2025-03-15&to=2025-03-31`]);
+  });
+
+  it("shows the reason the API refused the period", async () => {
+    stubApi({
+      imported: problem(400, {
+        type: "https://gestoria.local/problems/invalid-input",
+        title: "The input is not valid",
+        errors: { to: ["The period cannot run past today."] },
+      }),
+    });
+    const user = renderPage();
+    await screen.findByText(fill(en.list.count, { count: g12Year.length }));
+
+    await user.upload(screen.getByLabelText(en.import.file), csv("15/03/2025"));
+    await user.click(screen.getByRole("button", { name: en.import.submit }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(en.failure.refused);
+    expect(alert).toHaveTextContent("The period cannot run past today.");
+  });
+
   it("imports the file as the body, says what was stored and reads the list again", async () => {
     const fetchStub = stubApi();
     const user = renderPage();
@@ -160,7 +261,7 @@ describe("TransactionsPage", () => {
     await user.click(screen.getByRole("button", { name: en.import.submit }));
 
     expect(await screen.findByText("18 movements read: 18 new, 0 already imported.")).toBeInTheDocument();
-    const [url, init] = fetchStub.mock.calls.find(([called]) => called.includes("/bank-statements"))!;
+    const [url, init] = fetchStub.mock.calls.find(([, called]) => called?.method === "POST")!;
     expect(url).toBe(`${PROFILE}/bank-statements?bank=bbva`);
     expect(init?.method).toBe("POST");
     expect(init?.body).toBe(file);
@@ -218,7 +319,7 @@ describe("TransactionsPage", () => {
     await user.upload(screen.getByLabelText(en.import.file), statement(2 * 1024 * 1024 + 1));
     await user.click(screen.getByRole("button", { name: en.import.submit }));
     expect(screen.getByRole("alert")).toHaveTextContent(en.failure.tooLarge);
-    expect(urls(fetchStub, "/bank-statements")).toHaveLength(1);
+    expect(posts(fetchStub)).toHaveLength(1);
   });
 
   it("says the database is not answering when the API cannot reach it", async () => {

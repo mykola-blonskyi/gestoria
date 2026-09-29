@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { profileKeys } from "@/data/profiles";
 import type { Quarter } from "@/data/set-aside";
-import { classifyMutation, importStatementMutation, reviewQueueQuery, transactionsQuery } from "@/data/transactions";
+import { classifyMutation, importStatementMutation, reviewQueueQuery, statementsQuery, transactionsQuery } from "@/data/transactions";
 
 export function useTransactions(profileId: string, year: number, quarter: Quarter | null) {
   return useQuery(transactionsQuery(profileId, year, quarter));
@@ -10,6 +10,10 @@ export function useTransactions(profileId: string, year: number, quarter: Quarte
 
 export function useReviewQueue(profileId: string) {
   return useQuery(reviewQueueQuery(profileId));
+}
+
+export function useStatements(profileId: string) {
+  return useQuery(statementsQuery(profileId));
 }
 
 // An import or a class can change any quarter's lists, the review queue and the actuals the estimate counts, so every

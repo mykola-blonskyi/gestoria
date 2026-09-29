@@ -59,6 +59,7 @@ public class WebFixtures(ApiFactory api) : IClassFixture<ApiFactory>
         var id = await client.CreateProfile();
 
         await AssertFixture("g12-statement-import.json", await client.ImportStatement(id, RepoFiles.Statement));
+        await AssertFixture("g12-bank-statements.json", await client.GetAsync($"/api/v1/profiles/{id}/bank-statements"));
         var year = await client.GetAsync($"/api/v1/profiles/{id}/transactions?year=2025");
         var ids = JsonNode.Parse(await year.Content.ReadAsStringAsync())!.AsArray().Select(t => t!["id"]!.GetValue<string>()).ToList();
         var fixtureIds = ids.Select((movement, index) => (movement, $"00000000-0000-0000-0072-{index + 1:D12}")).Append((id, FixtureId)).ToList();

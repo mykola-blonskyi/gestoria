@@ -10,6 +10,7 @@ export type Transaction = components["schemas"]["TransactionView"];
 export type Bank = operations["importBankStatement"]["parameters"]["query"]["bank"];
 export type ReviewItem = components["schemas"]["ReviewItem"];
 export type TransactionClass = components["schemas"]["TransactionClass"];
+export type StatementImport = components["schemas"]["StatementImportView"];
 
 export const BANKS = ["bbva"] as const satisfies readonly Bank[];
 
@@ -31,6 +32,7 @@ export const transactionKeys = {
   list: (profileId: string, year: number, quarter: Quarter | null) =>
     ["profiles", profileId, "transactions", year, quarter ?? "year"] as const,
   reviewQueue: (profileId: string) => ["profiles", profileId, "review-queue"] as const,
+  statements: (profileId: string) => ["profiles", profileId, "bank-statements"] as const,
 };
 
 export const transactionsQuery = (profileId: string, year: number, quarter: Quarter | null) =>
@@ -40,16 +42,26 @@ export const transactionsQuery = (profileId: string, year: number, quarter: Quar
       apiFetch<Transaction[]>(`/profiles/${profileId}/transactions?year=${year}${quarter === null ? "" : `&quarter=${quarter}`}`),
   });
 
-// The file itself is the body; importing it again stores nothing twice, so a retry is harmless.
+// Every import is a statement with a period, ordered by it.
+export const statementsQuery = (profileId: string) =>
+  queryOptions({
+    queryKey: transactionKeys.statements(profileId),
+    queryFn: () => apiFetch<StatementImport[]>(`/profiles/${profileId}/bank-statements`),
+  });
+
+// The file itself is the body; importing it again stores nothing twice, so a retry is harmless. Without from and to the
+// API takes the first and last booking date of the file as the period.
 export const importStatementMutation = () =>
   mutationOptions({
     mutationKey: ["profiles", "bank-statements", "import"],
-    mutationFn: ({ profileId, bank, file }: { profileId: string; bank: Bank; file: File }) =>
-      apiFetch<components["schemas"]["BankStatementImport"]>(`/profiles/${profileId}/bank-statements?bank=${bank}`, {
+    mutationFn: ({ profileId, bank, file, from, to }: { profileId: string; bank: Bank; file: File; from?: string; to?: string }) => {
+      const period = (from ? `&from=${from}` : "") + (to ? `&to=${to}` : "");
+      return apiFetch<components["schemas"]["BankStatementImport"]>(`/profiles/${profileId}/bank-statements?bank=${bank}${period}`, {
         method: "POST",
         headers: { "Content-Type": "text/csv" },
         body: file,
-      }),
+      });
+    },
   });
 
 // The movements no rule is sure about, oldest first, each with the class a rule suggests when one does.

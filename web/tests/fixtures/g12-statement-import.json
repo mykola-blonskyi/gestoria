@@ -2,5 +2,7 @@
   "bank": "bbva",
   "lines": 18,
   "imported": 18,
-  "alreadyImported": 0
+  "alreadyImported": 0,
+  "from": "2025-01-02",
+  "to": "2025-12-31"
 }

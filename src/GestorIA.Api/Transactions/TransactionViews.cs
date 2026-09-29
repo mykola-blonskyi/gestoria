@@ -6,8 +6,15 @@ using GestorIA.Infrastructure.Transactions;
 
 namespace GestorIA.Api.Transactions;
 
-// The answer to an import: how many movements the file held, how many were new and how many an earlier import already stored.
-public sealed record BankStatementImport(string Bank, int Lines, int Imported, int AlreadyImported);
+// The answer to an import: how many movements the file held, how many were new and how many an earlier import already stored,
+// and the period the statement was recorded for.
+public sealed record BankStatementImport(string Bank, int Lines, int Imported, int AlreadyImported, DateOnly From, DateOnly To);
+
+// An imported statement (#88): the import's number and the days its statement covers, both ends included.
+public sealed record StatementImportView(int Sequence, DateOnly From, DateOnly To)
+{
+    public static StatementImportView Of(StatementImportRow row) => new(row.Sequence, row.From, row.To);
+}
 
 // A stored statement line (SPEC-009 §1): money as a signed string with two decimals, positive for money in, dates ISO-8601.
 public sealed record TransactionView(
