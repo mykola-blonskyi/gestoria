@@ -2,7 +2,15 @@
 
 The browser side of GestorIA: a Next.js App Router application that shows the engine's answers in Ukrainian, Spanish, English or Russian. It runs on your machine next to the API (ADR-0010). It never computes tax; every figure comes from the engine through the API (ADR-0017, SPEC-012).
 
-Settings edits the taxpayer profile the API stores and deletes everything stored, and the overview shows the set-aside estimate the API computes from it (#66, #69, #74). Transactions imports a bank statement into that profile, lists its movements (#72) and asks what the unclear ones are, and the estimate counts the classified movements of closed quarters (#73). Backup downloads all of it in one file (#74) and restores that file into an empty installation (#75). The app opens locked and unlocks with the API key of your installation (#68). Every other page is an honest empty state that says what it will show.
+The app has seven pages, and every figure on them comes from the API:
+
+- **Overview** shows the set-aside estimate the API computes from the stored profile for the quarter picked: the share to hold back, the next Modelo 130, the monthly TGSS cuota, the Renta gap and its window, the notices and the trace. It says whether the figures rest on the projection or on classified movements of closed quarters (#66, #69, #73, #89).
+- **Payments** lists every obligation of the tax year in date order, with its window and its amount when the engine knows it, and exports the dates still to come as an ICS file (#70).
+- **Transactions** imports a BBVA statement into the profile, lists its movements, and asks in a keyboard-driven review queue what the unclear ones are (#72, #73).
+- **Periods** opens a quarter, with its Modelo 130 casilla by casilla, or the tax year, with the annual true-up gap, each with its trace (#71, #87).
+- **Settings** edits the taxpayer profile the API stores, the language and the theme, and deletes everything stored behind a typed confirmation (#69, #74).
+- **Backup** downloads everything stored in one file and restores that file into an empty installation (#74, #75).
+- **Access** says the app is unlocked and locks it. The app opens locked and unlocks with the API key of your installation (#68).
 
 ## Run it
 
