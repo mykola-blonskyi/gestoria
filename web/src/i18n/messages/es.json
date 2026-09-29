@@ -371,6 +371,8 @@
       "unsendable": "Una clave se compone de letras latinas, cifras y símbolos. Revisa la distribución del teclado y vuelve a intentarlo.",
       "unreachable": "La API de GestorIA no está en marcha.",
       "unreachableNext": "Iníciala desde la carpeta del proyecto con este comando y vuelve a intentarlo:",
+      "cors": "Algo responde en la dirección de la API de GestorIA, pero el navegador rechazó la llamada.",
+      "corsNext": "Comprueba que en esa dirección esté la API de GestorIA. Si lo está, inicia la API permitiendo la dirección de esta página y vuelve a intentarlo:",
       "database": "La API de GestorIA está en marcha, pero su base de datos no.",
       "databaseNext": "Inicia la base de datos desde la carpeta del proyecto con este comando y vuelve a intentarlo:",
       "other": "La API ha respondido con un error ({status}). Vuelve a intentarlo."

@@ -23,7 +23,7 @@ const taxYears = [
 ] satisfies TaxYear[];
 const HEADER = "X-Api-Key";
 
-type Answer = "ok" | "unauthorized" | "unreachable" | "noDatabase";
+type Answer = "ok" | "unauthorized" | "unreachable" | "blocked" | "noDatabase";
 
 // The API: the list of tax years for the right key, the api-key-required problem otherwise, or no API at all. Readiness
 // answers 204, or the API's own database-unavailable problem when the database is down.
@@ -31,6 +31,11 @@ function stubApi(answer: (key: string | null, url: string) => Answer = (key) => 
   const fetchStub = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async (url, init) => {
     const outcome = answer(new Headers(init?.headers).get(HEADER), url);
     if (outcome === "unreachable") throw new TypeError("fetch failed");
+    // The API is up but CORS refuses this page: only the no-cors liveness probe gets through, as an opaque response.
+    if (outcome === "blocked") {
+      if (init?.mode === "no-cors") return new Response(null);
+      throw new TypeError("Failed to fetch");
+    }
     if (outcome === "noDatabase") {
       return new Response(JSON.stringify(databaseUnavailable), { status: 503, headers: { "Content-Type": "application/problem+json" } });
     }
@@ -125,6 +130,21 @@ describe("AuthGate", () => {
     expect(alert).toHaveTextContent("dotnet run --project src/GestorIA.Api");
     expect(alert).not.toHaveTextContent(MESSAGES[locale].Auth.unlock.wrongKey);
     expect(screen.queryByText(/tax years/)).not.toBeInTheDocument();
+  });
+
+  it.each(LOCALES)("in %s names CORS, not a stopped API, and this page's origin, when the API is up but refuses the page", async (locale) => {
+    stubApi(() => "blocked");
+    renderInApp(gated(), { locale });
+
+    await unlockWith(KEY, locale);
+
+    const alert = await screen.findByRole("alert");
+    const messages = MESSAGES[locale].Auth.unlock;
+    expect(alert).toHaveTextContent(messages.cors);
+    expect(alert).toHaveTextContent(messages.corsNext);
+    expect(alert).toHaveTextContent(`Cors__Origins__0=${window.location.origin} dotnet run --project src/GestorIA.Api`);
+    expect(alert).not.toHaveTextContent(messages.unreachable);
+    expect(alert).not.toHaveTextContent(messages.wrongKey);
   });
 
   it.each(LOCALES)("in %s says the database is not running, and how to start it, when the API cannot reach it", async (locale) => {

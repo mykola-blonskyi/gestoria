@@ -32,7 +32,8 @@ export function isDatabaseUnavailable(error: unknown): boolean {
 export type ApiFailure =
   | { kind: "problem"; problem: ProblemDetails }
   | { kind: "http"; status: number }
-  | { kind: "network" };
+  // `reachable`: something answered a probe that needs no CORS permission, so the browser refused the call, not the network.
+  | { kind: "network"; reachable: boolean };
 
 // The message carries only the status and the problem type's title, never `detail`
 // or extensions, which may hold amounts: an uncaught error reaches the console (SPEC-013).
