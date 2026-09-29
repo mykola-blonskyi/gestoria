@@ -31,13 +31,6 @@
         }
       }
     ],
-    "statementImports": [
-      {
-        "sequence": 1,
-        "from": "2025-01-02",
-        "to": "2025-12-31"
-      }
-    ],
     "bankTransactions": [
       {
         "id": "00000000-0000-0000-0072-000000000001",
@@ -254,6 +247,13 @@
         "lineNumber": 19,
         "lineKey": "1874565a02634f993c8b9397a01b886b2ffad25d6b8c3640714c76494fce8201",
         "class": null
+      }
+    ],
+    "statementImports": [
+      {
+        "sequence": 1,
+        "from": "2025-01-02",
+        "to": "2025-12-31"
       }
     ]
   }

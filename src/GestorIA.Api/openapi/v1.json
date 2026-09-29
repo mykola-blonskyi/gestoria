@@ -1877,7 +1877,6 @@
       "ExportedEntities": {
         "required": [
           "profiles",
-          "statementImports",
           "bankTransactions"
         ],
         "type": "object",
@@ -1888,16 +1887,16 @@
               "$ref": "#/components/schemas/ProfileView"
             }
           },
-          "statementImports": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ExportedStatementImport"
-            }
-          },
           "bankTransactions": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ExportedBankTransaction"
+            }
+          },
+          "statementImports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExportedStatementImport"
             }
           }
         }

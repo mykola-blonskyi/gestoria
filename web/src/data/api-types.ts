@@ -392,8 +392,8 @@ export interface components {
         };
         ExportedEntities: {
             profiles: components["schemas"]["ProfileView"][];
-            statementImports: components["schemas"]["ExportedStatementImport"][];
             bankTransactions: components["schemas"]["ExportedBankTransaction"][];
+            statementImports?: components["schemas"]["ExportedStatementImport"][];
         };
         ExportedStatementImport: {
             /** Format: int32 */
