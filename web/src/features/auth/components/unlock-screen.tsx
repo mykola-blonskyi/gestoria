@@ -11,6 +11,7 @@ import { PageHeader } from "@/shared/ui/page-header";
 import { useUnlock } from "../hooks/use-api-key";
 
 const START_API_COMMAND = "dotnet run --project src/GestorIA.Api";
+const ALLOW_ORIGIN_VARIABLE = "Cors__Origins__0";
 const START_DATABASE_COMMAND = "docker compose up -d postgres";
 
 export function UnlockScreen({ refused }: { refused: boolean }) {
@@ -65,6 +66,9 @@ function UnlockFailure({ error }: { error: Error }) {
   const failure = error instanceof ApiError ? error.failure : null;
   const status = failure?.kind === "problem" ? failure.problem.status : failure?.kind === "http" ? failure.status : 0;
 
+  if (failure?.kind === "network" && failure.reachable) {
+    return <StartIt title={t("cors")} next={t("corsNext")} command={`${ALLOW_ORIGIN_VARIABLE}=${window.location.origin} ${START_API_COMMAND}`} />;
+  }
   if (failure?.kind === "network") return <StartIt title={t("unreachable")} next={t("unreachableNext")} command={START_API_COMMAND} />;
   if (isDatabaseUnavailable(error)) return <StartIt title={t("database")} next={t("databaseNext")} command={START_DATABASE_COMMAND} />;
   return <Alert title={status === 401 ? t("wrongKey") : t("other", { status })} />;

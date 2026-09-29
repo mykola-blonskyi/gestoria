@@ -1,10 +1,23 @@
 import { ApiError, parseProblem } from "@/shared/lib/api-error";
 import { API_KEY_HEADER, apiKeyStore } from "@/data/api-key-store";
 
+const PROBE_TIMEOUT_MS = 3000;
 const DEFAULT_API_BASE_URL = "http://localhost:5080";
 
 export function apiBaseUrl(): string {
   return (process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/+$/, "");
+}
+
+// A browser reports a refused connection and a CORS refusal alike, as a TypeError from fetch. A no-cors request to the open
+// liveness endpoint tells them apart: it needs no CORS permission, resolves as an opaque response when something answers, and
+// rejects when nothing does.
+async function apiAnswers(): Promise<boolean> {
+  try {
+    await fetch(`${apiBaseUrl()}/api/v1/health/live`, { mode: "no-cors", signal: AbortSignal.timeout(PROBE_TIMEOUT_MS) });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // Every caller below wants the same request: the local API key attached, a network failure and a 401 turned into the
@@ -19,7 +32,7 @@ async function request(path: `/${string}`, accept: string, init: RequestInit): P
   try {
     response = await fetch(`${apiBaseUrl()}/api/v1${path}`, { ...init, headers });
   } catch {
-    throw new ApiError({ kind: "network" });
+    throw new ApiError({ kind: "network", reachable: await apiAnswers() });
   }
 
   if (response.status === 401) apiKeyStore.refused(headers.get(API_KEY_HEADER));

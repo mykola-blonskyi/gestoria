@@ -117,8 +117,24 @@ describe("apiFetch", () => {
 
     const error = await failureOf(apiFetch("/health/live"));
 
-    expect(error.failure).toEqual({ kind: "network" });
+    expect(error.failure).toEqual({ kind: "network", reachable: false });
     expect(error.message).toBe("API unreachable");
+  });
+
+  it("tells a call the browser refused from an API that is not there, by a probe that needs no CORS permission", async () => {
+    const fetchStub = vi
+      .fn<(url: string, init?: RequestInit) => Promise<Response>>()
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValueOnce(new Response(null));
+    vi.stubGlobal("fetch", fetchStub);
+
+    const error = await failureOf(apiFetch("/config/tax-years"));
+
+    expect(error.failure).toEqual({ kind: "network", reachable: true });
+    const [probeUrl, probeInit] = fetchStub.mock.calls[1]!;
+    expect(probeUrl).toMatch(/\/api\/v1\/health\/live$/);
+    expect(probeInit?.mode).toBe("no-cors");
+    expect(new Headers(probeInit?.headers).get("X-Api-Key")).toBeNull();
   });
 });
 
@@ -127,7 +143,7 @@ describe("shouldRetry", () => {
     new ApiError({ kind: "problem", problem: { type: "about:blank", title: "", status, extensions: {} } });
 
   it.each([
-    ["an unreachable API", new ApiError({ kind: "network" })],
+    ["an unreachable API", new ApiError({ kind: "network", reachable: false })],
     ["a 503 answer", new ApiError({ kind: "http", status: 503 })],
     ["a 500 problem", problem(500)],
   ])("retries %s", (_, error) => {

@@ -305,6 +305,26 @@ describe("restoring an export", () => {
     expect(restoreCalls(fetchStub)).toEqual([]);
   });
 
+  // A browser fires `change` only when the input's value differs, so a file the input still holds cannot be picked again.
+  it("lets the same file be picked again once it has been read, restored or cancelled", async () => {
+    stubApi();
+    const file = exportFile();
+    const user = await choose(file);
+    const input = screen.getByLabelText(restoreText.file) as HTMLInputElement;
+    await screen.findByRole("button", { name: restoreText.confirm });
+    expect(input.value).toBe("");
+
+    await user.click(screen.getByRole("button", { name: restoreText.cancel }));
+    await user.upload(screen.getByLabelText(restoreText.file), file);
+    await user.click(await screen.findByRole("button", { name: restoreText.confirm }));
+    await screen.findByText(translator("en")("done", { year: 2025, count: 18 }), { exact: false });
+    expect((screen.getByLabelText(restoreText.file) as HTMLInputElement).value).toBe("");
+
+    await user.upload(screen.getByLabelText(restoreText.file), file);
+    expect(await screen.findByRole("button", { name: restoreText.confirm })).toBeEnabled();
+    expect(screen.queryByText(translator("en")("done", { year: 2025, count: 18 }), { exact: false })).not.toBeInTheDocument();
+  });
+
   it("forgets the file on cancel and sends nothing", async () => {
     const fetchStub = stubApi();
     const user = await choose(exportFile());

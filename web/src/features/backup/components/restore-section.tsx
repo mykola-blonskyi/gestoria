@@ -27,13 +27,14 @@ export function RestoreSection() {
   const t = useTranslations("Backup.restore");
   const id = useId();
   const [chosen, setChosen] = useState<Chosen | null>(null);
-  // A new key empties the file input, which cannot be cleared from React.
-  const [inputKey, setInputKey] = useState(0);
   const [restored, setRestored] = useState<Restored | null>(null);
   const restore = useRestoreProfile();
 
   async function choose(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
+    // The file is read below from the File object, so the input can let go of it: a browser fires `change` only when the
+    // input's value differs, and the same file could not be picked again.
+    event.target.value = "";
     restore.reset();
     setRestored(null);
     if (file === undefined) return setChosen(null);
@@ -45,7 +46,6 @@ export function RestoreSection() {
   function clear() {
     restore.reset();
     setChosen(null);
-    setInputKey((key) => key + 1);
   }
 
   function confirm(text: string, year: number) {
@@ -71,7 +71,6 @@ export function RestoreSection() {
             {t("file")}
           </label>
           <input
-            key={inputKey}
             id={`${id}-file`}
             type="file"
             accept=".json,application/json"
