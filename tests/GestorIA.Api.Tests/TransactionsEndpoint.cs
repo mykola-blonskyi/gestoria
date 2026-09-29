@@ -135,11 +135,12 @@ public class TransactionsEndpoint
             (await response.Json())["errors"]!["from"]![0]!.GetValue<string>());
     }
 
+    // A statement's period is read from its movements and runs at most 31 days past them (#88), so a file without one has
+    // none to record, whatever it states.
     [Theory]
-    [InlineData(null, null, "from,to")]
-    [InlineData("2025-04-01", null, "to")]
-    [InlineData("2025-04-02", "2025-04-01", "from")]
-    public async Task AStatementWithoutMovementsMustStateItsWholePeriod(string? from, string? to, string fields)
+    [InlineData(null, null)]
+    [InlineData("2025-04-01", "2025-04-30")]
+    public async Task AStatementWithoutMovementsIsRefused(string? from, string? to)
     {
         await using var api = await Api();
         var client = api.CreateClient();
@@ -148,21 +149,36 @@ public class TransactionsEndpoint
         var response = await client.ImportStatement(id, Encoding.UTF8.GetBytes(Header), from: from, to: to);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(fields.Split(','), (await response.Json())["errors"]!.AsObject().Select(error => error.Key).Order(StringComparer.Ordinal));
+        Assert.Equal(["file"], (await response.Json())["errors"]!.AsObject().Select(error => error.Key));
         Assert.Empty(await client.Statements(id));
     }
 
-    [Fact]
-    public async Task AStatementWithoutMovementsIsRecordedForTheWholePeriodItStates()
+    // The synthetic statement runs from 2 January to 31 December 2025: a period may start 31 days before it and end 31 days
+    // after it, and not a day more, since an autónomo's account holds a movement every month.
+    [Theory]
+    [InlineData("2024-12-02", null, null)]
+    [InlineData("2024-12-01", null, "from")]
+    [InlineData(null, "2026-01-31", null)]
+    [InlineData(null, "2026-02-01", "to")]
+    public async Task APeriodRunsAtMost31DaysPastTheStatementsMovements(string? from, string? to, string? refused)
     {
         await using var api = await Api();
         var client = api.CreateClient();
         var id = await client.CreateProfile();
 
-        var response = await client.ImportStatement(id, Encoding.UTF8.GetBytes(Header), from: "2025-04-01", to: "2025-06-30");
+        var response = await client.ImportStatement(id, RepoFiles.Statement, from: from, to: to);
 
-        Assert.True(JsonNode.DeepEquals(Imported(0, 0, 0, "2025-04-01", "2025-06-30"), await response.Json()));
-        Assert.True(JsonNode.DeepEquals(JsonNode.Parse("""[{"sequence":1,"from":"2025-04-01","to":"2025-06-30"}]"""), await client.Statements(id)));
+        if (refused is null)
+        {
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Single(await client.Statements(id));
+        }
+        else
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal([refused], (await response.Json())["errors"]!.AsObject().Select(error => error.Key));
+            Assert.Empty(await Transactions(client, id));
+        }
     }
 
     // A long statement followed at once by a short one: each day's lines follow their imports' order and then their files',

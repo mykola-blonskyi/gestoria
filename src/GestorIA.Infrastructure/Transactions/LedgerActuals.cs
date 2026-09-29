@@ -217,7 +217,8 @@ public static class LedgerActuals
         var merged = new List<StatementPeriod>();
         foreach (var span in statements.OrderBy(span => span.From))
         {
-            if (merged.Count > 0 && span.From <= merged[^1].To.AddDays(1))
+            // The last day there is has no next day to meet.
+            if (merged.Count > 0 && (merged[^1].To == DateOnly.MaxValue || span.From <= merged[^1].To.AddDays(1)))
             {
                 merged[^1] = merged[^1] with { To = new[] { merged[^1].To, span.To }.Max() };
             }

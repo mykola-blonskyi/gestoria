@@ -254,6 +254,15 @@ public class LedgerActualsTests
         Assert.Equal(["2025-01-02..2025-02-28", "2025-03-10..2025-12-31"], coverage.Inputs.Where(input => input.Name == "statementPeriod").Select(input => input.Value));
     }
 
+    // A statement dated in the last year there is has no next day for another period to meet; the periods still join.
+    [Fact]
+    public void APeriodEndingOnTheLastDayThereIsStillJoinsTheOthers()
+    {
+        var ledger = LedgerActuals.Of(January, [Line(2, 20, 1000.00m, Income)], [Period("2025-01-02", "9999-12-31"), Period("9999-12-31", "9999-12-31"), Period("2025-01-10", "2025-02-01")], Config, Quarter.Q1, AfterTheYear);
+
+        Assert.Equal(Quarter.Q1, ledger.Counts.ActualsThrough);
+    }
+
     // A taxpayer who registered on 10 May can have no activity before it: Q2 needs movements from the alta on.
     [Fact]
     public void CoverageOfTheAltasQuarterStartsAtTheAlta()

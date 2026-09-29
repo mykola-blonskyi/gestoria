@@ -289,9 +289,12 @@ public static class ProfileRestore
         }
 
         // Each import's sequence is one of 1 to the number of imports, and no two share one, so they are exactly those numbers.
-        // Its period passes the rule an import's does, against the movements the file says it stored: a period that leaves one
-        // out, or runs into days still to come, would count days as covered that no statement holds.
+        // Its period passes the rule an import's does. Its statement's movements are the ones it stored and every movement of
+        // the file inside its period: an import stores only what an earlier one did not, and the file holds what each earlier
+        // one stored. A period that leaves one out, or runs far past them or into days still to come, would count days as
+        // covered that no statement holds.
         var datesOf = movements.OfType<ExportedBankTransaction>().ToLookup(movement => movement.ImportSequence, movement => movement.BookingDate);
+        var allDates = movements.OfType<ExportedBankTransaction>().Select(movement => movement.BookingDate).Order().ToArray();
         var importRows = new StatementImportRow?[imports.Count];
         var bySequence = new Dictionary<int, int>();
         for (var i = 0; i < imports.Count; i++)
@@ -311,7 +314,7 @@ public static class ProfileRestore
                 RefuseImport(i, "sequence", Invariant($"is the sequence of {Imports}[{bySequence[import.Sequence]}] too"));
             }
 
-            var dates = datesOf[import.Sequence].ToList();
+            var dates = datesOf[import.Sequence].Concat(Within(allDates, import.From, import.To)).ToList();
             var refusals = StatementPeriod.Refusals(import.From, import.To, dates.Count == 0 ? null : dates.Min(), dates.Count == 0 ? null : dates.Max(), today);
             foreach (var (end, reason) in refusals)
             {
@@ -331,11 +334,22 @@ public static class ProfileRestore
 
         var stored = rows.Select(row => row!).ToList();
         // A file without statement imports, as every file exported before #88, gets one per import its movements name, over
-        // the first to the last booking date of what that import stored: the days #73 read from the lines.
+        // the first to the last booking date of what that import stored: the days #73 read from the lines. They are numbered
+        // 1 to n in their order and the movements follow, since a file of an installation before #88 may skip a number and
+        // the imports' numbers are exactly 1 to n from then on.
         var statements = imports.Count > 0
             ? [.. importRows.Select(row => row!)]
             : stored.GroupBy(row => row.ImportSequence)
-                .Select(import => new StatementImportRow { Sequence = import.Key, From = import.Min(row => row.BookingDate), To = import.Max(row => row.BookingDate) })
+                .OrderBy(import => import.Key)
+                .Select((import, index) =>
+                {
+                    foreach (var row in import)
+                    {
+                        row.ImportSequence = index + 1;
+                    }
+
+                    return new StatementImportRow { Sequence = index + 1, From = import.Min(row => row.BookingDate), To = import.Max(row => row.BookingDate) };
+                })
                 .ToList();
         foreach (var row in stored)
         {
@@ -348,6 +362,26 @@ public static class ProfileRestore
         }
 
         return new Restored(profile!, statements, stored, ProfileExport.Of(ProfileView.From(profile!.Id, profile.ToProfile()), statements, stored, DateTimeOffset.UnixEpoch).Entities);
+    }
+
+    // The dates of sorted between from and to, both included.
+    private static ArraySegment<DateOnly> Within(DateOnly[] sorted, DateOnly from, DateOnly to)
+    {
+        var (start, end) = (FirstWhere(sorted, date => date >= from), FirstWhere(sorted, date => date > to));
+        return start < end ? new ArraySegment<DateOnly>(sorted, start, end - start) : [];
+    }
+
+    // The index of the first date the test holds for, which holds for every later one too; the length when there is none.
+    private static int FirstWhere(DateOnly[] sorted, Func<DateOnly, bool> test)
+    {
+        var (low, high) = (0, sorted.Length);
+        while (low < high)
+        {
+            var middle = (low + high) / 2;
+            (low, high) = test(sorted[middle]) ? (low, middle) : (middle + 1, high);
+        }
+
+        return low;
     }
 
     private static void Add(SortedDictionary<int, List<(string? Field, string Reason)>> refused, int index, string? field, string reason)

@@ -32,6 +32,22 @@ namespace GestorIA.Infrastructure.Persistence.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            // Before #88 only an import that stored a line kept its number, and one that stored nothing left no trace, so a
+            // profile's numbers may skip one. From #88 on they are exactly 1 to n, so the imports are numbered again in their
+            // order, and each movement follows its import: the order of a day's lines does not change.
+            migrationBuilder.Sql(
+                """
+                UPDATE "BankTransactions" AS t
+                SET "ImportSequence" = numbered."Dense"
+                FROM (
+                    SELECT "ProfileId", "ImportSequence",
+                           row_number() OVER (PARTITION BY "ProfileId" ORDER BY "ImportSequence")::integer AS "Dense"
+                    FROM (SELECT DISTINCT "ProfileId", "ImportSequence" FROM "BankTransactions") AS imports
+                ) AS numbered
+                WHERE t."ProfileId" = numbered."ProfileId" AND t."ImportSequence" = numbered."ImportSequence"
+                  AND numbered."ImportSequence" <> numbered."Dense";
+                """);
+
             // One import per import that stored movements before #88, its period the first to the last booking date of what it
             // stored: the span #73 read from the lines, so every estimate stays as it was until a new statement is imported.
             migrationBuilder.Sql(

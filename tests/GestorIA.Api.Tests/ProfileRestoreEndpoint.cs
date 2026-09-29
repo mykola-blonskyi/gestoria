@@ -194,6 +194,54 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
             export["entities"]!["statementImports"]));
     }
 
+    // An import that stored nothing new has no movement of its own in the file; its statement's movements are the file's
+    // inside its period, which bound it as they bound the import. 31 days past them is restored, as the import took it.
+    [Fact]
+    public async Task AnImportOfOnlyDuplicatesIsBoundedByTheFilesMovementsInItsPeriod()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var file = JsonNode.Parse(deleted.Export)!;
+        file["entities"]!["statementImports"]!.AsArray().Add(new JsonObject { ["sequence"] = 2, ["from"] = "2024-12-02", ["to"] = "2026-01-31" });
+
+        var response = await client.Restore(file.ToJsonString());
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(2, (await response.Json())["entities"]!["statementImports"]!.GetValue<int>());
+    }
+
+    // An installation before #88 kept a number only for an import that stored a line, so its file may skip one. The restore
+    // numbers the imports 1 to n in their order, and the next export restores again.
+    [Fact]
+    public async Task AVersion1FileWhoseImportsSkipANumberRestoresAndRoundTrips()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var file = JsonNode.Parse(deleted.Export)!;
+        Assert.True(file["entities"]!.AsObject().Remove("statementImports"));
+        foreach (var movement in file["entities"]!["bankTransactions"]!.AsArray().Where(movement => string.CompareOrdinal(movement!["bookingDate"]!.GetValue<string>(), "2025-07-01") >= 0))
+        {
+            movement!["importSequence"] = 3;
+        }
+
+        var restored = await client.Restore(file.ToJsonString());
+        Assert.Equal(HttpStatusCode.Created, restored.StatusCode);
+        var id = (await restored.Json())["profileId"]!.GetValue<string>();
+        var export = await client.GetStringAsync($"/api/v1/profiles/{id}/export");
+        Assert.Equal(HttpStatusCode.OK, (await client.Restore(file.ToJsonString())).StatusCode);
+        (await client.DeleteAsync($"/api/v1/profiles/{id}")).EnsureSuccessStatusCode();
+
+        var again = await client.Restore(export);
+
+        Assert.Equal(HttpStatusCode.Created, again.StatusCode);
+        var entities = JsonNode.Parse(export)!["entities"]!;
+        Assert.True(JsonNode.DeepEquals(
+            JsonNode.Parse("""[{"sequence":1,"from":"2025-01-02","to":"2025-06-30"},{"sequence":2,"from":"2025-07-01","to":"2025-12-31"}]"""),
+            entities["statementImports"]));
+        Assert.Equal([1, 2], entities["bankTransactions"]!.AsArray().Select(movement => movement!["importSequence"]!.GetValue<int>()).Distinct().Order());
+        AssertSameExport(export, await client.GetStringAsync($"/api/v1/profiles/{id}/export"));
+    }
+
     // SPEC-009 §2.1: a movement without class, as in every file exported before #73, restores undecided; the classes the file
     // does hold come back as they were.
     [Fact]
@@ -258,7 +306,9 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
         { "a period starting after its first movement", "$.entities.statementImports[0].from" },
         { "a period ending before its last movement", "$.entities.statementImports[0].to" },
         { "a period running into days to come", "$.entities.statementImports[0].to" },
-        { "a period ending before it starts", "$.entities.statementImports[1].from" },
+        { "a statement import holding no movement", "$.entities.statementImports[1]" },
+        { "a period starting 32 days before its first movement", "$.entities.statementImports[0].from" },
+        { "a period ending 32 days after its last movement", "$.entities.statementImports[0].to" },
     };
 
     [Theory]
@@ -327,9 +377,11 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
             case "a period starting after its first movement": imports[0]!["from"] = "2025-01-03"; break;
             case "a period ending before its last movement": imports[0]!["to"] = "2025-12-30"; break;
             case "a period running into days to come": imports[0]!["to"] = "2999-12-31"; break;
-            case "a period ending before it starts":
-                imports.Add(new JsonObject { ["sequence"] = 2, ["from"] = "2025-05-02", ["to"] = "2025-05-01" });
+            case "a statement import holding no movement":
+                imports.Add(new JsonObject { ["sequence"] = 2, ["from"] = "2025-05-06", ["to"] = "2025-06-29" });
                 break;
+            case "a period starting 32 days before its first movement": imports[0]!["from"] = "2024-12-01"; break;
+            case "a period ending 32 days after its last movement": imports[0]!["to"] = "2026-02-01"; break;
         }
 
         await AssertRefused(WithHalfACharacter(file.ToJsonString()), path);

@@ -168,7 +168,7 @@
       "donePeriod": "Periodo del extracto: {from} – {to}.",
       "from": "Periodo del extracto: desde",
       "to": "Periodo del extracto: hasta",
-      "periodHint": "Al elegir el archivo se rellenan las fechas de su primer y último movimiento. Amplíalas a todo el periodo que cubre el extracto, por ejemplo hasta el día en que lo exportaste: los días sin movimientos solo cuentan como cubiertos dentro del periodo de un extracto."
+      "periodHint": "Indica el periodo que cubre el propio extracto: las fechas que elegiste al exportarlo o las que BBVA imprime en él. Al elegir el archivo se rellenan las fechas de su primer y último movimiento. No añadas días que el extracto no cubre: GestorIA los contaría como días sin ingresos y apartaría de menos. El periodo puede ir como mucho 31 días más allá de los movimientos del extracto."
     },
     "statements": {
       "heading": "Extractos importados",

@@ -132,17 +132,11 @@ public static class TransactionEndpoints
         // The period of every line the file holds, the ones an earlier import stored included: they are this statement's too.
         var dates = statement.Select(line => line.Line.Movement.BookingDate).ToList();
         var (first, last) = dates.Count == 0 ? ((DateOnly?)null, (DateOnly?)null) : (dates.Min(), dates.Max());
-        if ((declaredFrom ?? first, declaredTo ?? last) is not ({ } periodFrom, { } periodTo))
-        {
-            return Problems.Invalid(new[] { (End: "from", Date: declaredFrom), (End: "to", Date: declaredTo) }
-                .Where(end => end.Date is null)
-                .ToDictionary(end => end.End, end => new[] { $"{end.End} is missing; the statement holds no movement, so its period must be stated." }));
-        }
-
+        var (periodFrom, periodTo) = (declaredFrom ?? first ?? default, declaredTo ?? last ?? default);
         var refusals = StatementPeriod.Refusals(periodFrom, periodTo, first, last, MadridDay.Of(clock.GetUtcNow()));
         if (refusals.Count > 0)
         {
-            return Problems.Invalid(refusals.ToDictionary(refusal => refusal.End, refusal => new[] { $"{refusal.End} {refusal.Reason}." }));
+            return Problems.Invalid(refusals.ToDictionary(refusal => refusal.End ?? "file", refusal => new[] { $"{refusal.End ?? "The file"} {refusal.Reason}." }));
         }
 
         // Imports into one profile run one at a time: each holds the profile's row lock from reading which lines are stored to

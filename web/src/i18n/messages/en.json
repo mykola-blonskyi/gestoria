@@ -168,7 +168,7 @@
       "donePeriod": "Statement period: {from} – {to}.",
       "from": "Statement period from",
       "to": "Statement period to",
-      "periodHint": "Choosing a file fills in the dates of its first and last movement. Widen them to the whole period the statement covers, for example through the day you exported it: days without movements count as covered only inside a statement's period."
+      "periodHint": "Enter the period the statement itself covers: the dates you chose when exporting it, or the ones BBVA prints on it. Choosing a file fills in the dates of its first and last movement. Do not add days the statement does not cover: GestorIA would count them as days without income and set aside too little. A period may run at most 31 days past the statement's movements."
     },
     "statements": {
       "heading": "Imported statements",
