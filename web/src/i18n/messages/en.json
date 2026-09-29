@@ -371,8 +371,8 @@
       "unsendable": "A key is made of Latin letters, digits and symbols. Check the keyboard layout and try again.",
       "unreachable": "The GestorIA API is not running.",
       "unreachableNext": "Start it from the project folder with this command, then try again:",
-      "cors": "The GestorIA API is running, but it does not allow calls from this page's address.",
-      "corsNext": "Start it again with this address allowed, then try again:",
+      "cors": "Something answers at the GestorIA API address, but the browser refused the call.",
+      "corsNext": "Make sure it is the GestorIA API on that address. If it is, start the API with this page's address allowed, then try again:",
       "database": "The GestorIA API is running, but its database is not.",
       "databaseNext": "Start the database from the project folder with this command, then try again:",
       "other": "The API answered with an error ({status}). Try again."
