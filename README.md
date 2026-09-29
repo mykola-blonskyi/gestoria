@@ -26,21 +26,21 @@ Being autónomo in Spain means paying tax in advance, every quarter, on a year y
 
 It is built for one person: the author, a profesional with EU business clients and US clients, living in the Comunitat Valenciana or the Comunidad de Madrid. It assumes that client mix everywhere. Your clients withhold no retención, and you charge them no IVA. If your situation is different, the figures will be wrong for you.
 
-Everything stays on your machine. The data lives in a PostgreSQL database in Docker, the API that does the calculations runs with `dotnet run`, and the web app runs in your browser with `pnpm dev`. Nothing is sent anywhere else. The app is locked by a key only you know.
+Your data stays on your machine. It lives in a PostgreSQL database in Docker. The API that does the calculations runs with `dotnet run`, and the web app runs in your browser with `pnpm dev`. GestorIA itself sends your data nowhere. The .NET tools and Next.js do send anonymous usage statistics (telemetry) by default, with nothing about your finances in them. To turn them off, run `pnpm exec next telemetry disable` once in `web/`, and add `export DOTNET_CLI_TELEMETRY_OPTOUT=1` to `~/.zshrc`. The app is locked by a key only you know.
 
 GestorIA always leans towards putting aside *more* rather than less. Idle money in a separate account is better than a bill you cannot pay. Every figure comes with the step-by-step calculation behind it, and each step names the law it comes from.
 
 ## What it does today
 
-The web app has seven pages, in the order of its menu. It opens in Ukrainian; pick another language from the menu at the top right.
+The web app has seven pages. They are described here in the order of its menu: Overview, Payments, Transactions, Periods, Settings, Backup and Access. It opens in Ukrainian; pick another language from the menu at the top right.
 
 ### Overview: the set-aside estimate
 
 The first page answers the main question for the quarter you pick:
 
 - **Hold back X % of every payment you receive.** Move that share of each client payment to a separate account. It covers the Modelo 130 advances, the RETA cuotas and whatever the Renta will want on top, spread over the year's income.
-- **Next Modelo 130** for that quarter, with the amount and the days you can file it. A deadline on a weekend or a national or regional holiday moves to the next working day. Town holidays are not known, so a date can be early but never late. When the amount is zero or negative, it says the return is still filed, and whether it goes in as "a deducir" or "negativa".
-- **TGSS cuota per month** this quarter, including the tarifa plana while it lasts.
+- **Next Modelo 130** for that quarter, with the amount and the days you can file it. A deadline on a weekend or a national or regional holiday moves to the next working day. Town holidays are not known, so a date can be early but never late. When there is nothing to pay, the return is still filed, and the page says how. A negative result in Q1 to Q3 is filed "a deducir": you pay nothing and subtract it in a later quarter of the year. A zero result, or a negative one in Q4, is filed as "negativa": a return that says nothing is owed.
+- **TGSS cuota per month** this quarter, including the tarifa plana (the reduced flat cuota of your first months) while it lasts.
 - **Renta on top of the Modelo 130 advances**, and the window to file it.
 - **IVA to set aside**, zero for this client mix, with the reason.
 - **Notices** to read before trusting the figures, warnings first.
@@ -48,11 +48,13 @@ The first page answers the main question for the quarter you pick:
 
 A sentence above the estimate says what it is based on. With nothing imported, the projection you entered in Settings covers the whole year. Once your bank movements for a closed quarter are imported and reviewed, the estimate uses what really happened in that quarter instead (see [Transactions](#transactions-import-review-classify)).
 
-### Settings: your profile
+### Payments: calendar and ICS
 
-You enter your taxpayer profile once: tax year, region, salary, when you registered as autónomo, last year's activity, and what you expect to invoice and spend this year. GestorIA stores it in the database and every page computes from it. [First use](#first-use) explains each field in plain words.
+Every obligation of the tax year in date order: the monthly TGSS cuota, Modelo 130, 303 and 349 each quarter, and the Renta true-up (what the annual return adds on top of the quarterly advances), each with its window and its amount when GestorIA knows it. Modelo 303 and 349 have no calculator yet, so their amount says "Not known yet". Modelo 349 only applies if you had intra-EU operations that quarter.
 
-Settings also holds the language and colour theme, and the "Your data" card, which deletes everything stored.
+**Export to your calendar** downloads an `.ics` file of the dates still to come, for Apple Calendar, Google Calendar or Outlook. Amounts stay out of event titles unless you tick "Include amounts in event titles". When nothing is still to come, as for a tax year that is over, the button is disabled and the page says so.
+
+**Today no year can be exported.** 2025 is over, so its button is disabled. 2026 is refused as a whole until its missing values are published (see [known limits](#what-it-does-not-do-yet-and-known-limits)). The export works again once a year with dates still to come can be computed.
 
 ### Transactions: import, review, classify
 
@@ -89,20 +91,22 @@ After each choice the app says "Classified as ..." and moves to the next movemen
 
 1. the quarter has ended (today is past its last day);
 2. none of its movements is waiting in the review queue;
-3. your imported statements cover every day of it and reach past its last day;
+3. your imported statements cover every day of it from its first day, or from your alta if that is later, to past its last day;
 4. every earlier quarter of the year since your alta has also switched.
 
 Then the estimate counts that quarter's activity income and the RETA cuotas TGSS actually charged, and keeps the projection only for the months still ahead. The overview says through which quarter it counts actuals, how many movements are still waiting (with a link to them), and how many expenses are not counted because they need an invoice.
 
+A statement covers the days from its first line to its last line, nothing more. So if your statement's first line is later than your alta day, the days in between count as not covered, even when nothing happened on them. That quarter, and every quarter after it, stays on the projection. For example, with an alta on 1 January and a statement whose first line is 2 January, the whole year stays projected; with an alta on 2 January, the same statement is enough. Issue #88 will fix this.
+
 ### Periods: a quarter or the whole year
 
-Pick **Quarter** to see one quarter's Modelo 130 with every figure next to its box number (casilla) on the AEAT form, taken from the tax year's configuration. Pick **Tax year** to see the annual true-up: the gap between what the Renta will want and the Modelo 130 advances already paid. Both show the calculation step by step and say what they are based on. A result of zero says nothing is to be paid but the return is still filed, as "negativa" or "a deducir".
+Pick **Quarter** to see one quarter's Modelo 130 with every figure next to its box number (casilla) on the AEAT form, taken from the tax year's configuration. Pick **Tax year** to see the annual true-up: the gap between what the Renta will want and the Modelo 130 advances already paid. Both show the calculation step by step and say what they are based on. A result with nothing to pay says so, and says the return is still filed, as "negativa" or "a deducir" (see [Overview](#overview-the-set-aside-estimate)).
 
-### Payments: calendar and ICS
+### Settings: your profile
 
-Every obligation of the tax year in date order: the monthly TGSS cuota, Modelo 130, 303 and 349 each quarter, and the Renta true-up, each with its window and its amount when GestorIA knows it. Modelo 303 and 349 have no calculator yet, so their amount says "Not known yet". Modelo 349 only applies if you had intra-EU operations that quarter.
+You enter your taxpayer profile once: tax year, region, salary, when you registered as autónomo, last year's activity, and what you expect to invoice and spend this year. GestorIA stores it in the database and every page computes from it. [First use](#first-use) explains each field in plain words.
 
-**Export to your calendar** downloads an `.ics` file of the dates still to come, for Apple Calendar, Google Calendar or Outlook. Amounts stay out of event titles unless you tick "Include amounts in event titles". When nothing is still to come, as for a tax year that is over, the button is disabled and the page says so.
+Settings also holds the language and colour theme, and the "Your data" card, which deletes everything stored.
 
 ### Backup: export, restore, delete
 
@@ -119,8 +123,8 @@ The app opens locked and asks for your API key. The key stays only in the memory
 - **The annual return (Modelo 100) is not computed.** Periods shows only the annual true-up, the gap beyond the Modelo 130 advances. No tax credits (deducciones) and no savings income are included. Leaving them out can only make the estimate higher, never lower.
 - **No forms are produced.** GestorIA computes the figures behind Modelo 130 and knows which casilla each goes in, but you file with the AEAT yourself. Modelo 303 and 349 amounts are not computed.
 - **Expenses do not count yet.** A deductible expense needs a linked invoice, and GestorIA cannot store documents yet (no invoices, no OCR). Your expected gastos in Settings stay in the projection.
-- **2026 is refused today, and 2027 does not exist yet.** The 2026 configuration declares three values as not published: the tarifa plana amount for 2026, the Renta window for tax year 2026 together with the 2027 holidays, and the Modelo 100 casillas. Every 2026 estimate, period and payments calendar is refused with "Not published yet" until they are. The 2027 values come out in the BOE around December 2026 (issue #12). See [Tax-year configuration](#tax-year-configuration).
-- **A closed quarter can stay on the projection.** An import covers the days from the first to the last line it newly stored. Overlapping statements, or monthly statements with quiet days between them, can leave gaps, and then the quarter keeps using the projection. The last quarter of a year needs a statement that reaches into January. Your figures stay safe (they over-reserve), but actuals switch on less often than they should. Issue #88 fixes this.
+- **2026 is refused today, and 2027 does not exist yet.** The 2026 configuration declares three values as not published: the tarifa plana amount for 2026, the Renta window for tax year 2026 together with the 2027 holidays, and the Modelo 100 casillas. Every 2026 estimate, period and payments calendar is refused with "Not published yet" until they are. With 2025 over and 2026 refused, no calendar (`.ics`) can be exported today. The 2027 values come out in the BOE around December 2026 (issue #12). See [Tax-year configuration](#tax-year-configuration).
+- **A closed quarter can stay on the projection.** An import covers the days from the first to the last line it newly stored, and nothing else. A statement whose first line comes after your alta day, overlapping statements, or monthly statements with quiet days between them all leave uncovered days, and then that quarter and the ones after it keep using the projection. The last quarter of a year needs a statement that reaches into January. Your figures stay safe (they over-reserve), but actuals switch on less often than they should. Issue #88 will fix this.
 - **Only BBVA, only CSV.** No other bank, and no BBVA Excel (`.xlsx`) files.
 - **One profile per installation, for one tax year at a time.** Movements of other years stay stored and in your backups, but the pages show only the profile's year.
 - **Local only.** It runs on one computer. There is no sync, no phone app and no hosted version. The database and the API listen on your own machine only.
@@ -140,7 +144,7 @@ You end up with three things running: the database (in Docker), the API (in one 
 xcode-select --install                          # Git, if macOS asks for it
 brew install --cask dotnet-sdk docker-desktop
 brew install node@24
-echo 'export PATH="/opt/homebrew/opt/node@24/bin:$PATH"' >> ~/.zshrc
+echo "export PATH=\"$(brew --prefix node@24)/bin:\$PATH\"" >> ~/.zshrc
 ```
 
 Without Homebrew, use the installers from [dot.net](https://dotnet.microsoft.com/download/dotnet/10.0), [nodejs.org](https://nodejs.org) (version 24) and [docker.com](https://www.docker.com/products/docker-desktop/). Then open **Docker Desktop** from Applications once and wait until it says it is running.
@@ -224,7 +228,7 @@ User secrets apply when the API runs with `dotnet run`. Anywhere else, set the e
 dotnet run --project src/GestorIA.Api
 ```
 
-The first run builds everything, which takes a minute. The API then brings the database up to date and ends with:
+The first run builds everything, which takes a minute. The API then brings the database up to date, and the log shows:
 
 ```
 info: Microsoft.Hosting.Lifetime[14]
@@ -233,7 +237,7 @@ info: Microsoft.Hosting.Lifetime[0]
       Application started. Press Ctrl+C to shut down.
 ```
 
-On the very first start, EF Core also logs a `fail:` line about `__EFMigrationsHistory` just before it creates that table, then `Applying migration ...` lines. That is expected. `Ctrl+C` stops the API.
+On the very first start the API creates its tables in the empty database. Just before, the log shows a `fail:` line about a table called `__EFMigrationsHistory`, because that table does not exist yet, then `Applying migration ...` lines as it creates the tables. That is expected. `Ctrl+C` stops the API.
 
 **8. Check that the API and the database answer.** In a second Terminal window:
 
@@ -261,9 +265,9 @@ pnpm dev
 ✓ Ready in ...
 ```
 
-The first time, Next.js also prints a note about anonymous telemetry. That is normal.
+It also prints a `Network:` address. The web app answers on your home network there too, but it cannot unlock from another device, because the API only listens on this computer. To keep the web app on this computer as well, start it with `pnpm dev -H localhost`. The first time, Next.js also prints a note about anonymous telemetry; [What GestorIA is](#what-gestoria-is-and-who-it-is-for) says how to turn it off.
 
-The API accepts calls from `http://localhost:3000` only. If `pnpm dev` says it uses another port because 3000 is taken, see [Ports](#ports).
+The API accepts calls from `http://localhost:3000` only. Browsers enforce this rule, called CORS. A page may call the API only if the API names the page's address as allowed. When they disagree, the unlock screen says "Something answers at the GestorIA API address, but the browser refused the call." and prints the command that starts the API with the page's address allowed. If `pnpm dev` says it uses another port because 3000 is taken, see [Ports](#ports).
 
 **10. Open the app and unlock it.** Go to <http://localhost:3000>. The app opens in Ukrainian on the unlock screen; the language menu (Мова) is at the top right. Paste the key from step 6 and press the button. You should land on the overview, which says there is no taxpayer profile yet and links to Settings.
 
@@ -304,7 +308,9 @@ Open **Settings**. The "Your taxpayer profile" card asks for:
 | **Ingresos from last year's employer** | Shown for a new activity. What you expect to invoice this year to a company that paid you a salary last year. If that is more than half of your activity income, the 20 % reduction does not apply. |
 | **Expected ingresos** | What you expect to invoice in the whole year, for the months you are registered. Without IVA. |
 | **Expected gastos, without the RETA cuota** | What you expect the activity to spend in the year. Leave the Seguridad Social cuota out; GestorIA adds it. |
-| **Monthly base de cotización you pay** | The monthly contribution base you chose with the TGSS (in Import@ss), in euros of base, not the cuota. It is ignored while the tarifa plana lasts. |
+| **Monthly base de cotización you pay** | The monthly contribution base you chose with the TGSS, in euros of base, not the cuota. You pick it in Import@ss, the Seguridad Social's online office, and it appears on your TGSS receipts. It is ignored while the tarifa plana lasts. |
+
+The example outputs below come from this made-up profile. Use it to follow along, then replace it with your own: tax year 2025, Comunitat Valenciana, salary and its Seguridad Social `0.00`, alta `2025-01-15`, no activity last year, "First period with a positive net", ingresos from last year's employer `0.00`, expected ingresos `30000.00`, expected gastos `1200.00`, base de cotización `1274.51`.
 
 Press **Save the profile**. You should see "Saved. The overview now estimates from this profile." Save again whenever something changes; there is only ever one profile.
 
@@ -360,7 +366,9 @@ Estimated for 2025 from actuals through Q3, 5 classified movements; the projecti
 2 expenses await an invoice and are not counted: a deductible expense needs a linked invoice, and GestorIA cannot store invoices yet.
 ```
 
-Here Q4 stays on the projection because the example statement ends on 31 December and does not reach past the quarter (see [known limits](#what-it-does-not-do-yet-and-known-limits)).
+Here Q4 stays on the projection because the example statement ends on 31 December and does not reach past the quarter.
+
+This works because the example alta, 15 January, comes after the statement's first line, 2 January. With an alta of 1 January, the same statement leaves 1 January uncovered, so the whole year stays projected and the overview keeps saying "with no closed quarter recorded". If that happens to you, import a statement that starts on or before your alta day (see [known limits](#what-it-does-not-do-yet-and-known-limits)).
 
 You can change a classification later. Only your decision is stored, and the latest one counts.
 
@@ -372,7 +380,9 @@ Open **Payments** for every date of the year. Use it to plan cash, and file each
 
 ### 6. Export the calendar
 
-On **Payments**, under "Export to your calendar", tick "Include amounts in event titles" if you want them, and press **Download .ics**. Open the file with your calendar app. It holds only the dates still to come. For a tax year that is over, the button is disabled and the page says "Nothing is still to come in this tax year, so there is no date to export."
+**This does not work for anyone today.** The export holds only dates still to come. Every date of 2025 has passed, so for 2025 the button is disabled and the page says "Nothing is still to come in this tax year, so there is no date to export." 2026 has dates to come, but GestorIA cannot compute 2026 until its missing values are published, so its Payments page shows "Not published yet" instead of a calendar. See [Tax-year configuration](#tax-year-configuration).
+
+Once a year with dates to come can be computed: on **Payments**, under "Export to your calendar", tick "Include amounts in event titles" if you want them, and press **Download .ics**. Open the file with your calendar app.
 
 ### 7. Make a backup
 
@@ -525,19 +535,19 @@ Each tax year has one file: `config/tax-years/2025.json`, `config/tax-years/2026
 - the Renta window for tax year 2026 and the 2027 holidays, which the Q4 2026 Modelo 130 deadline needs;
 - the Modelo 100 casillas for 2026.
 
-The estimate always works out the whole year's annual true-up next to the quarter you ask for, so every 2026 estimate is refused, Q1 to Q3 included. That covers the overview, Periods, Payments and the console. Which gap you see depends on the profile. With an alta in 2026 the engine stops at the tarifa plana:
+The estimate always works out the whole year's annual true-up (what the Renta adds on top of the quarterly advances) next to the quarter you ask for, so every 2026 estimate is refused, Q1 to Q3 included. That covers the overview, Periods, Payments and the console. Which gap you see depends on whether your tarifa plana runs into 2026. The tarifa plana lasts twelve whole months: from the month of your alta if it falls on the 1st, otherwise from the month after (the first, partial month is also on it). The overview's notices say when yours ends ("Tarifa plana ends with 2026-01"). If any of its months fall in 2026, as for an alta on 15 January 2025 or any alta in 2026, the engine stops at the tarifa plana:
 
 ```
 seguridadSocial.tarifaPlana.amount, the cuota for 2026-01 under tarifa plana, is declared incomplete in this configuration: ...
 ```
 
-With an older alta it stops at the calendar:
+If your tarifa plana ended in 2025 or earlier, as for an alta on 1 January 2025 or before, it stops at the calendar:
 
 ```
 calendar.modelo130 Q4 of tax year 2026 ends on 2027-01-30, and this configuration declares the calendar after 2026 incomplete: ...
 ```
 
-The API answers these as `422` with the problem type `config-gap`. The web app shows them as "Not published yet" with the engine's reason and a link back to Settings.
+The web app shows either as "Not published yet" with the engine's reason and a link back to Settings. Behind it, the API answers with the HTTP status `422` (the request was understood but cannot be answered) and the error type `config-gap`.
 
 **The files are checked every time they load.** `schema.json` checks the shape, and extra rules in `src/GestorIA.Infrastructure/TaxYears/TaxYearRules.cs` check what a schema cannot: that scales go up in order, that Seguridad Social bands do not leave gaps, that every provenance entry points at a real value, and more (SPEC-007 §2). A file that breaks a rule is rejected with a message naming the exact place.
 
@@ -578,6 +588,8 @@ knowledge/          business rules, domain model, glossary of Spanish tax terms
 plans/              current plan, backlog, development plan
 services/ocr/       planned document-reading service (not built)
 ```
+
+Three names in the tree, for readers new to .NET. EF Core is the library the API uses to read and write PostgreSQL; its migrations are the steps that create and change the tables, and `__EFMigrationsHistory` is the table where it records which steps ran. The OpenAPI document is a machine-readable list of every API endpoint and its data, from which the web app's types are generated. Testcontainers is a test library that starts a throwaway Docker container, here a PostgreSQL, for each test run.
 
 The browser talks only to the API, on `http://localhost:5080/api/v1`, and sends the key in the `X-Api-Key` header. The API reads the stored profile and movements from PostgreSQL, turns them into the engine's input, runs the engine, and returns the result with its trace. The web app never computes tax itself (ADR-0017). Every endpoint except `/api/v1/health/live` and `/api/v1/health/ready` needs the key.
 
@@ -690,7 +702,7 @@ The theory behind the rules (explanations and worked examples) is kept outside t
 
 **`ConnectionStrings:Gestoria is not set; README.md, "Database", shows how to set it.`** The API stops at once. Do step 5 in [Database](#database). The API checks this before the key.
 
-**`Auth:ApiKeySha256 must be the SHA-256 of a non-empty local API key, as 64 hex characters`.** The key hash is missing or malformed. Do step 6 in [The API key](#the-api-key). The value must be the 64-character hash, not the key itself.
+**`Auth:ApiKeySha256 must be the SHA-256 of a non-empty local API key, as 64 hex characters`.** The key hash is missing, or it is not 64 letters and digits. Do step 6 in [The API key](#the-api-key).
 
 **The database is not reachable**, and `/api/v1/health/ready` answers `503`:
 
@@ -704,9 +716,22 @@ Start Docker Desktop, run `docker compose up -d postgres`, and check that `docke
 
 ### Unlocking the web app
 
-**"The API did not accept this key. Check it and try again."** The key does not match the stored hash. Paste it again without spaces. If you lost it, make a new one (step 6) and restart the API.
+**"The API did not accept this key. Check it and try again."** The key you typed does not match the stored hash. Two causes:
 
-**"The GestorIA API is not running."** Either the API is stopped (start it, step 7), or the browser was not allowed to call it. The second case happens when the web app runs on a port the API does not accept (CORS), or when `web/.env.local` points at the wrong API port. The browser's developer console then shows `blocked by CORS policy`. Make the ports agree as [Ports](#ports) shows, and restart both.
+- A typo. Paste the key again, without spaces.
+- The key itself was stored instead of its hash. The key from step 6 is also 64 letters and digits, so the API starts without complaint and then refuses the right key. To tell, run `dotnet user-secrets list --project src/GestorIA.Api` from the `gestoria` folder. If the `Auth:ApiKeySha256` value is the same as your key, that is it. Fix it by typing `KEY=` followed by your key, running the last line of step 6 again, and restarting the API.
+
+If you lost the key, make a new one (step 6) and restart the API.
+
+**"The GestorIA API is not running."** Nothing answers at the API's address. Either the API is stopped (start it, step 7), or `web/.env.local` points at another port than the one the API runs on (see [Ports](#ports)).
+
+**"Something answers at the GestorIA API address, but the browser refused the call."** The screen goes on: "Make sure it is the GestorIA API on that address. If it is, start the API with this page's address allowed, then try again:" and prints a command such as:
+
+```
+Cors__Origins__0=http://localhost:3190 dotnet run --project src/GestorIA.Api
+```
+
+The web app runs on an address the API does not allow (the CORS rule, see step 9), usually because `pnpm dev` took another port than 3000. Stop the API with `Ctrl+C` and start it with the printed command, or make the ports agree as [Ports](#ports) shows. If another program uses the API's port, stop it or move the API to another port.
 
 **"The GestorIA API is running, but its database is not."** Start the database with `docker compose up -d postgres`.
 
@@ -716,17 +741,18 @@ Start Docker Desktop, run `docker compose up -d postgres`, and check that `docke
 
 ### Figures and pages
 
-**"Not published yet" on the overview, Periods or Payments** (the API's `422 config-gap`). The profile's tax year needs a value its configuration marks as unpublished. Today that is every 2026 estimate. Pick 2025 in Settings, or wait for the value to be published and added. See [Tax-year configuration](#tax-year-configuration).
+**"Not published yet" on the overview, Periods or Payments.** The profile's tax year needs a value its configuration marks as unpublished. Today that is every 2026 estimate. Pick 2025 in Settings, or wait for the value to be published and added. See [Tax-year configuration](#tax-year-configuration).
 
 **A finished quarter stays on the projection.** Check, in this order:
 
 1. Transactions shows no movement of that quarter in the review queue.
 2. Every earlier quarter since your alta has switched already.
 3. Your imported statements cover every day of the quarter and have a line after its last day. For Q4, import a statement that reaches into January.
+4. For the first quarter of your activity, a statement starts on or before your alta day. With an alta on 1 January, a statement whose first line is 2 January leaves 1 January uncovered.
 
 Under "How it was calculated", the step "Trimestre no cubierto por los movimientos importados" (`ledger.coverage`) names the first day no import covers. A gap left by overlapping or monthly statements does not close by importing them again (issue #88).
 
-**The ICS download is disabled** and the page says "Nothing is still to come in this tax year". Every date of that tax year has passed. The API answers the same request with `422 no-upcoming-obligations`.
+**The ICS download is disabled** and the page says "Nothing is still to come in this tax year". Every date of that tax year has passed. Today that is true of 2025, and 2026 cannot be computed yet, so no calendar can be exported (see [Export the calendar](#6-export-the-calendar)).
 
 **An import is refused.** The page lists each reason. "The first line is not the header of a BBVA CSV statement" means extra rows sit above `Fecha;Fecha Valor;Concepto;Importe;Saldo`, or the separator is not `;`. "The file is an XLSX workbook" means the file is Excel; save it as CSV (see [Import a BBVA statement](#3-import-a-bbva-statement)).
 
@@ -738,7 +764,7 @@ Under "How it was calculated", the step "Trimestre no cubierto por los movimient
 
 **`No estimate: $.something is missing` (or `must be ...`).** Your input file has a missing, extra or badly written field. The part after `$` is the path to it in the JSON.
 
-**`ConfigNotFoundException` / "Region XX is not in this configuration".** The region code in your input is not `VC` or `MD`, or the year's file does not include it.
+**`No estimate: Region CT is not in this configuration.`** The region code in your input is not `VC` or `MD`, or the year's file does not include it.
 
 ### Building and testing
 
