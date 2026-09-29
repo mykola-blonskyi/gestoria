@@ -42,6 +42,8 @@ User corrections are stored as `ClassificationFeedback { pattern, class }` and b
 
 Built so far (#72): `IStatementParser.Parse(text)` answers every `BankTransaction` of a statement in the file's order, or refuses the whole file with `InvalidStatementException`, whose errors name each unreadable line by number and never quote it. `BbvaCsvStatementParser` reads BBVA's CSV (`Fecha;Fecha Valor;Concepto;Importe;Saldo`, dates `dd/MM/yyyy`, Spanish amounts, `;` inside double quotes allowed). BBVA XLSX is not read yet; the API refuses a ZIP file with a message saying to export CSV.
 
+A statement's period (#88): BBVA's CSV states none, so an import records the period the user states, or else the first to the last booking date of every line the file holds, duplicates of earlier imports included (SPEC-009 §1.1). The estimate counts a closed quarter's movements only when the imported statements' periods cover it.
+
 ## 6. Acceptance
 - Precision ≥ 98 % on SOCIAL_SECURITY, AEAT_PAYMENT, OWN_TRANSFER.
 - Golden #9 reconstruction.
