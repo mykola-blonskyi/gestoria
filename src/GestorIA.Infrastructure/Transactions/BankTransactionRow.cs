@@ -7,8 +7,8 @@ using GestorIA.Domain.ValueObjects;
 
 namespace GestorIA.Infrastructure.Transactions;
 
-// A bank statement line stored under its profile (ADR-0006: money in numeric(18,6)). The profile owns its lines: deleting
-// the profile deletes them (GestoriaDbContext).
+// A bank statement line stored under its profile and the import that stored it (ADR-0006: money in numeric(18,6)). The
+// profile owns its lines: deleting the profile deletes them (GestoriaDbContext).
 public sealed class BankTransactionRow
 {
     public Guid Id { get; set; }
@@ -18,8 +18,8 @@ public sealed class BankTransactionRow
     // What makes an import idempotent, held by a unique index on (ProfileId, LineKey); LineKeys says how it is made.
     public required string LineKey { get; set; }
 
-    // The list's order within a day: the profile's imports counted from 1, then the line's number in its file. Explicit
-    // numbers, so no clock or id decides which of a day's lines comes first.
+    // The import that stored the line (StatementImportRow.Sequence), and the list's order within a day: the imports' order,
+    // then the line's number in its file. Explicit numbers, so no clock or id decides which of a day's lines comes first.
     public int ImportSequence { get; set; }
 
     public int LineNumber { get; set; }

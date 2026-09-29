@@ -1088,7 +1088,7 @@
         "tags": [
           "transactions"
         ],
-        "summary": "Imports a bank statement, the file itself as the body. A line an earlier import stored is not stored again.",
+        "summary": "Imports a bank statement, the file itself as the body, for the period from and to state or else its lines' first to last date. A line an earlier import stored is not stored again.",
         "operationId": "importBankStatement",
         "parameters": [
           {
@@ -1109,6 +1109,24 @@
                 "bbva"
               ],
               "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "The statement period's first day; the first line's booking date when left out.",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "The statement period's last day; the last line's booking date when left out.",
+            "schema": {
+              "type": "string",
+              "format": "date"
             }
           }
         ],
@@ -1196,6 +1214,74 @@
           },
           "415": {
             "description": "Unsupported Media Type",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "The imported statements, each with the period it covers, in the order of their periods.",
+        "operationId": "listBankStatements",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StatementImportView"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1624,7 +1710,9 @@
           "bank",
           "lines",
           "imported",
-          "alreadyImported"
+          "alreadyImported",
+          "from",
+          "to"
         ],
         "type": "object",
         "properties": {
@@ -1642,6 +1730,14 @@
           "alreadyImported": {
             "type": "integer",
             "format": "int32"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
           }
         }
       },
@@ -1696,11 +1792,16 @@
       "EntityCounts": {
         "required": [
           "profiles",
+          "statementImports",
           "bankTransactions"
         ],
         "type": "object",
         "properties": {
           "profiles": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "statementImports": {
             "type": "integer",
             "format": "int32"
           },
@@ -1776,6 +1877,7 @@
       "ExportedEntities": {
         "required": [
           "profiles",
+          "statementImports",
           "bankTransactions"
         ],
         "type": "object",
@@ -1786,11 +1888,39 @@
               "$ref": "#/components/schemas/ProfileView"
             }
           },
+          "statementImports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExportedStatementImport"
+            }
+          },
           "bankTransactions": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ExportedBankTransaction"
             }
+          }
+        }
+      },
+      "ExportedStatementImport": {
+        "required": [
+          "sequence",
+          "from",
+          "to"
+        ],
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
           }
         }
       },
@@ -2745,6 +2875,28 @@
           "first",
           "following"
         ]
+      },
+      "StatementImportView": {
+        "required": [
+          "sequence",
+          "from",
+          "to"
+        ],
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          }
+        }
       },
       "TaxYearView": {
         "required": [

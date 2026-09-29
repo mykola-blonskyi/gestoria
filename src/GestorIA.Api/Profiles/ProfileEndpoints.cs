@@ -209,7 +209,7 @@ public static class ProfileEndpoints
     // Local mode keeps one profile per installation, so a restore fills an empty one, or answers for what is already there:
     // the file's own contents are a 200 that writes nothing, so a retry is safe, and anything else a 409 (SPEC-009 §2.2).
     private static async Task<Results<Created<RestoredExport>, Ok<RestoredExport>, ValidationProblem, ProblemHttpResult>> Restore(
-        HttpRequest request, GestoriaDbContext db, TaxYearConfigLoader loader, IOptions<JsonOptions> json, CancellationToken cancellationToken)
+        HttpRequest request, GestoriaDbContext db, TaxYearConfigLoader loader, IOptions<JsonOptions> json, TimeProvider clock, CancellationToken cancellationToken)
     {
         if (!ProfileRestore.IsJson(request.ContentType))
         {
@@ -224,7 +224,7 @@ public static class ProfileEndpoints
         Restored file;
         try
         {
-            file = ProfileRestore.Read(body, json.Value.SerializerOptions, loader);
+            file = ProfileRestore.Read(body, json.Value.SerializerOptions, loader, MadridDay.Of(clock.GetUtcNow()));
         }
         catch (InvalidExportException e)
         {
@@ -249,6 +249,7 @@ public static class ProfileEndpoints
             }
 
             db.Profiles.Add(file.Profile);
+            db.StatementImports.AddRange(file.StatementImports);
             db.BankTransactions.AddRange(file.BankTransactions);
             try
             {
@@ -272,11 +273,9 @@ public static class ProfileEndpoints
             return null;
         }
 
-        var transactions = await db.BankTransactions.AsNoTracking()
-            .Where(t => t.ProfileId == id)
-            .OrderBy(t => t.BookingDate).ThenBy(t => t.ImportSequence).ThenBy(t => t.LineNumber)
-            .ToListAsync(cancellationToken);
-        return ProfileExport.Of(View(row), transactions, DateTimeOffset.UtcNow);
+        var imports = await db.StatementImports.AsNoTracking().Where(i => i.ProfileId == id).ToListAsync(cancellationToken);
+        var transactions = await db.BankTransactions.AsNoTracking().Where(t => t.ProfileId == id).ToListAsync(cancellationToken);
+        return ProfileExport.Of(View(row), imports, transactions, DateTimeOffset.UtcNow);
     }
 
     private static async Task<Results<Ok<SetAsideEstimate>, ValidationProblem, ProblemHttpResult>> Estimate(

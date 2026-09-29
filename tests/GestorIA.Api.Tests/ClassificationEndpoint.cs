@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -313,7 +314,7 @@ public class ClassificationEndpoint
         Assert.True(JsonNode.DeepEquals(EngineOnly(fromFile, 0), EngineOnly(estimate, ledgerSteps)), estimate.ToJsonString());
         Assert.Equal("Q1", estimate["ledger"]!["actualsThrough"]!.GetValue<string>());
         Assert.Equal(
-            "no stored import spans the days from 2025-04-23 on; Q2 stays on the projection, with what follows, until its days from 2025-04-01 through 2025-07-01 are spanned",
+            "no imported statement's period covers the days from 2025-04-23 on; Q2 stays on the projection, with what follows, until statements whose periods cover its days from 2025-04-01 through 2025-07-01 are imported",
             Coverage(estimate));
 
         await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n23/04/2025;23/04/2025;MERCADONA;-20,00;\n15/07/2025;15/07/2025;MERCADONA;-20,00;\n"));
@@ -321,7 +322,7 @@ public class ClassificationEndpoint
         Assert.Equal("Q2", july["ledger"]!["actualsThrough"]!.GetValue<string>());
     }
 
-    // The export carries each movement's import and class, so a restored installation spans the same days and counts the same
+    // The export carries each statement's period and each movement's class, so a restored installation covers the same days and counts the same
     // actuals: the estimate is the one before, the partial April import's coverage step included.
     [Fact]
     public async Task ARestoredExportGivesTheSameEstimate()
@@ -340,7 +341,7 @@ public class ClassificationEndpoint
 
         var after = await client.GetStringAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2");
         Assert.Equal(before, after);
-        Assert.Contains("no stored import spans the days from 2025-04-21 through 2025-06-09", before, StringComparison.Ordinal);
+        Assert.Contains("no imported statement's period covers the days from 2025-04-21 through 2025-06-09", before, StringComparison.Ordinal);
     }
 
     // A first statement starting on 15 February lacks the first month of alta: Q1 stays projected, and the trace names the days.
@@ -357,9 +358,56 @@ public class ClassificationEndpoint
 
         Assert.Null(estimate["ledger"]!["actualsThrough"]);
         Assert.Equal(
-            "no stored import spans the days from 2025-01-15 through 2025-02-13; Q1 stays on the projection, with what follows, until its days from 2025-01-15 through 2025-04-01 are spanned",
+            "no imported statement's period covers the days from 2025-01-15 through 2025-02-13; Q1 stays on the projection, with what follows, until statements whose periods cover its days from 2025-01-15 through 2025-04-01 are imported",
             Coverage(estimate));
     }
+
+    // Two statements that overlap (#88): A runs from 2 January to 7 April, B from 31 March to 31 December, so B's first two
+    // lines are A's last two and B stores nothing for those days. B's period is still its lines' first to last date, the
+    // duplicates included, so the two periods meet and Q2 is actuals.
+    [Fact]
+    public async Task OverlappingStatementsCoverTheDaysTheyShare()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = await client.CreateProfile("G12");
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes(SyntheticLines(line => Day(line) <= new DateOnly(2025, 4, 7))));
+
+        var b = await (await client.ImportStatement(id, Encoding.UTF8.GetBytes(SyntheticLines(line => Day(line) >= new DateOnly(2025, 3, 31))))).Json();
+        await client.ClassifySyntheticQueue(id);
+
+        Assert.Equal((2, "2025-03-31", "2025-12-31"), (b["alreadyImported"]!.GetValue<int>(), b["from"]!.GetValue<string>(), b["to"]!.GetValue<string>()));
+        var estimate = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+        Assert.Equal("Q2", estimate["ledger"]!["actualsThrough"]!.GetValue<string>());
+        Assert.DoesNotContain(estimate["trace"]!.AsArray(), step => step!["id"]!.GetValue<string>() == "ledger.coverage");
+    }
+
+    // Quarterly exports, each stated for its quarter (#88). Nothing moved between 31 March and 7 April, or between 5 May and
+    // 30 June, so the lines alone leave those days uncovered; the stated periods meet. A period ending on a quarter's last day
+    // shows only that day covered, so Q3, the last one stated, waits for the statement after it.
+    [Fact]
+    public async Task QuarterlyStatementsStatedForTheirQuartersMakeTheQuartersActuals()
+    {
+        await using var api = await Api();
+        var client = api.CreateClient();
+        var id = await client.CreateProfile("G12");
+        foreach (var (first, last) in new[] { ("2025-01-01", "2025-03-31"), ("2025-04-01", "2025-06-30"), ("2025-07-01", "2025-09-30") })
+        {
+            var (from, to) = (DateOnly.Parse(first, CultureInfo.InvariantCulture), DateOnly.Parse(last, CultureInfo.InvariantCulture));
+            var quarter = Encoding.UTF8.GetBytes(SyntheticLines(line => Day(line) >= from && Day(line) <= to));
+            (await client.ImportStatement(id, quarter, from: first, to: last)).EnsureSuccessStatusCode();
+        }
+
+        await client.ClassifySyntheticQueue(id);
+
+        var estimate = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q3")).Json();
+        Assert.Equal("Q2", estimate["ledger"]!["actualsThrough"]!.GetValue<string>());
+        Assert.Equal(
+            "no imported statement's period covers the days from 2025-10-01 on; Q3 stays on the projection, with what follows, until statements whose periods cover its days from 2025-07-01 through 2025-10-01 are imported",
+            Coverage(estimate));
+    }
+
+    private static DateOnly Day(string line) => DateOnly.ParseExact(line[..10], "dd/MM/yyyy", CultureInfo.InvariantCulture);
 
     // The synthetic statement's header and the lines the filter keeps.
     private static string SyntheticLines(Func<string, bool> keep) =>

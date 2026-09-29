@@ -10,10 +10,6 @@ namespace GestorIA.Infrastructure.Transactions;
 // A movement as the actuals read it. No description: nothing here can put one in a trace (SPEC-013).
 public sealed record ClassifiedLine(Guid Id, DateOnly BookingDate, Money Amount, Classification Classification);
 
-// The days one import of a statement spans: its first booking date to its last. A BBVA export does not state its period, so
-// the lines it holds are the evidence of what it covers.
-public sealed record ImportSpan(DateOnly From, DateOnly To);
-
 // ActualsThrough is the last quarter the movements cover, null when they cover none. Counted and AwaitingInvoice are of the
 // movements in the covered quarters; AwaitingReview of those in every closed quarter up to asOf, which holds the rest back.
 public sealed record LedgerCounts(Quarter? ActualsThrough, int Counted, int AwaitingReview, int AwaitingInvoice);
@@ -50,9 +46,9 @@ public static class LedgerActuals
     // The amounts are cents; a sum of none keeps two decimals, so the engine's trace shows "0.00" as it does for an input file.
     private static readonly Money NoEuros = new(0.00m);
 
-    // lines: the profile's movements of its tax year. imports: the span of each import of the profile, of any year. today decides
-    // which quarters are closed.
-    public static LedgerEstimate Of(Profile profile, IReadOnlyList<ClassifiedLine> lines, IReadOnlyList<ImportSpan> imports, TaxYearConfig config, Quarter asOf, DateOnly today)
+    // lines: the profile's movements of its tax year. statements: the period of each statement imported for the profile, of any
+    // year. today decides which quarters are closed.
+    public static LedgerEstimate Of(Profile profile, IReadOnlyList<ClassifiedLine> lines, IReadOnlyList<StatementPeriod> statements, TaxYearConfig config, Quarter asOf, DateOnly today)
     {
         var year = config.TaxYear;
         var alta = profile.Taxpayer.Activity.Alta;
@@ -62,11 +58,11 @@ public static class LedgerActuals
         var byQuarter = lines.ToLookup(line => QuarterOf(line.BookingDate));
         DateOnly LastDay(Quarter quarter) => new DateOnly(year, (int)quarter * 3, 1).AddMonths(1).AddDays(-1);
         bool Closed(Quarter quarter) => today > LastDay(quarter);
-        var covered = Merged(imports);
-        // A quarter's movements are all imported only when the imports together span every day of it that can hold activity,
-        // from its first day (the alta, when that falls inside it) to one day past its last: the imports hold no day before
-        // their first line or after their last, so a statement ending on a quarter's last day, or starting after its first,
-        // leaves it projected until more movements arrive.
+        var covered = Merged(statements);
+        // A quarter's movements are all imported only when the statements' periods together cover every day of it that can
+        // hold activity, from its first day (the alta, when that falls inside it) to one day past its last: a period read from
+        // the lines holds no day before its first line or after its last, so a statement ending on a quarter's last day, or
+        // starting after its first, leaves it projected until a later or earlier statement is imported.
         DateOnly From(Quarter quarter) => new[] { LastDay(quarter).AddDays(1).AddMonths(-3), alta }.Max();
         DateOnly? Uncovered(Quarter quarter)
         {
@@ -81,7 +77,7 @@ public static class LedgerActuals
         // The quarters that could be actuals: from the first of activity, closed, and not after asOf, so an unbroken run.
         var firstQuarter = QuarterOf(new DateOnly(year, firstMonth, 1));
         var closed = Enum.GetValues<Quarter>().Where(quarter => quarter >= firstQuarter && quarter <= asOf && Closed(quarter)).ToList();
-        // A quarter with no imported line has no evidence, one the imported movements do not reach past may have more, and one
+        // A quarter with no imported line has no evidence, one the statements' periods do not reach past may have more, and one
         // with a line awaiting review has income not known yet; each would read as missing income, so it and the rest stay
         // projected.
         var actual = closed.TakeWhile(quarter => byQuarter.Contains(quarter) && Covered(quarter) && !byQuarter[quarter].Any(AwaitsReview)).ToList();
@@ -105,7 +101,7 @@ public static class LedgerActuals
                 "#73: a quarter with no imported movement has no evidence and would read as zero income, so it stays projected"));
         }
 
-        // The run stopped at a quarter with movements that the imports do not span.
+        // The run stopped at a quarter with movements that the statements' periods do not cover.
         if (actual.Count < closed.Count && byQuarter.Contains(closed[actual.Count]) && Uncovered(closed[actual.Count]) is { } gap)
         {
             var reached = closed[actual.Count];
@@ -113,14 +109,21 @@ public static class LedgerActuals
             steps.Add(new TraceStep(
                 "ledger.coverage",
                 TraceSection.Actividad,
-                "Trimestre no cubierto por los movimientos importados",
-                [new("quarter", Invariant($"{reached}")), new("uncoveredFrom", Invariant($"{gap:yyyy-MM-dd}")), new("uncoveredThrough", gapEnd is { } end ? Invariant($"{end:yyyy-MM-dd}") : "")],
+                "Trimestre no cubierto por los extractos importados",
+                [
+                    new("quarter", Invariant($"{reached}")),
+                    new("uncoveredFrom", Invariant($"{gap:yyyy-MM-dd}")),
+                    new("uncoveredThrough", gapEnd is { } end ? Invariant($"{end:yyyy-MM-dd}") : ""),
+                    .. statements.OrderBy(period => period.From).ThenBy(period => period.To)
+                        .Select(period => new TraceInput("statementPeriod", Invariant($"{period.From:yyyy-MM-dd}..{period.To:yyyy-MM-dd}"))),
+                ],
                 (gapEnd is { } through
-                    ? Invariant($"no stored import spans the days from {gap:yyyy-MM-dd} through {through:yyyy-MM-dd}")
-                    : Invariant($"no stored import spans the days from {gap:yyyy-MM-dd} on"))
-                    + Invariant($"; {reached} stays on the projection, with what follows, until its days from {From(reached):yyyy-MM-dd} through {LastDay(reached).AddDays(1):yyyy-MM-dd} are spanned"),
+                    ? Invariant($"no imported statement's period covers the days from {gap:yyyy-MM-dd} through {through:yyyy-MM-dd}")
+                    : Invariant($"no imported statement's period covers the days from {gap:yyyy-MM-dd} on"))
+                    + Invariant($"; {reached} stays on the projection, with what follows, until statements whose periods cover its days from {From(reached):yyyy-MM-dd} through {LastDay(reached).AddDays(1):yyyy-MM-dd} are imported"),
                 new TraceValue.Count(byQuarter[reached].Count()),
-                "#73: an import spans the days from the first to the last movement it stored; a quarter no stored import spans may hold income not stored, so it stays on the projection. Statement periods: #88"));
+                "#73, #88: the imported statements cover the union of their periods, each stated at import or else its lines' first to last booking date; "
+                    + "a quarter they do not cover to one day past its end may hold income not imported, so it stays on the projection"));
         }
 
         if (waiting.Count > 0)
@@ -208,11 +211,11 @@ public static class LedgerActuals
     private static SetAsideInput Input(Profile profile, IReadOnlyList<QuarterToDate> actuals, ActivityProjection projection, TaxYearConfig config, Quarter asOf) =>
         new(profile.Taxpayer, new ActivityPicture(actuals, projection, new Retenciones.ForeignPayersOnly()), config, asOf);
 
-    // The imports' spans joined where they overlap or meet (one ending the day before the next begins), in date order.
-    private static List<ImportSpan> Merged(IReadOnlyList<ImportSpan> imports)
+    // The statements' periods joined where they overlap or meet (one ending the day before the next begins), in date order.
+    private static List<StatementPeriod> Merged(IReadOnlyList<StatementPeriod> statements)
     {
-        var merged = new List<ImportSpan>();
-        foreach (var span in imports.OrderBy(span => span.From))
+        var merged = new List<StatementPeriod>();
+        foreach (var span in statements.OrderBy(span => span.From))
         {
             if (merged.Count > 0 && span.From <= merged[^1].To.AddDays(1))
             {

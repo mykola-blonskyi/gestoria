@@ -26,11 +26,10 @@ public static class Ledger
         var profile = row.ToProfile();
         var stored = await db.BankTransactions.AsNoTracking().OfTaxYear(row.Id, profile.TaxYear).ToListAsync(cancellationToken);
         var lines = stored.Select(line => new ClassifiedLine(line.Id, line.BookingDate, line.ToBankTransaction().Amount, line.ClassifiedBy(rules))).ToList();
-        // Of every year: an import running into January shows the statement reached past December.
-        var imports = await db.BankTransactions.Where(t => t.ProfileId == row.Id)
-            .GroupBy(t => t.ImportSequence)
-            .Select(import => new ImportSpan(import.Min(t => t.BookingDate), import.Max(t => t.BookingDate)))
+        // Of every year: a statement running into January shows the previous December was covered to its end.
+        var statements = await db.StatementImports.AsNoTracking().Where(i => i.ProfileId == row.Id)
+            .Select(i => new StatementPeriod(i.From, i.To))
             .ToListAsync(cancellationToken);
-        return LedgerActuals.Of(profile, lines, imports, config, asOf, today);
+        return LedgerActuals.Of(profile, lines, statements, config, asOf, today);
     }
 }

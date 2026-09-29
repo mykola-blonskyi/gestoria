@@ -25,7 +25,7 @@ public static class TransactionEndpoints
 
         profile.MapPost("/bank-statements", Import)
             .WithName("importBankStatement")
-            .WithSummary("Imports a bank statement, the file itself as the body. A line an earlier import stored is not stored again.")
+            .WithSummary("Imports a bank statement, the file itself as the body, for the period from and to state or else its lines' first to last date. A line an earlier import stored is not stored again.")
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status413PayloadTooLarge)
             .ProducesProblem(StatusCodes.Status415UnsupportedMediaType)
@@ -34,6 +34,15 @@ public static class TransactionEndpoints
                 var bank = (OpenApiParameter)operation.Parameters!.Single(p => p.Name == "bank");
                 bank.Required = true;
                 bank.Schema = new OpenApiSchema { Type = JsonSchemaType.String, Enum = [.. Parsers.Keys.Select(key => (JsonNode)key)] };
+                // Read as text so a malformed date is an invalid-input problem; the document still says what each accepts.
+                foreach (var end in operation.Parameters!.Cast<OpenApiParameter>().Where(p => p.Name is "from" or "to"))
+                {
+                    end.Schema = new OpenApiSchema { Type = JsonSchemaType.String, Format = "date" };
+                    end.Description = end.Name == "from"
+                        ? "The statement period's first day; the first line's booking date when left out."
+                        : "The statement period's last day; the last line's booking date when left out.";
+                }
+
                 operation.RequestBody = new OpenApiRequestBody
                 {
                     Required = true,
@@ -44,6 +53,11 @@ public static class TransactionEndpoints
                 };
                 return Task.CompletedTask;
             });
+
+        profile.MapGet("/bank-statements", Statements)
+            .WithName("listBankStatements")
+            .WithSummary("The imported statements, each with the period it covers, in the order of their periods.")
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         profile.MapGet("/transactions", List)
             .WithName("listTransactions")
@@ -74,12 +88,21 @@ public static class TransactionEndpoints
     }
 
     private static async Task<Results<Ok<BankStatementImport>, ValidationProblem, ProblemHttpResult>> Import(
-        Guid id, string? bank, HttpRequest request, GestoriaDbContext db, CancellationToken cancellationToken)
+        Guid id, string? bank, string? from, string? to, HttpRequest request, GestoriaDbContext db, TimeProvider clock, CancellationToken cancellationToken)
     {
-        if (bank is null || !Parsers.TryGetValue(bank, out var parser))
+        var errors = new Dictionary<string, string[]>();
+        if (bank is null || !Parsers.ContainsKey(bank))
         {
-            return Problems.Invalid("bank", $"bank is {(bank is null ? "missing" : $"\"{bank}\"")}; it must name the statement's format, one of {string.Join(", ", Parsers.Keys)}.");
+            errors["bank"] = [$"bank is {(bank is null ? "missing" : $"\"{bank}\"")}; it must name the statement's format, one of {string.Join(", ", Parsers.Keys)}."];
         }
+
+        var (declaredFrom, declaredTo) = (Date("from", from, errors), Date("to", to, errors));
+        if (errors.Count > 0)
+        {
+            return Problems.Invalid(errors);
+        }
+
+        var parser = Parsers[bank!];
 
         if (!StatementFile.IsAcceptedMediaType(request.ContentType))
         {
@@ -106,6 +129,22 @@ public static class TransactionEndpoints
             return Problems.Invalid(e.Errors.ToDictionary(error => error.Key, error => error.Value));
         }
 
+        // The period of every line the file holds, the ones an earlier import stored included: they are this statement's too.
+        var dates = statement.Select(line => line.Line.Movement.BookingDate).ToList();
+        var (first, last) = dates.Count == 0 ? ((DateOnly?)null, (DateOnly?)null) : (dates.Min(), dates.Max());
+        if ((declaredFrom ?? first, declaredTo ?? last) is not ({ } periodFrom, { } periodTo))
+        {
+            return Problems.Invalid(new[] { (End: "from", Date: declaredFrom), (End: "to", Date: declaredTo) }
+                .Where(end => end.Date is null)
+                .ToDictionary(end => end.End, end => new[] { $"{end.End} is missing; the statement holds no movement, so its period must be stated." }));
+        }
+
+        var refusals = StatementPeriod.Refusals(periodFrom, periodTo, first, last, MadridDay.Of(clock.GetUtcNow()));
+        if (refusals.Count > 0)
+        {
+            return Problems.Invalid(refusals.ToDictionary(refusal => refusal.End, refusal => new[] { $"{refusal.End} {refusal.Reason}." }));
+        }
+
         // Imports into one profile run one at a time: each holds the profile's row lock from reading which lines are stored to
         // storing the rest, so two overlapping statements imported at once cannot both find a line missing. The unique index on
         // the line key stays the last word.
@@ -123,8 +162,10 @@ public static class TransactionEndpoints
             .Select(t => t.LineKey)
             .ToHashSetAsync(StringComparer.Ordinal, cancellationToken);
         var fresh = statement.Where(line => !stored.Contains(line.Key)).ToList();
-        // Under the profile's lock, so no other import of this profile can take the same number.
-        var sequence = await db.BankTransactions.Where(t => t.ProfileId == id).MaxAsync(t => (int?)t.ImportSequence, cancellationToken) + 1 ?? 1;
+        // Under the profile's lock, so no other import of this profile can take the same number. Recorded even when every line
+        // was stored before: the statement's period is news of its own.
+        var sequence = await db.StatementImports.Where(i => i.ProfileId == id).MaxAsync(i => (int?)i.Sequence, cancellationToken) + 1 ?? 1;
+        db.StatementImports.Add(new StatementImportRow { ProfileId = id, Sequence = sequence, From = periodFrom, To = periodTo });
         db.BankTransactions.AddRange(fresh.Select(line => new BankTransactionRow
         {
             Id = Guid.NewGuid(),
@@ -141,7 +182,39 @@ public static class TransactionEndpoints
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        return TypedResults.Ok(new BankStatementImport(parser.Bank, statement.Count, fresh.Count, statement.Count - fresh.Count));
+        return TypedResults.Ok(new BankStatementImport(parser.Bank, statement.Count, fresh.Count, statement.Count - fresh.Count, periodFrom, periodTo));
+    }
+
+    private static async Task<Results<Ok<List<StatementImportView>>, ProblemHttpResult>> Statements(
+        Guid id, GestoriaDbContext db, CancellationToken cancellationToken)
+    {
+        if (!await db.Profiles.AnyAsync(p => p.Id == id, cancellationToken))
+        {
+            return Problems.NoProfile(id);
+        }
+
+        var imports = await db.StatementImports.AsNoTracking()
+            .Where(i => i.ProfileId == id)
+            .OrderBy(i => i.From).ThenBy(i => i.To).ThenBy(i => i.Sequence)
+            .ToListAsync(cancellationToken);
+        return TypedResults.Ok(imports.Select(StatementImportView.Of).ToList());
+    }
+
+    // An end of a stated period, as yyyy-MM-dd; null when it is not given, or not a date, which errors then names.
+    private static DateOnly? Date(string end, string? text, Dictionary<string, string[]> errors)
+    {
+        if (text is null)
+        {
+            return null;
+        }
+
+        if (DateOnly.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+        {
+            return date;
+        }
+
+        errors[end] = [$"{end} is \"{text}\"; it must be a date written yyyy-MM-dd, such as 2025-03-31."];
+        return null;
     }
 
     private static async Task<Results<Ok<List<TransactionView>>, ValidationProblem, ProblemHttpResult>> List(

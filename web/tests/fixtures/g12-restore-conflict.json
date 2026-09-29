@@ -7,6 +7,7 @@
   "taxYear": 2025,
   "entities": {
     "profiles": 1,
+    "statementImports": 1,
     "bankTransactions": 18
   }
 }

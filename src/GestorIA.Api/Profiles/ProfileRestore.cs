@@ -23,10 +23,12 @@ public static class ProfileRestore
     // A movement is about 250 bytes of JSON, so this holds some 60,000 of them: decades of a personal account.
     public const int MaxBytes = 16 * 1024 * 1024;
 
-    // As many movements as a refused file lists, like a refused statement's lines (BbvaCsvStatementParser).
-    private const int MaxMovementErrors = 20;
+    // As many movements, or statement imports, as a refused file lists, like a refused statement's lines (BbvaCsvStatementParser).
+    private const int MaxRowErrors = 20;
 
     private const string Movements = "$.entities.bankTransactions";
+
+    private const string Imports = "$.entities.statementImports";
 
     private static readonly Regex Signed = new(ProfileAmounts.Signed, RegexOptions.CultureInvariant);
 
@@ -42,7 +44,8 @@ public static class ProfileRestore
         MediaTypeHeaderValue.TryParse(contentType, out var parsed)
         && parsed.MediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase);
 
-    public static Restored Read(byte[] body, JsonSerializerOptions apiOptions, TaxYearConfigLoader loader)
+    // today bounds the statements' periods as it bounds an import's (StatementPeriod.Refusals).
+    public static Restored Read(byte[] body, JsonSerializerOptions apiOptions, TaxYearConfigLoader loader, DateOnly today)
     {
         ProfileExport export;
         try
@@ -56,7 +59,7 @@ public static class ProfileRestore
             throw Refused("$", "The file holds text that is not whole Unicode characters.");
         }
 
-        return Check(export, loader);
+        return Check(export, loader, today);
     }
 
     private static ProfileExport Parse(byte[] body, JsonSerializerOptions apiOptions)
@@ -140,7 +143,7 @@ public static class ProfileRestore
         return export;
     }
 
-    private static Restored Check(ProfileExport export, TaxYearConfigLoader loader)
+    private static Restored Check(ProfileExport export, TaxYearConfigLoader loader, DateOnly today)
     {
         var errors = new Dictionary<string, string[]>();
         if (export.Classification != ProfileExport.PersonalFinancialData)
@@ -180,17 +183,12 @@ public static class ProfileRestore
             errors["$.entities.profiles"] = [Invariant($"$.entities.profiles holds {export.Entities.Profiles.Count} profiles; an installation keeps exactly one.")];
         }
 
-        var movements = export.Entities.BankTransactions;
+        var (movements, imports) = (export.Entities.BankTransactions, export.Entities.StatementImports);
         var refused = new SortedDictionary<int, List<(string? Field, string Reason)>>();
-        void Refuse(int index, string? field, string reason)
-        {
-            if (!refused.TryGetValue(index, out var reasons))
-            {
-                refused[index] = reasons = [];
-            }
-
-            reasons.Add((field, reason));
-        }
+        var refusedImports = new SortedDictionary<int, List<(string? Field, string Reason)>>();
+        void Refuse(int index, string? field, string reason) => Add(refused, index, field, reason);
+        void RefuseImport(int index, string? field, string reason) => Add(refusedImports, index, field, reason);
+        var sequences = imports.OfType<ExportedStatementImport>().Select(import => import.Sequence).ToHashSet();
 
         var rows = new BankTransactionRow?[movements.Count];
         var ids = new Dictionary<Guid, int>();
@@ -231,11 +229,16 @@ public static class ProfileRestore
                 Refuse(i, "lineNumber", Invariant($"is {movement.LineNumber}; it must be 1 or more"));
             }
 
-            // An import that stores anything stores at least one line, so the file's movements came from as many imports at
-            // most. The bound also keeps the next import's number, one more than the highest, from overflowing.
-            if (movement.ImportSequence < 1 || movement.ImportSequence > movements.Count)
+            // A file without statement imports was exported before #88, when only an import that stored a line kept its number,
+            // so its movements came from as many imports at most. The bound also keeps the next import's number, one more than
+            // the highest, from overflowing; the imports' own bound does that for a later file.
+            if (imports.Count == 0 && (movement.ImportSequence < 1 || movement.ImportSequence > movements.Count))
             {
                 Refuse(i, "importSequence", Invariant($"is {movement.ImportSequence}; it must be from 1 to {movements.Count}, the number of movements in the file"));
+            }
+            else if (imports.Count > 0 && !sequences.Contains(movement.ImportSequence))
+            {
+                Refuse(i, "importSequence", Invariant($"is {movement.ImportSequence}, the sequence of no statement import in {Imports}"));
             }
 
             if (!ids.TryAdd(movement.Id, i))
@@ -285,19 +288,41 @@ public static class ProfileRestore
             }
         }
 
-        foreach (var (index, reasons) in refused.Take(MaxMovementErrors))
+        // Each import's sequence is one of 1 to the number of imports, and no two share one, so they are exactly those numbers.
+        // Its period passes the rule an import's does, against the movements the file says it stored: a period that leaves one
+        // out, or runs into days still to come, would count days as covered that no statement holds.
+        var datesOf = movements.OfType<ExportedBankTransaction>().ToLookup(movement => movement.ImportSequence, movement => movement.BookingDate);
+        var importRows = new StatementImportRow?[imports.Count];
+        var bySequence = new Dictionary<int, int>();
+        for (var i = 0; i < imports.Count; i++)
         {
-            foreach (var field in reasons.GroupBy(reason => reason.Field, reason => reason.Reason))
+            if (imports[i] is not { } import)
             {
-                var path = field.Key is null ? Invariant($"{Movements}[{index}]") : Invariant($"{Movements}[{index}].{field.Key}");
-                errors[path] = [.. field.Select(reason => $"{path} {reason}.")];
+                RefuseImport(i, null, "is null; it must be a statement import");
+                continue;
             }
+
+            if (import.Sequence < 1 || import.Sequence > imports.Count)
+            {
+                RefuseImport(i, "sequence", Invariant($"is {import.Sequence}; it must be from 1 to {imports.Count}, the number of statement imports in the file"));
+            }
+            else if (!bySequence.TryAdd(import.Sequence, i))
+            {
+                RefuseImport(i, "sequence", Invariant($"is the sequence of {Imports}[{bySequence[import.Sequence]}] too"));
+            }
+
+            var dates = datesOf[import.Sequence].ToList();
+            var refusals = StatementPeriod.Refusals(import.From, import.To, dates.Count == 0 ? null : dates.Min(), dates.Count == 0 ? null : dates.Max(), today);
+            foreach (var (end, reason) in refusals)
+            {
+                RefuseImport(i, end, reason);
+            }
+
+            importRows[i] = new StatementImportRow { Sequence = import.Sequence, From = import.From, To = import.To };
         }
 
-        if (refused.Count > MaxMovementErrors)
-        {
-            errors[Movements] = [Invariant($"{refused.Count} movements are refused; the first {MaxMovementErrors} are listed.")];
-        }
+        Report(Imports, "statement imports", refusedImports, errors);
+        Report(Movements, "movements", refused, errors);
 
         if (errors.Count > 0)
         {
@@ -305,13 +330,52 @@ public static class ProfileRestore
         }
 
         var stored = rows.Select(row => row!).ToList();
+        // A file without statement imports, as every file exported before #88, gets one per import its movements name, over
+        // the first to the last booking date of what that import stored: the days #73 read from the lines.
+        var statements = imports.Count > 0
+            ? [.. importRows.Select(row => row!)]
+            : stored.GroupBy(row => row.ImportSequence)
+                .Select(import => new StatementImportRow { Sequence = import.Key, From = import.Min(row => row.BookingDate), To = import.Max(row => row.BookingDate) })
+                .ToList();
         foreach (var row in stored)
         {
             row.ProfileId = profile!.Id;
         }
 
-        var ordered = stored.OrderBy(t => t.BookingDate).ThenBy(t => t.ImportSequence).ThenBy(t => t.LineNumber);
-        return new Restored(profile!, stored, ProfileExport.Of(ProfileView.From(profile!.Id, profile.ToProfile()), ordered, DateTimeOffset.UnixEpoch).Entities);
+        foreach (var statement in statements)
+        {
+            statement.ProfileId = profile!.Id;
+        }
+
+        return new Restored(profile!, statements, stored, ProfileExport.Of(ProfileView.From(profile!.Id, profile.ToProfile()), statements, stored, DateTimeOffset.UnixEpoch).Entities);
+    }
+
+    private static void Add(SortedDictionary<int, List<(string? Field, string Reason)>> refused, int index, string? field, string reason)
+    {
+        if (!refused.TryGetValue(index, out var reasons))
+        {
+            refused[index] = reasons = [];
+        }
+
+        reasons.Add((field, reason));
+    }
+
+    // The refused rows of a kind by their paths, the first MaxRowErrors of them.
+    private static void Report(string kind, string rows, SortedDictionary<int, List<(string? Field, string Reason)>> refused, Dictionary<string, string[]> errors)
+    {
+        foreach (var (index, reasons) in refused.Take(MaxRowErrors))
+        {
+            foreach (var field in reasons.GroupBy(reason => reason.Field, reason => reason.Reason))
+            {
+                var path = field.Key is null ? Invariant($"{kind}[{index}]") : Invariant($"{kind}[{index}].{field.Key}");
+                errors[path] = [.. field.Select(reason => $"{path} {reason}.")];
+            }
+        }
+
+        if (refused.Count > MaxRowErrors)
+        {
+            errors[kind] = [Invariant($"{refused.Count} {rows} are refused; the first {MaxRowErrors} are listed.")];
+        }
     }
 
     // A movement's class (#73) as the export writes it: null, or one of the names ClassifyInput takes. The API's enum converter
@@ -361,15 +425,15 @@ public static class ProfileRestore
 }
 
 // What a valid file stores, and what it holds as the export would write it, to compare with what an installation holds.
-public sealed record Restored(ProfileRow Profile, IReadOnlyList<BankTransactionRow> BankTransactions, ExportedEntities Entities);
+public sealed record Restored(ProfileRow Profile, IReadOnlyList<StatementImportRow> StatementImports, IReadOnlyList<BankTransactionRow> BankTransactions, ExportedEntities Entities);
 
 // The answer to a restore: the restored profile's id and how many rows each kind holds, one member per table, named as the
 // export's entities are.
 public sealed record RestoredExport(Guid ProfileId, EntityCounts Entities);
 
-public sealed record EntityCounts(int Profiles, int BankTransactions)
+public sealed record EntityCounts(int Profiles, int StatementImports, int BankTransactions)
 {
-    public static EntityCounts Of(ExportedEntities entities) => new(entities.Profiles.Count, entities.BankTransactions.Count);
+    public static EntityCounts Of(ExportedEntities entities) => new(entities.Profiles.Count, entities.StatementImports.Count, entities.BankTransactions.Count);
 }
 
 public sealed class InvalidExportException(Dictionary<string, string[]> errors) : Exception("The export is not valid.")

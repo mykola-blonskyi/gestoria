@@ -17,9 +17,9 @@ public class LedgerActualsTests
     private static readonly DateOnly AfterTheYear = new(2026, 9, 28);
 
     // One statement from December 2024 to January 2026, so every quarter of 2025 that holds lines is covered.
-    private static readonly IReadOnlyList<ImportSpan> WholeYear = [Span("2024-12-01", "2026-01-31")];
+    private static readonly IReadOnlyList<StatementPeriod> WholeYear = [Period("2024-12-01", "2026-01-31")];
 
-    private static ImportSpan Span(string from, string to) =>
+    private static StatementPeriod Period(string from, string to) =>
         new(DateOnly.Parse(from, System.Globalization.CultureInfo.InvariantCulture), DateOnly.Parse(to, System.Globalization.CultureInfo.InvariantCulture));
 
     private static Profile Profile(DateOnly alta, decimal ingresos = 30000.00m, decimal gastos = 1200.00m) => new(
@@ -193,7 +193,7 @@ public class LedgerActualsTests
     [InlineData("2025-04-22", null)]
     [InlineData("2025-06-30", null)]
     [InlineData("2025-07-15", Quarter.Q2)]
-    public void OnlyAQuarterTheImportsReachPastIsActuals(string to, Quarter? q2)
+    public void OnlyAQuarterTheStatementsReachPastIsActuals(string to, Quarter? q2)
     {
         List<ClassifiedLine> lines =
         [
@@ -202,14 +202,14 @@ public class LedgerActualsTests
             Line(4, 22, -35.10m, new Classification.Confirmed(TransactionClass.Personal, "personal")),
         ];
 
-        var ledger = LedgerActuals.Of(January, lines, [Span("2025-01-10", to)], Config, Quarter.Q4, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, [Period("2025-01-10", to)], Config, Quarter.Q4, AfterTheYear);
 
         Assert.Equal(q2 ?? Quarter.Q1, ledger.Counts.ActualsThrough);
         var coverage = ledger.Steps.SingleOrDefault(step => step.Id == "ledger.coverage");
         if (q2 is null)
         {
             var gap = DateOnly.Parse(to, System.Globalization.CultureInfo.InvariantCulture).AddDays(1);
-            Assert.Equal($"no stored import spans the days from {gap:yyyy-MM-dd} on; Q2 stays on the projection, with what follows, until its days from 2025-04-01 through 2025-07-01 are spanned", coverage!.Formula);
+            Assert.Equal($"no imported statement's period covers the days from {gap:yyyy-MM-dd} on; Q2 stays on the projection, with what follows, until statements whose periods cover its days from 2025-04-01 through 2025-07-01 are imported", coverage!.Formula);
         }
         else
         {
@@ -217,19 +217,19 @@ public class LedgerActualsTests
         }
     }
 
-    // A first statement starting on 15 February lacks January, and a gap between two imports lacks those days: a quarter missing
-    // days stays projected, and the trace names the days. Two imports that meet cover it together.
+    // A first statement starting on 15 February lacks January, and a gap between two statements' periods lacks those days: a quarter missing
+    // days stays projected, and the trace names the days. Two periods that meet cover it together.
     [Theory]
-    [InlineData("2025-02-15", "2025-12-31", null, null, "Q1", "no stored import spans the days from 2025-01-15 through 2025-02-14; Q1 stays on the projection, with what follows, until its days from 2025-01-15 through 2025-04-01")]
-    [InlineData("2025-01-02", "2025-02-28", "2025-06-01", "2025-12-31", "Q1", "no stored import spans the days from 2025-03-01 through 2025-05-31; Q1 stays on the projection, with what follows, until its days from 2025-01-15 through 2025-04-01")]
-    [InlineData("2025-01-02", "2025-04-30", "2025-06-01", "2025-12-31", "Q2", "no stored import spans the days from 2025-05-01 through 2025-05-31; Q2 stays on the projection, with what follows, until its days from 2025-04-01 through 2025-07-01")]
+    [InlineData("2025-02-15", "2025-12-31", null, null, "Q1", "no imported statement's period covers the days from 2025-01-15 through 2025-02-14; Q1 stays on the projection, with what follows, until statements whose periods cover its days from 2025-01-15 through 2025-04-01 are imported")]
+    [InlineData("2025-01-02", "2025-02-28", "2025-06-01", "2025-12-31", "Q1", "no imported statement's period covers the days from 2025-03-01 through 2025-05-31; Q1 stays on the projection, with what follows, until statements whose periods cover its days from 2025-01-15 through 2025-04-01 are imported")]
+    [InlineData("2025-01-02", "2025-04-30", "2025-06-01", "2025-12-31", "Q2", "no imported statement's period covers the days from 2025-05-01 through 2025-05-31; Q2 stays on the projection, with what follows, until statements whose periods cover its days from 2025-04-01 through 2025-07-01 are imported")]
     [InlineData("2025-01-02", "2025-03-31", "2025-04-01", "2025-12-31", null, null)]
-    public void AQuarterIsActualsOnlyWhenTheImportsSpanEveryDayOfIt(string firstFrom, string firstTo, string? secondFrom, string? secondTo, string? projected, string? why)
+    public void AQuarterIsActualsOnlyWhenTheStatementsCoverEveryDayOfIt(string firstFrom, string firstTo, string? secondFrom, string? secondTo, string? projected, string? why)
     {
         List<ClassifiedLine> lines = [Line(2, 20, 1000.00m, Income), Line(5, 20, 1000.00m, Income), Line(8, 20, 1000.00m, Income)];
-        List<ImportSpan> imports = [Span(firstFrom, firstTo), .. secondFrom is null ? [] : new[] { Span(secondFrom, secondTo!) }];
+        List<StatementPeriod> statements = [Period(firstFrom, firstTo), .. secondFrom is null ? [] : new[] { Period(secondFrom, secondTo!) }];
 
-        var ledger = LedgerActuals.Of(January, lines, imports, Config, Quarter.Q3, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, statements, Config, Quarter.Q3, AfterTheYear);
 
         if (projected is null)
         {
@@ -243,6 +243,17 @@ public class LedgerActualsTests
         }
     }
 
+    // The uncovered days read against the statements' periods, which the step names in date order (#88).
+    [Fact]
+    public void TheCoverageStepNamesEveryStatementsPeriod()
+    {
+        var ledger = LedgerActuals.Of(January, [Line(2, 20, 1000.00m, Income)], [Period("2025-03-10", "2025-12-31"), Period("2025-01-02", "2025-02-28")], Config, Quarter.Q1, AfterTheYear);
+
+        var coverage = Assert.Single(ledger.Steps, step => step.Id == "ledger.coverage");
+        Assert.StartsWith("no imported statement's period covers the days from 2025-03-01 through 2025-03-09;", coverage.Formula, StringComparison.Ordinal);
+        Assert.Equal(["2025-01-02..2025-02-28", "2025-03-10..2025-12-31"], coverage.Inputs.Where(input => input.Name == "statementPeriod").Select(input => input.Value));
+    }
+
     // A taxpayer who registered on 10 May can have no activity before it: Q2 needs movements from the alta on.
     [Fact]
     public void CoverageOfTheAltasQuarterStartsAtTheAlta()
@@ -250,8 +261,8 @@ public class LedgerActualsTests
         var may = Profile(new(2025, 5, 10));
         List<ClassifiedLine> lines = [Line(5, 20, 1000.00m, Income)];
 
-        var fromAlta = LedgerActuals.Of(may, lines, [Span("2025-05-10", "2025-07-05")], Config, Quarter.Q2, AfterTheYear);
-        var afterAlta = LedgerActuals.Of(may, lines, [Span("2025-05-11", "2025-07-05")], Config, Quarter.Q2, AfterTheYear);
+        var fromAlta = LedgerActuals.Of(may, lines, [Period("2025-05-10", "2025-07-05")], Config, Quarter.Q2, AfterTheYear);
+        var afterAlta = LedgerActuals.Of(may, lines, [Period("2025-05-11", "2025-07-05")], Config, Quarter.Q2, AfterTheYear);
 
         Assert.Equal(Quarter.Q2, fromAlta.Counts.ActualsThrough);
         Assert.Null(afterAlta.Counts.ActualsThrough);
