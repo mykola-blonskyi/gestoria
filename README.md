@@ -149,6 +149,7 @@ You end up with three things running: the database (in Docker), the API (in one 
 
 **1. Install the tools.** You need Git, the .NET 10 SDK, Node 24 with pnpm, and Docker Desktop. With [Homebrew](https://brew.sh):
 
+<!-- cmd:tools-install -->
 ```bash
 xcode-select --install                          # Git, if macOS asks for it
 brew install --cask dotnet-sdk docker-desktop
@@ -160,12 +161,14 @@ Without Homebrew, use the installers from [dot.net](https://dotnet.microsoft.com
 
 Before the first `dotnet` command, turn off the .NET tools' telemetry if you want to:
 
+<!-- cmd:dotnet-telemetry -->
 ```bash
 echo 'export DOTNET_CLI_TELEMETRY_OPTOUT=1' >> ~/.zshrc
 ```
 
 It takes effect in Terminal windows opened after this. Open a new Terminal window and check:
 
+<!-- cmd:version-checks -->
 ```bash
 dotnet --version     # 10.0.something
 node --version       # v24.something
@@ -174,12 +177,14 @@ docker --version     # Docker version 29 or later
 
 Turn on pnpm, the web app's package manager. Node ships it through corepack, which uses the exact version the project asks for:
 
+<!-- cmd:corepack -->
 ```bash
 corepack enable
 ```
 
 **2. Get the code.**
 
+<!-- cmd:clone -->
 ```bash
 git clone https://github.com/mykola-blonskyi/gestoria.git
 cd gestoria
@@ -193,6 +198,7 @@ The database holds personal financial data, so its password lives in a file outs
 
 **3. Create `.env` with a random password.**
 
+<!-- cmd:env-create -->
 ```bash
 cp .env.example .env
 PASSWORD=$(openssl rand -hex 24)
@@ -203,6 +209,7 @@ You can also open `.env` in a text editor and type a long password after `POSTGR
 
 **4. Start the database.**
 
+<!-- cmd:compose-up -->
 ```bash
 docker compose up -d postgres
 docker compose ps
@@ -212,6 +219,7 @@ The second command should show the `postgres` service `Up ... (healthy)` on `127
 
 **5. Tell the API how to reach the database.** The connection string goes into .NET *user secrets*, a file in your home folder (`~/.microsoft/usersecrets/`), outside the repository:
 
+<!-- cmd:connection-string -->
 ```bash
 PASSWORD=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2)
 dotnet user-secrets set ConnectionStrings:Gestoria "Host=localhost;Port=5432;Database=gestoria;Username=gestoria;Password=$PASSWORD" --project src/GestorIA.Api
@@ -225,6 +233,7 @@ The app is locked with a key you choose. The API keeps only the key's SHA-256 ha
 
 **6. Make a key, keep it, and store its hash.**
 
+<!-- cmd:api-key -->
 ```bash
 KEY=$(openssl rand -hex 32)
 echo "$KEY"
@@ -239,6 +248,7 @@ User secrets apply when the API runs with `dotnet run`. Anywhere else, set the e
 
 **7. Run the API** and leave this Terminal window open:
 
+<!-- cmd:api-run -->
 ```bash
 dotnet run --project src/GestorIA.Api
 ```
@@ -256,6 +266,7 @@ On the very first start the API creates its tables in the empty database. Just b
 
 **8. Check that the API and the database answer.** In a second Terminal window:
 
+<!-- cmd:health-ready -->
 ```bash
 curl -i http://localhost:5080/api/v1/health/ready
 ```
@@ -266,14 +277,20 @@ The first line should be `HTTP/1.1 204 No Content`. A `503 Service Unavailable` 
 
 **9. Install and run the web app** in that second window, and leave it open:
 
+<!-- cmd:web-install -->
 ```bash
 cd web
 pnpm install
 pnpm exec next telemetry disable
+```
+
+`pnpm install` ends with `Done in ...`. The last line is optional. It turns off Next.js telemetry and says "You have opted-out of Next.js' anonymous telemetry program." Then start the web app:
+
+```bash
 pnpm dev
 ```
 
-`pnpm install` ends with `Done in ...`. The third line is optional. It turns off Next.js telemetry and says "You have opted-out of Next.js' anonymous telemetry program." `pnpm dev` prints:
+It prints:
 
 ```
 ▲ Next.js 16.3.6 (Turbopack)
@@ -463,37 +480,115 @@ Run step 6 of the setup again with a new key, then stop the API with `Ctrl+C` an
 
 ## Local development
 
-This section brings GestorIA up from source to work on it, from an empty machine to the checks CI runs. Where a step is the same as in [Set it up from zero](#set-it-up-from-zero), it links there instead of repeating the command, so each command is written down once. Every command runs from the `gestoria` folder unless it says `web/`.
+This section brings GestorIA up from source to work on it, from an empty machine to the checks CI runs, in the order you run them. It repeats the commands of [Set it up from zero](#set-it-up-from-zero) so you never leave it. `scripts/check-docs.mjs` fails when a command shared by both sections differs between them.
 
 ### 1. Prerequisites
 
-You need the .NET 10 SDK, Node 24, pnpm and Docker. [Setup step 1](#tools) installs them, turns on pnpm through corepack, turns off .NET telemetry, and checks `dotnet`, `node` and `docker`. Two more checks:
+You need Git, the .NET 10 SDK, Node 24 with pnpm, and Docker. On a Mac with [Homebrew](https://brew.sh):
+
+<!-- cmd:tools-install -->
+```bash
+xcode-select --install                          # Git, if macOS asks for it
+brew install --cask dotnet-sdk docker-desktop
+brew install node@24
+echo "export PATH=\"$(brew --prefix node@24)/bin:\$PATH\"" >> ~/.zshrc
+```
+
+Open Docker Desktop once and wait until it says it is running. Before the first `dotnet` command, turn off the .NET tools' telemetry if you want to:
+
+<!-- cmd:dotnet-telemetry -->
+```bash
+echo 'export DOTNET_CLI_TELEMETRY_OPTOUT=1' >> ~/.zshrc
+```
+
+Open a new Terminal window, so both lines above take effect. Turn on pnpm through corepack, which uses the version `web/package.json` pins:
+
+<!-- cmd:corepack -->
+```bash
+corepack enable
+```
+
+Check the versions:
+
+<!-- cmd:version-checks -->
+```bash
+dotnet --version     # 10.0.something
+node --version       # v24.something
+docker --version     # Docker version 29 or later
+```
+
+One more check for development:
 
 ```bash
-pnpm --version            # 11.27.1, the version "packageManager" in web/package.json pins
 docker compose version    # Docker Compose version v2 or later
 ```
 
+Windows and Linux differ in a few commands. [Windows and Linux](#windows-and-linux) lists them.
+
 ### 2. Clone and create `.env`
 
-Clone as in [setup step 2](#tools), then create `.env` with a random database password as in [step 3](#database). Git ignores `.env`. `docker compose` reads it from the folder that holds `compose.yaml`.
+<!-- cmd:clone -->
+```bash
+git clone https://github.com/mykola-blonskyi/gestoria.git
+cd gestoria
+```
+
+Every later command runs from this `gestoria` folder unless it says `web/`. Check that corepack gives the pnpm version `web/package.json` pins in its `"packageManager"` field:
+
+```bash
+(cd web && pnpm --version)
+```
+
+Create `.env` with a random database password:
+
+<!-- cmd:env-create -->
+```bash
+cp .env.example .env
+PASSWORD=$(openssl rand -hex 24)
+sed -i '' "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$PASSWORD/" .env
+```
+
+Check it with `grep -c '^POSTGRES_PASSWORD=.' .env`, which prints `1`. Git ignores `.env`. `docker compose` reads it from the folder that holds `compose.yaml`. Set `POSTGRES_PORT` in it too if port 5432 is taken.
 
 ### 3. Postgres
 
-Start the database and check that it is healthy with [setup step 4](#database). Then:
+<!-- cmd:compose-up -->
+```bash
+docker compose up -d postgres
+docker compose ps
+```
+
+The second command shows the `postgres` service `Up ... (healthy)` on `127.0.0.1:5432->5432/tcp`. Then:
 
 | To | Run |
 |---|---|
 | Stop it and keep the data | `docker compose stop postgres` |
-| Start it again | `docker compose up -d postgres`, as in step 4 |
+| Start it again | `docker compose up -d postgres` |
 | Open a SQL prompt in it | `docker compose exec postgres psql -U gestoria -d gestoria` |
 | Delete it with all its data | `docker compose down -v` (see [step 9](#9-reset-to-a-clean-state)) |
 
-`\dt` at the SQL prompt lists the tables: `BankTransactions`, `Profiles`, `StatementImports` and `__EFMigrationsHistory`. `\q` leaves it.
+`\dt` at the SQL prompt lists the tables, among them `Profiles`, `BankTransactions` and `__EFMigrationsHistory`. `\q` leaves it.
 
 ### 4. Secrets: the connection string and the API key
 
-Store the connection string with [setup step 5](#database). Make the key and store its hash with [step 6](#the-api-key). To see what is stored:
+The API reads both from .NET user secrets, a file in your home folder outside the repository. Store the connection string:
+
+<!-- cmd:connection-string -->
+```bash
+PASSWORD=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2)
+dotnet user-secrets set ConnectionStrings:Gestoria "Host=localhost;Port=5432;Database=gestoria;Username=gestoria;Password=$PASSWORD" --project src/GestorIA.Api
+```
+
+It ends with `Successfully saved ConnectionStrings:Gestoria to the secret store.` If you changed `POSTGRES_PORT`, put that port in place of 5432. Then make a key and store its SHA-256 hash:
+
+<!-- cmd:api-key -->
+```bash
+KEY=$(openssl rand -hex 32)
+echo "$KEY"
+dotnet user-secrets set Auth:ApiKeySha256 "$(printf %s "$KEY" | openssl dgst -sha256 -r | cut -d' ' -f1)" --project src/GestorIA.Api
+```
+
+The second line prints the key. Save it in your password manager; the app asks for it and nothing can recover it. The last line ends with `Successfully saved Auth:ApiKeySha256 to the secret store.` To see what is stored:
 
 ```bash
 dotnet user-secrets list --project src/GestorIA.Api
@@ -503,40 +598,56 @@ The user-secrets id is written in `src/GestorIA.Api/GestorIA.Api.csproj`. So eve
 
 ### 5. Run the API
 
-Start it with [setup step 7](#the-api) and check it with [step 8](#the-api). What a developer should know:
+Leave this Terminal window open:
+
+<!-- cmd:api-run -->
+```bash
+dotnet run --project src/GestorIA.Api
+```
+
+The log shows `Now listening on: http://localhost:5080` and `Application started. Press Ctrl+C to shut down.` In a second Terminal window, check that the API and the database answer:
+
+<!-- cmd:health-ready -->
+```bash
+curl -i http://localhost:5080/api/v1/health/ready
+```
+
+The first line is `HTTP/1.1 204 No Content`. What a developer should know:
 
 - `dotnet run` uses the `http` profile in `src/GestorIA.Api/Properties/launchSettings.json`. It sets the address `http://localhost:5080` and `ASPNETCORE_ENVIRONMENT=Development`. The log starts with `Using launch settings from src/GestorIA.Api/Properties/launchSettings.json...` and, after `Application started`, prints `Hosting environment: Development`.
 - User secrets are read only in Development. With `dotnet run --no-launch-profile` the API runs as Production, reads only environment variables, and stops with `ConnectionStrings:Gestoria is not set`.
 - In Development the API also serves its OpenAPI document at <http://localhost:5080/openapi/v1.json>.
-- At every start it applies the migrations the database does not have yet. On an empty database the log shows one line per migration, oldest first:
+- At every start it applies the migrations the database does not have yet. On an empty database the log first shows a `fail:` line about `__EFMigrationsHistory`, which does not exist yet, then one line per migration, oldest first, starting with:
 
   ```
   info: Microsoft.EntityFrameworkCore.Migrations[20402]
         Applying migration '20260927164529_Profiles'.
-  ...
-  info: Microsoft.EntityFrameworkCore.Migrations[20402]
-        Applying migration '20260929115546_StatementImports'.
   ```
 
 ### 6. Run the web app
 
-1. Only if the API does not run on port 5080, create `web/.env.local` and point it at the API:
+Only if the API does not run on port 5080, point the web app at it:
 
-   ```bash
-   cp web/.env.example web/.env.local
-   ```
+```bash
+cp web/.env.example web/.env.local
+```
 
-   Then set `NEXT_PUBLIC_API_BASE_URL` in it, for example to `http://localhost:5190`.
-2. Install the dependencies as in [setup step 9](#the-web-app).
-3. Start it on this computer only:
+Then set `NEXT_PUBLIC_API_BASE_URL` in `web/.env.local`, for example to `http://localhost:5190`. Install the dependencies in the second window:
 
-   ```bash
-   cd web
-   pnpm dev -H localhost
-   ```
+<!-- cmd:web-install -->
+```bash
+cd web
+pnpm install
+pnpm exec next telemetry disable
+```
 
-   It prints `Local: http://localhost:3000` and `Network: http://localhost:3000`, so nothing else on your network reaches it. With a `web/.env.local` it also prints `Environments: .env.local`.
-4. Open <http://localhost:3000> and unlock it as in [setup step 10](#the-web-app).
+`pnpm install` ends with `Done in ...`. The last line turns off Next.js telemetry, and is optional. Start the web app on this computer only:
+
+```bash
+pnpm dev -H localhost
+```
+
+It prints `Local: http://localhost:3000` and `Network: http://localhost:3000`, so nothing else on your network reaches it. With a `web/.env.local` it also prints `Environments: .env.local`. Open <http://localhost:3000>, paste the key from step 4 and press the button. You land on the overview, which says there is no taxpayer profile yet.
 
 ### 7. The everyday loop
 
@@ -548,7 +659,7 @@ dotnet build GestorIA.slnx --no-restore
 dotnet test GestorIA.slnx --no-build
 ```
 
-The build ends with `0 Warning(s)` and `0 Error(s)`. Warnings are errors in this repository. Each test project ends with a line such as `Passed!  - Failed:     0, Passed:   344, ...  - GestorIA.Api.Tests.dll (net10.0)`. The API's tests start their own throwaway PostgreSQL in Docker and remove it when they finish. [Tests](#tests) describes the kinds of tests.
+The build ends with `0 Warning(s)` and `0 Error(s)`. Warnings are errors in this repository. Each test project ends with a `Passed!` line that says `Failed:     0`. The API's tests start their own throwaway PostgreSQL in Docker and remove it when they finish. [Tests](#tests) describes the kinds of tests.
 
 **Run only the golden tests:**
 
@@ -603,6 +714,14 @@ GESTORIA_WRITE_WEB_FIXTURES=1 dotnet test tests/GestorIA.Api.Tests --no-build --
 
 Without the variable, the same tests fail when a fixture no longer matches the API. Commit the rewritten files.
 
+**After a change to a README**, check its links and the commands this section repeats from setup:
+
+```bash
+node scripts/check-docs.mjs
+```
+
+It prints how many links and shared commands it checked, or names each broken link and each command whose two copies differ. A command both sections show is marked `<!-- cmd:<id> -->` in both, so change both copies together.
+
 ### 8. Run a second copy side by side
 
 A second clone or worktree, for example to try a branch while your own copy keeps running. Its database, API and web app each need their own port, and its database needs its own name in Docker.
@@ -636,7 +755,7 @@ The defaults are the database on 5432, the API on 5080 and the web app on 3000. 
 
 | What | Where to change it |
 |---|---|
-| Database port | `POSTGRES_PORT` in `.env`, and the `Port=` in the connection string (setup step 5, or the environment variable in step 8). |
+| Database port | `POSTGRES_PORT` in `.env`, and the `Port=` in the connection string (step 4 of this section, or the environment variable in step 8). |
 | API port | Start it with `dotnet run --project src/GestorIA.Api --urls http://localhost:5190`, and put `NEXT_PUBLIC_API_BASE_URL=http://localhost:5190` in `web/.env.local` (step 6). Restart `pnpm dev` after changing it. |
 | Web app port | Start it with `pnpm dev -p 3190`, and start the API with `Cors__Origins__0=http://localhost:3190` in front of its `dotnet run` command. |
 
@@ -649,7 +768,7 @@ docker compose down -v
 docker compose up -d postgres
 ```
 
-In a second copy, add its `-p <name>` to both (step 8). `down -v` deletes the Docker volume for good, so download a backup first if you need the data. The next API start creates the tables again (step 5). Your secrets and key stay. To forget them too, run `dotnet user-secrets clear --project src/GestorIA.Api`, then setup steps 5 and 6 again. Delete `web/.env.local` if you made one. Reload the browser tab, which locks the app.
+In a second copy, add its `-p <name>` to both (step 8). `down -v` deletes the Docker volume for good, so download a backup first if you need the data. The next API start creates the tables again (step 5). Your secrets and key stay. To forget them too, run `dotnet user-secrets clear --project src/GestorIA.Api`, then step 4 again. Delete `web/.env.local` if you made one. Reload the browser tab, which locks the app.
 
 ## The console program
 
@@ -802,6 +921,7 @@ compose.yaml        the local database (PostgreSQL 16) in Docker
 docs/               specifications (specs/), decisions (adr/), conventions, architecture
 knowledge/          business rules, domain model, glossary of Spanish tax terms
 plans/              current plan, backlog, development plan
+scripts/            check-docs.mjs, which checks the READMEs' links and repeated commands
 services/ocr/       planned document-reading service (not built)
 ```
 
@@ -863,7 +983,7 @@ Dependencies between issues use GitHub's "blocked by" links. An issue is ready t
 4. Build and test as [Local development, step 7](#7-the-everyday-loop) shows. The build must show `0 Warning(s)`, and every test must pass. If you changed the API or the database model, regenerate what step 7 says and commit it.
 5. Commit with a conventional message that names the issue, for example `feat(engine): project the Modelo 130 payment (#8)`. Only the repository owner authors commits. No `Co-authored-by` lines and no tool or AI attribution. Never bypass the hook with `--no-verify`.
 6. Push and open a pull request with `Closes #<number>` in the description. If you changed a file in `config/tax-years/`, say whether any golden test is affected.
-7. CI (`.github/workflows/ci.yml`) builds and tests every pull request, checks that the OpenAPI document and `web/src/data/api-types.ts` are current, and fails a document that breaks the one on `main`. `main` must always be green. Pull requests are squash-merged.
+7. CI (`.github/workflows/ci.yml`) builds and tests every pull request, checks that the OpenAPI document and `web/src/data/api-types.ts` are current, runs `scripts/check-docs.mjs`, and fails a document that breaks the one on `main`. `main` must always be green. Pull requests are squash-merged.
 
 ### Things that are easy to get wrong
 
