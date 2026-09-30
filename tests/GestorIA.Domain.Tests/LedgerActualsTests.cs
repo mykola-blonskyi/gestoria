@@ -19,6 +19,14 @@ public class LedgerActualsTests
     // One statement from December 2024 to January 2026, so every quarter of 2025 that holds lines is covered.
     private static readonly IReadOnlyList<StatementPeriod> WholeYear = [Period("2024-12-01", "2026-01-31")];
 
+    // A stored movement on the 28th of every month WholeYear covers, so no stretch without one runs past 31 days.
+    private static readonly IReadOnlyList<DateOnly> EveryMonth = [.. Enumerable.Range(0, 14).Select(month => new DateOnly(2024, 12, 28).AddMonths(month))];
+
+    private static IReadOnlyList<DateOnly> Days(IEnumerable<DateOnly> days, params string[] more) =>
+        [.. days.Concat(more.Select(Day)).Distinct().Order()];
+
+    private static DateOnly Day(string day) => DateOnly.Parse(day, System.Globalization.CultureInfo.InvariantCulture);
+
     private static StatementPeriod Period(string from, string to) =>
         new(DateOnly.Parse(from, System.Globalization.CultureInfo.InvariantCulture), DateOnly.Parse(to, System.Globalization.CultureInfo.InvariantCulture));
 
@@ -40,7 +48,7 @@ public class LedgerActualsTests
     [Fact]
     public void WithoutLinesTheInputIsTheWholeProjectionAndNoStepIsAdded()
     {
-        var ledger = LedgerActuals.Of(January, [], [], Config, Quarter.Q2, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, [], [], EveryMonth, Config, Quarter.Q2, AfterTheYear);
 
         Assert.Equal((January.Taxpayer, Quarter.Q2), (ledger.Input.Profile, ledger.Input.AsOf));
         Assert.Empty(ledger.Input.Activity.Actuals);
@@ -63,7 +71,7 @@ public class LedgerActualsTests
             Line(5, 2, -87.61m, Cuota),
         ];
 
-        var actuals = LedgerActuals.Of(January, lines, WholeYear, Config, Quarter.Q2, AfterTheYear).Input.Activity.Actuals;
+        var actuals = LedgerActuals.Of(January, lines, WholeYear, EveryMonth, Config, Quarter.Q2, AfterTheYear).Input.Activity.Actuals;
 
         Assert.Equal(
             [
@@ -84,7 +92,7 @@ public class LedgerActualsTests
             Line(1, 9, 700.00m, new Classification.Confirmed(TransactionClass.SavingsIncome, "savings")),
         ];
 
-        var ledger = LedgerActuals.Of(January, lines, WholeYear, Config, Quarter.Q1, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, WholeYear, EveryMonth, Config, Quarter.Q1, AfterTheYear);
 
         Assert.Equal(new QuarterToDate(Quarter.Q1, new Money(1000.00m), new Money(0.00m), new Money(0.00m)), Assert.Single(ledger.Input.Activity.Actuals));
         Assert.Equal(new LedgerCounts(Quarter.Q1, 1, 0, 1), ledger.Counts);
@@ -110,7 +118,7 @@ public class LedgerActualsTests
             Line(11, 6, 900.00m, Income),
         ];
 
-        var ledger = LedgerActuals.Of(January, lines, WholeYear, Config, Quarter.Q4, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, WholeYear, EveryMonth, Config, Quarter.Q4, AfterTheYear);
 
         Assert.Equal([Quarter.Q1], ledger.Input.Activity.Actuals.Select(actual => actual.Quarter));
         Assert.Equal(new LedgerCounts(Quarter.Q1, 1, 2, 0), ledger.Counts);
@@ -127,7 +135,7 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [.. Enumerable.Range(0, 4).Select(q => Line(q * 3 + 1, 5, 1000.00m, new Classification.Unclear()))];
 
-        var ledger = LedgerActuals.Of(January, lines, WholeYear, Config, Quarter.Q4, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, WholeYear, EveryMonth, Config, Quarter.Q4, AfterTheYear);
 
         Assert.Empty(ledger.Input.Activity.Actuals);
         Assert.Equal(January.Projection, ledger.Input.Activity.Projection);
@@ -141,7 +149,7 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [Line(2, 1, 100.00m, Income), Line(5, 1, 100.00m, new Classification.Unclear()), Line(8, 1, 100.00m, new Classification.Unclear())];
 
-        var ledger = LedgerActuals.Of(January, lines, WholeYear, Config, Quarter.Q2, new DateOnly(2025, 8, 10));
+        var ledger = LedgerActuals.Of(January, lines, WholeYear, EveryMonth, Config, Quarter.Q2, new DateOnly(2025, 8, 10));
 
         Assert.Equal(new LedgerCounts(Quarter.Q1, 1, 1, 0), ledger.Counts);
     }
@@ -151,8 +159,8 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [Line(2, 1, 100.00m, Income), Line(5, 1, 100.00m, Income), Line(8, 1, 100.00m, Income)];
 
-        var open = LedgerActuals.Of(January, lines, WholeYear, Config, Quarter.Q3, new DateOnly(2025, 8, 10));
-        var asOf = LedgerActuals.Of(January, lines, WholeYear, Config, Quarter.Q1, AfterTheYear);
+        var open = LedgerActuals.Of(January, lines, WholeYear, EveryMonth, Config, Quarter.Q3, new DateOnly(2025, 8, 10));
+        var asOf = LedgerActuals.Of(January, lines, WholeYear, EveryMonth, Config, Quarter.Q1, AfterTheYear);
 
         Assert.Equal(Quarter.Q2, open.Counts.ActualsThrough);
         Assert.Equal(Quarter.Q1, asOf.Counts.ActualsThrough);
@@ -164,7 +172,7 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [Line(2, 1, 100.00m, Income), Line(8, 1, 100.00m, Income), Line(11, 1, 100.00m, Income)];
 
-        var ledger = LedgerActuals.Of(January, lines, WholeYear, Config, Quarter.Q4, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, WholeYear, EveryMonth, Config, Quarter.Q4, AfterTheYear);
 
         Assert.Equal(Quarter.Q1, ledger.Counts.ActualsThrough);
         var coverage = Assert.Single(ledger.Steps, step => step.Id == "ledger.coverage");
@@ -177,7 +185,7 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [Line(5, 1, 100.00m, Income)];
 
-        var ledger = LedgerActuals.Of(January, lines, WholeYear, Config, Quarter.Q2, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, WholeYear, EveryMonth, Config, Quarter.Q2, AfterTheYear);
 
         Assert.Null(ledger.Counts.ActualsThrough);
         Assert.Empty(ledger.Input.Activity.Actuals);
@@ -202,7 +210,7 @@ public class LedgerActualsTests
             Line(4, 22, -35.10m, new Classification.Confirmed(TransactionClass.Personal, "personal")),
         ];
 
-        var ledger = LedgerActuals.Of(January, lines, [Period("2025-01-10", to)], Config, Quarter.Q4, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, [Period("2025-01-10", to)], EveryMonth, Config, Quarter.Q4, AfterTheYear);
 
         Assert.Equal(q2 ?? Quarter.Q1, ledger.Counts.ActualsThrough);
         var coverage = ledger.Steps.SingleOrDefault(step => step.Id == "ledger.coverage");
@@ -229,7 +237,7 @@ public class LedgerActualsTests
         List<ClassifiedLine> lines = [Line(2, 20, 1000.00m, Income), Line(5, 20, 1000.00m, Income), Line(8, 20, 1000.00m, Income)];
         List<StatementPeriod> statements = [Period(firstFrom, firstTo), .. secondFrom is null ? [] : new[] { Period(secondFrom, secondTo!) }];
 
-        var ledger = LedgerActuals.Of(January, lines, statements, Config, Quarter.Q3, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, statements, EveryMonth, Config, Quarter.Q3, AfterTheYear);
 
         if (projected is null)
         {
@@ -247,7 +255,7 @@ public class LedgerActualsTests
     [Fact]
     public void TheCoverageStepNamesEveryStatementsPeriod()
     {
-        var ledger = LedgerActuals.Of(January, [Line(2, 20, 1000.00m, Income)], [Period("2025-03-10", "2025-12-31"), Period("2025-01-02", "2025-02-28")], Config, Quarter.Q1, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, [Line(2, 20, 1000.00m, Income)], [Period("2025-03-10", "2025-12-31"), Period("2025-01-02", "2025-02-28")], EveryMonth, Config, Quarter.Q1, AfterTheYear);
 
         var coverage = Assert.Single(ledger.Steps, step => step.Id == "ledger.coverage");
         Assert.StartsWith("no imported statement's period covers the days from 2025-03-01 through 2025-03-09;", coverage.Formula, StringComparison.Ordinal);
@@ -258,7 +266,7 @@ public class LedgerActualsTests
     [Fact]
     public void APeriodEndingOnTheLastDayThereIsStillJoinsTheOthers()
     {
-        var ledger = LedgerActuals.Of(January, [Line(2, 20, 1000.00m, Income)], [Period("2025-01-02", "9999-12-31"), Period("9999-12-31", "9999-12-31"), Period("2025-01-10", "2025-02-01")], Config, Quarter.Q1, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, [Line(2, 20, 1000.00m, Income)], [Period("2025-01-02", "9999-12-31"), Period("9999-12-31", "9999-12-31"), Period("2025-01-10", "2025-02-01")], EveryMonth, Config, Quarter.Q1, AfterTheYear);
 
         Assert.Equal(Quarter.Q1, ledger.Counts.ActualsThrough);
     }
@@ -270,8 +278,8 @@ public class LedgerActualsTests
         var may = Profile(new(2025, 5, 10));
         List<ClassifiedLine> lines = [Line(5, 20, 1000.00m, Income)];
 
-        var fromAlta = LedgerActuals.Of(may, lines, [Period("2025-05-10", "2025-07-05")], Config, Quarter.Q2, AfterTheYear);
-        var afterAlta = LedgerActuals.Of(may, lines, [Period("2025-05-11", "2025-07-05")], Config, Quarter.Q2, AfterTheYear);
+        var fromAlta = LedgerActuals.Of(may, lines, [Period("2025-05-10", "2025-07-05")], EveryMonth, Config, Quarter.Q2, AfterTheYear);
+        var afterAlta = LedgerActuals.Of(may, lines, [Period("2025-05-11", "2025-07-05")], EveryMonth, Config, Quarter.Q2, AfterTheYear);
 
         Assert.Equal(Quarter.Q2, fromAlta.Counts.ActualsThrough);
         Assert.Null(afterAlta.Counts.ActualsThrough);
@@ -283,7 +291,7 @@ public class LedgerActualsTests
         var may = Profile(new(2025, 5, 10));
         List<ClassifiedLine> lines = [Line(2, 1, 100.00m, Income), Line(5, 20, 200.00m, Income), Line(8, 1, 300.00m, Income)];
 
-        var ledger = LedgerActuals.Of(may, lines, WholeYear, Config, Quarter.Q3, AfterTheYear);
+        var ledger = LedgerActuals.Of(may, lines, WholeYear, EveryMonth, Config, Quarter.Q3, AfterTheYear);
 
         Assert.Equal([Quarter.Q2, Quarter.Q3], ledger.Input.Activity.Actuals.Select(actual => actual.Quarter));
         Assert.Equal(new Money(500.00m), ledger.Input.Activity.Actuals[^1].IngresosYtd);
@@ -297,7 +305,7 @@ public class LedgerActualsTests
     {
         var profile = Profile(new(2025, 1, 15), ingresos: 1000.06m, gastos: 1200.00m);
 
-        var ledger = LedgerActuals.Of(profile, [Line(1, 2, 100.00m, Income)], WholeYear, Config, Quarter.Q2, AfterTheYear);
+        var ledger = LedgerActuals.Of(profile, [Line(1, 2, 100.00m, Income)], WholeYear, EveryMonth, Config, Quarter.Q2, AfterTheYear);
 
         Assert.Equal(new ActivityProjection(new Money(750.05m), new Money(900.00m), new Money(1274.51m)), ledger.Input.Activity.Projection);
         var step = Assert.Single(ledger.Steps, step => step.Id == "ledger.projection-remaining");
@@ -310,7 +318,7 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [.. Enumerable.Range(0, 4).Select(q => Line(q * 3 + 1, 5, 1000.00m, Income))];
 
-        var ledger = LedgerActuals.Of(January, lines, WholeYear, Config, Quarter.Q4, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, WholeYear, EveryMonth, Config, Quarter.Q4, AfterTheYear);
 
         Assert.Equal(new Money(0.00m), ledger.Input.Activity.Projection.Ingresos);
         Assert.Equal(Quarter.Q4, SetAsideEstimator.Estimate(ledger.Input).NextPayment.Quarter);
@@ -321,11 +329,102 @@ public class LedgerActualsTests
     {
         List<ClassifiedLine> lines = [Line(1, 2, 2345.67m, Income), Line(1, 3, -87.61m, Cuota), Line(1, 4, -23.79m, Confirmed(TransactionClass.DeductibleExpense))];
 
-        var ledger = LedgerActuals.Of(January, lines, WholeYear, Config, Quarter.Q1, AfterTheYear);
+        var ledger = LedgerActuals.Of(January, lines, WholeYear, EveryMonth, Config, Quarter.Q1, AfterTheYear);
 
         var values = ledger.Steps[0].Inputs.Select(input => input.Value).ToList();
         Assert.Equal(lines.Select(line => $"{line.Id} {line.BookingDate:yyyy-MM-dd}"), values);
         Assert.All(values, value => Assert.Matches(new Regex("^[0-9a-f-]{36} 2025-01-0[234]$"), value));
+    }
+
+    // #94's example: A holds lines to 31 March and is stated to 1 May, B holds lines from 1 June and is stated from 1 May. Each
+    // period is within 31 days of its lines and together they cover Q2, yet no statement holds April or May.
+    [Fact]
+    public void TwoPeriodsChainedOverMonthsNoStatementHoldsLeaveTheQuarterProjected()
+    {
+        List<ClassifiedLine> lines = [Line(2, 20, 1000.00m, Income), Line(6, 1, 1000.00m, Income), Line(8, 20, 1000.00m, Income)];
+        var days = Days(EveryMonth.Where(day => day < new DateOnly(2025, 4, 1) || day > new DateOnly(2025, 6, 1)), "2025-02-20", "2025-03-31", "2025-06-01", "2025-08-20");
+
+        var ledger = LedgerActuals.Of(January, lines, [Period("2024-12-01", "2025-05-01"), Period("2025-05-01", "2026-01-31")], days, Config, Quarter.Q3, AfterTheYear);
+
+        Assert.Equal(Quarter.Q1, ledger.Counts.ActualsThrough);
+        var coverage = Assert.Single(ledger.Steps, step => step.Id == "ledger.coverage");
+        Assert.Equal(
+            "no stored movement from 2025-04-01 through 2025-05-31 (61 days, over 31), though the statements' periods cover those days; "
+                + "Q2 stays on the projection, with what follows, until the statement holding that stretch's movements is imported",
+            coverage.Formula);
+        Assert.Equal([new TraceInput("quarter", "Q2"), new TraceInput("quietFrom", "2025-04-01"), new TraceInput("quietThrough", "2025-05-31")], coverage.Inputs);
+        Assert.Equal(new TraceValue.Count(61), coverage.Output);
+    }
+
+    // One statement covering the year whose movements skip a stretch: 31 days without one is a month's RETA cuota apart, 32 is
+    // a statement missing.
+    [Theory]
+    [InlineData("2025-08-11", null)]
+    [InlineData("2025-08-12", "no stored movement from 2025-07-11 through 2025-08-11 (32 days, over 31)")]
+    public void OneStatementWithAQuietStretchOver31DaysLeavesItsQuarterProjected(string after, string? quiet)
+    {
+        List<ClassifiedLine> lines = [Line(2, 28, 1000.00m, Income), Line(5, 28, 1000.00m, Income), Line(7, 10, 1000.00m, Income)];
+        var days = Days(EveryMonth.Where(day => day.Month != 7), "2025-07-10", after);
+
+        var ledger = LedgerActuals.Of(January, lines, WholeYear, days, Config, Quarter.Q3, AfterTheYear);
+
+        Assert.Equal(quiet is null ? Quarter.Q3 : Quarter.Q2, ledger.Counts.ActualsThrough);
+        var coverage = ledger.Steps.SingleOrDefault(step => step.Id == "ledger.coverage");
+        if (quiet is null)
+        {
+            Assert.Null(coverage);
+        }
+        else
+        {
+            Assert.StartsWith(quiet, coverage!.Formula, StringComparison.Ordinal);
+        }
+    }
+
+    // A stretch counts whole in each quarter it runs into: six quiet days of March and twenty-six of April hold Q1 back.
+    [Theory]
+    [InlineData("2025-04-26", Quarter.Q2)]
+    [InlineData("2025-04-27", null)]
+    public void AQuietStretchRunningIntoTheNextQuarterHoldsBackTheOneItStartsIn(string after, Quarter? actualsThrough)
+    {
+        List<ClassifiedLine> lines = [Line(2, 28, 1000.00m, Income), Line(5, 28, 1000.00m, Income)];
+        var days = Days(EveryMonth.Where(day => day.Month is not (3 or 4) || day.Year != 2025), "2025-03-25", after);
+
+        var ledger = LedgerActuals.Of(January, lines, WholeYear, days, Config, Quarter.Q2, AfterTheYear);
+
+        Assert.Equal(actualsThrough, ledger.Counts.ActualsThrough);
+        if (actualsThrough is null)
+        {
+            Assert.StartsWith("no stored movement from 2025-03-26 through 2025-04-26 (32 days, over 31)", Assert.Single(ledger.Steps, step => step.Id == "ledger.coverage").Formula, StringComparison.Ordinal);
+        }
+    }
+
+    // An honest account: the RETA cuota charged on the last business day of every month of 2025, and nothing else.
+    [Fact]
+    public void AStatementWithTheMonthlyCuotaAloneIsActuals()
+    {
+        string[] lastBusinessDays = ["2025-01-31", "2025-02-28", "2025-03-31", "2025-04-30", "2025-05-30", "2025-06-30", "2025-07-31", "2025-08-29", "2025-09-30", "2025-10-31"];
+        List<ClassifiedLine> lines = [.. lastBusinessDays.Select(day => new ClassifiedLine(Guid.NewGuid(), Day(day), new Money(-87.61m), Cuota))];
+
+        var ledger = LedgerActuals.Of(January, lines, [Period("2024-12-01", "2025-10-31")], Days([], ["2024-12-31", .. lastBusinessDays]), Config, Quarter.Q3, AfterTheYear);
+
+        Assert.Equal(Quarter.Q3, ledger.Counts.ActualsThrough);
+        Assert.DoesNotContain(ledger.Steps, step => step.Id == "ledger.coverage");
+    }
+
+    // No cuota is charged before the alta, so a quiet stretch starts there: none before 10 May counts, and the one from it to
+    // the first movement does.
+    [Theory]
+    [InlineData("2025-03-01", "2025-06-10", Quarter.Q2)]
+    [InlineData("2025-05-10", "2025-06-10", Quarter.Q2)]
+    [InlineData("2025-05-10", "2025-06-11", null)]
+    public void AQuietStretchStartsNoEarlierThanTheAlta(string from, string first, Quarter? actualsThrough)
+    {
+        var may = Profile(new(2025, 5, 10));
+        List<ClassifiedLine> lines = [new(Guid.NewGuid(), Day(first), new Money(1000.00m), Income)];
+
+        var ledger = LedgerActuals.Of(may, lines, [Period(from, "2025-07-05")], Days([], first, "2025-07-01"), Config, Quarter.Q2, AfterTheYear);
+
+        Assert.Equal(actualsThrough, ledger.Counts.ActualsThrough);
     }
 
     private static string RepoRoot([CallerFilePath] string here = "") => Path.GetFullPath(Path.Combine(Path.GetDirectoryName(here)!, "..", ".."));

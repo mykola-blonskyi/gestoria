@@ -294,8 +294,9 @@ public class ClassificationEndpoint
     }
 
     // A statement exported on 22 April: Q1 and three weeks of Q2, whose two lines rules confirm and nobody is asked about. Q2
-    // holds lines but the statement does not span it, so it stays projected; a later statement meeting it and reaching past
-    // 30 June makes it actuals.
+    // holds lines but the statement does not span it, so it stays projected. A later statement meeting it and reaching past
+    // 30 June covers it but holds no movement in May or June, so a statement is missing (#94); the one holding them makes Q2
+    // actuals.
     [Fact]
     public async Task AQuarterTheStatementDoesNotSpanStaysProjected()
     {
@@ -319,7 +320,12 @@ public class ClassificationEndpoint
 
         await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n23/04/2025;23/04/2025;MERCADONA;-20,00;\n15/07/2025;15/07/2025;MERCADONA;-20,00;\n"));
         var july = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
-        Assert.Equal("Q2", july["ledger"]!["actualsThrough"]!.GetValue<string>());
+        Assert.Equal("Q1", july["ledger"]!["actualsThrough"]!.GetValue<string>());
+        Assert.StartsWith("no stored movement from 2025-04-24 through 2025-07-14 (82 days, over 31)", Coverage(july), StringComparison.Ordinal);
+
+        await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n20/05/2025;20/05/2025;MERCADONA;-20,00;\n18/06/2025;18/06/2025;MERCADONA;-20,00;\n"));
+        var complete = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
+        Assert.Equal("Q2", complete["ledger"]!["actualsThrough"]!.GetValue<string>());
     }
 
     // The export carries each statement's period and each movement's class, so a restored installation covers the same days and counts the same

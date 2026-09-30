@@ -30,6 +30,9 @@ public static class Ledger
         var statements = await db.StatementImports.AsNoTracking().Where(i => i.ProfileId == row.Id)
             .Select(i => new StatementPeriod(i.From, i.To))
             .ToListAsync(cancellationToken);
-        return LedgerActuals.Of(profile, lines, statements, config, asOf, today);
+        var movementDays = await db.BankTransactions.AsNoTracking().Where(t => t.ProfileId == row.Id)
+            .Select(t => t.BookingDate).Distinct().OrderBy(day => day)
+            .ToListAsync(cancellationToken);
+        return LedgerActuals.Of(profile, lines, statements, movementDays, config, asOf, today);
     }
 }

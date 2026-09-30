@@ -124,8 +124,9 @@ public class TransactionRulesTests
         Assert.Equal(
             [
                 queue, queue, TransactionClass.Personal, TransactionClass.Personal, queue, queue, queue,
-                queue, queue, TransactionClass.AeatPayment, TransactionClass.Personal, queue, queue, queue,
-                queue, queue, TransactionClass.Personal, queue,
+                queue, queue, TransactionClass.AeatPayment, TransactionClass.Personal, TransactionClass.Personal, queue, queue,
+                TransactionClass.Personal, queue, TransactionClass.Personal, queue, queue, TransactionClass.Personal,
+                TransactionClass.Personal, TransactionClass.Personal, queue,
             ],
             classes);
     }
