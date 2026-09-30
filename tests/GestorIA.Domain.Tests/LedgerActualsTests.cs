@@ -31,7 +31,7 @@ public class LedgerActualsTests
         new(DateOnly.Parse(from, System.Globalization.CultureInfo.InvariantCulture), DateOnly.Parse(to, System.Globalization.CultureInfo.InvariantCulture));
 
     private static Profile Profile(DateOnly alta, decimal ingresos = 30000.00m, decimal gastos = 1200.00m) => new(
-        2025,
+        alta.Year,
         new TaxpayerProfile("VC", new EmploymentIncome(Money.Zero, Money.Zero), new AutonomoRegistration(alta, new PreviousYear.NoActivity(), new NewActivity.Established())),
         new ActivityProjection(new Money(ingresos), new Money(gastos), new Money(1274.51m)));
 
@@ -349,19 +349,19 @@ public class LedgerActualsTests
         Assert.Equal(Quarter.Q1, ledger.Counts.ActualsThrough);
         var coverage = Assert.Single(ledger.Steps, step => step.Id == "ledger.coverage");
         Assert.Equal(
-            "no stored movement from 2025-04-01 through 2025-05-31 (61 days, over 31), though the statements' periods cover those days; "
+            "no stored movement from 2025-04-01 through 2025-05-31 (61 days, over 33), though the statements' periods cover those days; "
                 + "Q2 stays on the projection, with what follows, until the statement holding that stretch's movements is imported",
             coverage.Formula);
         Assert.Equal([new TraceInput("quarter", "Q2"), new TraceInput("quietFrom", "2025-04-01"), new TraceInput("quietThrough", "2025-05-31")], coverage.Inputs);
         Assert.Equal(new TraceValue.Count(61), coverage.Output);
     }
 
-    // One statement covering the year whose movements skip a stretch: 31 days without one is a month's RETA cuota apart, 32 is
-    // a statement missing.
+    // One statement covering the year whose movements skip a stretch: 33 days without one can lie between two RETA cuotas, 34
+    // cannot, so a statement is missing.
     [Theory]
-    [InlineData("2025-08-11", null)]
-    [InlineData("2025-08-12", "no stored movement from 2025-07-11 through 2025-08-11 (32 days, over 31)")]
-    public void OneStatementWithAQuietStretchOver31DaysLeavesItsQuarterProjected(string after, string? quiet)
+    [InlineData("2025-08-13", null)]
+    [InlineData("2025-08-14", "no stored movement from 2025-07-11 through 2025-08-13 (34 days, over 33)")]
+    public void OneStatementWithAQuietStretchOverTheLimitLeavesItsQuarterProjected(string after, string? quiet)
     {
         List<ClassifiedLine> lines = [Line(2, 28, 1000.00m, Income), Line(5, 28, 1000.00m, Income), Line(7, 10, 1000.00m, Income)];
         var days = Days(EveryMonth.Where(day => day.Month != 7), "2025-07-10", after);
@@ -380,10 +380,10 @@ public class LedgerActualsTests
         }
     }
 
-    // A stretch counts whole in each quarter it runs into: six quiet days of March and twenty-six of April hold Q1 back.
+    // A stretch counts whole in each quarter it runs into: six quiet days of March and twenty-eight of April hold Q1 back.
     [Theory]
-    [InlineData("2025-04-26", Quarter.Q2)]
-    [InlineData("2025-04-27", null)]
+    [InlineData("2025-04-28", Quarter.Q2)]
+    [InlineData("2025-04-29", null)]
     public void AQuietStretchRunningIntoTheNextQuarterHoldsBackTheOneItStartsIn(string after, Quarter? actualsThrough)
     {
         List<ClassifiedLine> lines = [Line(2, 28, 1000.00m, Income), Line(5, 28, 1000.00m, Income)];
@@ -394,29 +394,80 @@ public class LedgerActualsTests
         Assert.Equal(actualsThrough, ledger.Counts.ActualsThrough);
         if (actualsThrough is null)
         {
-            Assert.StartsWith("no stored movement from 2025-03-26 through 2025-04-26 (32 days, over 31)", Assert.Single(ledger.Steps, step => step.Id == "ledger.coverage").Formula, StringComparison.Ordinal);
+            Assert.StartsWith("no stored movement from 2025-03-26 through 2025-04-28 (34 days, over 33)", Assert.Single(ledger.Steps, step => step.Id == "ledger.coverage").Formula, StringComparison.Ordinal);
         }
     }
 
-    // An honest account: the RETA cuota charged on the last business day of every month of 2025, and nothing else.
-    [Fact]
-    public void AStatementWithTheMonthlyCuotaAloneIsActuals()
+    // An honest account whose only movements are the RETA cuotas, each on the last working day of its month as the engine
+    // computes it: 28 November to 31 December 2025, 32 quiet days, and every other month of both years stay actuals.
+    [Theory]
+    [InlineData(2025)]
+    [InlineData(2026)]
+    public void AnAccountWithTheMonthlyCuotaAloneIsActuals(int year)
     {
-        string[] lastBusinessDays = ["2025-01-31", "2025-02-28", "2025-03-31", "2025-04-30", "2025-05-30", "2025-06-30", "2025-07-31", "2025-08-29", "2025-09-30", "2025-10-31"];
-        List<ClassifiedLine> lines = [.. lastBusinessDays.Select(day => new ClassifiedLine(Guid.NewGuid(), Day(day), new Money(-87.61m), Cuota))];
+        var config = new TaxYearConfigLoader(Path.Combine(RepoRoot(), "config", "tax-years")).Load(year);
+        var profile = Profile(new(year, 1, 1));
+        var debits = Enumerable.Range(1, 12).Select(month => FilingDeadline.MonthlyCuotaSs(new YearMonth(year, month), "VC", config).End).ToList();
+        List<ClassifiedLine> lines = [.. debits.Select(day => new ClassifiedLine(Guid.NewGuid(), day, new Money(-87.61m), Cuota))];
 
-        var ledger = LedgerActuals.Of(January, lines, [Period("2024-12-01", "2025-10-31")], Days([], ["2024-12-31", .. lastBusinessDays]), Config, Quarter.Q3, AfterTheYear);
+        var ledger = LedgerActuals.Of(profile, lines, [new(new(year, 1, 1), new(year + 1, 1, 1))], debits, config, Quarter.Q4, new(year + 1, 2, 1));
 
-        Assert.Equal(Quarter.Q3, ledger.Counts.ActualsThrough);
+        Assert.Equal(Quarter.Q4, ledger.Counts.ActualsThrough);
         Assert.DoesNotContain(ledger.Steps, step => step.Id == "ledger.coverage");
+    }
+
+    // The engine's calendar holds 2025 and 2026 only, so the years around them use what every region shares or may add at a
+    // month's end: weekends, the fixed national holidays, and Holy Thursday, Good Friday and Easter Monday (national or
+    // regional, all taken, so the limit is the widest any region needs). Municipal holidays are not known (FilingDeadline).
+    [Fact]
+    public void TheQuietLimitIsTheLongestStretchBetweenTwoCuotas()
+    {
+        static int Longest(IEnumerable<DateOnly> debits) => debits.Zip(debits.Skip(1), (first, next) => next.DayNumber - first.DayNumber - 1).Max();
+
+        var configured = new[] { 2025, 2026 }.SelectMany(year =>
+        {
+            var config = new TaxYearConfigLoader(Path.Combine(RepoRoot(), "config", "tax-years")).Load(year);
+            return new[] { "MD", "VC" }.Select(region => Longest(Enumerable.Range(1, 12).Select(month => FilingDeadline.MonthlyCuotaSs(new YearMonth(year, month), region, config).End)));
+        });
+        var modelled = Longest(Enumerable.Range(2019 * 12 + 11, 16 * 12 + 2).Select(index => LastWorkingDay(index / 12, index % 12 + 1)));
+
+        Assert.All(configured, longest => Assert.True(longest <= LedgerActuals.MaxQuietDays, $"{longest}"));
+        Assert.Equal(LedgerActuals.MaxQuietDays, modelled);
+    }
+
+    private static DateOnly LastWorkingDay(int year, int month)
+    {
+        var easter = Easter(year);
+        HashSet<DateOnly> holidays =
+        [
+            .. new[] { (1, 1), (1, 6), (5, 1), (8, 15), (10, 12), (11, 1), (12, 6), (12, 8), (12, 25) }.Select(day => new DateOnly(year, day.Item1, day.Item2)),
+            easter.AddDays(-3), easter.AddDays(-2), easter.AddDays(1),
+        ];
+        var day = new DateOnly(year, month, DateTime.DaysInMonth(year, month));
+        while (day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || holidays.Contains(day))
+        {
+            day = day.AddDays(-1);
+        }
+
+        return day;
+    }
+
+    // Easter Sunday in the Gregorian calendar (the anonymous algorithm, Meeus, Astronomical Algorithms, ch. 8).
+    private static DateOnly Easter(int year)
+    {
+        var (a, b, c) = (year % 19, year / 100, year % 100);
+        var h = (19 * a + b - b / 4 - (b - (b + 8) / 25 + 1) / 3 + 15) % 30;
+        var l = (32 + 2 * (b % 4) + 2 * (c / 4) - h - c % 4) % 7;
+        var m = (a + 11 * h + 22 * l) / 451;
+        return new DateOnly(year, (h + l - 7 * m + 114) / 31, (h + l - 7 * m + 114) % 31 + 1);
     }
 
     // No cuota is charged before the alta, so a quiet stretch starts there: none before 10 May counts, and the one from it to
     // the first movement does.
     [Theory]
-    [InlineData("2025-03-01", "2025-06-10", Quarter.Q2)]
-    [InlineData("2025-05-10", "2025-06-10", Quarter.Q2)]
-    [InlineData("2025-05-10", "2025-06-11", null)]
+    [InlineData("2025-03-01", "2025-06-12", Quarter.Q2)]
+    [InlineData("2025-05-10", "2025-06-12", Quarter.Q2)]
+    [InlineData("2025-05-10", "2025-06-13", null)]
     public void AQuietStretchStartsNoEarlierThanTheAlta(string from, string first, Quarter? actualsThrough)
     {
         var may = Profile(new(2025, 5, 10));

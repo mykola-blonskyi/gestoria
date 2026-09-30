@@ -321,7 +321,7 @@ public class ClassificationEndpoint
         await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n23/04/2025;23/04/2025;MERCADONA;-20,00;\n15/07/2025;15/07/2025;MERCADONA;-20,00;\n"));
         var july = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();
         Assert.Equal("Q1", july["ledger"]!["actualsThrough"]!.GetValue<string>());
-        Assert.StartsWith("no stored movement from 2025-04-24 through 2025-07-14 (82 days, over 31)", Coverage(july), StringComparison.Ordinal);
+        Assert.StartsWith("no stored movement from 2025-04-24 through 2025-07-14 (82 days, over 33)", Coverage(july), StringComparison.Ordinal);
 
         await client.ImportStatement(id, Encoding.UTF8.GetBytes("Fecha;Fecha Valor;Concepto;Importe;Saldo\n20/05/2025;20/05/2025;MERCADONA;-20,00;\n18/06/2025;18/06/2025;MERCADONA;-20,00;\n"));
         var complete = await (await client.GetAsync($"/api/v1/profiles/{id}/set-aside/estimate?asOf=Q2")).Json();

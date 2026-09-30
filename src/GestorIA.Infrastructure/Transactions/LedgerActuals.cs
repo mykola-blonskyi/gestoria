@@ -43,6 +43,14 @@ public static class LedgerActuals
 
     public static bool Counts(TransactionClass transactionClass) => Parts.ContainsKey(transactionClass);
 
+    // The longest run of days an honest account goes without a movement: the RETA cuota is debited on the last working day of
+    // every month (FilingDeadline.MonthlyCuotaSs, RD 1415/2004 art. 8.b), so two debits lie at most a month apart plus the
+    // days the earlier one moves back. The worst from 2020 to 2035 is 27 March to 30 April 2024: 31 March a Sunday, Good
+    // Friday and Holy Thursday before it, 33 quiet days between (LedgerActualsTests). StatementPeriod.MaxDaysBeyondMovements
+    // bounds how far one statement's stated period may reach past its own lines, a different question: a stretch up to this
+    // long can occur with every statement imported, so it cannot mean one is missing.
+    public const int MaxQuietDays = 33;
+
     // The amounts are cents; a sum of none keeps two decimals, so the engine's trace shows "0.00" as it does for an input file.
     private static readonly Money NoEuros = new(0.00m);
 
@@ -143,11 +151,11 @@ public static class LedgerActuals
                     new("quietFrom", Invariant($"{stretch.From:yyyy-MM-dd}")),
                     new("quietThrough", Invariant($"{stretch.To:yyyy-MM-dd}")),
                 ],
-                Invariant($"no stored movement from {stretch.From:yyyy-MM-dd} through {stretch.To:yyyy-MM-dd} ({stretch.Days} days, over {StatementPeriod.MaxDaysBeyondMovements}), ")
+                Invariant($"no stored movement from {stretch.From:yyyy-MM-dd} through {stretch.To:yyyy-MM-dd} ({stretch.Days} days, over {MaxQuietDays}), ")
                     + Invariant($"though the statements' periods cover those days; {reached} stays on the projection, with what follows, until the statement holding that stretch's movements is imported"),
                 new TraceValue.Count(stretch.Days),
-                "#94: an autónomo's account is charged the RETA cuota on the last business day of every month, so a covered stretch of more than "
-                    + Invariant($"{StatementPeriod.MaxDaysBeyondMovements} days without a stored movement means a statement is missing, and its quarter may hold income not imported")));
+                "#94: an autónomo's account is charged the RETA cuota on the last working day of every month, so a covered stretch of more than "
+                    + Invariant($"{MaxQuietDays} days without a stored movement means a statement is missing, and its quarter may hold income not imported")));
         }
 
         if (waiting.Count > 0)
@@ -261,7 +269,7 @@ public static class LedgerActuals
         public int Days => To.DayNumber - From.DayNumber + 1;
     }
 
-    // The runs of more than MaxDaysBeyondMovements covered days from the alta on without a stored movement, in date order. Two
+    // The runs of more than MaxQuietDays covered days from the alta on without a stored movement, in date order. Two
     // periods each within their bound can chain over a month no statement holds, and one statement can leave a month out; the
     // RETA cuota every month rules both out for a real account (#94). Days no period covers are claimed by none, so no run
     // crosses them, and before the alta no cuota is charged.
@@ -275,7 +283,7 @@ public static class LedgerActuals
             var movements = movementDays.Where(day => day >= span.From && day <= span.To).Select(day => day.DayNumber);
             foreach (var next in movements.Append(span.To.DayNumber + 1))
             {
-                if (next - from > StatementPeriod.MaxDaysBeyondMovements)
+                if (next - from > MaxQuietDays)
                 {
                     stretches.Add(new QuietStretch(DateOnly.FromDayNumber(from), DateOnly.FromDayNumber(next - 1)));
                 }
