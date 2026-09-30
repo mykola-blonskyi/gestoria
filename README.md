@@ -61,7 +61,7 @@ No year can be exported today. [Known limits](#what-it-does-not-do-yet-and-known
 
 **Import.** You pick a BBVA statement in CSV format, check its period, and press Import. GestorIA reads every line and stores the movements it does not have yet. Importing the same statement twice, or one that overlaps an earlier one, adds only what is missing. A file it cannot read is refused whole, with the line numbers and what is wrong on each line. A file over 2 MB is refused, and so is a file with no movements.
 
-**The statement's period.** Every import is recorded as a statement with a period, the days it covers. BBVA's CSV file does not say which days those are, so you enter them. When you pick the file, GestorIA fills in the dates of its first and last movement. Change them to the period the statement itself covers: the dates you chose when exporting it, or the dates BBVA prints on it. The period may start at most 31 days before the first movement and end at most 31 days after the last. An autónomo's account is charged the RETA cuota every month, so a real statement has no month without a movement. A wider period is refused, with the reason.
+**The statement's period.** Every import is recorded as a statement with a period, the days it covers. BBVA's CSV file does not say which days those are, so you enter them. When you pick the file, GestorIA fills in the dates of its first and last movement. Change them to the period the statement itself covers: the dates you chose when exporting it, or the dates BBVA prints on it. Picking the same file again fills the dates in again. The period must include every movement in the file, and it may not end after today. It may start at most 31 days before the first movement and end at most 31 days after the last. An autónomo's account is charged the RETA cuota every month, so a real statement has no month without a movement. A period that breaks any of these rules is refused, with the reason.
 
 Do not claim days the statement does not cover. GestorIA reads a claimed day as a day with no income, so it would set aside too little.
 
@@ -99,11 +99,14 @@ After each choice the app says "Classified as ..." and moves to the next movemen
 1. the quarter has ended (today is past its last day);
 2. none of its movements is waiting in the review queue;
 3. the periods of your imported statements, joined together, cover every day of it from its first day, or from your alta if that is later, to at least one day past its last day;
-4. every earlier quarter of the year since your alta has also switched.
+4. inside those periods, no more than 33 days in a row pass without a stored movement, counting days that run into the quarter from the one before;
+5. every earlier quarter of the year since your alta has also switched.
 
 Then the estimate counts that quarter's activity income and the RETA cuotas TGSS actually charged, and keeps the projection only for the months still ahead. The overview says through which quarter it counts actuals, how many movements are still waiting (with a link to them), and how many expenses are not counted because they need an invoice.
 
 Coverage comes from the statements' periods, not from their movements. A day inside a period counts as covered even when nothing moved on it. Overlapping periods join into one stretch, and so do periods that follow each other, such as January to March and then April to June. A quarter also needs a day covered after its last day, so Q4 switches only once a statement that runs into January is imported. A quarter with no movement at all stays on the projection too.
+
+The 33-day rule catches a missing statement that the periods hide. The TGSS debits the RETA cuota on the last working day of every month, so an account whose statements are all imported never goes more than 33 days without a movement. A longer quiet stretch means some movements were never imported, and they may include income. Then that quarter stays on the projection, and "How it was calculated" names the quiet days.
 
 ### Periods: a quarter or the whole year
 
@@ -133,7 +136,7 @@ The app opens locked and asks for your API key. The key stays only in the memory
 - **2026 is refused today, and 2027 does not exist yet.** The 2026 configuration declares three values as not published: the tarifa plana amount for 2026, the Renta window for tax year 2026 together with the 2027 holidays, and the Modelo 100 casillas. Every 2026 estimate, period and payments calendar is refused with "Not published yet" until they are. The 2027 values come out in the BOE around December 2026 (issue #12). See [Tax-year configuration](#tax-year-configuration).
 - **No calendar (`.ics`) can be exported today.** The export holds only dates still to come. Every date of 2025 has passed, so its button is disabled and Payments says "Nothing is still to come in this tax year, so there is no date to export." 2026 has dates to come, but it is refused as a whole, as the point above says, so its Payments page shows "Not published yet" instead of a calendar. The export works again once a year with dates still to come can be computed.
 - **A closed quarter needs a statement that reaches past its end.** A quarter whose last day is also the last day of your statements stays on the projection. So Q4 needs a statement that runs into January. Until then the figures err towards setting aside more.
-- **GestorIA takes your word for a statement's period.** Within 31 days of the movements, it cannot tell a true period from a wrong one. A stricter check for long quiet stretches is planned (#94).
+- **GestorIA takes your word for a statement's period.** Within 31 days of the movements, it cannot tell a true period from a wrong one. The 33-day rule catches most missing statements, but not all. A period stated past what its statement covers can still hide up to a month with no statement imported.
 - **Only BBVA, only CSV.** No other bank, and no BBVA Excel (`.xlsx`) files.
 - **One profile per installation, for one tax year at a time.** Movements of other years stay stored and in your backups, but the pages show only the profile's year.
 - **Local only.** It runs on one computer. There is no sync, no phone app and no hosted version. The database and the API listen on your own machine only.
@@ -365,10 +368,10 @@ Keep your statements outside this folder. They are personal financial data and m
 The example file is made up, so keep the dates it fills in: 2 January 2025 to 31 December 2025. You see:
 
 ```
-18 movements read: 18 new, 0 already imported. Statement period: January 2, 2025 – December 31, 2025.
+23 movements read: 23 new, 0 already imported. Statement period: January 2, 2025 – December 31, 2025.
 ```
 
-"Imported statements" now lists "Statement 1: January 2, 2025 – December 31, 2025", and a heading says "13 movements to review". The other five movements were settled by certain rules: two cafés, a supermarket, a restaurant and the Modelo 130 payment.
+"Imported statements" now lists "Statement 1: January 2, 2025 – December 31, 2025", and a heading says "13 movements to review". The other ten movements were settled by certain rules: seven cafés, a supermarket, a restaurant and the Modelo 130 payment.
 
 A period more than 31 days away from the movements is refused, and nothing is stored. For example, "from" set to 1 November 2024 gives:
 
@@ -448,7 +451,7 @@ Download the new period from BBVA and import it on **Transactions**, with the pe
 
 1. On the old laptop, make a backup on **Backup**.
 2. On the new one, follow [Set it up from zero](#set-it-up-from-zero). You can pick a new key.
-3. Unlock, open **Backup**, choose the file under "Restore my data from an export", check what it says it holds, and press **Restore**. You should see a line like "Restored: your profile for 2025 and 18 bank movements." with your own numbers.
+3. Unlock, open **Backup**, choose the file under "Restore my data from an export", check what it says it holds, and press **Restore**. You should see a line like "Restored: your profile for 2025 and 23 bank movements." with your own numbers.
 
 Restore works only into an empty installation. If it refuses because data is already stored, download a copy of that data first, delete it in Settings, then restore.
 
@@ -685,8 +688,7 @@ pnpm build
 
 ```bash
 dotnet build GestorIA.slnx
-cd web
-pnpm api:types
+(cd web && pnpm api:types)
 ```
 
 Commit both `src/GestorIA.Api/openapi/v1.json` and `web/src/data/api-types.ts`. CI builds both again and fails when either differs from what you committed.
@@ -704,7 +706,7 @@ It prints `Build started...`, `Build succeeded.` and `Done. To undo this action,
 dotnet ef migrations remove --project src/GestorIA.Infrastructure
 ```
 
-It first tries to reach a database on port 5432 to check the migration was not applied, and prints an error line when there is none. It then says `Removing migration ...` and `Reverting the model snapshot.`
+It prints an error line about the database, then `Removing migration ...` and `Reverting the model snapshot.` The error is a check that the migration was never applied, and it cannot work here: `DesignTimeDbContextFactory` connects with no password, so the check always fails and `remove` goes ahead anyway. It cannot tell you whether the migration reached a database. The API applies migrations at every start, so remove a migration only if no API has run since you added it. Otherwise add a new migration that undoes it.
 
 **After a change to an API answer the web tests use**, rewrite the web app's fixtures in `web/tests/fixtures/` from the API's real answers:
 
@@ -724,7 +726,7 @@ It prints how many links and shared commands it checked, or names each broken li
 
 ### 8. Run a second copy side by side
 
-A second clone or worktree, for example to try a branch while your own copy keeps running. Its database, API and web app each need their own port, and its database needs its own name in Docker.
+A second clone or worktree, for example to try a branch while your own copy keeps running. Its database, API and web app each need their own port, and its database needs its own name in Docker. A fresh clone or worktree has no `.env` and no `web/node_modules`, since git ignores both. In that copy, first create `.env` with the commands of [step 2](#2-clone-and-create-env), and install the web app's dependencies with the commands of [step 6](#6-run-the-web-app).
 
 1. **Database.** In that copy's `.env`, set a free port, such as `POSTGRES_PORT=55490`. Start it under its own compose project name, and use the same `-p` on every `docker compose` command for that copy (`ps`, `stop`, `down -v`):
 
@@ -1067,8 +1069,9 @@ The web app runs on an address the API does not allow (the CORS rule, see step 9
 3. The periods of your imported statements, joined together, cover every day of the quarter and at least one day after it. "Imported statements" on Transactions lists them. For Q4, import a statement that reaches into January.
 4. For the first quarter of your activity, a statement's period starts on or before your alta day. If your export starts before its first movement, import it again with "Statement period from" set to the day the export starts. Only the period is recorded again; no movement is stored twice.
 5. The quarter holds at least one imported movement.
+6. No more than 33 days in a row pass without a stored movement. A longer quiet stretch usually means a statement is missing. Import it.
 
-Under "How it was calculated", the step "Trimestre no cubierto por los extractos importados" (`ledger.coverage`) names the first days no statement's period covers, and lists every period. A quarter with no movement shows "Trimestre sin movimientos importados" instead.
+Under "How it was calculated", the step "Trimestre no cubierto por los extractos importados" (`ledger.coverage`) names the first days no statement's period covers, and lists every period. A quarter with no movement shows "Trimestre sin movimientos importados" instead. A quiet stretch shows "Tramo sin movimientos importados", with its first and last day and how many days it lasts.
 
 **The ICS download is disabled** and the page says "Nothing is still to come in this tax year". Every date of that tax year has passed. No year can be exported today; [known limits](#what-it-does-not-do-yet-and-known-limits) says why.
 
