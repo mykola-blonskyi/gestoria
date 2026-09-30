@@ -35,6 +35,16 @@ jobs:
           review: false
           github-token: ""
 
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: README links resolve, and the commands the root README repeats are identical
+        run: node scripts/check-docs.mjs
+
   web:
     runs-on: ubuntu-latest
     defaults:
