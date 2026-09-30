@@ -43,12 +43,22 @@ public static class LedgerActuals
 
     public static bool Counts(TransactionClass transactionClass) => Parts.ContainsKey(transactionClass);
 
+    // The longest run of days an honest account goes without a movement: the RETA cuota is debited on the last working day of
+    // every month (FilingDeadline.MonthlyCuotaSs, RD 1415/2004 art. 8.b), so two debits lie at most a month apart plus the
+    // days the earlier one moves back. The worst from 2020 to 2035 is 27 March to 30 April 2024: 31 March a Sunday, Good
+    // Friday and Holy Thursday before it, 33 quiet days between (LedgerActualsTests). StatementPeriod.MaxDaysBeyondMovements
+    // bounds how far one statement's stated period may reach past its own lines, a different question: a stretch up to this
+    // long can occur with every statement imported, so it cannot mean one is missing.
+    public const int MaxQuietDays = 33;
+
     // The amounts are cents; a sum of none keeps two decimals, so the engine's trace shows "0.00" as it does for an input file.
     private static readonly Money NoEuros = new(0.00m);
 
     // lines: the profile's movements of its tax year. statements: the period of each statement imported for the profile, of any
-    // year. today decides which quarters are closed.
-    public static LedgerEstimate Of(Profile profile, IReadOnlyList<ClassifiedLine> lines, IReadOnlyList<StatementPeriod> statements, TaxYearConfig config, Quarter asOf, DateOnly today)
+    // year. movementDays: the distinct booking dates of the profile's stored movements, of any year, in date order. today
+    // decides which quarters are closed.
+    public static LedgerEstimate Of(
+        Profile profile, IReadOnlyList<ClassifiedLine> lines, IReadOnlyList<StatementPeriod> statements, IReadOnlyList<DateOnly> movementDays, TaxYearConfig config, Quarter asOf, DateOnly today)
     {
         var year = config.TaxYear;
         var alta = profile.Taxpayer.Activity.Alta;
@@ -72,15 +82,17 @@ public static class LedgerActuals
         }
 
         bool Covered(Quarter quarter) => Uncovered(quarter) is null;
+        var quiet = QuietStretches(covered, movementDays, alta);
+        QuietStretch? Quiet(Quarter quarter) => quiet.FirstOrDefault(stretch => stretch.From <= LastDay(quarter) && stretch.To >= From(quarter));
         static bool AwaitsReview(ClassifiedLine line) => line.Classification is Classification.Unclear or Classification.Suggested;
 
         // The quarters that could be actuals: from the first of activity, closed, and not after asOf, so an unbroken run.
         var firstQuarter = QuarterOf(new DateOnly(year, firstMonth, 1));
         var closed = Enum.GetValues<Quarter>().Where(quarter => quarter >= firstQuarter && quarter <= asOf && Closed(quarter)).ToList();
-        // A quarter with no imported line has no evidence, one the statements' periods do not reach past may have more, and one
-        // with a line awaiting review has income not known yet; each would read as missing income, so it and the rest stay
-        // projected.
-        var actual = closed.TakeWhile(quarter => byQuarter.Contains(quarter) && Covered(quarter) && !byQuarter[quarter].Any(AwaitsReview)).ToList();
+        // A quarter with no imported line has no evidence, one the statements' periods do not reach past may have more, one a
+        // quiet stretch runs into lacks a statement whatever the periods claim, and one with a line awaiting review has income
+        // not known yet; each would read as missing income, so it and the rest stay projected.
+        var actual = closed.TakeWhile(quarter => byQuarter.Contains(quarter) && Covered(quarter) && Quiet(quarter) is null && !byQuarter[quarter].Any(AwaitsReview)).ToList();
         var waiting = closed.SelectMany(quarter => byQuarter[quarter]).Where(AwaitsReview).ToList();
 
         var steps = new List<TraceStep>();
@@ -124,6 +136,26 @@ public static class LedgerActuals
                 new TraceValue.Count(byQuarter[reached].Count()),
                 "#73, #88: the imported statements cover the union of their periods, each stated at import or else its lines' first to last booking date; "
                     + "a quarter they do not cover to one day past its end may hold income not imported, so it stays on the projection"));
+        }
+
+        // The run stopped at a covered quarter with movements that a quiet stretch runs into.
+        if (actual.Count < closed.Count && byQuarter.Contains(closed[actual.Count]) && Covered(closed[actual.Count]) && Quiet(closed[actual.Count]) is { } stretch)
+        {
+            var reached = closed[actual.Count];
+            steps.Add(new TraceStep(
+                "ledger.coverage",
+                TraceSection.Actividad,
+                "Tramo sin movimientos importados",
+                [
+                    new("quarter", Invariant($"{reached}")),
+                    new("quietFrom", Invariant($"{stretch.From:yyyy-MM-dd}")),
+                    new("quietThrough", Invariant($"{stretch.To:yyyy-MM-dd}")),
+                ],
+                Invariant($"no stored movement from {stretch.From:yyyy-MM-dd} through {stretch.To:yyyy-MM-dd} ({stretch.Days} days, over {MaxQuietDays}), ")
+                    + Invariant($"though the statements' periods cover those days; {reached} stays on the projection, with what follows, until the statement holding that stretch's movements is imported"),
+                new TraceValue.Count(stretch.Days),
+                "#94: an autónomo's account is charged the RETA cuota on the last working day of every month, so a covered stretch of more than "
+                    + Invariant($"{MaxQuietDays} days without a stored movement means a statement is missing, and its quarter may hold income not imported")));
         }
 
         if (waiting.Count > 0)
@@ -229,6 +261,38 @@ public static class LedgerActuals
         }
 
         return merged;
+    }
+
+    // Days the statements' periods cover, both ends included, holding no stored movement.
+    private sealed record QuietStretch(DateOnly From, DateOnly To)
+    {
+        public int Days => To.DayNumber - From.DayNumber + 1;
+    }
+
+    // The runs of more than MaxQuietDays covered days from the alta on without a stored movement, in date order. Two
+    // periods each within their bound can chain over a month no statement holds, and one statement can leave a month out; the
+    // RETA cuota every month rules both out for a real account (#94). Days no period covers are claimed by none, so no run
+    // crosses them, and before the alta no cuota is charged.
+    private static List<QuietStretch> QuietStretches(List<StatementPeriod> covered, IReadOnlyList<DateOnly> movementDays, DateOnly alta)
+    {
+        var stretches = new List<QuietStretch>();
+        foreach (var span in covered)
+        {
+            // Day numbers, so the day after 9999-12-31 is a number rather than an overflow.
+            var from = Math.Max(span.From.DayNumber, alta.DayNumber);
+            var movements = movementDays.Where(day => day >= span.From && day <= span.To).Select(day => day.DayNumber);
+            foreach (var next in movements.Append(span.To.DayNumber + 1))
+            {
+                if (next - from > MaxQuietDays)
+                {
+                    stretches.Add(new QuietStretch(DateOnly.FromDayNumber(from), DateOnly.FromDayNumber(next - 1)));
+                }
+
+                from = Math.Max(from, next + 1);
+            }
+        }
+
+        return stretches;
     }
 
     private static Quarter QuarterOf(DateOnly date) => (Quarter)((date.Month + 2) / 3);

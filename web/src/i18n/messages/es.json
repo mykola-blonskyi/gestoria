@@ -161,6 +161,7 @@
       "heading": "Importar un extracto bancario",
       "lead": "Exporta el extracto desde tu banco en CSV. Importar de nuevo el mismo extracto, o uno que se solape, solo añade los movimientos que aún no están guardados.",
       "file": "Archivo del extracto (CSV)",
+      "chosen": "Elegido: {name}",
       "bank": "Banco",
       "submit": "Importar",
       "importing": "Importando…",

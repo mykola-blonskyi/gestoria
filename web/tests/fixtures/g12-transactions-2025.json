@@ -89,58 +89,98 @@
   },
   {
     "id": "00000000-0000-0000-0072-000000000012",
+    "bookingDate": "2025-06-02",
+    "valueDate": "2025-06-02",
+    "description": "CAFETERIA LA PRUEBA",
+    "amount": "-1.85",
+    "balance": "9531.33"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000013",
     "bookingDate": "2025-06-30",
     "valueDate": "2025-06-30",
     "description": "COMISION MANTENIMIENTO",
     "amount": "-3.00",
-    "balance": "9530.18"
+    "balance": "9528.33"
   },
   {
-    "id": "00000000-0000-0000-0072-000000000013",
+    "id": "00000000-0000-0000-0072-000000000014",
     "bookingDate": "2025-07-01",
     "valueDate": "2025-07-01",
     "description": "TRANSFERENCIA RECIBIDA CLIENTE SINTETICO UNO",
     "amount": "2345.67",
-    "balance": "11875.85"
+    "balance": "11874.00"
   },
   {
-    "id": "00000000-0000-0000-0072-000000000014",
+    "id": "00000000-0000-0000-0072-000000000015",
+    "bookingDate": "2025-07-25",
+    "valueDate": "2025-07-25",
+    "description": "CAFETERIA LA PRUEBA",
+    "amount": "-1.85",
+    "balance": "11872.15"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000016",
     "bookingDate": "2025-08-18",
     "valueDate": "2025-08-18",
     "description": "LIBRERIA TECNICA INVENTADA",
     "amount": "-39.90",
-    "balance": "11835.95"
+    "balance": "11832.25"
   },
   {
-    "id": "00000000-0000-0000-0072-000000000015",
+    "id": "00000000-0000-0000-0072-000000000017",
+    "bookingDate": "2025-09-12",
+    "valueDate": "2025-09-12",
+    "description": "CAFETERIA LA PRUEBA",
+    "amount": "-1.85",
+    "balance": "11830.40"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000018",
     "bookingDate": "2025-09-30",
     "valueDate": "2025-09-30",
     "description": "CUOTA AUTONOMOS TGSS",
     "amount": "-87.61",
-    "balance": "11748.34"
+    "balance": "11742.79"
   },
   {
-    "id": "00000000-0000-0000-0072-000000000016",
+    "id": "00000000-0000-0000-0072-000000000019",
     "bookingDate": "2025-10-06",
     "valueDate": "2025-10-06",
     "description": "DEVOLUCION COMPRA",
     "amount": "12.99",
-    "balance": "11761.33"
+    "balance": "11755.78"
   },
   {
-    "id": "00000000-0000-0000-0072-000000000017",
+    "id": "00000000-0000-0000-0072-000000000020",
+    "bookingDate": "2025-10-30",
+    "valueDate": "2025-10-30",
+    "description": "CAFETERIA LA PRUEBA",
+    "amount": "-1.85",
+    "balance": "11753.93"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000021",
     "bookingDate": "2025-11-22",
     "valueDate": "2025-11-22",
     "description": "RESTAURANTE IMAGINARIO",
     "amount": "-58.70",
-    "balance": "11702.63"
+    "balance": "11695.23"
   },
   {
-    "id": "00000000-0000-0000-0072-000000000018",
+    "id": "00000000-0000-0000-0072-000000000022",
+    "bookingDate": "2025-12-15",
+    "valueDate": "2025-12-15",
+    "description": "CAFETERIA LA PRUEBA",
+    "amount": "-1.85",
+    "balance": "11693.38"
+  },
+  {
+    "id": "00000000-0000-0000-0072-000000000023",
     "bookingDate": "2025-12-31",
     "valueDate": "2025-12-31",
     "description": "ABONO INTERESES CUENTA",
     "amount": "0.51",
-    "balance": "11703.14"
+    "balance": "11693.89"
   }
 ]

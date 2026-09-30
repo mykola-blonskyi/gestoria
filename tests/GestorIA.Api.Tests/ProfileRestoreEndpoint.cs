@@ -147,7 +147,7 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
         var import = await (await client.ImportStatement(id, RepoFiles.Statement)).Json();
 
         Assert.Equal(0, import["imported"]!.GetValue<int>());
-        Assert.Equal(18, import["alreadyImported"]!.GetValue<int>());
+        Assert.Equal(23, import["alreadyImported"]!.GetValue<int>());
     }
 
     // SPEC-009 §2.1: a known kind missing from a version 1 file reads as zero rows, as in a file exported before #72, which
@@ -286,7 +286,7 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
         { "import int.MaxValue", "$.entities.bankTransactions[0].importSequence" },
         { "a repeated id", "$.entities.bankTransactions[1].id" },
         { "a repeated line of an import", "$.entities.bankTransactions[1].lineNumber" },
-        { "a movement stored twice", "$.entities.bankTransactions[18].lineKey" },
+        { "a movement stored twice", "$.entities.bankTransactions[23].lineKey" },
         { "a null profile", "$.entities.profiles[0]" },
         { "a profile id of zeros", "$.entities.profiles[0].id" },
         { "a null movement", "$.entities.bankTransactions[0]" },
@@ -378,7 +378,7 @@ public class ProfileRestoreEndpoint(ProfileRestoreEndpoint.DeletedInstallation d
             case "a period ending before its last movement": imports[0]!["to"] = "2025-12-30"; break;
             case "a period running into days to come": imports[0]!["to"] = "2999-12-31"; break;
             case "a statement import holding no movement":
-                imports.Add(new JsonObject { ["sequence"] = 2, ["from"] = "2025-05-06", ["to"] = "2025-06-29" });
+                imports.Add(new JsonObject { ["sequence"] = 2, ["from"] = "2025-06-03", ["to"] = "2025-06-29" });
                 break;
             case "a period starting 32 days before its first movement": imports[0]!["from"] = "2024-12-01"; break;
             case "a period ending 32 days after its last movement": imports[0]!["to"] = "2026-02-01"; break;

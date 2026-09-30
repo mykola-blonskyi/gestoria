@@ -161,6 +161,7 @@
       "heading": "Import a bank statement",
       "lead": "Export the statement from your bank as CSV. Importing the same statement again, or one that overlaps it, adds only the movements not stored yet.",
       "file": "Statement file (CSV)",
+      "chosen": "Chosen: {name}",
       "bank": "Bank",
       "submit": "Import",
       "importing": "Importing…",

@@ -201,6 +201,27 @@ describe("TransactionsPage", () => {
     expect(posts(fetchStub)).toEqual([`${PROFILE}/bank-statements?bank=bbva&from=2025-01-02&to=2025-06-30`]);
   });
 
+  // A browser fires `change` only when the input's value differs, so a file the input still holds cannot be picked again.
+  it("lets the same file be picked again to refill the period after the dates were edited", async () => {
+    stubApi();
+    const user = renderPage();
+    await screen.findByText(fill(en.list.count, { count: g12Year.length }));
+    const file = csv("15/03/2025", "02/01/2025");
+
+    await user.upload(screen.getByLabelText(en.import.file), file);
+    await waitFor(() => expect(screen.getByLabelText(en.import.from)).toHaveValue("2025-01-02"));
+    expect((screen.getByLabelText(en.import.file) as HTMLInputElement).value).toBe("");
+    expect(screen.getByText(fill(en.import.chosen, { name: "bbva.csv" }))).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText(en.import.from));
+    await user.type(screen.getByLabelText(en.import.from), "2025-01-01");
+    expect(screen.getByLabelText(en.import.from)).toHaveValue("2025-01-01");
+
+    await user.upload(screen.getByLabelText(en.import.file), file);
+    await waitFor(() => expect(screen.getByLabelText(en.import.from)).toHaveValue("2025-01-02"));
+    expect(screen.getByLabelText(en.import.to)).toHaveValue("2025-03-15");
+  });
+
   it("clears the period when the chosen file holds no date, and leaves it out of the request when cleared", async () => {
     const fetchStub = stubApi();
     const user = renderPage();
@@ -260,7 +281,7 @@ describe("TransactionsPage", () => {
     await user.upload(screen.getByLabelText(en.import.file), file);
     await user.click(screen.getByRole("button", { name: en.import.submit }));
 
-    expect(await screen.findByText("18 movements read: 18 new, 0 already imported.")).toBeInTheDocument();
+    expect(await screen.findByText("23 movements read: 23 new, 0 already imported.")).toBeInTheDocument();
     const [url, init] = fetchStub.mock.calls.find(([, called]) => called?.method === "POST")!;
     expect(url).toBe(`${PROFILE}/bank-statements?bank=bbva`);
     expect(init?.method).toBe("POST");
@@ -373,7 +394,7 @@ describe("TransactionsPage", () => {
     await screen.findByText(fill(en.list.count, { count: g12Year.length }));
     await user.upload(screen.getByLabelText(en.import.file), statement());
     await user.click(screen.getByRole("button", { name: en.import.submit }));
-    await screen.findByText("18 movements read: 18 new, 0 already imported.");
+    await screen.findByText("23 movements read: 23 new, 0 already imported.");
 
     expect(setItem).not.toHaveBeenCalled();
     expect(localStorage.length).toBe(0);

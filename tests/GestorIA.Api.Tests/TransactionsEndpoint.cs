@@ -24,9 +24,9 @@ public class TransactionsEndpoint
         var response = await client.ImportStatement(id, RepoFiles.Statement);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.True(JsonNode.DeepEquals(Imported(18, 18, 0), await response.Json()));
+        Assert.True(JsonNode.DeepEquals(Imported(23, 23, 0), await response.Json()));
         var all = await Transactions(client, id);
-        Assert.Equal(18, all.Count);
+        Assert.Equal(23, all.Count);
         var first = all[0]!;
         Assert.Equal("2025-01-02", first["bookingDate"]!.GetValue<string>());
         Assert.Equal("TRANSFERENCIA RECIBIDA CLIENTE SINTETICO UNO", first["description"]!.GetValue<string>());
@@ -48,8 +48,8 @@ public class TransactionsEndpoint
 
         var again = await client.ImportStatement(id, RepoFiles.Statement);
 
-        Assert.True(JsonNode.DeepEquals(Imported(18, 0, 18), await again.Json()));
-        Assert.Equal(18, (await Transactions(client, id)).Count);
+        Assert.True(JsonNode.DeepEquals(Imported(23, 0, 23), await again.Json()));
+        Assert.Equal(23, (await Transactions(client, id)).Count);
     }
 
     [Fact]
@@ -84,8 +84,8 @@ public class TransactionsEndpoint
 
         var again = await client.ImportStatement(id, RepoFiles.Statement, from: "2024-12-20", to: "2026-01-05");
 
-        Assert.True(JsonNode.DeepEquals(Imported(18, 0, 18, "2024-12-20", "2026-01-05"), await again.Json()));
-        Assert.Equal(18, (await Transactions(client, id)).Count);
+        Assert.True(JsonNode.DeepEquals(Imported(23, 0, 23, "2024-12-20", "2026-01-05"), await again.Json()));
+        Assert.Equal(23, (await Transactions(client, id)).Count);
         Assert.True(JsonNode.DeepEquals(
             JsonNode.Parse("""[{"sequence":2,"from":"2024-12-20","to":"2026-01-05"},{"sequence":1,"from":"2025-01-02","to":"2025-12-31"}]"""),
             await client.Statements(id)));
@@ -275,19 +275,19 @@ public class TransactionsEndpoint
         var answers = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => client.ImportStatement(id, RepoFiles.Statement)));
 
         Assert.All(answers, answer => Assert.Equal(HttpStatusCode.OK, answer.StatusCode));
-        Assert.Equal(18, (await Transactions(client, id)).Count);
+        Assert.Equal(23, (await Transactions(client, id)).Count);
         var imported = await Task.WhenAll(answers.Select(async answer => (await answer.Json())["imported"]!.GetValue<int>()));
-        Assert.Equal(18, imported.Sum());
+        Assert.Equal(23, imported.Sum());
     }
 
     [Theory]
     [InlineData("?year=2025&quarter=Q1", 8)]
-    [InlineData("?year=2025&quarter=Q2", 4)]
-    [InlineData("?year=2025&quarter=Q3", 3)]
-    [InlineData("?year=2025&quarter=Q4", 3)]
-    [InlineData("?year=2025", 18)]
+    [InlineData("?year=2025&quarter=Q2", 5)]
+    [InlineData("?year=2025&quarter=Q3", 5)]
+    [InlineData("?year=2025&quarter=Q4", 5)]
+    [InlineData("?year=2025", 23)]
     [InlineData("?year=2024", 0)]
-    [InlineData("", 18)]
+    [InlineData("", 23)]
     public async Task TheMovementsAreFilteredByTheQuarterOfTheirBookingDate(string query, int count)
     {
         await using var api = await Api();

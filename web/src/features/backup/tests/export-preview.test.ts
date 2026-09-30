@@ -12,7 +12,7 @@ describe("previewExport", () => {
     expect(previewExport(JSON.stringify(g12Export))).toEqual({
       kind: "preview",
       profile: { taxYear: 2025, region: "VC" },
-      bankTransactions: 18,
+      bankTransactions: 23,
       firstBooking: "2025-01-02",
       lastBooking: "2025-12-31",
       exportedOn: "2026-09-28",

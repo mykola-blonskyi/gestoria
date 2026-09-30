@@ -211,7 +211,7 @@ describe("restoring an export", () => {
     const items = (await screen.findByText(t("holds"))).parentElement!;
     expect(within(items).getAllByRole("listitem").map((item) => item.textContent)).toEqual([
       t("profile", { year: 2025, region: "VC" }),
-      t("movements", { count: 18, first, last }),
+      t("movements", { count: 23, first, last }),
     ]);
     expect(screen.getByText(t("exported", { date: exported }))).toBeInTheDocument();
     expect(screen.getByText(t("where"))).toBeInTheDocument();
@@ -226,7 +226,7 @@ describe("restoring an export", () => {
 
     await user.click(await screen.findByRole("button", { name: restoreText.confirm }));
 
-    expect(await screen.findByText(translator("en")("done", { year: 2025, count: 18 }), { exact: false })).toBeInTheDocument();
+    expect(await screen.findByText(translator("en")("done", { year: 2025, count: 23 }), { exact: false })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: restoreText.overview })).toHaveAttribute("href", "/");
     const calls = restoreCalls(fetchStub);
     expect(calls).toHaveLength(1);
@@ -246,7 +246,7 @@ describe("restoring an export", () => {
     await user.click(await screen.findByRole("button", { name: restoreText.confirm }));
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent(translator("en")("failure.notEmpty", { year: 2025, count: 18 }));
+    expect(alert).toHaveTextContent(translator("en")("failure.notEmpty", { year: 2025, count: 23 }));
     expect(within(alert).getByRole("link", { name: restoreText.failure.settings })).toHaveAttribute("href", "/settings");
   });
 
@@ -317,12 +317,12 @@ describe("restoring an export", () => {
     await user.click(screen.getByRole("button", { name: restoreText.cancel }));
     await user.upload(screen.getByLabelText(restoreText.file), file);
     await user.click(await screen.findByRole("button", { name: restoreText.confirm }));
-    await screen.findByText(translator("en")("done", { year: 2025, count: 18 }), { exact: false });
+    await screen.findByText(translator("en")("done", { year: 2025, count: 23 }), { exact: false });
     expect((screen.getByLabelText(restoreText.file) as HTMLInputElement).value).toBe("");
 
     await user.upload(screen.getByLabelText(restoreText.file), file);
     expect(await screen.findByRole("button", { name: restoreText.confirm })).toBeEnabled();
-    expect(screen.queryByText(translator("en")("done", { year: 2025, count: 18 }), { exact: false })).not.toBeInTheDocument();
+    expect(screen.queryByText(translator("en")("done", { year: 2025, count: 23 }), { exact: false })).not.toBeInTheDocument();
   });
 
   it("forgets the file on cancel and sends nothing", async () => {
@@ -356,7 +356,7 @@ describe("restoring an export", () => {
 
     await user.click(await screen.findByRole("button", { name: restoreText.confirm }));
 
-    await screen.findByText(translator("en")("done", { year: 2025, count: 18 }), { exact: false });
+    await screen.findByText(translator("en")("done", { year: 2025, count: 23 }), { exact: false });
     await vi.waitFor(() => expect(removed).toHaveBeenCalled());
   });
 
@@ -367,7 +367,7 @@ describe("restoring an export", () => {
     const user = await choose(exportFile());
 
     await user.click(await screen.findByRole("button", { name: restoreText.confirm }));
-    await screen.findByText(translator("en")("done", { year: 2025, count: 18 }), { exact: false });
+    await screen.findByText(translator("en")("done", { year: 2025, count: 23 }), { exact: false });
 
     expect(setItem).not.toHaveBeenCalled();
     expect(document.cookie).toBe("");

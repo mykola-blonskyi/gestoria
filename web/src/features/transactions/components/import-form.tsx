@@ -31,6 +31,9 @@ export function ImportForm({ profileId }: { profileId: string }) {
 
   async function choose(event: ChangeEvent<HTMLInputElement>) {
     const next = event.target.files?.[0] ?? null;
+    // The File lives in state, so the input can let go of it: a browser fires `change` only when the input's value
+    // differs, and the same file could not be picked again to refill the dates.
+    event.target.value = "";
     chosen.current = next;
     setFile(next);
     const period = next === null || next.size > STATEMENT_MAX_BYTES ? null : statementPeriod(await next.text());
@@ -60,9 +63,16 @@ export function ImportForm({ profileId }: { profileId: string }) {
             id={`${id}-file`}
             type="file"
             accept=".csv,text/csv"
-            className="text-sm"
+            // The input lets go of the file once read, so its own "no file chosen" is hidden and the line below names it.
+            className="text-sm text-transparent file:text-foreground"
+            aria-describedby={file === null ? undefined : `${id}-chosen`}
             onChange={choose}
           />
+          {file !== null && (
+            <p id={`${id}-chosen`} className="text-sm text-muted-foreground">
+              {t("chosen", { name: file.name })}
+            </p>
+          )}
         </div>
         <div className="grid gap-1.5">
           <label htmlFor={`${id}-bank`} className="text-sm font-medium">
