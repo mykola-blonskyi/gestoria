@@ -14,15 +14,7 @@ The app has seven pages, and every figure on them comes from the API:
 
 ## Run it
 
-You need Node 24 and pnpm (the version is pinned in `package.json`, so `corepack enable` is enough).
-
-```bash
-cd web
-pnpm install
-pnpm dev          # http://localhost:3000
-```
-
-The app needs the API: `dotnet run --project src/GestorIA.Api` from the repository root, once its key (below) and its database (the root `README.md`, "Database") are set up. It listens on `http://localhost:5080` and allows calls from `http://localhost:3000` (`Cors:Origins` in its `appsettings.json`; set `Cors__Origins__0` when `pnpm dev` takes another port).
+The root README's [Local development](../README.md#local-development) brings up the database, the API and this app, and lists the checks CI runs here. The API listens on `http://localhost:5080` and allows calls from `http://localhost:3000` only (`Cors:Origins` in its `appsettings.json`). [Ports](../README.md#ports) says how to move either.
 
 ### The API key
 
@@ -58,6 +50,8 @@ Transactions (`features/transactions`) imports a bank statement into the stored 
 - **Restore** (`features/backup`, #75). Backup reads the chosen file in the browser and shows what it holds before anything is sent: the taxpayer profile's tax year and region, how many bank movements and the first and last booking date, and the day it was exported. A file that is not JSON, not a GestorIA export, of a format version this app does not read, or over 16 MB (the API's limit, `EXPORT_MAX_BYTES`, checked before the file is read) is refused on the page and nothing is sent. Only once the user presses Restore does it send `POST /profiles/restore` with the file's text exactly as read (SPEC-009 §2.2), and the API validates the whole file then. It stores only into an empty installation: when anything is stored, the API refuses with what it holds and the page links to settings to delete it first, after downloading a copy. Restoring the same file again is harmless: the API finds exactly what the file holds and writes nothing. The file's text lives in the component's state until it is sent or cancelled, then as the variables of a mutation with `gcTime: 0`, which leaves the mutation cache once it is done; never in the query cache, browser storage, cookies, the address or the console. A restore invalidates `["profiles"]`, so the download card finds the restored profile. The file input is cleared once the chosen file has been read, so the same export can be chosen again after a preview, restore or cancel.
 - **Delete** (`features/settings`, the "Your data" card). It lists what will be deleted, says it cannot be undone and that Spanish tax law expects the records behind a return to be kept at least four years after its deadline, and ten for a loss or deduction carried forward (SPEC-013 §2), and deletes only once the user types the confirmation word of their language (`DELETE`, `BORRAR`, `ВИДАЛИТИ`, `УДАЛИТЬ`). A delete resets every query under `["profiles"]`, so the profile and its estimates leave the cache with it and the profile form starts over. The card links to Backup for a copy first.
 - The delete lists the profile and every imported bank movement. A new stored entity kind adds a line there and nothing to the download, which saves whatever the API exports.
+
+### Scripts
 
 | Command | What it does |
 |---|---|
@@ -145,7 +139,7 @@ The colours are CSS variables, one block per theme, in `src/app/globals.css`, wi
 
 ### API types
 
-`pnpm api:types` runs `openapi-typescript` on `../src/GestorIA.Api/openapi/v1.json` and writes `src/data/api-types.ts`. `dotnet build` writes that document from the API's code (`Microsoft.Extensions.ApiDescription.Server`, OpenAPI 3.1), and both files are committed, so the web job needs no .NET. CI fails if either is stale, and fails a pull request whose document breaks the one on `main` (oasdiff). After an API change: `dotnet build GestorIA.slnx`, then `pnpm api:types`, and commit both. Nothing in the web app invents an API type.
+`pnpm api:types` runs `openapi-typescript` on `../src/GestorIA.Api/openapi/v1.json` and writes `src/data/api-types.ts`. `dotnet build` writes that document from the API's code (`Microsoft.Extensions.ApiDescription.Server`, OpenAPI 3.1), and both files are committed, so the web job needs no .NET. CI fails if either is stale, and fails a pull request whose document breaks the one on `main` (oasdiff). After an API change, regenerate and commit both as the root README's [Local development, step 7](../README.md#7-the-everyday-loop) shows. Nothing in the web app invents an API type.
 
 ## Tests
 
@@ -154,7 +148,7 @@ The colours are CSS variables, one block per theme, in `src/app/globals.css`, wi
 - The root layout: `<html lang>` and `data-theme` come from the cookies, so the first paint is right (`tests/root-layout.test.tsx`).
 - The virtualised list with ten thousand synthetic rows.
 - The data client against stubbed `fetch` responses: JSON, 204, problem+json, a non-problem error and a network failure.
-- Settings and the overview through their `index.ts`, with `fetch` stubbed by the API's own answers in `tests/fixtures/` (`tests/GestorIA.Api.Tests/WebFixtures.cs` fails when they drift from the API; rerun it with `GESTORIA_WRITE_WEB_FIXTURES=1` to rewrite them). Typing G12's figures saves exactly G12's stored profile, and a stored profile fills the form and is replaced on save; the API's refusals show next to their field; a new profile starts on the newest year without gaps. The overview asks for the stored profile's estimate at the right quarter, sends to settings without a profile, and shows a gap with a way back to settings. Nothing lands in storage, cookies, the address or the console.
+- Settings and the overview through their `index.ts`, with `fetch` stubbed by the API's own answers in `tests/fixtures/` (`tests/GestorIA.Api.Tests/WebFixtures.cs` fails when they drift from the API; the root README's [Local development, step 7](../README.md#7-the-everyday-loop) says how to rewrite them). Typing G12's figures saves exactly G12's stored profile, and a stored profile fills the form and is replaced on save; the API's refusals show next to their field; a new profile starts on the newest year without gaps. The overview asks for the stored profile's estimate at the right quarter, sends to settings without a profile, and shows a gap with a way back to settings. Nothing lands in storage, cookies, the address or the console.
 - Transactions through its `index.ts`, with `fetch` stubbed by the API's answers for the synthetic 2025 statement: the year's list and Q1's asked with the right query, dates and amounts in four languages, money in and out filtered without a request, the import sent as the file with `text/csv` and followed by a fresh list, the statement's period filled from the chosen file and sent only when set, the imported statements' periods listed, the review queue's keyboard model, classification by digit and by button with focus moving to the next movement, its empty state and a refused classification, the API's refusals and the size limit shown, no profile sending to settings, ten thousand synthetic movements rendered as a window of rows and filtered, and nothing kept in storage, cookies, the address or the console.
 - Backup and settings' data card through their `index.ts` (#74, #75): the download is the API's export, the same JSON document, under a name that carries only the date, labelled as personal financial data in every language, and never lands in storage, cookies, the address or the console; the restore shows what the file holds in every language before any request, sends the file's text byte for byte once confirmed, reads the profile again, and shows each refusal (installation not empty, the API's reasons, not JSON, not an export, a newer version, too large, database, network) with nothing sent or stored; the delete lists what goes, stays disabled until the word is typed, sends one `DELETE` and starts the profile form over, and an unreachable API says nothing was deleted. `tests/fixtures/g12-export.json` is the API's own export (`WebFixtures.cs`).
 - Classifying a movement on the transactions page refetches the overview's estimate in the same query cache, and the overview then shows the ledger's basis (`tests/review-updates-estimate.test.tsx`, outside `src` so it may import both features).

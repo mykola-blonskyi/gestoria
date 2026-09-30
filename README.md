@@ -12,13 +12,14 @@ This is a personal project, not a product and not tax advice. The numbers are on
 4. [Set it up from zero](#set-it-up-from-zero)
 5. [First use](#first-use)
 6. [Everyday tasks](#everyday-tasks)
-7. [The console program](#the-console-program)
-8. [Tax-year configuration](#tax-year-configuration)
-9. [How the project is organised](#how-the-project-is-organised)
-10. [Tests](#tests)
-11. [Working on the project](#working-on-the-project)
-12. [Where to find things](#where-to-find-things)
-13. [Troubleshooting](#troubleshooting)
+7. [Local development](#local-development)
+8. [The console program](#the-console-program)
+9. [Tax-year configuration](#tax-year-configuration)
+10. [How the project is organised](#how-the-project-is-organised)
+11. [Tests](#tests)
+12. [Working on the project](#working-on-the-project)
+13. [Where to find things](#where-to-find-things)
+14. [Troubleshooting](#troubleshooting)
 
 ## What GestorIA is and who it is for
 
@@ -26,7 +27,7 @@ Being autónomo in Spain means paying tax in advance, every quarter, on a year y
 
 It is built for one person: the author, a profesional with EU business clients and US clients, living in the Comunitat Valenciana or the Comunidad de Madrid. It assumes that client mix everywhere. Your clients withhold no retención, and you charge them no IVA. If your situation is different, the figures will be wrong for you.
 
-Your data stays on your machine. It lives in a PostgreSQL database in Docker. The API that does the calculations runs with `dotnet run`, and the web app runs in your browser with `pnpm dev`. GestorIA itself sends your data nowhere. The .NET tools and Next.js do send anonymous usage statistics (telemetry) by default, with nothing about your finances in them. To turn them off, run `pnpm exec next telemetry disable` once in `web/`, and add `export DOTNET_CLI_TELEMETRY_OPTOUT=1` to `~/.zshrc`. The app is locked by a key only you know.
+Your data stays on your machine. It lives in a PostgreSQL database in Docker. The API that does the calculations runs with `dotnet run`, and the web app runs in your browser with `pnpm dev`. GestorIA itself sends your data nowhere. The .NET tools and Next.js do send anonymous usage statistics (telemetry) by default, with nothing about your finances in them. Setup steps 1 and 9 say how to turn them off. The app is locked by a key only you know.
 
 GestorIA always leans towards putting aside *more* rather than less. Idle money in a separate account is better than a bill you cannot pay. Every figure comes with the step-by-step calculation behind it, and each step names the law it comes from.
 
@@ -54,11 +55,17 @@ Every obligation of the tax year in date order: the monthly TGSS cuota, Modelo 1
 
 **Export to your calendar** downloads an `.ics` file of the dates still to come, for Apple Calendar, Google Calendar or Outlook. Amounts stay out of event titles unless you tick "Include amounts in event titles". When nothing is still to come, as for a tax year that is over, the button is disabled and the page says so.
 
-**Today no year can be exported.** 2025 is over, so its button is disabled. 2026 is refused as a whole until its missing values are published (see [known limits](#what-it-does-not-do-yet-and-known-limits)). The export works again once a year with dates still to come can be computed.
+No year can be exported today. [Known limits](#what-it-does-not-do-yet-and-known-limits) says why.
 
 ### Transactions: import, review, classify
 
-**Import.** You pick a BBVA statement in CSV format and press Import. GestorIA reads every line and stores the movements it does not have yet. Importing the same statement twice, or one that overlaps an earlier one, adds only what is missing. A file it cannot read is refused whole, with the line numbers and what is wrong on each line. A file over 2 MB is refused.
+**Import.** You pick a BBVA statement in CSV format, check its period, and press Import. GestorIA reads every line and stores the movements it does not have yet. Importing the same statement twice, or one that overlaps an earlier one, adds only what is missing. A file it cannot read is refused whole, with the line numbers and what is wrong on each line. A file over 2 MB is refused, and so is a file with no movements.
+
+**The statement's period.** Every import is recorded as a statement with a period, the days it covers. BBVA's CSV file does not say which days those are, so you enter them. When you pick the file, GestorIA fills in the dates of its first and last movement. Change them to the period the statement itself covers: the dates you chose when exporting it, or the dates BBVA prints on it. The period may start at most 31 days before the first movement and end at most 31 days after the last. An autónomo's account is charged the RETA cuota every month, so a real statement has no month without a movement. A wider period is refused, with the reason.
+
+Do not claim days the statement does not cover. GestorIA reads a claimed day as a day with no income, so it would set aside too little.
+
+Below the form, "Imported statements" lists every import with its period, for example "Statement 1: January 2, 2025 – December 31, 2025". An import that added nothing new is listed too.
 
 **The list.** Every movement of the profile's tax year, filtered by quarter and by money in or money out.
 
@@ -91,12 +98,12 @@ After each choice the app says "Classified as ..." and moves to the next movemen
 
 1. the quarter has ended (today is past its last day);
 2. none of its movements is waiting in the review queue;
-3. your imported statements cover every day of it from its first day, or from your alta if that is later, to past its last day;
+3. the periods of your imported statements, joined together, cover every day of it from its first day, or from your alta if that is later, to at least one day past its last day;
 4. every earlier quarter of the year since your alta has also switched.
 
 Then the estimate counts that quarter's activity income and the RETA cuotas TGSS actually charged, and keeps the projection only for the months still ahead. The overview says through which quarter it counts actuals, how many movements are still waiting (with a link to them), and how many expenses are not counted because they need an invoice.
 
-A statement covers the days from its first line to its last line, nothing more. So if your statement's first line is later than your alta day, the days in between count as not covered, even when nothing happened on them. That quarter, and every quarter after it, stays on the projection. For example, with an alta on 1 January and a statement whose first line is 2 January, the whole year stays projected; with an alta on 2 January, the same statement is enough. Issue #88 will fix this.
+Coverage comes from the statements' periods, not from their movements. A day inside a period counts as covered even when nothing moved on it. Overlapping periods join into one stretch, and so do periods that follow each other, such as January to March and then April to June. A quarter also needs a day covered after its last day, so Q4 switches only once a statement that runs into January is imported. A quarter with no movement at all stays on the projection too.
 
 ### Periods: a quarter or the whole year
 
@@ -123,8 +130,10 @@ The app opens locked and asks for your API key. The key stays only in the memory
 - **The annual return (Modelo 100) is not computed.** Periods shows only the annual true-up, the gap beyond the Modelo 130 advances. No tax credits (deducciones) and no savings income are included. Leaving them out can only make the estimate higher, never lower.
 - **No forms are produced.** GestorIA computes the figures behind Modelo 130 and knows which casilla each goes in, but you file with the AEAT yourself. Modelo 303 and 349 amounts are not computed.
 - **Expenses do not count yet.** A deductible expense needs a linked invoice, and GestorIA cannot store documents yet (no invoices, no OCR). Your expected gastos in Settings stay in the projection.
-- **2026 is refused today, and 2027 does not exist yet.** The 2026 configuration declares three values as not published: the tarifa plana amount for 2026, the Renta window for tax year 2026 together with the 2027 holidays, and the Modelo 100 casillas. Every 2026 estimate, period and payments calendar is refused with "Not published yet" until they are. With 2025 over and 2026 refused, no calendar (`.ics`) can be exported today. The 2027 values come out in the BOE around December 2026 (issue #12). See [Tax-year configuration](#tax-year-configuration).
-- **A closed quarter can stay on the projection.** An import covers the days from the first to the last line it newly stored, and nothing else. A statement whose first line comes after your alta day, overlapping statements, or monthly statements with quiet days between them all leave uncovered days, and then that quarter and the ones after it keep using the projection. The last quarter of a year needs a statement that reaches into January. Your figures stay safe (they over-reserve), but actuals switch on less often than they should. Issue #88 will fix this.
+- **2026 is refused today, and 2027 does not exist yet.** The 2026 configuration declares three values as not published: the tarifa plana amount for 2026, the Renta window for tax year 2026 together with the 2027 holidays, and the Modelo 100 casillas. Every 2026 estimate, period and payments calendar is refused with "Not published yet" until they are. The 2027 values come out in the BOE around December 2026 (issue #12). See [Tax-year configuration](#tax-year-configuration).
+- **No calendar (`.ics`) can be exported today.** The export holds only dates still to come. Every date of 2025 has passed, so its button is disabled and Payments says "Nothing is still to come in this tax year, so there is no date to export." 2026 has dates to come, but it is refused as a whole, as the point above says, so its Payments page shows "Not published yet" instead of a calendar. The export works again once a year with dates still to come can be computed.
+- **A closed quarter needs a statement that reaches past its end.** A quarter whose last day is also the last day of your statements stays on the projection. So Q4 needs a statement that runs into January. Until then the figures err towards setting aside more.
+- **GestorIA takes your word for a statement's period.** Within 31 days of the movements, it cannot tell a true period from a wrong one. A stricter check for long quiet stretches is planned (#94).
 - **Only BBVA, only CSV.** No other bank, and no BBVA Excel (`.xlsx`) files.
 - **One profile per installation, for one tax year at a time.** Movements of other years stay stored and in your backups, but the pages show only the profile's year.
 - **Local only.** It runs on one computer. There is no sync, no phone app and no hosted version. The database and the API listen on your own machine only.
@@ -149,7 +158,13 @@ echo "export PATH=\"$(brew --prefix node@24)/bin:\$PATH\"" >> ~/.zshrc
 
 Without Homebrew, use the installers from [dot.net](https://dotnet.microsoft.com/download/dotnet/10.0), [nodejs.org](https://nodejs.org) (version 24) and [docker.com](https://www.docker.com/products/docker-desktop/). Then open **Docker Desktop** from Applications once and wait until it says it is running.
 
-Open a new Terminal window and check:
+Before the first `dotnet` command, turn off the .NET tools' telemetry if you want to:
+
+```bash
+echo 'export DOTNET_CLI_TELEMETRY_OPTOUT=1' >> ~/.zshrc
+```
+
+It takes effect in Terminal windows opened after this. Open a new Terminal window and check:
 
 ```bash
 dotnet --version     # 10.0.something
@@ -193,7 +208,7 @@ docker compose up -d postgres
 docker compose ps
 ```
 
-The second command should show the `postgres` service `Up ... (healthy)` on `127.0.0.1:5432->5432/tcp`. Docker starts it again whenever Docker Desktop starts. The data lives in a Docker volume and survives restarts.
+The second command should show the `postgres` service `Up ... (healthy)` on `127.0.0.1:5432->5432/tcp`. Docker starts it again whenever Docker Desktop starts. The data lives in a Docker volume: a storage folder that Docker keeps apart from the database program. It survives restarts, and it stays when the database's container is removed or updated.
 
 **5. Tell the API how to reach the database.** The connection string goes into .NET *user secrets*, a file in your home folder (`~/.microsoft/usersecrets/`), outside the repository:
 
@@ -202,11 +217,11 @@ PASSWORD=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2)
 dotnet user-secrets set ConnectionStrings:Gestoria "Host=localhost;Port=5432;Database=gestoria;Username=gestoria;Password=$PASSWORD" --project src/GestorIA.Api
 ```
 
-On a new machine, the first `dotnet` command first prints a "Welcome to .NET" text about telemetry and a development certificate. That is normal. At the end you should see `Successfully saved ConnectionStrings:Gestoria to the secret store.` If you changed `POSTGRES_PORT`, put that port in place of 5432.
+On a new machine, this first real `dotnet` command first prints a "Welcome to .NET 10.0!" text about a development certificate (and about telemetry, if you did not turn it off in step 1). That is normal. At the end you should see `Successfully saved ConnectionStrings:Gestoria to the secret store.` If you changed `POSTGRES_PORT`, put that port in place of 5432.
 
 ### The API key
 
-The app is locked with a key you choose. The API keeps only the key's SHA-256 hash, never the key itself, and refuses to start without it.
+The app is locked with a key you choose. The API keeps only the key's SHA-256 hash, never the key itself. A hash is a fingerprint worked out from the key. The same key always gives the same hash, but nobody can get the key back from the hash. The API refuses to start without it.
 
 **6. Make a key, keep it, and store its hash.**
 
@@ -216,7 +231,7 @@ echo "$KEY"
 dotnet user-secrets set Auth:ApiKeySha256 "$(printf %s "$KEY" | openssl dgst -sha256 -r | cut -d' ' -f1)" --project src/GestorIA.Api
 ```
 
-The second line prints the key: 64 letters and digits. Save it in your password manager now. The app asks for it every time you open it, and nothing can recover it. The last line should print `Successfully saved Auth:ApiKeySha256 to the secret store.`
+The second line prints the key: 64 characters of 0-9 and a-f. Save it in your password manager now. The app asks for it every time you open it, and nothing can recover it. The last line should print `Successfully saved Auth:ApiKeySha256 to the secret store.`
 
 User secrets apply when the API runs with `dotnet run`. Anywhere else, set the environment variables `ConnectionStrings__Gestoria` and `Auth__ApiKeySha256` instead (two underscores).
 
@@ -254,10 +269,11 @@ The first line should be `HTTP/1.1 204 No Content`. A `503 Service Unavailable` 
 ```bash
 cd web
 pnpm install
+pnpm exec next telemetry disable
 pnpm dev
 ```
 
-`pnpm install` ends with `Done in ...`. `pnpm dev` prints:
+`pnpm install` ends with `Done in ...`. The third line is optional. It turns off Next.js telemetry and says "You have opted-out of Next.js' anonymous telemetry program." `pnpm dev` prints:
 
 ```
 ▲ Next.js 16.3.6 (Turbopack)
@@ -265,23 +281,13 @@ pnpm dev
 ✓ Ready in ...
 ```
 
-It also prints a `Network:` address. The web app answers on your home network there too, but it cannot unlock from another device, because the API only listens on this computer. To keep the web app on this computer as well, start it with `pnpm dev -H localhost`. The first time, Next.js also prints a note about anonymous telemetry; [What GestorIA is](#what-gestoria-is-and-who-it-is-for) says how to turn it off.
+It also prints a `Network:` address. The web app answers on your home network there too, but it cannot unlock from another device, because the API only listens on this computer. To keep the web app on this computer as well, start it with `pnpm dev -H localhost`. If you skipped the telemetry line, the first `pnpm dev` also prints a note about telemetry.
 
 The API accepts calls from `http://localhost:3000` only. Browsers enforce this rule, called CORS. A page may call the API only if the API names the page's address as allowed. When they disagree, the unlock screen says "Something answers at the GestorIA API address, but the browser refused the call." and prints the command that starts the API with the page's address allowed. If `pnpm dev` says it uses another port because 3000 is taken, see [Ports](#ports).
 
 **10. Open the app and unlock it.** Go to <http://localhost:3000>. The app opens in Ukrainian on the unlock screen; the language menu (Мова) is at the top right. Paste the key from step 6 and press the button. You should land on the overview, which says there is no taxpayer profile yet and links to Settings.
 
 A wrong key shows "The API did not accept this key. Check it and try again." Other messages are in [Troubleshooting](#troubleshooting).
-
-### Ports
-
-The defaults are the database on 5432, the API on 5080 and the web app on 3000. To use other ports, all three places must agree:
-
-| What | Where to change it |
-|---|---|
-| Database port | `POSTGRES_PORT` in `.env`, and the `Port=` in the connection string (step 5). |
-| API port | Start it with `dotnet run --project src/GestorIA.Api --urls http://localhost:5190`, and put `NEXT_PUBLIC_API_BASE_URL=http://localhost:5190` in `web/.env.local` (copy `web/.env.example`). Restart `pnpm dev` after changing it. |
-| Web app port | Start it with `pnpm dev -p 3190`, and start the API with `Cors__Origins__0=http://localhost:3190 dotnet run --project src/GestorIA.Api`. |
 
 ### Windows and Linux
 
@@ -326,7 +332,7 @@ Read the notices first, then the figures. [Overview](#overview-the-set-aside-est
 
 ### 3. Import a BBVA statement
 
-**Get the file from BBVA.** In BBVA online banking, open your account's movements, choose the dates you want (a whole quarter or year is best), and download them. GestorIA reads only the CSV format. The file must start with this header line, then one movement per line:
+**Get the file from BBVA.** In BBVA online banking, open your account's movements, choose the dates you want (a whole quarter or year is best), and download them. Note those dates: you enter them below as the statement's period. GestorIA reads only the CSV format. The file must start with this header line, then one movement per line:
 
 ```
 Fecha;Fecha Valor;Concepto;Importe;Saldo
@@ -337,17 +343,27 @@ Dates are `dd/mm/yyyy`, amounts are Spanish style (`2.345,67`), and fields are s
 
 Keep your statements outside this folder. They are personal financial data and must never be committed.
 
-**Import it.** Open **Transactions**, press "Statement file (CSV)", pick the file, leave Bank on BBVA, and press **Import**. With the example file you see:
+**Import it.** Open **Transactions**, press "Statement file (CSV)", pick the file, and leave Bank on BBVA. "Statement period from" and "Statement period to" fill in with the dates of the file's first and last movement. Change them to the dates you chose when exporting, or the ones BBVA prints on the statement. [Transactions](#transactions-import-review-classify) says why the period matters and how far it may reach. Then press **Import**.
+
+The example file is made up, so keep the dates it fills in: 2 January 2025 to 31 December 2025. You see:
 
 ```
-18 movements read: 18 new, 0 already imported.
+18 movements read: 18 new, 0 already imported. Statement period: January 2, 2025 – December 31, 2025.
 ```
 
-and a heading such as "13 movements to review".
+"Imported statements" now lists "Statement 1: January 2, 2025 – December 31, 2025", and a heading says "13 movements to review". The other five movements were settled by certain rules: two cafés, a supermarket, a restaurant and the Modelo 130 payment.
+
+A period more than 31 days away from the movements is refused, and nothing is stored. For example, "from" set to 1 November 2024 gives:
+
+```
+from is 2024-11-01, 62 days before the statement's first movement on 2025-01-02; a period may run at most 31 days past the statement's movements, since an autónomo's account is charged the RETA cuota every month, and days the statement does not hold, counted as covered, would set aside too little.
+```
+
+A file with only the header line is refused with "The file holds no movement; a statement's period is read from its movements and may run at most 31 days past them."
 
 ### 4. Work through the review queue
 
-Click the first movement in the queue (on its text, not a button), or Tab into it. Then, for each movement, press the digit of the right class. The next movement comes up by itself. For example, with the example file:
+Click the first movement in the queue (on its text, not a button), or Tab into it. Then, for each movement, press the digit of the right class. The next movement comes up by itself. With the example file, in the order the queue shows them:
 
 | Movement | Press | Class |
 |---|---|---|
@@ -356,19 +372,29 @@ Click the first movement in the queue (on its text, not a button), or Tab into i
 | COMPRA SUSCRIPCION SOFTWARE EJEMPLO, -€23.79 | `2` | Expense of my activity |
 | RECIBO LUZ; FEBRERO, -€64.32 | `8` | Personal, not the activity |
 | TRANSFERENCIA A ES12 ..., -€150.00 | `7` | Transfer between my accounts |
+| ABONO INTERESES CUENTA, €0.43 (suggested) | `1` | Interest or dividends |
+| TRANSFERENCIA RECIBIDA CLIENTE SINTETICO DOS, €1,876.54 | `1` | Income from my activity |
+| COMISION MANTENIMIENTO, -€3.00 | `8` | Personal, not the activity |
+| TRANSFERENCIA RECIBIDA CLIENTE SINTETICO UNO, €2,345.67 | `1` | Income from my activity |
+| LIBRERIA TECNICA INVENTADA, -€39.90 | `2` | Expense of my activity |
+| CUOTA AUTONOMOS TGSS, -€87.61 (suggested) | `1` | Cuota to the TGSS (RETA) |
+| DEVOLUCION COMPRA, €12.99 | `8` | Personal, not the activity |
+| ABONO INTERESES CUENTA, €0.51 (suggested) | `1` | Interest or dividends |
 
 The digits follow the buttons on screen. On a movement with a suggestion, `1` is the suggestion, so the digit for a class can change from one movement to the next. Look at the buttons before you press. Each choice shows "Classified as ...", and the last one leaves "No movements to review".
 
-Go back to **Overview**. The first sentence now names the actuals, for example:
+Go back to **Overview**. The first sentence now names the actuals:
 
 ```
 Estimated for 2025 from actuals through Q3, 5 classified movements; the projection covers the rest of the year.
 2 expenses await an invoice and are not counted: a deductible expense needs a linked invoice, and GestorIA cannot store invoices yet.
 ```
 
-Here Q4 stays on the projection because the example statement ends on 31 December and does not reach past the quarter.
+The 5 movements are the three client transfers and the two TGSS cuotas, since only income and cuotas enter the figures. The 2 expenses are the software and the book. Give the interest, the bank fee and the refund any class except Income, Cuota or Expense, and both lines stay the same.
 
-This works because the example alta, 15 January, comes after the statement's first line, 2 January. With an alta of 1 January, the same statement leaves 1 January uncovered, so the whole year stays projected and the overview keeps saying "with no closed quarter recorded". If that happens to you, import a statement that starts on or before your alta day (see [known limits](#what-it-does-not-do-yet-and-known-limits)).
+Q4 stays on the projection because the statement's period ends on 31 December, the quarter's last day. Importing January's statement later switches Q4 too.
+
+The example alta, 15 January, falls inside the statement's period. If your alta is before your statement's first movement, enter the day your export starts as "Statement period from", as long as it is no more than 31 days earlier.
 
 You can change a classification later. Only your decision is stored, and the latest one counts.
 
@@ -380,7 +406,7 @@ Open **Payments** for every date of the year. Use it to plan cash, and file each
 
 ### 6. Export the calendar
 
-**This does not work for anyone today.** The export holds only dates still to come. Every date of 2025 has passed, so for 2025 the button is disabled and the page says "Nothing is still to come in this tax year, so there is no date to export." 2026 has dates to come, but GestorIA cannot compute 2026 until its missing values are published, so its Payments page shows "Not published yet" instead of a calendar. See [Tax-year configuration](#tax-year-configuration).
+This does not work for anyone today. [Known limits](#what-it-does-not-do-yet-and-known-limits) says why.
 
 Once a year with dates to come can be computed: on **Payments**, under "Export to your calendar", tick "Include amounts in event titles" if you want them, and press **Download .ics**. Open the file with your calendar app.
 
@@ -399,7 +425,7 @@ Open **Backup** and press **Download my data (personal financial data)**. Your b
 
 ### Add a new statement
 
-Download the new period from BBVA and import it on **Transactions**. Overlapping an earlier statement is fine; only new lines are stored. Classify what lands in the queue. The overview switches each finished quarter to actuals once it is reviewed and your statements cover it.
+Download the new period from BBVA and import it on **Transactions**, with the period you chose when exporting. Overlapping an earlier statement is fine; only new lines are stored, and the periods join. Start each export no later than the day after the last one ended, so no day is left out. Classify what lands in the queue. The overview switches each finished quarter to actuals once it is reviewed and your statements' periods cover it.
 
 ### Move to a new laptop
 
@@ -415,7 +441,7 @@ Restore works only into an empty installation. If it refuses because data is alr
 2. Open **Settings**, find "Your data", type the confirmation word shown (for example `DELETE` in English), and press **Delete everything**.
 3. You should see "Everything was deleted. Nothing about you is stored on this installation any more."
 
-To also remove the database itself, stop the API and run `docker compose down -v` from the `gestoria` folder. This deletes the Docker volume for good.
+To also remove the database itself, see [Local development, step 9](#9-reset-to-a-clean-state).
 
 ### Change the language or the theme
 
@@ -434,6 +460,196 @@ Movements of other years stay stored and in your backups, but the pages show onl
 ### Change the API key
 
 Run step 6 of the setup again with a new key, then stop the API with `Ctrl+C` and start it again. An open tab goes back to the unlock screen at its next request.
+
+## Local development
+
+This section brings GestorIA up from source to work on it, from an empty machine to the checks CI runs. Where a step is the same as in [Set it up from zero](#set-it-up-from-zero), it links there instead of repeating the command, so each command is written down once. Every command runs from the `gestoria` folder unless it says `web/`.
+
+### 1. Prerequisites
+
+You need the .NET 10 SDK, Node 24, pnpm and Docker. [Setup step 1](#tools) installs them, turns on pnpm through corepack, turns off .NET telemetry, and checks `dotnet`, `node` and `docker`. Two more checks:
+
+```bash
+pnpm --version            # 11.27.1, the version "packageManager" in web/package.json pins
+docker compose version    # Docker Compose version v2 or later
+```
+
+### 2. Clone and create `.env`
+
+Clone as in [setup step 2](#tools), then create `.env` with a random database password as in [step 3](#database). Git ignores `.env`. `docker compose` reads it from the folder that holds `compose.yaml`.
+
+### 3. Postgres
+
+Start the database and check that it is healthy with [setup step 4](#database). Then:
+
+| To | Run |
+|---|---|
+| Stop it and keep the data | `docker compose stop postgres` |
+| Start it again | `docker compose up -d postgres`, as in step 4 |
+| Open a SQL prompt in it | `docker compose exec postgres psql -U gestoria -d gestoria` |
+| Delete it with all its data | `docker compose down -v` (see [step 9](#9-reset-to-a-clean-state)) |
+
+`\dt` at the SQL prompt lists the tables: `BankTransactions`, `Profiles`, `StatementImports` and `__EFMigrationsHistory`. `\q` leaves it.
+
+### 4. Secrets: the connection string and the API key
+
+Store the connection string with [setup step 5](#database). Make the key and store its hash with [step 6](#the-api-key). To see what is stored:
+
+```bash
+dotnet user-secrets list --project src/GestorIA.Api
+```
+
+The user-secrets id is written in `src/GestorIA.Api/GestorIA.Api.csproj`. So every clone and worktree of this repository on your computer reads the same secrets. A second copy overrides them with environment variables ([step 8](#8-run-a-second-copy-side-by-side)).
+
+### 5. Run the API
+
+Start it with [setup step 7](#the-api) and check it with [step 8](#the-api). What a developer should know:
+
+- `dotnet run` uses the `http` profile in `src/GestorIA.Api/Properties/launchSettings.json`. It sets the address `http://localhost:5080` and `ASPNETCORE_ENVIRONMENT=Development`. The log starts with `Using launch settings from src/GestorIA.Api/Properties/launchSettings.json...` and, after `Application started`, prints `Hosting environment: Development`.
+- User secrets are read only in Development. With `dotnet run --no-launch-profile` the API runs as Production, reads only environment variables, and stops with `ConnectionStrings:Gestoria is not set`.
+- In Development the API also serves its OpenAPI document at <http://localhost:5080/openapi/v1.json>.
+- At every start it applies the migrations the database does not have yet. On an empty database the log shows one line per migration, oldest first:
+
+  ```
+  info: Microsoft.EntityFrameworkCore.Migrations[20402]
+        Applying migration '20260927164529_Profiles'.
+  ...
+  info: Microsoft.EntityFrameworkCore.Migrations[20402]
+        Applying migration '20260929115546_StatementImports'.
+  ```
+
+### 6. Run the web app
+
+1. Only if the API does not run on port 5080, create `web/.env.local` and point it at the API:
+
+   ```bash
+   cp web/.env.example web/.env.local
+   ```
+
+   Then set `NEXT_PUBLIC_API_BASE_URL` in it, for example to `http://localhost:5190`.
+2. Install the dependencies as in [setup step 9](#the-web-app).
+3. Start it on this computer only:
+
+   ```bash
+   cd web
+   pnpm dev -H localhost
+   ```
+
+   It prints `Local: http://localhost:3000` and `Network: http://localhost:3000`, so nothing else on your network reaches it. With a `web/.env.local` it also prints `Environments: .env.local`.
+4. Open <http://localhost:3000> and unlock it as in [setup step 10](#the-web-app).
+
+### 7. The everyday loop
+
+**Build and test the .NET code**, with Docker running:
+
+```bash
+dotnet restore GestorIA.slnx
+dotnet build GestorIA.slnx --no-restore
+dotnet test GestorIA.slnx --no-build
+```
+
+The build ends with `0 Warning(s)` and `0 Error(s)`. Warnings are errors in this repository. Each test project ends with a line such as `Passed!  - Failed:     0, Passed:   344, ...  - GestorIA.Api.Tests.dll (net10.0)`. The API's tests start their own throwaway PostgreSQL in Docker and remove it when they finish. [Tests](#tests) describes the kinds of tests.
+
+**Run only the golden tests:**
+
+```bash
+dotnet test tests/GestorIA.Engine.Tests --no-build --filter "FullyQualifiedName~GestorIA.Engine.Tests.Golden"
+```
+
+A plain `--filter Golden` also runs other tests with "Golden" in their names, in the API and console test projects too.
+
+**Check the web app** as CI does, in `web/`:
+
+```bash
+pnpm install --frozen-lockfile   # exactly the locked versions
+pnpm lint                        # warnings fail
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+[Scripts](web/README.md#scripts) in `web/README.md` says what each one does.
+
+**After a change to the API**, regenerate the OpenAPI document and the web app's types from it:
+
+```bash
+dotnet build GestorIA.slnx
+cd web
+pnpm api:types
+```
+
+Commit both `src/GestorIA.Api/openapi/v1.json` and `web/src/data/api-types.ts`. CI builds both again and fails when either differs from what you committed.
+
+**After a change to the database model**, add an EF Core migration. The tool is pinned in `dotnet-tools.json`, so restore it once per clone. `migrations add` needs the packages restored, which the build above does.
+
+```bash
+dotnet tool restore
+dotnet ef migrations add <Name> --project src/GestorIA.Infrastructure --output-dir Persistence/Migrations
+```
+
+It prints `Build started...`, `Build succeeded.` and `Done. To undo this action, use 'ef migrations remove'`. It writes two files, `<timestamp>_<Name>.cs` and `<timestamp>_<Name>.Designer.cs`, and updates `GestoriaDbContextModelSnapshot.cs` in `src/GestorIA.Infrastructure/Persistence/Migrations/`. It needs no `--startup-project` and no running database, because `DesignTimeDbContextFactory` builds the model on its own. The API applies the migration at its next start. Never edit the snapshot by hand. To take back the last migration before anyone has applied it:
+
+```bash
+dotnet ef migrations remove --project src/GestorIA.Infrastructure
+```
+
+It first tries to reach a database on port 5432 to check the migration was not applied, and prints an error line when there is none. It then says `Removing migration ...` and `Reverting the model snapshot.`
+
+**After a change to an API answer the web tests use**, rewrite the web app's fixtures in `web/tests/fixtures/` from the API's real answers:
+
+```bash
+GESTORIA_WRITE_WEB_FIXTURES=1 dotnet test tests/GestorIA.Api.Tests --no-build --filter "FullyQualifiedName~WebFixtures"
+```
+
+Without the variable, the same tests fail when a fixture no longer matches the API. Commit the rewritten files.
+
+### 8. Run a second copy side by side
+
+A second clone or worktree, for example to try a branch while your own copy keeps running. Its database, API and web app each need their own port, and its database needs its own name in Docker.
+
+1. **Database.** In that copy's `.env`, set a free port, such as `POSTGRES_PORT=55490`. Start it under its own compose project name, and use the same `-p` on every `docker compose` command for that copy (`ps`, `stop`, `down -v`):
+
+   ```bash
+   docker compose -p review up -d postgres
+   ```
+
+   `compose.yaml` names its project `gestoria`. Without `-p`, both copies would share one container and one volume.
+2. **API.** User secrets are shared (step 4), so give this copy its connection string as an environment variable, which wins over the user secret. The key stays the same. Allow the web app's port and pick the API's:
+
+   ```bash
+   PASSWORD=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2)
+   ConnectionStrings__Gestoria="Host=localhost;Port=55490;Database=gestoria;Username=gestoria;Password=$PASSWORD" \
+   Cors__Origins__0=http://localhost:3190 \
+   dotnet run --project src/GestorIA.Api --urls http://localhost:5190
+   ```
+
+3. **Web app.** Point `web/.env.local` at the API (step 6), then start it on its own port:
+
+   ```bash
+   cd web
+   pnpm dev -H localhost -p 3190
+   ```
+
+#### Ports
+
+The defaults are the database on 5432, the API on 5080 and the web app on 3000. To use other ports, all three places must agree:
+
+| What | Where to change it |
+|---|---|
+| Database port | `POSTGRES_PORT` in `.env`, and the `Port=` in the connection string (setup step 5, or the environment variable in step 8). |
+| API port | Start it with `dotnet run --project src/GestorIA.Api --urls http://localhost:5190`, and put `NEXT_PUBLIC_API_BASE_URL=http://localhost:5190` in `web/.env.local` (step 6). Restart `pnpm dev` after changing it. |
+| Web app port | Start it with `pnpm dev -p 3190`, and start the API with `Cors__Origins__0=http://localhost:3190` in front of its `dotnet run` command. |
+
+### 9. Reset to a clean state
+
+Stop the API and the web app with `Ctrl+C`. Then delete the database with all its data, and start an empty one:
+
+```bash
+docker compose down -v
+docker compose up -d postgres
+```
+
+In a second copy, add its `-p <name>` to both (step 8). `down -v` deletes the Docker volume for good, so download a backup first if you need the data. The next API start creates the tables again (step 5). Your secrets and key stay. To forget them too, run `dotnet user-secrets clear --project src/GestorIA.Api`, then setup steps 5 and 6 again. Delete `web/.env.local` if you made one. Reload the browser tab, which locks the app.
 
 ## The console program
 
@@ -604,26 +820,7 @@ A few rules the code follows everywhere:
 
 ## Tests
 
-From the repository root, with Docker running:
-
-```bash
-dotnet restore GestorIA.slnx
-dotnet build GestorIA.slnx --no-restore
-dotnet test GestorIA.slnx --no-build
-```
-
-A clean build prints `0 Warning(s)` and `0 Error(s)`; warnings are errors in this repository. `dotnet build` also rewrites the API's OpenAPI document, `src/GestorIA.Api/openapi/v1.json`, which is committed. The API's tests start a throwaway PostgreSQL from the image in `compose.yaml` and remove it when they finish.
-
-For the web app, in `web/`:
-
-| Command | Why |
-|---|---|
-| `pnpm install --frozen-lockfile` | Installs exactly the locked versions, as CI does. |
-| `pnpm lint` | Checks the code, including the rules on which folder may import which. Warnings fail. |
-| `pnpm typecheck` | Checks the TypeScript types. |
-| `pnpm test` | Runs the web tests. |
-| `pnpm build` | Builds the production app, as CI does. |
-| `pnpm api:types` | Regenerates `src/data/api-types.ts` from the OpenAPI document, after `dotnet build` has refreshed it. |
+[Local development, step 7](#7-the-everyday-loop) shows how to run them.
 
 There are four kinds of .NET tests:
 
@@ -663,7 +860,7 @@ Dependencies between issues use GitHub's "blocked by" links. An issue is ready t
 1. Turn on the repository's git hooks once per clone: `git config core.hooksPath .githooks`. The `commit-msg` hook rejects commits not authored by your configured `user.email`, and commits with attribution lines.
 2. Branch from the latest `main`, named after the issue: `ticket-<number>`.
 3. Make the change. Keep `plans/current.md`, the specs in `docs/specs/`, `knowledge/`, this README and `web/README.md` in sync with it.
-4. Build and test as [Tests](#tests) shows. The build must show `0 Warning(s)`, and every test must pass. If you changed the API, run `pnpm api:types` in `web/` and commit both generated files.
+4. Build and test as [Local development, step 7](#7-the-everyday-loop) shows. The build must show `0 Warning(s)`, and every test must pass. If you changed the API or the database model, regenerate what step 7 says and commit it.
 5. Commit with a conventional message that names the issue, for example `feat(engine): project the Modelo 130 payment (#8)`. Only the repository owner authors commits. No `Co-authored-by` lines and no tool or AI attribution. Never bypass the hook with `--no-verify`.
 6. Push and open a pull request with `Closes #<number>` in the description. If you changed a file in `config/tax-years/`, say whether any golden test is affected.
 7. CI (`.github/workflows/ci.yml`) builds and tests every pull request, checks that the OpenAPI document and `web/src/data/api-types.ts` are current, and fails a document that breaks the one on `main`. `main` must always be green. Pull requests are squash-merged.
@@ -702,7 +899,7 @@ The theory behind the rules (explanations and worked examples) is kept outside t
 
 **`ConnectionStrings:Gestoria is not set; README.md, "Database", shows how to set it.`** The API stops at once. Do step 5 in [Database](#database). The API checks this before the key.
 
-**`Auth:ApiKeySha256 must be the SHA-256 of a non-empty local API key, as 64 hex characters`.** The key hash is missing, or it is not 64 letters and digits. Do step 6 in [The API key](#the-api-key).
+**`Auth:ApiKeySha256 must be the SHA-256 of a non-empty local API key, as 64 hex characters`.** The key hash is missing, or it is not 64 characters of 0-9 and a-f. Do step 6 in [The API key](#the-api-key).
 
 **The database is not reachable**, and `/api/v1/health/ready` answers `503`:
 
@@ -719,7 +916,7 @@ Start Docker Desktop, run `docker compose up -d postgres`, and check that `docke
 **"The API did not accept this key. Check it and try again."** The key you typed does not match the stored hash. Two causes:
 
 - A typo. Paste the key again, without spaces.
-- The key itself was stored instead of its hash. The key from step 6 is also 64 letters and digits, so the API starts without complaint and then refuses the right key. To tell, run `dotnet user-secrets list --project src/GestorIA.Api` from the `gestoria` folder. If the `Auth:ApiKeySha256` value is the same as your key, that is it. Fix it by typing `KEY=` followed by your key, running the last line of step 6 again, and restarting the API.
+- The key itself was stored instead of its hash. The key from step 6 is also 64 characters of 0-9 and a-f, so the API starts without complaint and then refuses the right key. To tell, run `dotnet user-secrets list --project src/GestorIA.Api` from the `gestoria` folder. If the `Auth:ApiKeySha256` value is the same as your key, that is it. Fix it by typing `KEY=` followed by your key, running the last line of step 6 again, and restarting the API.
 
 If you lost the key, make a new one (step 6) and restart the API.
 
@@ -731,7 +928,7 @@ If you lost the key, make a new one (step 6) and restart the API.
 Cors__Origins__0=http://localhost:3190 dotnet run --project src/GestorIA.Api
 ```
 
-The web app runs on an address the API does not allow (the CORS rule, see step 9), usually because `pnpm dev` took another port than 3000. Stop the API with `Ctrl+C` and start it with the printed command, or make the ports agree as [Ports](#ports) shows. If another program uses the API's port, stop it or move the API to another port.
+The web app runs on an address the API does not allow (the CORS rule, see step 9), usually because `pnpm dev` took another port than 3000. Stop the API with `Ctrl+C` and start it with the printed command. Add `--urls http://localhost:<port>` to it if you moved the API off port 5080. Or make the ports agree as [Ports](#ports) shows. If another program uses the API's port, stop it or move the API to another port.
 
 **"The GestorIA API is running, but its database is not."** Start the database with `docker compose up -d postgres`.
 
@@ -747,14 +944,15 @@ The web app runs on an address the API does not allow (the CORS rule, see step 9
 
 1. Transactions shows no movement of that quarter in the review queue.
 2. Every earlier quarter since your alta has switched already.
-3. Your imported statements cover every day of the quarter and have a line after its last day. For Q4, import a statement that reaches into January.
-4. For the first quarter of your activity, a statement starts on or before your alta day. With an alta on 1 January, a statement whose first line is 2 January leaves 1 January uncovered.
+3. The periods of your imported statements, joined together, cover every day of the quarter and at least one day after it. "Imported statements" on Transactions lists them. For Q4, import a statement that reaches into January.
+4. For the first quarter of your activity, a statement's period starts on or before your alta day. If your export starts before its first movement, import it again with "Statement period from" set to the day the export starts. Only the period is recorded again; no movement is stored twice.
+5. The quarter holds at least one imported movement.
 
-Under "How it was calculated", the step "Trimestre no cubierto por los movimientos importados" (`ledger.coverage`) names the first day no import covers. A gap left by overlapping or monthly statements does not close by importing them again (issue #88).
+Under "How it was calculated", the step "Trimestre no cubierto por los extractos importados" (`ledger.coverage`) names the first days no statement's period covers, and lists every period. A quarter with no movement shows "Trimestre sin movimientos importados" instead.
 
-**The ICS download is disabled** and the page says "Nothing is still to come in this tax year". Every date of that tax year has passed. Today that is true of 2025, and 2026 cannot be computed yet, so no calendar can be exported (see [Export the calendar](#6-export-the-calendar)).
+**The ICS download is disabled** and the page says "Nothing is still to come in this tax year". Every date of that tax year has passed. No year can be exported today; [known limits](#what-it-does-not-do-yet-and-known-limits) says why.
 
-**An import is refused.** The page lists each reason. "The first line is not the header of a BBVA CSV statement" means extra rows sit above `Fecha;Fecha Valor;Concepto;Importe;Saldo`, or the separator is not `;`. "The file is an XLSX workbook" means the file is Excel; save it as CSV (see [Import a BBVA statement](#3-import-a-bbva-statement)).
+**An import is refused.** The page lists each reason. A reason that starts with `from is` or `to is` is about the statement's period (see [Import a BBVA statement](#3-import-a-bbva-statement)). "The first line is not the header of a BBVA CSV statement" means extra rows sit above `Fecha;Fecha Valor;Concepto;Importe;Saldo`, or the separator is not `;`. "The file is an XLSX workbook" means the file is Excel; save it as CSV (see [Import a BBVA statement](#3-import-a-bbva-statement)).
 
 **Restore is refused because the installation is not empty.** Download what is stored, delete it in Settings, then restore.
 
